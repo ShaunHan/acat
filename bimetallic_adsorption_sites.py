@@ -406,7 +406,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
         An atom object.
         An atoms object (for a molecular adsorbate).
 
-    site: Support 4 typical adsorption sites: 
+    site: Support 5 typical adsorption sites: 
         1-fold site 'ontop', 
         2-fold site 'bridge', 
         3-fold hollow sites 'fcc' and 'hcp', 
