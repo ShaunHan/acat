@@ -12,6 +12,9 @@ from ase.io import read, write
 from collections import Counter
 import re
 import random
+import warnings
+
+warnings.filterwarnings('ignore')
 
 # TODO: more robust way of going from key to surf site description
 # e.g. the dictionary could be arranged in a different way
