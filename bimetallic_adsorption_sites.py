@@ -424,7 +424,8 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
         'hcp' and 'fcc' sites include 4 compositions: 'AAA' or 'AAB' or 'ABB' or 'BBB'.
         'hollow' sites include 6 compositions: 'AAAA' or 'AAAB' or 'AABB' or 'ABAB' or 'ABBB' or 'BBBB'.
 
-    second_shell: Default is False. This keyword can only be set to 'A' or 'B' for 'hcp' and 'hollow'.
+    second_shell: The second shell element beneath the adsorption site.
+        Default is False. This keyword can only be set to 'A' or 'B' for 'hcp' and 'hollow'.
 
     nsite: The number of such adsorption site that is attached with the adsorbate. 
         Default is 1. Set nsite = all to attach the adsorbate to all such sites.
