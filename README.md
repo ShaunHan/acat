@@ -1,2 +1,2 @@
-# Nanoparticle with adsorbate
+# Souce code for NANOPADS: NANOParticle with ADSorbate
 
