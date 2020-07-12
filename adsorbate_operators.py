@@ -7,7 +7,7 @@ from itertools import chain
 from ase import Atoms, Atom
 from ase.build import molecule
 from ase.ga.offspring_creator import OffspringCreator
-from ase.neighborlist import NeighborList as aseNeighborList
+from ase.neighborlist import NeighborList, natural_cutoffs
 
 
 class AdsorbateOperator(OffspringCreator):
@@ -142,7 +142,7 @@ class AdsorbateOperator(OffspringCreator):
         ads_ind = [a.index for a in ac
                    if a.symbol in self.adsorbate_set]
         mbl = 1.5  # max_bond_length
-        nl = aseNeighborList([mbl / 2. for i in ac],
+        nl = NeighborList([mbl / 2. for i in ac],
                              skin=0.0, self_interaction=False)
         nl.update(ac)
 
@@ -205,10 +205,34 @@ class AdsorbateOperator(OffspringCreator):
                 return True
         return False
 
-    def count_occupied_sites(self, atoms):
-        ads = self.adsorbate_set
-        n_occupied_sites = len([a for a in atoms if a.symbol in ads]) / len(ads)
-        return n_occupied_sites
+    def is_site_occupied_by(self, atoms, adsorbate, site, min_adsorbate_distance):
+        """Returns True if the site on the atoms object is occupied by
+        a specified species"""
+        # if site['occupied']:
+        #     return True
+        ads_symbols = molecule(adsorbate).get_chemical_symbols()
+        n_ads_atoms = len(ads_symbols)
+        # play aruond with the cutoff
+        height = site['height']
+        normal = np.array(site['normal'])
+        pos = np.array(site['adsorbate_position']) + normal * height
+        dists = []
+        for a in atoms:
+            if a.symbol in set(ads_symbols):
+                dists.append((a.index, np.linalg.norm(pos - a.position)))
+        for (i, d) in dists:
+            if d < min_adsorbate_distance:
+                site_ads_symbols = []
+                if n_ads_atoms > 1:
+                    for k in range(i,i+n_ads_atoms):
+                        site_ads_symbols.append(atoms[k].symbol)
+                else:
+                    site_ads_symbols.append(atoms[i].symbol)
+                if sorted(site_ads_symbols) == sorted(ads_symbols):               
+                # print('under min d', d, pos)
+                # site['occupied'] = 1
+                    return True
+        return False
 
     @classmethod
     def convert_adsorbate(cls, adsorbate):
