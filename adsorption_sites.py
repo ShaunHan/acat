@@ -400,19 +400,42 @@ def add_adsorbate(atoms, adsorbate, site):
     atoms.extend(ads)
 
 
-def monometallic_add_adsorbate(atoms, adsorbate, site, surface='all', nsite='all'):
+def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all'):
+    """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
+    icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
+
+    Parameters:
+
+    atoms: The nanoparticle onto which the adsorbate should be added.
+        
+    adsorbate: The adsorbate. Must be one of the following three types:
+        A string containing the chemical symbol for a single atom.
+        An atom object.
+        An atoms object (for a molecular adsorbate).
+
+    site: Support 5 typical adsorption sites: 
+        1-fold site 'ontop', 
+        2-fold site 'bridge', 
+        3-fold hollow sites 'fcc' and 'hcp', 
+        4-fold hollow site 'hollow'.
+
+    surface: Support 4 typical surfaces (positions) for fcc crystal where the adsorbate is attached: 
+        'vertex', 
+        'edge', 
+        'fcc100', 
+        'fcc111'.
+
+    nsite: The number of such adsorption site that is attached with the adsorbate. 
+        Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
+    
+    Example: monometallic_add_adsorbate(atoms,adsorbate='CO',site='hollow',surface='fcc100',nsite='all')"""
+
     atoms.info['data'] = {}
     ads = AdsorptionSites(atoms)
-    #print(ads.get_surface_sites())
-    sites = []
-    if surface == 'all':
-        for surf in ['vertex', 'edge', 'fcc100', 'fcc111']:
-            special_sites = ads.get_sites_from_surface(site, surf)
-            sites += special_sites
-    else:        
-        special_sites = ads.get_sites_from_surface(site, surface)
-        for site in special_sites:
-            sites.append(site)
+    sites = []        
+    special_sites = ads.get_sites_from_surface(site, surface)
+    for site in special_sites:
+        sites.append(site)
     if not sites:
         print('No such adsorption site found on this nanoparticle.')
     elif adsorbate == 'CO':
@@ -435,6 +458,9 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface='all', nsite='all
 
 
 def get_monometallic_sites(atoms, site, surface, second_shell=False): 
+    """Get a specific site from a nanoparticle and assign a label to it.  
+       Elemental composition is ignored.""" 
+
     label_dct = {'site ontop, surface vertex' : '90', 
                  'site ontop, surface edge' : '91', 
                  'site ontop, surface fcc100' : '92', 
@@ -450,7 +476,7 @@ def get_monometallic_sites(atoms, site, surface, second_shell=False):
     nl = NeighborList(cutoff, self_interaction=False, bothways=True)
     nl.update(atoms)            
     ads = AdsorptionSites(atoms)
-    #print(ads.get_surface_sites())
+
     sites = []    
     special_sites = ads.get_sites_from_surface(site, surface)
     if special_sites:
@@ -463,17 +489,17 @@ def get_monometallic_sites(atoms, site, surface, second_shell=False):
                 if site_name == 'hcp':
                     for i in site['indices']:
                         indices, offsets = nl.get_neighbors(i)
-                        for inb in indices:
-                            if atoms[inb].symbol not in adsorbates:
-                                hcp_neighbor_indices.append(inb)
+                        for idx in indices:
+                            if atoms[idx].symbol not in adsorbates:
+                                hcp_neighbor_indices.append(idx)
                     second_shell_index = [key for key, count in Counter(hcp_neighbor_indices).items() if count == 3][0]
                     site['indices'] += (second_shell_index,)
                 elif site_name == 'hollow':
                     for i in site['indices']:
                         indices, offsets = nl.get_neighbors(i)
-                        for inb in indices:
-                            if atoms[inb].symbol not in adsorbates:
-                                hollow_neighbor_indices.append(inb)
+                        for idx in indices:
+                            if atoms[idx].symbol not in adsorbates:
+                                hollow_neighbor_indices.append(idx)
                     second_shell_index = [key for key, count in Counter(hollow_neighbor_indices).items() if count == 4][0]
                     site['indices'] += (second_shell_index,)
                 else:
@@ -486,6 +512,8 @@ def get_monometallic_sites(atoms, site, surface, second_shell=False):
 
 
 def enumerate_monometallic_sites(atoms):
+    """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
+
     all_sites = []
     for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
         ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, second_shell=False)
@@ -548,11 +576,11 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
     Example: bimetallic_add_adsorbate(atoms, adsorbate='CO', site='hollow', surface='fcc100', 
         composition='NiPtNiPt', second_shell='Pt', nsite='all')"""
 
-#    print('System: adsorbate {0}, site {1}, surface {2}, composition {3}, second shell {4}'.format(
-#           adsorbate, site, surface, composition, second_shell))
+    #print('System: adsorbate {0}, site {1}, surface {2}, composition {3}, second shell {4}'.format(
+    #       adsorbate, site, surface, composition, second_shell))
     atoms.info['data'] = {}
     ads = AdsorptionSites(atoms)
-    #print(ads.get_surface_sites())
+
     sites = ads.get_sites_from_surface(site, surface)
     if not sites:
         print('This site is not possible at all. Please check your input parameters.')
@@ -588,9 +616,9 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
                             nl = NeighborList(cutoff, self_interaction=False, bothways=True)
                             nl.update(atoms)
                             indices, offsets = nl.get_neighbors(i)
-                            for inb in indices:
-                                if atoms[inb].symbol not in adsorbates:
-                                    neighbor_indices.append(inb)                        
+                            for idx in indices:
+                                if atoms[idx].symbol not in adsorbates:
+                                    neighbor_indices.append(idx)                        
                         second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
                                               if count == 3][0]
                         second_shell_element = atoms[second_shell_index].symbol
@@ -614,9 +642,9 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
                                 nl = NeighborList(cutoff, self_interaction=False, bothways=True)
                                 nl.update(atoms)
                                 indices, offsets = nl.get_neighbors(i)
-                                for inb in indices:
-                                    if atoms[inb].symbol not in adsorbates:
-                                        neighbor_indices.append(inb)
+                                for idx in indices:
+                                    if atoms[idx].symbol not in adsorbates:
+                                        neighbor_indices.append(idx)
                             second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
                                                   if count == 4][0] 
                             second_shell_element = atoms[second_shell_index].symbol
@@ -632,9 +660,9 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
                             nl = NeighborList(cutoff, self_interaction=False, bothways=True)
                             nl.update(atoms)
                             indices, offsets = nl.get_neighbors(i)
-                            for inb in indices:
-                                if atoms[inb].symbol not in adsorbates:
-                                    neighbor_indices.append(inb)
+                            for idx in indices:
+                                if atoms[idx].symbol not in adsorbates:
+                                    neighbor_indices.append(idx)
                         second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
                                               if count == 4][0]
                         second_shell_element = atoms[second_shell_index].symbol
@@ -642,7 +670,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
                             final_sites.append(site)
         else:
             raise ValueError('{0} sites do not have second shell'.format(site))
-        #print(final_sites)
+
         if not final_sites:
             print('No such adsorption site found on this nanoparticle')
         elif adsorbate == 'CO':
@@ -665,6 +693,9 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
 
 
 def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
+    """Get a specific site from a bimetallic nanoparticle and assign a label to it.  
+       Elemental composition is included.""" 
+
     system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
     atoms.info['data'] = {}
     cutoff = natural_cutoffs(atoms)
@@ -701,9 +732,9 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
                         neighbor_indices = []
                         for i in site['indices']: 
                             indices, offsets = nl.get_neighbors(i)
-                            for inb in indices:
-                                if atoms[inb].symbol not in adsorbates:
-                                    neighbor_indices.append(inb)                        
+                            for idx in indices:
+                                if atoms[idx].symbol not in adsorbates:
+                                    neighbor_indices.append(idx)                        
                         second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
                                               if count == 3][0]
                         second_shell_element = atoms[second_shell_index].symbol
@@ -725,9 +756,9 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
                             neighbor_indices = []
                             for i in site['indices']:
                                 indices, offsets = nl.get_neighbors(i)
-                                for inb in indices:
-                                    if atoms[inb].symbol not in adsorbates:
-                                        neighbor_indices.append(inb)
+                                for idx in indices:
+                                    if atoms[idx].symbol not in adsorbates:
+                                        neighbor_indices.append(idx)
                             second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
                                                   if count == 4][0] 
                             second_shell_element = atoms[second_shell_index].symbol
@@ -741,9 +772,9 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
                         neighbor_indices = []
                         for i in site['indices']:
                             indices, offsets = nl.get_neighbors(i)
-                            for inb in indices:
-                                if atoms[inb].symbol not in adsorbates:
-                                    neighbor_indices.append(inb)
+                            for idx in indices:
+                                if atoms[idx].symbol not in adsorbates:
+                                    neighbor_indices.append(idx)
                         second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
                                               if count == 4][0]
                         second_shell_element = atoms[second_shell_index].symbol
@@ -760,6 +791,8 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
 
 
 def enumerate_bimetallic_sites(atoms):
+    """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
+
     all_sites = []
     elements = list(set(atoms.symbols))
     metals = [element for element in elements if element not in adsorbates]
@@ -796,6 +829,15 @@ def enumerate_bimetallic_sites(atoms):
 
 
 def label_occupied_sites(atoms, adsorbate):
+    '''Assign labels to all occupied sites. Different labels represent different local environments.
+       Change the 2 metal elements to 2 pseudo elements for sites occupied by a species.
+       If multiple species are present, the 2 metal elements are assigned to multiple pseudo elements.
+       Atoms that are occupied by multiple species also need to be changed to new pseudo elements.
+       Currently only a maximum of 2 species is supported.
+       
+       Note: Please provide adsorbate as a string or a list of strings.'''
+
+    species_pseudo_mapping = [('Ge','Sn'),('As','Sb'),('Se','Te')]  
     elements = list(set(atoms.symbols))
     metals = [element for element in elements if element not in adsorbates]
     mA = metals[0]
@@ -803,34 +845,67 @@ def label_occupied_sites(atoms, adsorbate):
     if Atom(metals[0]).number > Atom(metals[1]).number:
         mA = metals[1]
         mB = metals[0]
-    sites = enumerate_monometallic_sites(atoms) 
-    ao = AdsorbateOperator(adsorbate, sites)
-    n_found_occupied_sites = 0
-    for site in sites:
-        if ao.is_site_occupied(atoms, site, min_adsorbate_distance=0.1):
-            site['occupied'] = 1
-            indices = site['indices']
-            label = site['label']
-            for index in indices:                
-                if atoms[index].tag == 0:
-                    atoms[index].tag = label
-                elif label not in str(atoms[index].tag):
-                    atoms[index].tag = str(atoms[index].tag) + label
-                if atoms[index].symbol == mA:
-                    atoms[index].symbol = 'Nb'
-                elif atoms[index].symbol == mB:
-                    atoms[index].symbol = 'Pb'
-            n_found_occupied_sites += 1
-    n_occupied_sites = ao.count_occupied_sites(atoms)
-    if n_found_occupied_sites != n_occupied_sites: 
-        raise ValueError('Could not find all {0} occupied adsorption sites, found {1} instead'.format(
-                          n_occupied_sites, n_found_occupied_sites))
+    sites = enumerate_monometallic_sites(atoms)   
+    n_occupied_sites = 0
+    if isinstance(adsorbate, list) and len(adsorbate) == 2:               
+        for site in sites:            
+            for ads in adsorbate:
+                k = adsorbate.index(ads)
+                ao = AdsorbateOperator(ads, sites)
+                if ao.is_site_occupied_by(atoms, ads, site, min_adsorbate_distance=0.01):
+                    site['occupied'] = 1
+                    site['adsorbate'] = ads
+                    indices = site['indices']
+                    label = site['label']
+                    for idx in indices:                
+                        if atoms[idx].tag == 0:
+                            atoms[idx].tag = label
+                        elif label not in str(atoms[idx].tag):
+                            atoms[idx].tag = str(atoms[idx].tag) + label
+                        if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]: 
+                            if atoms[idx].symbol == mA:
+                                atoms[idx].symbol = species_pseudo_mapping[k][0]
+                            elif atoms[idx].symbol == mB:
+                                atoms[idx].symbol = species_pseudo_mapping[k][1]
+                        else:
+                            if atoms[idx].symbol == species_pseudo_mapping[k-1][0]:
+                                atoms[idx].symbol = species_pseudo_mapping[2][0]
+                            elif atoms[idx].symbol == species_pseudo_mapping[k-1][1]:
+                                atoms[idx].symbol = species_pseudo_mapping[2][1]
+                    n_occupied_sites += 1 
+
+    elif adsorbate in list(species_pseudo_mapping.keys()):
+        ao = AdsorbateOperator(adsorbate, sites)
+        for site in sites:
+            if ao.is_site_occupied(atoms, site, min_adsorbate_distance=0.01):
+                site['occupied'] = 1
+                indices = site['indices']
+                label = site['label']
+                for idx in indices:                
+                    if atoms[idx].tag == 0:
+                        atoms[idx].tag = label
+                    elif label not in str(atoms[idx].tag):
+                        atoms[idx].tag = str(atoms[idx].tag) + label
+                    if atoms[idx].symbol == mA:
+                        atoms[idx].symbol = species_pseudo_mapping[0][0]
+                    elif atoms[idx].symbol == mB:
+                        atoms[idx].symbol = species_pseudo_mapping[0][1]
+                n_occupied_sites += 1
+    else:
+        raise NotImplementedError
+    tag_set = set([a.tag for a in atoms])
+    print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
 
     return atoms
 
 
-def label_encoder(atoms, adsorbate):
-    labeled_atoms = label_occupied_sites(atoms, adsorbate)
+def multi_label_binarizer(labeled_atoms):
+    '''Encoding the labels into binaries. This can be further used as a fingerprint.
+       Atoms that constitute an occupied adsorption site will be labeled as 1.
+       One atom can encompass multiple 1s if it contributes to multiple sites.
+
+       Note: Please provide only the labeled atoms object.'''
+
     np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]  
     np_atoms = labeled_atoms[np_indices]
     output = []
