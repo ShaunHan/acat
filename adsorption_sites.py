@@ -511,7 +511,7 @@ def get_monometallic_sites(atoms, site, surface, second_shell=False):
     return sites
 
 
-def enumerate_monometallic_sites(atoms):
+def enumerate_monometallic_sites(atoms, second_shell=False):
     """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
 
     all_sites = []
@@ -526,10 +526,10 @@ def enumerate_monometallic_sites(atoms):
     fcc_sites = get_monometallic_sites(atoms, 'fcc', 'fcc111', second_shell=False)
     if fcc_sites:
         all_sites += fcc_sites
-    hcp_sites = get_monometallic_sites(atoms, 'hcp', 'fcc111', second_shell=True)
+    hcp_sites = get_monometallic_sites(atoms, 'hcp', 'fcc111', second_shell)
     if hcp_sites:
         all_sites += hcp_sites
-    hollow_sites = get_monometallic_sites(atoms, 'hollow', 'fcc100', second_shell=True)
+    hollow_sites = get_monometallic_sites(atoms, 'hollow', 'fcc100', second_shell)
     if hollow_sites:
         all_sites += hollow_sites
 
@@ -790,7 +790,7 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
         return final_sites
 
 
-def enumerate_bimetallic_sites(atoms):
+def enumerate_bimetallic_sites(atoms, second_shell=False):
     """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
 
     all_sites = []
@@ -813,29 +813,40 @@ def enumerate_bimetallic_sites(atoms):
             all_sites += fcc_sites
     for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                         metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-        for second_shell in metals:
-            hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell)
+        if second_shell:
+            for second_shell_element in metals:
+                hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell_element)
+                if hcp_sites:
+                    all_sites += hcp_sites
+        else:
+            hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell=False)
             if hcp_sites:
                 all_sites += hcp_sites
     for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
                         metals[0]+metals[0]+metals[1]+metals[1], metals[0]+metals[1]+metals[0]+metals[1], 
                         metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
-        for second_shell in metals:
-            hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell)
+        if second_shell:
+            for second_shell_element in metals:
+                hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell_element)
+                if hollow_sites:
+                    all_sites += hollow_sites
+        else:
+            hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell=False)
             if hollow_sites:
                 all_sites += hollow_sites
 
     return all_sites
 
 
-def label_occupied_sites(atoms, adsorbate):
+def label_occupied_sites(atoms, adsorbate, second_shell=False):
     '''Assign labels to all occupied sites. Different labels represent different local environments.
        Change the 2 metal elements to 2 pseudo elements for sites occupied by a species.
        If multiple species are present, the 2 metal elements are assigned to multiple pseudo elements.
        Atoms that are occupied by multiple species also need to be changed to new pseudo elements.
        Currently only a maximum of 2 species is supported.
        
-       Note: Please provide adsorbate as a string or a list of strings.'''
+       Note: Please provide adsorbate as a string or a list of strings.
+             Set second_shell=True if you also want to label the second shell atoms.'''
 
     species_pseudo_mapping = [('Ge','Sn'),('As','Sb'),('Se','Te')]  
     elements = list(set(atoms.symbols))
@@ -845,7 +856,7 @@ def label_occupied_sites(atoms, adsorbate):
     if Atom(metals[0]).number > Atom(metals[1]).number:
         mA = metals[1]
         mB = metals[0]
-    sites = enumerate_monometallic_sites(atoms)   
+    sites = enumerate_monometallic_sites(atoms, second_shell)   
     n_occupied_sites = 0
     if isinstance(adsorbate, list) and len(adsorbate) == 2:               
         for site in sites:            
