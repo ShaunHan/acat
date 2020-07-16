@@ -6,6 +6,7 @@ from asap3.analysis import FullCNA
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.visualize import view
 from ase.build import molecule
+from ase.geometry import Cell
 from ase import Atom
 import numpy as np
 from itertools import combinations
@@ -21,7 +22,7 @@ warnings.filterwarnings('ignore')
 
 # TODO: more robust way of going from key to surf site description
 # e.g. the dictionary could be arranged in a different way
-icosa_dict = {
+icosa_dct = {
     # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
     'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
@@ -33,22 +34,22 @@ icosa_dict = {
     'vertex': str({(3, 2, 2): 5, (5, 5, 5): 1}),
 }
 
-cubocta_dict = {
+cubocta_dct = {
     # Edge sites on outermost shell -- Cubocta, Tocta
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
     'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
-    # Square sites on outermost shell -- Cubocta, Deca, Tocta
+    # Square sites on outermost shell -- Cubocta, Deca, Tocta, (Extended surface)
     str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
     'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
     # Vertice sites on outermost shell -- Cubocta
     str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
     'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
-    # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
+    # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta, (Extended surface)
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
     'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
 }
 
-deca_dict = {
+deca_dct = {
     # Edge sites (111)-(111) on outermost shell -- Deca
     str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
     'edge': str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}),
@@ -78,7 +79,7 @@ deca_dict = {
     'fcc111': str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}),
 }
 
-tocta_dict = {
+tocta_dct = {
     # Edge sites on outermost shell -- Cubocta, Tocta
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
     'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
@@ -110,7 +111,7 @@ class AdsorptionSites(object):
         self.fullCNA = {}
         self.make_fullCNA()
         self.set_first_neighbor_distance_from_rdf()
-        self.site_dict = self.get_site_dict()
+        self.site_dct = self.get_site_dct()
         self.make_neighbor_list()
         self.surf_sites = self.get_surface_sites()
 
@@ -127,7 +128,7 @@ class AdsorptionSites(object):
         ss = self.surf_sites
         ssall = set(ss['all'])
         fcna = self.get_fullCNA()
-        sd = self.site_dict
+        sd = self.site_dct
         sl = self.site_list
         usi = set()  # used_site_indices
         normals_for_site = dict(list(zip(ssall, [[] for _ in ssall])))
@@ -255,7 +256,7 @@ class AdsorptionSites(object):
         vec2 = p2 - self.atoms[sites[0]].position
         return vec1, vec2
 
-    def is_eq(self, v1, v2, eps=0.1):
+    def is_eq(self, v1, v2, eps=0.05):
         if abs(v1 - v2) < eps:
             return True
         else:
@@ -294,24 +295,24 @@ class AdsorptionSites(object):
                          'vertex': [], }
         atoms = self.atoms.copy()
         fcna = self.get_fullCNA()
-        site_dict = self.site_dict
+        site_dct = self.site_dct
 
         for i in range(len(atoms)):
 #            if i == 185:
 #                print(fcna[i])
             if sum(fcna[i].values()) < 12:
                 surface_sites['all'].append(i)
-                if str(fcna[i]) not in site_dict:
+                if str(fcna[i]) not in site_dct:
                     # The structure is distorted from the original, giving
                     # a larger cutoff should overcome this problem
                     r = self.r + 0.6
                     fcna = self.get_fullCNA(rCut=r)
-                if str(fcna[i]) not in site_dict:
+                if str(fcna[i]) not in site_dct:
                     # If this does not solve the problem we probably have a
                     # reconstruction of the surface and will leave this
                     # atom unused this time
                     continue
-                surface_sites[site_dict[str(fcna[i])]].append(i)
+                surface_sites[site_dct[str(fcna[i])]].append(i)
         return surface_sites
 
     def make_fullCNA(self, rCut=None):
@@ -327,27 +328,27 @@ class AdsorptionSites(object):
     def make_neighbor_list(self, rMax=10.):
         self.nlist = FullNeighborList(rCut=rMax, atoms=self.atoms)
 
-    def get_site_dict(self):
+    def get_site_dct(self):
         fcna = self.get_fullCNA()
         icosa_weight = cubocta_weight = deca_weight = tocta_weight = 0
         for s in fcna:
-            if str(s) in icosa_dict:
+            if str(s) in icosa_dct:
                 icosa_weight += 1
-            if str(s) in cubocta_dict:
+            if str(s) in cubocta_dct:
                 cubocta_weight += 1
-            if str(s) in deca_dict:
+            if str(s) in deca_dct:
                 deca_weight += 1
-            if str(s) in tocta_dict:
+            if str(s) in tocta_dct:
                 tocta_weight += 1
         full_weights = [icosa_weight, cubocta_weight, deca_weight, tocta_weight]
         if icosa_weight == max(full_weights):
-            return icosa_dict
+            return icosa_dct
         elif cubocta_weight == max(full_weights):
-            return cubocta_dict
+            return cubocta_dct
         elif deca_weight == max(full_weights):
-            return deca_dict
+            return deca_dct
         else:
-            return tocta_dict
+            return tocta_dct
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
         rdf = RadialDistributionFunction(self.atoms, rMax, nBins).get_rdf()
@@ -362,7 +363,7 @@ class AdsorptionSites(object):
 
     def get_surface_designation(self, sites):
         fcna = self.get_fullCNA()
-        sd = self.site_dict
+        sd = self.site_dct
         if len(sites) == 1:
             s = sites[0]
             return sd[str(fcna[s])]
@@ -400,7 +401,7 @@ def add_adsorbate(atoms, adsorbate, site):
     atoms.extend(ads)
 
 
-def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all'):
+def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all', rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
 
@@ -427,6 +428,9 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all'):
 
     nsite: The number of such adsorption site that is attached with the adsorbate. 
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
+
+    rmin: The minimum distance between two adsorbate atoms.
+        Default value 0.1 is good in most cases. Play around to find the best value.
     
     Example: monometallic_add_adsorbate(atoms,adsorbate='CO',site='hollow',surface='fcc100',nsite='all')"""
 
@@ -442,18 +446,48 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all'):
         if nsite == 'all':
             for site in sites:                                            
                 add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
+            nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+            nl.update(atoms)            
+            atom_indices = [a.index for a in atoms if a.symbol == 'O']            
+            n_ads_atoms = 2
+            overlap_atoms_indices = []
+            for idx in atom_indices:   
+                neighbor_indices, _ = nl.get_neighbors(idx)
+                overlap = 0
+                for i in neighbor_indices:
+                    if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):
+                        overlap += 1
+                if overlap > 0:
+                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
+            del atoms[overlap_atoms_indices]
         else:
             final_sites = random.sample(sites, nsite)
             for site in final_sites:
                 add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
     else:
-        if nsite == 'all':
+        if nsite == 'all':            
             for site in sites:
                 add_adsorbate(atoms, molecule(adsorbate), site)
+            nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+            nl.update(atoms)            
+            atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
+            ads_symbols = molecule(adsorbate).get_chemical_symbols()
+            n_ads_atoms = len(ads_symbols)
+            overlap_atoms_indices = []
+            for idx in atom_indices:   
+                neighbor_indices, _ = nl.get_neighbors(idx)
+                overlap = 0
+                for i in neighbor_indices:                                                                
+                    if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                       
+                        overlap += 1                                                                      
+                if overlap > 0:                                                                           
+                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
+            del atoms[overlap_atoms_indices]                                                                    
         else:
             final_sites = random.sample(sites, nsite)
             for site in final_sites:
                 add_adsorbate(atoms, molecule(adsorbate), site)
+
     return atoms
 
 
@@ -536,7 +570,7 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
     return all_sites
 
 
-def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, second_shell=False, nsite=1):
+def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, second_shell=False, nsite=1, rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
 
@@ -561,7 +595,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
         'fcc100', 
         'fcc111'.
 
-    composition: All possible elemental composition of the adsorption site for bimetalic nanoparticles:
+    composition: All possible elemental composition of the adsorption site for bimetalics:
         'ontop' sites include 2 compositions: 'A' or 'B'.
         'bridge' sites include 3 compositions: 'AA' or 'AB' or 'BB'.
         'hcp' and 'fcc' sites include 4 compositions: 'AAA' or 'AAB' or 'ABB' or 'BBB'.
@@ -572,6 +606,9 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
 
     nsite: The number of such adsorption site that is attached with the adsorbate. 
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
+
+    rmin: The minimum distance between two adsorbate atoms.                             
+        Default value 0.1 is good in most cases. Play around to find the best value.
     
     Example: bimetallic_add_adsorbate(atoms, adsorbate='CO', site='hollow', surface='fcc100', 
         composition='NiPtNiPt', second_shell='Pt', nsite='all')"""
@@ -677,6 +714,20 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
             if (nsite == 'all') or (nsite > len(final_sites)):
                 for site in final_sites:                                            
                     add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
+                nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+                nl.update(atoms)            
+                atom_indices = [a.index for a in atoms if a.symbol == 'O']            
+                n_ads_atoms = 2
+                overlap_atoms_indices = []
+                for idx in atom_indices:   
+                    neighbor_indices, _ = nl.get_neighbors(idx)
+                    overlap = 0
+                    for i in neighbor_indices:
+                        if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):
+                            overlap += 1
+                    if overlap > 0:
+                        overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
+                del atoms[overlap_atoms_indices]
             else:
                 final_sites = random.sample(final_sites, nsite)
                 for site in final_sites:
@@ -685,10 +736,26 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
             if (nsite == 'all') or (nsite > len(final_sites)):
                 for site in final_sites:
                     add_adsorbate(atoms, molecule(adsorbate), site)
+                nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+                nl.update(atoms)            
+                atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
+                ads_symbols = molecule(adsorbate).get_chemical_symbols()
+                n_ads_atoms = len(ads_symbols)
+                overlap_atoms_indices = []
+                for idx in atom_indices:   
+                    neighbor_indices, _ = nl.get_neighbors(idx)
+                    overlap = 0
+                    for i in neighbor_indices:                                                                
+                        if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                       
+                            overlap += 1                                                                      
+                    if overlap > 0:                                                                           
+                        overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
+                del atoms[overlap_atoms_indices]    
             else:
                 final_sites = random.sample(final_sites, nsite)
                 for site in final_sites:
                     add_adsorbate(atoms, molecule(adsorbate), site)
+
     return atoms
 
 
@@ -908,27 +975,3 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
     print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
 
     return atoms
-
-
-def multi_label_binarizer(labeled_atoms):
-    '''Encoding the labels into binaries. This can be further used as a fingerprint.
-       Atoms that constitute an occupied adsorption site will be labeled as 1.
-       One atom can encompass multiple 1s if it contributes to multiple sites.
-
-       Note: Please provide only the labeled atoms object.'''
-
-    np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]  
-    np_atoms = labeled_atoms[np_indices]
-    output = []
-    for i, atom in enumerate(np_atoms):
-        if atom.tag == 0:
-            output.append((i, atom.symbol, np.zeros(10)))
-        else:
-            line = str(atom.tag)
-            strings = [line[k:k+2] for k in range(0, len(line), 2)]
-            zeros = list(np.zeros(10))
-            for idx in [int(s[1]) for s in strings]:
-                zeros[idx] = 1
-            output.append((i, atom.symbol, np.asarray(zeros)))
-
-    return output
