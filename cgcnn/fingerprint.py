@@ -13,9 +13,6 @@ from pymatgen.analysis.structure_matcher import StructureMatcher
 import os 
 
 
-pbcs = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [1, 1, 0], [-1, 1, 0], [0, -1, 0], [1, -1, 0], [-1, -1, 0], [0, 0, 1], [1, 0, 1], [-1, 0, 1], [0, 1, 1], [1, 1, 1], [-1, 1, 1], [0, -1, 1], [1, -1, 1], [-1, -1, 1], [0, 0, -1], [1, 0, -1], [-1, 0, -1], [0, 1, -1], [1, 1, -1], [-1, 1, -1], [0, -1, -1], [1, -1, -1], [-1, -1, -1]]
-
-
 def multi_label_binarizer(labeled_atoms):
     '''Encoding the labels into binaries. This can be further used as a fingerprint.
        Atoms that constitute an occupied adsorption site will be labeled as 1.
@@ -27,23 +24,23 @@ def multi_label_binarizer(labeled_atoms):
     for atom in labeled_atoms:
         if atom.symbol not in 'SCHON':
             if atom.tag == 0:
-                output.append(np.zeros(10).astype(int).tolist())
+                output.append(np.zeros(5).astype(int).tolist())
             else:
                 line = str(atom.tag)
-                strings = [line[k:k+2] for k in range(0, len(line), 2)]
-                lst = np.zeros(10).astype(int).tolist()
-                for idx in [int(s[1]) for s in strings]:
-                    lst[idx] = int(1)
+                cns = [int(s) for s in line]
+                lst = np.zeros(5).astype(int).tolist()
+                for idx in cns:
+                    lst[idx-1] = int(1)
                 output.append(lst)
 
     return output
 
 
-def process_data(atoms):
+def process_data(atoms, adsorbate, second_shell=False):
     '''The input atoms object must be a structure consisting of a relaxed slab + unrelaxed adsorbates.'''
 
     # Set second_shell=False if you don't want to label second shell atoms
-    labeled_atoms = label_occupied_sites(atoms, ['CO','N'], second_shell=True)
+    labeled_atoms = label_occupied_sites(atoms, adsorbate, second_shell)
     np_indices = [a.index for a in labeled_atoms if a.symbol not in 'SCHON']
     np_atoms = labeled_atoms[np_indices]
 
@@ -63,8 +60,8 @@ def process_data(atoms):
     nbr_fea_init = np.array([list(map(lambda x: x[1], nbr[:nnbr])) for nbr in all_nbrs_init]).tolist()
     tags = multi_label_binarizer(np_atoms) 
     atoms_init = {'positions': np_atoms.get_positions().tolist(),
-                  'cell': np_atoms.get_cell().tolist(),
-                  'pbc':False,
+                  'cell': atoms.get_cell().tolist(),
+                  'pbc': atoms.get_pbc(),
                   'numbers': np_atoms.get_atomic_numbers().tolist(), 
                   'tags': tags,
                   'nbr_fea_idx': nbr_fea_idx_init,
