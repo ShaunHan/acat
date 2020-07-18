@@ -1,13 +1,16 @@
-from .adsorbate_operators import AdsorbateOperator
+from .adsorbate_operators import AdsorbateOperator, get_mic_distance
 from ase.cluster import Icosahedron, Octahedron
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
-from asap3.analysis import FullCNA
+from asap3.analysis import FullCNA, PTM
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.visualize import view
 from ase.build import molecule
 from ase.geometry import Cell
 from ase import Atom
+from pymatgen.analysis.adsorption import AdsorbateSiteFinder
+from pymatgen.io.ase import AseAtomsAdaptor
+import operator
 import numpy as np
 from itertools import combinations
 from ase.data import reference_states as refstate
@@ -98,7 +101,24 @@ tocta_dct = {
 }
 
 
+surface_dct = {
+    # Step sites
+    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
+    'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
+    # Square sites
+    str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
+    'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
+    # Kink sites
+    str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
+    'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
+    # Triangle sites
+    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+}
+
+
 adsorbates = 'SCHON'
+
 
 
 class AdsorptionSites(object):
@@ -253,10 +273,10 @@ class AdsorptionSites(object):
         p1 = self.atoms[int(sites[1])].position
         p2 = self.atoms[int(sites[2])].position
         vec1 = p1 - self.atoms[int(sites[0])].position
-        vec2 = p2 - self.atoms[sites[0]].position
+        vec2 = p2 - self.atoms[int(sites[0])].position
         return vec1, vec2
 
-    def is_eq(self, v1, v2, eps=0.05):
+    def is_eq(self, v1, v2, eps=0.1):
         if abs(v1 - v2) < eps:
             return True
         else:
@@ -384,6 +404,17 @@ class AdsorptionSites(object):
             return 'fcc111'
 
 
+def get_neighbors_from_position(atoms, position, cutoff=3.):
+    cell = atoms.get_cell()
+    pbc = np.array([cell[0][0], cell[1][1], 0])
+    lst = []
+    for a in atoms:
+        d = get_mic_distance(position, a.position, atoms)
+        if d < cutoff:
+            lst.append((a.index, d))
+    return lst
+
+
 def add_adsorbate(atoms, adsorbate, site):
     # Make the correct position
     height = site['height']
@@ -395,13 +426,13 @@ def add_adsorbate(atoms, adsorbate, site):
         avg_pos = np.average(ads[1:].positions, 0)
         ads.rotate(avg_pos - ads[0].position, normal)
         #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
-        #ads.rotate(-45, pvec, center=ads[0].position)
+        ads.rotate(-45, pvec, center=ads[0].position)
     ads.translate(pos - ads[0].position)
 
     atoms.extend(ads)
 
 
-def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all', rmin=0.1):
+def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all', rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
 
@@ -435,112 +466,355 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface, nsite='all', rmi
     Example: monometallic_add_adsorbate(atoms,adsorbate='CO',site='hollow',surface='fcc100',nsite='all')"""
 
     atoms.info['data'] = {}
-    ads = AdsorptionSites(atoms)
-    sites = []        
-    special_sites = ads.get_sites_from_surface(site, surface)
-    for site in special_sites:
-        sites.append(site)
-    if not sites:
-        print('No such adsorption site found on this nanoparticle.')
-    elif adsorbate == 'CO':
-        if nsite == 'all':
-            for site in sites:                                            
-                add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
-            nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
-            nl.update(atoms)            
-            atom_indices = [a.index for a in atoms if a.symbol == 'O']            
-            n_ads_atoms = 2
-            overlap_atoms_indices = []
-            for idx in atom_indices:   
-                neighbor_indices, _ = nl.get_neighbors(idx)
-                overlap = 0
-                for i in neighbor_indices:
-                    if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):
-                        overlap += 1
-                if overlap > 0:
-                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
-            del atoms[overlap_atoms_indices]
+
+    if True not in atoms.get_pbc():
+        if surface == None:
+            raise ValueError('Surface must be specified for a nanoparticle')
+        ads = AdsorptionSites(atoms)
+        sites = []        
+        special_sites = ads.get_sites_from_surface(site, surface)
+        for site in special_sites:
+            sites.append(site)
+        if not sites:
+            print('No such adsorption site found on this nanoparticle.')
+        elif adsorbate == 'CO':
+            if nsite == 'all':
+                for site in sites:                                            
+                    add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
+                nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+                nl.update(atoms)            
+                atom_indices = [a.index for a in atoms if a.symbol == 'O']            
+                n_ads_atoms = 2
+                overlap_atoms_indices = []
+                for idx in atom_indices:   
+                    neighbor_indices, _ = nl.get_neighbors(idx)
+                    overlap = 0
+                    for i in neighbor_indices:
+                        if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):
+                            overlap += 1
+                    if overlap > 0:
+                        overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
+                del atoms[overlap_atoms_indices]
+            else:
+                final_sites = random.sample(sites, nsite)
+                for site in final_sites:
+                    add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
         else:
-            final_sites = random.sample(sites, nsite)
-            for site in final_sites:
-                add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
+            if nsite == 'all':            
+                for site in sites:
+                    add_adsorbate(atoms, molecule(adsorbate), site)
+                nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+                nl.update(atoms)            
+                atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
+                ads_symbols = molecule(adsorbate).get_chemical_symbols()
+                n_ads_atoms = len(ads_symbols)
+                overlap_atoms_indices = []
+                for idx in atom_indices:   
+                    neighbor_indices, _ = nl.get_neighbors(idx)
+                    overlap = 0
+                    for i in neighbor_indices:                                                                
+                        if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                       
+                            overlap += 1                                                                      
+                    if overlap > 0:                                                                           
+                        overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
+                del atoms[overlap_atoms_indices]                                                                    
+            else:
+                final_sites = random.sample(sites, nsite)
+                for site in final_sites:
+                    add_adsorbate(atoms, molecule(adsorbate), site)
+
     else:
-        if nsite == 'all':            
-            for site in sites:
-                add_adsorbate(atoms, molecule(adsorbate), site)
-            nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
-            nl.update(atoms)            
-            atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-            ads_symbols = molecule(adsorbate).get_chemical_symbols()
-            n_ads_atoms = len(ads_symbols)
-            overlap_atoms_indices = []
-            for idx in atom_indices:   
-                neighbor_indices, _ = nl.get_neighbors(idx)
-                overlap = 0
-                for i in neighbor_indices:                                                                
-                    if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                       
-                        overlap += 1                                                                      
-                if overlap > 0:                                                                           
-                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
-            del atoms[overlap_atoms_indices]                                                                    
-        else:
-            final_sites = random.sample(sites, nsite)
-            for site in final_sites:
-                add_adsorbate(atoms, molecule(adsorbate), site)
+        ads_indices = [a.index for a in atoms if a.symbol in adsorbates]
+        ads_atoms = None
+        if ads_indices:
+            ads_atoms = atoms[ads_indices]
+            atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
+        ptmdata = PTM(atoms, rmsd_max=0.2)
+        atoms.set_tags(ptmdata['structure'])
+        meanz = np.mean(atoms.positions[:,2])
+        top_indices = [a.index for a in atoms if a.tag==0 and a.position[2] > meanz]
+        struct = AseAtomsAdaptor.get_structure(atoms)
+        asf = AdsorbateSiteFinder(struct)
+        ads_sites = asf.find_adsorption_sites()
+        ads = molecule(adsorbate)[::-1]
+        if str(ads.symbols) != 'CO':
+            ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
+        cna_sites = AdsorptionSites(atoms)
+        fcna = cna_sites.get_fullCNA()
+        fcc100_weight = fcc111_weight = 0
+        for s in fcna:
+            if str(s) in surface_dct['fcc100']:
+                fcc100_weight += 1
+            if str(s) in surface_dct['fcc111']:
+                fcc111_weight += 1
+        full_weights = [fcc100_weight, fcc111_weight]
+        if fcc100_weight == max(full_weights):
+            surface = 'fcc100'
+        elif fcc111_weight == max(full_weights): 
+            surface = 'fcc111'
+                                                                                                                             
+        if surface == 'fcc100':
+            if site == 'ontop':
+                site_positions = ads_sites[site]
+                if nsite == 'all':
+                    for pos in site_positions:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+                else:
+                    final_sites = random.sample(site_positions, nsite)
+                    for pos in final_sites:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+            elif site in ['bridge', 'hollow']:
+                site_positions = ads_sites['bridge']
+                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.)) 
+                           for pos in site_positions]
+                bridge_positions = []
+                hollow_positions = []
+                nbr_lst = []
+                for tup1 in tup_lst:
+                    pos = tup1[0]
+                    nbr_tup_lst = tup1[1]
+                    idx_lst = [tup2[0] for tup2 in nbr_tup_lst]
+                    nbr_lst.append((pos, idx_lst))
+                for (pos, nbrs) in nbr_lst:                    
+                    if len(nbrs) == 2:
+                        bridge_positions.append(pos)
+                    else:                    
+                        hollow_positions.append(pos)                                                
+                if nsite == 'all':
+                    for pos in locals()['{}_positions'.format(site)]:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+                else:
+                    final_sites = random.sample(locals()['{}_positions'.format(site)], nsite)
+                    for pos in final_sites:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+                                                                                                                             
+        elif surface == 'fcc111':
+            if site in ['ontop', 'bridge']:
+                site_positions = ads_sites[site]                                                                            
+                if nsite == 'all':
+                    for pos in site_positions:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+                else:
+                    final_sites = random.sample(site_positions, nsite)
+                    for pos in final_sites: 
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+            elif site in ['fcc', 'hcp']:
+                site_positions = ads_sites['hollow']
+                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5)) for pos in site_positions]
+                fcc_positions = []
+                hcp_positions = []
+                for (pos, nbrs) in nbr_lst: 
+                    test_pos = pos + np.array([0,0,-4.2])
+                    new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5) 
+                    if not new_nbr_lst:                    
+                        fcc_positions.append(pos)
+                    else:                    
+                        hcp_positions.append(pos)
+                if nsite == 'all':
+                    for pos in locals()['{}_positions'.format(site)]:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+                else:
+                    final_sites = random.sample(locals()['{}_positions'.format(site)], nsite)
+                    for pos in final_sites:
+                        ads.translate(pos - ads[0].position)
+                        atoms.extend(ads)
+                    if ads_indices:
+                        atoms.extend(ads_atoms)
+    return atoms        
 
-    return atoms
 
-
-def get_monometallic_sites(atoms, site, surface, second_shell=False): 
+def get_monometallic_sites(atoms, site, surface=None, second_shell=False): 
     """Get a specific site from a nanoparticle and assign a label to it.  
        Elemental composition is ignored.""" 
 
-    label_dct = {'site ontop, surface vertex' : '90', 
-                 'site ontop, surface edge' : '91', 
-                 'site ontop, surface fcc100' : '92', 
-                 'site ontop, surface fcc111' : '93',
-                 'site bridge, surface edge' : '94',
-                 'site bridge, surface fcc100' : '95',
-                 'site bridge, surface fcc111' : '96',
-                 'site fcc, surface fcc111' : '97',
-                 'site hcp, surface fcc111' : '98',
-                 'site hollow, surface fcc100' : '99'}
+    label_dct = {'ontop' : '1', 
+                 'bridge' : '2', 
+                 'fcc' : '3', 
+                 'hcp' : '4',
+                 'hollow' : '5'}
     atoms.info['data'] = {}                      
-    cutoff = natural_cutoffs(atoms)
-    nl = NeighborList(cutoff, self_interaction=False, bothways=True)
-    nl.update(atoms)            
-    ads = AdsorptionSites(atoms)
+    sites = []
+    if True not in atoms.get_pbc():
+        if surface == None:
+            raise ValueError('Surface must be specified for a nanoparticle')
+        cutoff = natural_cutoffs(atoms)
+        nl = NeighborList(cutoff, self_interaction=False, bothways=True)
+        nl.update(atoms)            
+        ads = AdsorptionSites(atoms)
+ 
+        special_sites = ads.get_sites_from_surface(site, surface)
+        if special_sites:
+            for site in special_sites:                 
+                site_name = site['site']
+                if second_shell:
+                    hcp_neighbor_indices = []
+                    hollow_neighbor_indices = []
+                    if site_name == 'hcp':
+                        for i in site['indices']:
+                            indices, offsets = nl.get_neighbors(i)
+                            for idx in indices:
+                                if atoms[idx].symbol not in adsorbates:
+                                    hcp_neighbor_indices.append(idx)
+                        second_shell_index = [key for key, count in Counter(hcp_neighbor_indices).items() if count == 3][0]
+                        site['indices'] += (second_shell_index,)
+                    elif site_name == 'hollow':
+                        for i in site['indices']:
+                            indices, offsets = nl.get_neighbors(i)
+                            for idx in indices:
+                                if atoms[idx].symbol not in adsorbates:
+                                    hollow_neighbor_indices.append(idx)
+                        second_shell_index = [key for key, count in Counter(hollow_neighbor_indices).items() if count == 4][0]
+                        site['indices'] += (second_shell_index,)
+                    else:
+                        raise ValueError('{0} sites do not have second shell'.format(site_name))
+                site['label'] = label_dct[site_name]
+        sites += special_sites
 
-    sites = []    
-    special_sites = ads.get_sites_from_surface(site, surface)
-    if special_sites:
-        for site in special_sites:                 
-            site_name = site['site']
-            surface_name = site['surface']
-            if second_shell:
-                hcp_neighbor_indices = []
-                hollow_neighbor_indices = []
-                if site_name == 'hcp':
-                    for i in site['indices']:
-                        indices, offsets = nl.get_neighbors(i)
-                        for idx in indices:
-                            if atoms[idx].symbol not in adsorbates:
-                                hcp_neighbor_indices.append(idx)
-                    second_shell_index = [key for key, count in Counter(hcp_neighbor_indices).items() if count == 3][0]
-                    site['indices'] += (second_shell_index,)
-                elif site_name == 'hollow':
-                    for i in site['indices']:
-                        indices, offsets = nl.get_neighbors(i)
-                        for idx in indices:
-                            if atoms[idx].symbol not in adsorbates:
-                                hollow_neighbor_indices.append(idx)
-                    second_shell_index = [key for key, count in Counter(hollow_neighbor_indices).items() if count == 4][0]
-                    site['indices'] += (second_shell_index,)
+    else:
+        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
+        ptmdata = PTM(atoms, rmsd_max=0.2)
+        atoms.set_tags(ptmdata['structure'])
+        meanz = np.mean(atoms.positions[:,2])
+        top_indices = [a.index for a in atoms if a.tag==0 and a.position[2] > meanz]
+        struct = AseAtomsAdaptor.get_structure(atoms)
+        asf = AdsorbateSiteFinder(struct)
+        ads_sites = asf.find_adsorption_sites()
+        cna_sites = AdsorptionSites(atoms)
+        fcna = cna_sites.get_fullCNA()
+        fcc100_weight = fcc111_weight = 0
+        for s in fcna:
+            if str(s) in surface_dct['fcc100']:
+                fcc100_weight += 1
+            if str(s) in surface_dct['fcc111']:
+                fcc111_weight += 1
+        full_weights = [fcc100_weight, fcc111_weight]
+        if fcc100_weight == max(full_weights):
+            surface = 'fcc100'
+        elif fcc111_weight == max(full_weights): 
+            surface = 'fcc111'
+                                                                                                                                                 
+        if surface == 'fcc100':
+            if site == 'ontop':
+                for i in top_indices:
+                    special_site = {}
+                    special_site['indices'] = (i,)
+                    special_site['surface'] = 'fcc100'
+                    special_site['site'] = 'ontop'
+                    special_site['adsorbate_position'] = atoms[i].position + np.array([0,0,2])
+                    special_site['label'] = label_dct['ontop'] 
+                    sites.append(special_site)            
+            elif site in ['bridge', 'hollow']:
+                site_positions = ads_sites['bridge']
+                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.)) 
+                           for pos in site_positions]
+                nbr_lst = []
+                for tup1 in tup_lst:
+                    pos = tup1[0]
+                    nbr_tup_lst = tup1[1]
+                    idx_lst = [tup2[0] for tup2 in nbr_tup_lst]
+                    nbr_lst.append((pos, idx_lst))
+                for (pos, nbrs) in nbr_lst:
+                    special_site = {}            
+                    if len(nbrs) == 2:                    
+                        special_site['indices'] = tuple(nbrs)
+                        special_site['surface'] = 'fcc100'
+                        special_site['site'] = 'bridge'
+                        special_site['adsorbate_position'] = pos
+                        special_site['label'] = label_dct['bridge'] 
+                        if site == 'bridge':
+                            sites.append(special_site)
+                    else:
+                        test_pos = pos + np.array([0,0,-2])
+                        new_tup_lst = get_neighbors_from_position(atoms, test_pos, cutoff=5.)                    
+                        new_tup_lst.sort(key=operator.itemgetter(1))
+                        if second_shell:
+                            new_nbrs = [x[0] for x in new_tup_lst[:5]]
+                        else:
+                            new_nbrs = [x[0] for x in new_tup_lst[:5] if x[0] in top_indices] 
+                        special_site['indices'] = tuple(new_nbrs)
+                        special_site['surface'] = 'fcc100'
+                        special_site['site'] = 'hollow'
+                        special_site['adsorbate_position'] = pos
+                        special_site['label'] = label_dct['hollow'] 
+                        if site == 'hollow':
+                            sites.append(special_site)
+                
+        elif surface == 'fcc111':
+            if site in ['ontop', 'bridge']:
+                site_positions = ads_sites[site]                                                                                        
+                if site == 'ontop':
+                    for i in top_indices:
+                        special_site = {}                                                                                         
+                        special_site['indices'] = (i,)
+                        special_site['surface'] = 'fcc100'
+                        special_site['site'] = 'ontop'
+                        special_site['adsorbate_position'] = atoms[i].position + np.array([0,0,2])
+                        special_site['label'] = label_dct['ontop'] 
+                        sites.append(special_site)            
                 else:
-                    raise ValueError('{0} sites do not have second shell'.format(site_name))
-            system = 'site {0}, surface {1}'.format(site_name, surface_name)
-            site['label'] = label_dct[system]
-    sites += special_sites
+                    for pos in site_positions:
+                        special_site = {}                                    
+                        new_tup_lst = get_neighbors_from_position(atoms, pos, cutoff=3.)
+                        new_tup_lst.sort(key=operator.itemgetter(1))
+                        new_nbrs = [x[0] for x in new_tup_lst[:2]]                    
+                        special_site['indices'] = tuple(new_nbrs)
+                        special_site['surface'] = 'fcc111'
+                        special_site['site'] = 'bridge'
+                        special_site['adsorbate_position'] = pos
+                        special_site['label'] = label_dct['bridge'] 
+                        sites.append(special_site)            
+            elif site in ['fcc', 'hcp']:
+                site_positions = ads_sites['hollow']
+                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5)) for pos in site_positions]            
+                for (pos, tup_lst) in nbr_lst:
+                    test_pos = pos + np.array([0,0,-4.2])
+                    new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5)
+                    if not new_nbr_lst:                    
+                        special_site = {}
+                        tup_lst.sort(key=operator.itemgetter(1))                    
+                        nbrs = [x[0] for x in tup_lst[:3]]
+                        special_site['indices'] = tuple(nbrs)
+                        special_site['surface'] = 'fcc111'
+                        special_site['site'] = 'fcc'
+                        special_site['adsorbate_position'] = pos
+                        special_site['label'] = label_dct['fcc'] 
+                        if site == 'fcc':
+                            sites.append(special_site)
+                    else:
+                        special_site = {}
+                        tup_lst.sort(key=operator.itemgetter(1))
+                        if second_shell:
+                            nbrs = [x[0] for x in tup_lst if x[0] in top_indices][:3] + [new_nbr_lst[0][0]]
+                        else:
+                            nbrs = [x[0] for x in tup_lst if x[0] in top_indices][:3]
+                        special_site['indices'] = tuple(nbrs)
+                        special_site['surface'] = 'fcc111'
+                        special_site['site'] = 'hcp'
+                        special_site['adsorbate_position'] = pos
+                        special_site['label'] = label_dct['hcp']  
+                        if site == 'hcp':
+                            sites.append(special_site)
 
     return sites
 
@@ -549,23 +823,35 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
     """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
 
     all_sites = []
-    for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
-        ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, second_shell=False)
-        if ontop_sites:
-            all_sites += ontop_sites
-    for surface in ['edge', 'fcc100', 'fcc111']:
-        bridge_sites = get_monometallic_sites(atoms, 'bridge', surface, second_shell=False)
-        if bridge_sites:
-            all_sites += bridge_sites
-    fcc_sites = get_monometallic_sites(atoms, 'fcc', 'fcc111', second_shell=False)
-    if fcc_sites:
-        all_sites += fcc_sites
-    hcp_sites = get_monometallic_sites(atoms, 'hcp', 'fcc111', second_shell)
-    if hcp_sites:
-        all_sites += hcp_sites
-    hollow_sites = get_monometallic_sites(atoms, 'hollow', 'fcc100', second_shell)
-    if hollow_sites:
-        all_sites += hollow_sites
+
+    if True not in atoms.get_pbc():
+        for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
+            ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, second_shell=False)
+            if ontop_sites:
+                all_sites += ontop_sites
+        for surface in ['edge', 'fcc100', 'fcc111']:
+            bridge_sites = get_monometallic_sites(atoms, 'bridge', surface, second_shell=False)
+            if bridge_sites:
+                all_sites += bridge_sites
+        fcc_sites = get_monometallic_sites(atoms, 'fcc', 'fcc111', second_shell=False)
+        if fcc_sites:
+            all_sites += fcc_sites
+        hcp_sites = get_monometallic_sites(atoms, 'hcp', 'fcc111', second_shell)
+        if hcp_sites:
+            all_sites += hcp_sites
+        hollow_sites = get_monometallic_sites(atoms, 'hollow', 'fcc100', second_shell)
+        if hollow_sites:
+            all_sites += hollow_sites
+
+    else:
+        for site in ['ontop', 'bridge', 'fcc']:
+            first_sites = get_monometallic_sites(atoms, site, second_shell=False)
+            if first_sites:
+                all_sites += first_sites
+        for site in ['hcp', 'hollow']:
+            second_sites = get_monometallic_sites(atoms, site, second_shell=second_shell)
+            if second_sites:
+                all_sites += second_sites
 
     return all_sites
 
@@ -906,8 +1192,9 @@ def enumerate_bimetallic_sites(atoms, second_shell=False):
 
 
 def label_occupied_sites(atoms, adsorbate, second_shell=False):
-    '''Assign labels to all occupied sites. Different labels represent different local environments.
-       Change the 2 metal elements to 2 pseudo elements for sites occupied by a species.
+    '''Assign labels to all occupied sites. Different labels represent different sites.
+       The label is defined as the number of atoms being labeled at that site (considering second shell).
+       Change the 2 metal elements to 2 pseudo elements for sites occupied by a certain species.
        If multiple species are present, the 2 metal elements are assigned to multiple pseudo elements.
        Atoms that are occupied by multiple species also need to be changed to new pseudo elements.
        Currently only a maximum of 2 species is supported.
@@ -923,8 +1210,9 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
     if Atom(metals[0]).number > Atom(metals[1]).number:
         mA = metals[1]
         mB = metals[0]
-    sites = enumerate_monometallic_sites(atoms, second_shell)   
+    sites = enumerate_monometallic_sites(atoms, second_shell)
     n_occupied_sites = 0
+    atoms.set_tags(0)
     if isinstance(adsorbate, list) and len(adsorbate) == 2:               
         for site in sites:            
             for ads in adsorbate:
@@ -940,7 +1228,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                             atoms[idx].tag = label
                         elif label not in str(atoms[idx].tag):
                             atoms[idx].tag = str(atoms[idx].tag) + label
-                        if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]: 
+                        if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]:
                             if atoms[idx].symbol == mA:
                                 atoms[idx].symbol = species_pseudo_mapping[k][0]
                             elif atoms[idx].symbol == mB:
