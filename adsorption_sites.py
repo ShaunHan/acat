@@ -434,7 +434,7 @@ def add_adsorbate(atoms, adsorbate, site):
 
 def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all', rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
-    icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
+    icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes, or a 100/111 surface slab.
 
     Parameters:
 
@@ -645,7 +645,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
 
 
 def get_monometallic_sites(atoms, site, surface=None, second_shell=False): 
-    """Get a specific site from a nanoparticle and assign a label to it.  
+    """Get a specific site from a nanoparticle or surface slab and assign a label to it.  
        Elemental composition is ignored.""" 
 
     label_dct = {'ontop' : '1', 
@@ -820,7 +820,8 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
 
 
 def enumerate_monometallic_sites(atoms, second_shell=False):
-    """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
+    """Get all sites from a nanoparticle or a surfaec slab. 
+       Elemental composition is ignored.""" 
 
     all_sites = []
 
@@ -859,6 +860,7 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
 def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, second_shell=False, nsite=1, rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
+    Currently only support nanoparticles.
 
     Parameters:
 
@@ -1047,7 +1049,8 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
 
 def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
     """Get a specific site from a bimetallic nanoparticle and assign a label to it.  
-       Elemental composition is included.""" 
+       Elemental composition is included.
+       Currently only support nanoparticles.""" 
 
     system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
     atoms.info['data'] = {}
@@ -1144,7 +1147,8 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
 
 
 def enumerate_bimetallic_sites(atoms, second_shell=False):
-    """Get all sites from a nanoparticle. Elemental composition is ignored.""" 
+    """Get all sites from a nanoparticle. Elemental composition is ignored.
+       Currently only support nanoparticles.""" 
 
     all_sites = []
     elements = list(set(atoms.symbols))
@@ -1199,7 +1203,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
        Atoms that are occupied by multiple species also need to be changed to new pseudo elements.
        Currently only a maximum of 2 species is supported.
        
-       Note: Please provide adsorbate as a string or a list of strings.
+       Note: Please provide atoms including adsorbate(s), with adsorbate being a string or a list of strings.
              Set second_shell=True if you also want to label the second shell atoms.'''
 
     species_pseudo_mapping = [('Ge','Sn'),('As','Sb'),('Se','Te')]  
