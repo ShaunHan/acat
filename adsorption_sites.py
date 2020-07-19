@@ -820,7 +820,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
 
 
 def enumerate_monometallic_sites(atoms, second_shell=False):
-    """Get all sites from a nanoparticle or a surfaec slab. 
+    """Get all sites from a nanoparticle or a surface slab. 
        Elemental composition is ignored.""" 
 
     all_sites = []
