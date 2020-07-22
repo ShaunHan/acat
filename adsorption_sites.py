@@ -426,18 +426,18 @@ def add_adsorbate(atoms, adsorbate, site):
         avg_pos = np.average(ads[1:].positions, 0)
         ads.rotate(avg_pos - ads[0].position, normal)
         #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
-        ads.rotate(-45, pvec, center=ads[0].position)
+        #ads.rotate(-45, pvec, center=ads[0].position)
     ads.translate(pos - ads[0].position)
 
     atoms.extend(ads)
 
 
-def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all', rmin=0.1):
+def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all', rmin=0.05):
     """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes, or a 100/111 surface slab.
 
-    Parameters:
-
+    Parameters
+    ----------
     atoms: The nanoparticle onto which the adsorbate should be added.
         
     adsorbate: The adsorbate. Must be one of the following three types:
@@ -461,9 +461,11 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
 
     rmin: The minimum distance between two adsorbate atoms.
-        Default value 0.1 is good in most cases. Play around to find the best value.
+        Default value 0.05 is good in most cases. Play around to find the best value.
     
-    Example: monometallic_add_adsorbate(atoms,adsorbate='CO',site='hollow',surface='fcc100',nsite='all')"""
+    Example
+    ------- 
+    monometallic_add_adsorbate(atoms,adsorbate='CO',site='hollow',surface='fcc100',nsite='all')"""
 
     atoms.info['data'] = {}
 
@@ -645,7 +647,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
 
 
 def get_monometallic_sites(atoms, site, surface=None, second_shell=False): 
-    """Get a specific site from a nanoparticle or surface slab and assign a label to it.  
+    """Get all sites of a specific type from a nanoparticle or surface slab and assign a label to it.  
        Elemental composition is ignored.""" 
 
     label_dct = {'ontop' : '1', 
@@ -750,6 +752,9 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                         new_tup_lst.sort(key=operator.itemgetter(1))
                         if second_shell:
                             new_nbrs = [x[0] for x in new_tup_lst[:5]]
+                            for n, nbridx in enumerate(new_nbrs):
+                                if nbridx not in top_indices:
+                                    new_nbrs.append(new_nbrs.pop(n))
                         else:
                             new_nbrs = [x[0] for x in new_tup_lst[:5] if x[0] in top_indices] 
                         special_site['indices'] = tuple(new_nbrs)
@@ -857,13 +862,12 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
     return all_sites
 
 
-def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, second_shell=False, nsite=1, rmin=0.1):
+def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, second_shell=False, nsite=1, rmin=0.05):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic nanoparticle in 
-    icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes.
-    Currently only support nanoparticles.
+    icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes or 100 / 111 surface slab.
 
-    Parameters:
-
+    Parameters
+    ----------
     atoms: The nanoparticle onto which the adsorbate should be added.
         
     adsorbate: The adsorbate. Must be one of the following three types:
@@ -896,68 +900,101 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
 
     rmin: The minimum distance between two adsorbate atoms.                             
-        Default value 0.1 is good in most cases. Play around to find the best value.
+        Default value 0.05 is good in most cases. Play around to find the best value.
     
-    Example: bimetallic_add_adsorbate(atoms, adsorbate='CO', site='hollow', surface='fcc100', 
-        composition='NiPtNiPt', second_shell='Pt', nsite='all')"""
+    Example
+    -------
+    bimetallic_add_adsorbate(atoms, adsorbate='CO', site='hollow', surface='fcc100', 
+    composition='NiPtNiPt', second_shell='Pt', nsite='all')"""
 
     #print('System: adsorbate {0}, site {1}, surface {2}, composition {3}, second shell {4}'.format(
     #       adsorbate, site, surface, composition, second_shell))
     atoms.info['data'] = {}
-    ads = AdsorptionSites(atoms)
 
-    sites = ads.get_sites_from_surface(site, surface)
-    if not sites:
-        print('This site is not possible at all. Please check your input parameters.')
-    else:
-        final_sites = []
-        if sites[0]['site'] == 'ontop' and not second_shell:
-            final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
-        elif sites[0]['site'] == 'bridge' and not second_shell:
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                if composition in [a+b, b+a]:
-                    final_sites.append(site)
-        elif sites[0]['site'] == 'fcc' and not second_shell:
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                c = atoms[site['indices'][2]].symbol
-                if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                    final_sites.append(site)
-        elif sites[0]['site'] == 'hcp':
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                c = atoms[site['indices'][2]].symbol
-                if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                    if not second_shell:
+    if True not in atoms.get_pbc():
+        ads = AdsorptionSites(atoms)
+        sites = ads.get_sites_from_surface(site, surface)
+        if not sites:
+            print('This site is not possible at all. Please check your input parameters.')
+        else:
+            final_sites = []
+            if sites[0]['site'] == 'ontop' and not second_shell:
+                final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
+            elif sites[0]['site'] == 'bridge' and not second_shell:
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    if composition in [a+b, b+a]:
                         final_sites.append(site)
-                    else:
-                        neighbor_indices = []
-                        for i in site['indices']:
-                            cutoff = natural_cutoffs(atoms)
-                            nl = NeighborList(cutoff, self_interaction=False, bothways=True)
-                            nl.update(atoms)
-                            indices, offsets = nl.get_neighbors(i)
-                            for idx in indices:
-                                if atoms[idx].symbol not in adsorbates:
-                                    neighbor_indices.append(idx)                        
-                        second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
-                                              if count == 3][0]
-                        second_shell_element = atoms[second_shell_index].symbol
-                        if second_shell == second_shell_element:
+            elif sites[0]['site'] == 'fcc' and not second_shell:
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        final_sites.append(site)
+            elif sites[0]['site'] == 'hcp':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        if not second_shell:
                             final_sites.append(site)
-        elif sites[0]['site'] == 'hollow':
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                c = atoms[site['indices'][2]].symbol
-                d = atoms[site['indices'][3]].symbol
-                comp = re.findall('[A-Z][^A-Z]*', composition)
-                if (comp[0] != comp[1]) and (comp[0]+comp[1] == comp[2]+comp[3]):
-                    if (a != b) and (a+b == c+d):
+                        else:
+                            neighbor_indices = []
+                            for i in site['indices']:
+                                cutoff = natural_cutoffs(atoms)
+                                nl = NeighborList(cutoff, self_interaction=False, bothways=True)
+                                nl.update(atoms)
+                                indices, offsets = nl.get_neighbors(i)
+                                for idx in indices:
+                                    if atoms[idx].symbol not in adsorbates:
+                                        neighbor_indices.append(idx)                        
+                            second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
+                                                  if count == 3][0]
+                            second_shell_element = atoms[second_shell_index].symbol
+                            if second_shell == second_shell_element:
+                                final_sites.append(site)
+            elif sites[0]['site'] == 'hollow':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    d = atoms[site['indices'][3]].symbol
+                    comp = re.findall('[A-Z][^A-Z]*', composition)
+                    if (comp[0] != comp[1]) and (comp[0]+comp[1] == comp[2]+comp[3]):
+                        d0 = 0                                                                                                             
+                        idmax = None
+                        for i in range(1,4):
+                            d = np.linalg.norm(atoms[site['indices'][0]].position - 
+                                atoms[site['indices'][i]].position)          
+                            if d > d0:
+                                d0 = d
+                                idmax = i
+                        short = [x for x in range(1,4) if x != idmax]
+                        b = atoms[site['indices'][short[0]]].symbol 
+                        c = atoms[site['indices'][idmax]].symbol
+                        d = atoms[site['indices'][short[1]]].symbol                                                
+                        if (a != b) and (a+b == c+d):
+                            if not second_shell:
+                                final_sites.append(site)
+                            else:
+                                neighbor_indices = []
+                                for i in site['indices']:
+                                    cutoff = natural_cutoffs(atoms)
+                                    nl = NeighborList(cutoff, self_interaction=False, bothways=True)
+                                    nl.update(atoms)
+                                    indices, offsets = nl.get_neighbors(i)
+                                    for idx in indices:
+                                        if atoms[idx].symbol not in adsorbates:
+                                            neighbor_indices.append(idx)
+                                second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
+                                                      if count == 4][0] 
+                                second_shell_element = atoms[second_shell_index].symbol
+                                if second_shell == second_shell_element:
+                                    final_sites.append(site)
+                    elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
                         if not second_shell:
                             final_sites.append(site)
                         else:
@@ -971,141 +1008,244 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
                                     if atoms[idx].symbol not in adsorbates:
                                         neighbor_indices.append(idx)
                             second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
-                                                  if count == 4][0] 
+                                                  if count == 4][0]
                             second_shell_element = atoms[second_shell_index].symbol
                             if second_shell == second_shell_element:
                                 final_sites.append(site)
-                elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
-                    if not second_shell:
+            else:
+                raise ValueError('{0} sites do not have second shell'.format(site))
+ 
+            if not final_sites:
+                print('No such adsorption site found on this nanoparticle')
+            elif adsorbate == 'CO':
+                if (nsite == 'all') or (nsite > len(final_sites)):
+                    for site in final_sites:                                            
+                        add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
+                    nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+                    nl.update(atoms)            
+                    atom_indices = [a.index for a in atoms if a.symbol == 'O']            
+                    n_ads_atoms = 2
+                    overlap_atoms_indices = []
+                    for idx in atom_indices:   
+                        neighbor_indices, _ = nl.get_neighbors(idx)
+                        overlap = 0
+                        for i in neighbor_indices:
+                            if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):
+                                overlap += 1
+                        if overlap > 0:
+                            overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
+                    del atoms[overlap_atoms_indices]
+                else:
+                    final_sites = random.sample(final_sites, nsite)
+                    for site in final_sites:
+                        add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
+            else:
+                if (nsite == 'all') or (nsite > len(final_sites)):
+                    for site in final_sites:
+                        add_adsorbate(atoms, molecule(adsorbate), site)
+                    nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+                    nl.update(atoms)            
+                    atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
+                    ads_symbols = molecule(adsorbate).get_chemical_symbols()
+                    n_ads_atoms = len(ads_symbols)
+                    overlap_atoms_indices = []
+                    for idx in atom_indices:   
+                        neighbor_indices, _ = nl.get_neighbors(idx)
+                        overlap = 0
+                        for i in neighbor_indices:                                                                
+                            if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                       
+                                overlap += 1                                                                      
+                        if overlap > 0:                                                                           
+                            overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
+                    del atoms[overlap_atoms_indices]    
+                else:
+                    final_sites = random.sample(final_sites, nsite)
+                    for site in final_sites:
+                        add_adsorbate(atoms, molecule(adsorbate), site)
+    else:
+        ads_indices = [a.index for a in atoms if a.symbol in adsorbates]
+        ads_atoms = None
+        if ads_indices:
+            ads_atoms = atoms[ads_indices]
+            atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
+        ads = molecule(adsorbate)[::-1]
+        if str(ads.symbols) != 'CO':
+            ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
+        final_sites = []
+        if site in ['ontop','bridge','fcc']:
+            sites = get_monometallic_sites(atoms, site, second_shell=False)
+            if not sites:
+                print('This site is not possible at all. Please check your input parameters.')
+            elif site == 'ontop':
+                final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
+            elif site == 'bridge':
+                for site in sites:                          
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    if composition in [a+b, b+a]:
                         final_sites.append(site)
-                    else:
-                        neighbor_indices = []
-                        for i in site['indices']:
-                            cutoff = natural_cutoffs(atoms)
-                            nl = NeighborList(cutoff, self_interaction=False, bothways=True)
-                            nl.update(atoms)
-                            indices, offsets = nl.get_neighbors(i)
-                            for idx in indices:
-                                if atoms[idx].symbol not in adsorbates:
-                                    neighbor_indices.append(idx)
-                        second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
-                                              if count == 4][0]
-                        second_shell_element = atoms[second_shell_index].symbol
-                        if second_shell == second_shell_element:
+            elif site == 'fcc':
+                for site in sites:                                                
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        final_sites.append(site)
+        elif site in ['hcp','hollow']:
+            sites = get_monometallic_sites(atoms, site, second_shell=True)
+            if not sites:
+                print('This site is not possible at all. Please check your input parameters.')
+            elif site == 'hcp':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        if not second_shell:
                             final_sites.append(site)
+                        else:
+                            second_shell_element = atoms[site['indices'][-1]].symbol
+                            if second_shell == second_shell_element:
+                                final_sites.append(site)
+            elif site == 'hollow':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    d = atoms[site['indices'][3]].symbol
+                    comp = re.findall('[A-Z][^A-Z]*', composition)
+                    if (comp[0] != comp[1]) and (comp[0]+comp[1] == comp[2]+comp[3]):
+                        d0 = 0
+                        idmax = None
+                        for i in range(1,4):
+                            d = get_mic_distance(atoms[site['indices'][0]].position,
+                                atoms[site['indices'][i]].position, atoms)                        
+                            if d > d0:
+                                d0 = d
+                                idmax = i
+                        short = [x for x in range(1,4) if x != idmax]
+                        b = atoms[site['indices'][short[0]]].symbol 
+                        c = atoms[site['indices'][idmax]].symbol
+                        d = atoms[site['indices'][short[1]]].symbol                                                
+                        if (a != b) and (a+b == c+d):
+                            if not second_shell:
+                                final_sites.append(site)
+                            else:
+                                second_shell_element = atoms[site['indices'][-1]].symbol
+                                if second_shell == second_shell_element:
+                                    final_sites.append(site)
+                    elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
+                        if not second_shell:
+                            final_sites.append(site)
+                        else:
+                            second_shell_element = atoms[site['indices'][-1]].symbol
+                            if second_shell == second_shell_element:
+                                final_sites.append(site)
+        if nsite == 'all':
+            for pos in [s['adsorbate_position'] for s in final_sites]:
+                ads.translate(pos - ads[0].position)
+                atoms.extend(ads)
+            if ads_indices:
+                atoms.extend(ads_atoms)
         else:
-            raise ValueError('{0} sites do not have second shell'.format(site))
-
-        if not final_sites:
-            print('No such adsorption site found on this nanoparticle')
-        elif adsorbate == 'CO':
-            if (nsite == 'all') or (nsite > len(final_sites)):
-                for site in final_sites:                                            
-                    add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
-                nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
-                nl.update(atoms)            
-                atom_indices = [a.index for a in atoms if a.symbol == 'O']            
-                n_ads_atoms = 2
-                overlap_atoms_indices = []
-                for idx in atom_indices:   
-                    neighbor_indices, _ = nl.get_neighbors(idx)
-                    overlap = 0
-                    for i in neighbor_indices:
-                        if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):
-                            overlap += 1
-                    if overlap > 0:
-                        overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
-                del atoms[overlap_atoms_indices]
-            else:
-                final_sites = random.sample(final_sites, nsite)
-                for site in final_sites:
-                    add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
-        else:
-            if (nsite == 'all') or (nsite > len(final_sites)):
-                for site in final_sites:
-                    add_adsorbate(atoms, molecule(adsorbate), site)
-                nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
-                nl.update(atoms)            
-                atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-                ads_symbols = molecule(adsorbate).get_chemical_symbols()
-                n_ads_atoms = len(ads_symbols)
-                overlap_atoms_indices = []
-                for idx in atom_indices:   
-                    neighbor_indices, _ = nl.get_neighbors(idx)
-                    overlap = 0
-                    for i in neighbor_indices:                                                                
-                        if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                       
-                            overlap += 1                                                                      
-                    if overlap > 0:                                                                           
-                        overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
-                del atoms[overlap_atoms_indices]    
-            else:
-                final_sites = random.sample(final_sites, nsite)
-                for site in final_sites:
-                    add_adsorbate(atoms, molecule(adsorbate), site)
+            final_sites = random.sample([s['adsorbate_position'] for s in final_sites], nsite)
+            for pos in final_sites:
+                ads.translate(pos - ads[0].position)
+                atoms.extend(ads)
+            if ads_indices:
+                atoms.extend(ads_atoms)
 
     return atoms
 
 
 def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
-    """Get a specific site from a bimetallic nanoparticle and assign a label to it.  
-       Elemental composition is included.
-       Currently only support nanoparticles.""" 
+    """Get all sites of a specific type from a bimetallic nanoparticle or slab.  
+       Elemental composition is included.""" 
 
     system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
     atoms.info['data'] = {}
-    cutoff = natural_cutoffs(atoms)
-    nl = NeighborList(cutoff, self_interaction=False, bothways=True)
-    nl.update(atoms)
-    ads = AdsorptionSites(atoms)
-    sites = ads.get_sites_from_surface(site, surface)
-    if sites:
-        final_sites = []
-        if sites[0]['site'] == 'ontop' and not second_shell:
-            final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
-        elif sites[0]['site'] == 'bridge' and not second_shell:
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                if composition in [a+b, b+a]:
-                    final_sites.append(site)
-        elif sites[0]['site'] == 'fcc' and not second_shell:
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                c = atoms[site['indices'][2]].symbol
-                if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                    final_sites.append(site)
-        elif sites[0]['site'] == 'hcp':
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                c = atoms[site['indices'][2]].symbol
-                if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                    if not second_shell:
+    final_sites = []
+
+    if True not in atoms.get_pbc():
+        cutoff = natural_cutoffs(atoms)
+        nl = NeighborList(cutoff, self_interaction=False, bothways=True)
+        nl.update(atoms)
+        ads = AdsorptionSites(atoms)
+        sites = ads.get_sites_from_surface(site, surface)
+        if sites:            
+            if sites[0]['site'] == 'ontop' and not second_shell:
+                final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
+            elif sites[0]['site'] == 'bridge' and not second_shell:
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    if composition in [a+b, b+a]:
                         final_sites.append(site)
-                    else:
-                        neighbor_indices = []
-                        for i in site['indices']: 
-                            indices, offsets = nl.get_neighbors(i)
-                            for idx in indices:
-                                if atoms[idx].symbol not in adsorbates:
-                                    neighbor_indices.append(idx)                        
-                        second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
-                                              if count == 3][0]
-                        second_shell_element = atoms[second_shell_index].symbol
-                        if second_shell == second_shell_element:
-                            site['indices'] += (second_shell_index,)
+            elif sites[0]['site'] == 'fcc' and not second_shell:
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        final_sites.append(site)
+            elif sites[0]['site'] == 'hcp':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        if not second_shell:
                             final_sites.append(site)
-        elif sites[0]['site'] == 'hollow':
-            for site in sites:
-                a = atoms[site['indices'][0]].symbol
-                b = atoms[site['indices'][1]].symbol
-                c = atoms[site['indices'][2]].symbol
-                d = atoms[site['indices'][3]].symbol
-                comp = re.findall('[A-Z][^A-Z]*', composition)
-                if (comp[0] != comp[1]) and (comp[0]+comp[1] == comp[2]+comp[3]):
-                    if (a != b) and (a+b == c+d):
+                        else:
+                            neighbor_indices = []
+                            for i in site['indices']: 
+                                indices, offsets = nl.get_neighbors(i)
+                                for idx in indices:
+                                    if atoms[idx].symbol not in adsorbates:
+                                        neighbor_indices.append(idx)                        
+                            second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
+                                                  if count == 3][0]
+                            second_shell_element = atoms[second_shell_index].symbol
+                            if second_shell == second_shell_element:
+                                site['indices'] += (second_shell_index,)
+                                final_sites.append(site)
+            elif sites[0]['site'] == 'hollow':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    d = atoms[site['indices'][3]].symbol
+                    comp = re.findall('[A-Z][^A-Z]*', composition)
+                    if (comp[0] != comp[1]) and (comp[0]+comp[1] == comp[2]+comp[3]):
+                        d0 = 0                                                                                                             
+                        idmax = None
+                        for i in range(1,4):
+                            d = np.linalg.norm(atoms[site['indices'][0]].position - 
+                                atoms[site['indices'][i]].position)          
+                            if d > d0:
+                                d0 = d
+                                idmax = i
+                        short = [x for x in range(1,4) if x != idmax]
+                        b = atoms[site['indices'][short[0]]].symbol 
+                        c = atoms[site['indices'][idmax]].symbol
+                        d = atoms[site['indices'][short[1]]].symbol                                                
+                        if (a != b) and (a+b == c+d):
+                            if not second_shell:
+                                final_sites.append(site)
+                            else:
+                                neighbor_indices = []
+                                for i in site['indices']:
+                                    indices, offsets = nl.get_neighbors(i)
+                                    for idx in indices:
+                                        if atoms[idx].symbol not in adsorbates:
+                                            neighbor_indices.append(idx)
+                                second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
+                                                      if count == 4][0] 
+                                second_shell_element = atoms[second_shell_index].symbol
+                                if second_shell == second_shell_element:
+                                    site['indices'] += (second_shell_index,)
+                                    final_sites.append(site)
+                    elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
                         if not second_shell:
                             final_sites.append(site)
                         else:
@@ -1116,81 +1256,177 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
                                     if atoms[idx].symbol not in adsorbates:
                                         neighbor_indices.append(idx)
                             second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
-                                                  if count == 4][0] 
+                                                  if count == 4][0]
                             second_shell_element = atoms[second_shell_index].symbol
                             if second_shell == second_shell_element:
                                 site['indices'] += (second_shell_index,)
                                 final_sites.append(site)
-                elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
-                    if not second_shell:
-                        final_sites.append(site)
-                    else:
-                        neighbor_indices = []
-                        for i in site['indices']:
-                            indices, offsets = nl.get_neighbors(i)
-                            for idx in indices:
-                                if atoms[idx].symbol not in adsorbates:
-                                    neighbor_indices.append(idx)
-                        second_shell_index = [key for key, count in Counter(neighbor_indices).items() 
-                                              if count == 4][0]
-                        second_shell_element = atoms[second_shell_index].symbol
-                        if second_shell == second_shell_element:
-                            site['indices'] += (second_shell_index,)
-                            final_sites.append(site)
-        else:
-            raise ValueError('{0} sites do not have second shell'.format(site))
-        if final_sites:
-            for site in final_sites:
-                site['system'] = system
+            else:
+                raise ValueError('{0} sites do not have second shell'.format(site))
 
-        return final_sites
+    else:        
+        if site in ['ontop','bridge','fcc']:
+            sites = get_monometallic_sites(atoms, site, second_shell=False)
+            if not sites:
+                print('This site is not possible at all. Please check your input parameters.')
+            elif site == 'ontop':
+                final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
+            elif site == 'bridge':
+                for site in sites:                          
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    if composition in [a+b, b+a]:
+                        final_sites.append(site)
+            elif site == 'fcc':
+                for site in sites:                                                
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        final_sites.append(site)
+        elif site in ['hcp','hollow']:
+            sites = get_monometallic_sites(atoms, site, second_shell=True)
+            if not sites:
+                print('This site is not possible at all. Please check your input parameters.')
+            elif site == 'hcp':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
+                        if not second_shell:
+                            final_sites.append(site)
+                        else:
+                            second_shell_element = atoms[site['indices'][-1]].symbol
+                            if second_shell == second_shell_element:
+                                final_sites.append(site)
+            elif site == 'hollow':
+                for site in sites:
+                    a = atoms[site['indices'][0]].symbol
+                    b = atoms[site['indices'][1]].symbol
+                    c = atoms[site['indices'][2]].symbol
+                    d = atoms[site['indices'][3]].symbol
+                    comp = re.findall('[A-Z][^A-Z]*', composition)
+                    if (comp[0] != comp[1]) and (comp[0]+comp[1] == comp[2]+comp[3]):
+                        d0 = 0
+                        idmax = None
+                        for i in range(1,4):
+                            d = get_mic_distance(atoms[site['indices'][0]].position,
+                                atoms[site['indices'][i]].position, atoms)                        
+                            if d > d0:
+                                d0 = d
+                                idmax = i
+                        short = [x for x in range(1,4) if x != idmax]
+                        b = atoms[site['indices'][short[0]]].symbol 
+                        c = atoms[site['indices'][idmax]].symbol
+                        d = atoms[site['indices'][short[1]]].symbol                                                
+                        if (a != b) and (a+b == c+d):
+                            if not second_shell:
+                                final_sites.append(site)
+                            else:
+                                second_shell_element = atoms[site['indices'][-1]].symbol
+                                if second_shell == second_shell_element:
+                                    final_sites.append(site)
+                    elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
+                        if not second_shell:
+                            final_sites.append(site)
+                        else:
+                            second_shell_element = atoms[site['indices'][-1]].symbol
+                            if second_shell == second_shell_element:
+                                final_sites.append(site)
+    if final_sites:
+        for site in final_sites:
+            site['system'] = system  
+
+    return final_sites
+
 
 
 def enumerate_bimetallic_sites(atoms, second_shell=False):
-    """Get all sites from a nanoparticle. Elemental composition is ignored.
-       Currently only support nanoparticles.""" 
+    """Get all sites from a bimetallic nanoparticle or slab. 
+       Elemental composition is included.""" 
 
     all_sites = []
     elements = list(set(atoms.symbols))
     metals = [element for element in elements if element not in adsorbates]
-    for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
-        for composition in metals:
-            ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, second_shell=False)
-            if ontop_sites:
-                all_sites += ontop_sites
-    for surface in ['edge', 'fcc100', 'fcc111']:
-        for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
-            bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, second_shell=False)
-            if bridge_sites:
-                all_sites += bridge_sites
-    for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
-                        metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-        fcc_sites = get_bimetallic_sites(atoms, 'fcc', 'fcc111', composition, second_shell=False)
-        if fcc_sites:
-            all_sites += fcc_sites
-    for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
-                        metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-        if second_shell:
-            for second_shell_element in metals:
-                hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell_element)
+
+    if True not in atoms.get_pbc():
+        for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
+            for composition in metals:
+                ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, second_shell=False)
+                if ontop_sites:
+                    all_sites += ontop_sites
+        for surface in ['edge', 'fcc100', 'fcc111']:
+            for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
+                bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, second_shell=False)
+                if bridge_sites:
+                    all_sites += bridge_sites
+        for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
+                            metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
+            fcc_sites = get_bimetallic_sites(atoms, 'fcc', 'fcc111', composition, second_shell=False)
+            if fcc_sites:
+                all_sites += fcc_sites
+        for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
+                            metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
+            if second_shell:
+                for second_shell_element in metals:
+                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell_element)
+                    if hcp_sites:
+                        all_sites += hcp_sites
+            else:
+                hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell=False)
                 if hcp_sites:
                     all_sites += hcp_sites
-        else:
-            hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell=False)
-            if hcp_sites:
-                all_sites += hcp_sites
-    for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
-                        metals[0]+metals[0]+metals[1]+metals[1], metals[0]+metals[1]+metals[0]+metals[1], 
-                        metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
-        if second_shell:
-            for second_shell_element in metals:
-                hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell_element)
+        for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
+                            metals[0]+metals[0]+metals[1]+metals[1], metals[0]+metals[1]+metals[0]+metals[1], 
+                            metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
+            if second_shell:
+                for second_shell_element in metals:
+                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell_element)
+                    if hollow_sites:
+                        all_sites += hollow_sites
+            else:
+                hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell=False)
                 if hollow_sites:
                     all_sites += hollow_sites
-        else:
-            hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell=False)
-            if hollow_sites:
-                all_sites += hollow_sites
+
+    else:
+        for composition in metals:
+            ontop_sites = get_bimetallic_sites(atoms, 'ontop', composition=composition, second_shell=False)
+            if ontop_sites:
+                all_sites += ontop_sites
+        for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
+            bridge_sites = get_bimetallic_sites(atoms, 'bridge', composition=composition, second_shell=False)
+            if bridge_sites:
+                all_sites += bridge_sites
+        for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
+                            metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
+            fcc_sites = get_bimetallic_sites(atoms, 'fcc', composition=composition, second_shell=False)
+            if fcc_sites:
+                all_sites += fcc_sites
+        for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
+                            metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
+            if second_shell:
+                for second_shell_element in metals:
+                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', composition=composition, second_shell=second_shell_element)
+                    if hcp_sites:
+                        all_sites += hcp_sites
+            else:
+                hcp_sites = get_bimetallic_sites(atoms, 'hcp', composition=composition, second_shell=False)
+                if hcp_sites:
+                    all_sites += hcp_sites
+        for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
+                            metals[0]+metals[0]+metals[1]+metals[1], metals[0]+metals[1]+metals[0]+metals[1], 
+                            metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
+            if second_shell:
+                for second_shell_element in metals:
+                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', composition=composition, second_shell=second_shell_element)
+                    if hollow_sites:
+                        all_sites += hollow_sites
+            else:
+                hollow_sites = get_bimetallic_sites(atoms, 'hollow', composition=composition, second_shell=False)
+                if hollow_sites:
+                    all_sites += hollow_sites
 
     return all_sites
 
@@ -1206,7 +1442,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
        Note: Please provide atoms including adsorbate(s), with adsorbate being a string or a list of strings.
              Set second_shell=True if you also want to label the second shell atoms.'''
 
-    species_pseudo_mapping = [('Ge','Sn'),('As','Sb'),('Se','Te')]  
+    species_pseudo_mapping = [('As','Sb'),('Se','Te'),('Br','I')]  
     elements = list(set(atoms.symbols))
     metals = [element for element in elements if element not in adsorbates]
     mA = metals[0]
@@ -1244,7 +1480,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                                 atoms[idx].symbol = species_pseudo_mapping[2][1]
                     n_occupied_sites += 1 
 
-    elif adsorbate in list(species_pseudo_mapping.keys()):
+    else:
         ao = AdsorbateOperator(adsorbate, sites)
         for site in sites:
             if ao.is_site_occupied(atoms, site, min_adsorbate_distance=0.01):
@@ -1261,8 +1497,6 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                     elif atoms[idx].symbol == mB:
                         atoms[idx].symbol = species_pseudo_mapping[0][1]
                 n_occupied_sites += 1
-    else:
-        raise NotImplementedError
     tag_set = set([a.tag for a in atoms])
     print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
 
