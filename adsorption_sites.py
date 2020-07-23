@@ -470,7 +470,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
     atoms.info['data'] = {}
 
     if True not in atoms.get_pbc():
-        if surface == None:
+        if surface is None:
             raise ValueError('Surface must be specified for a nanoparticle')
         ads = AdsorptionSites(atoms)
         sites = []        
@@ -541,19 +541,20 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         ads = molecule(adsorbate)[::-1]
         if str(ads.symbols) != 'CO':
             ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
-        cna_sites = AdsorptionSites(atoms)
-        fcna = cna_sites.get_fullCNA()
-        fcc100_weight = fcc111_weight = 0
-        for s in fcna:
-            if str(s) in surface_dct['fcc100']:
-                fcc100_weight += 1
-            if str(s) in surface_dct['fcc111']:
-                fcc111_weight += 1
-        full_weights = [fcc100_weight, fcc111_weight]
-        if fcc100_weight == max(full_weights):
-            surface = 'fcc100'
-        elif fcc111_weight == max(full_weights): 
-            surface = 'fcc111'
+        if surface is None: 
+            cna_sites = AdsorptionSites(atoms)
+            fcna = cna_sites.get_fullCNA()
+            fcc100_weight = fcc111_weight = 0
+            for s in fcna:
+                if str(s) in surface_dct['fcc100']:
+                    fcc100_weight += 1
+                if str(s) in surface_dct['fcc111']:
+                    fcc111_weight += 1
+            full_weights = [fcc100_weight, fcc111_weight]
+            if fcc100_weight == max(full_weights):
+                surface = 'fcc100'
+            elif fcc111_weight == max(full_weights): 
+                surface = 'fcc111'
                                                                                                                              
         if surface == 'fcc100':
             if site == 'ontop':
@@ -658,7 +659,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
     atoms.info['data'] = {}                      
     sites = []
     if True not in atoms.get_pbc():
-        if surface == None:
+        if surface is None:
             raise ValueError('Surface must be specified for a nanoparticle')
         cutoff = natural_cutoffs(atoms)
         nl = NeighborList(cutoff, self_interaction=False, bothways=True)
@@ -702,19 +703,20 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
         struct = AseAtomsAdaptor.get_structure(atoms)
         asf = AdsorbateSiteFinder(struct)
         ads_sites = asf.find_adsorption_sites()
-        cna_sites = AdsorptionSites(atoms)
-        fcna = cna_sites.get_fullCNA()
-        fcc100_weight = fcc111_weight = 0
-        for s in fcna:
-            if str(s) in surface_dct['fcc100']:
-                fcc100_weight += 1
-            if str(s) in surface_dct['fcc111']:
-                fcc111_weight += 1
-        full_weights = [fcc100_weight, fcc111_weight]
-        if fcc100_weight == max(full_weights):
-            surface = 'fcc100'
-        elif fcc111_weight == max(full_weights): 
-            surface = 'fcc111'
+        if surface is None:
+            cna_sites = AdsorptionSites(atoms)
+            fcna = cna_sites.get_fullCNA()
+            fcc100_weight = fcc111_weight = 0
+            for s in fcna:
+                if str(s) in surface_dct['fcc100']:
+                    fcc100_weight += 1
+                if str(s) in surface_dct['fcc111']:
+                    fcc111_weight += 1
+            full_weights = [fcc100_weight, fcc111_weight]
+            if fcc100_weight == max(full_weights):
+                surface = 'fcc100'
+            elif fcc111_weight == max(full_weights): 
+                surface = 'fcc111'
                                                                                                                                                  
         if surface == 'fcc100':
             if site == 'ontop':
@@ -910,8 +912,12 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
     #print('System: adsorbate {0}, site {1}, surface {2}, composition {3}, second shell {4}'.format(
     #       adsorbate, site, surface, composition, second_shell))
     atoms.info['data'] = {}
+    if composition is None:
+        raise ValueError('Composition must be specified. Otherwise use the monometallic function.')
 
     if True not in atoms.get_pbc():
+        if surface is None:
+            raise ValueError('Surface must be specified for a nanoparticle')
         ads = AdsorptionSites(atoms)
         sites = ads.get_sites_from_surface(site, surface)
         if not sites:
@@ -1163,8 +1169,12 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, second_she
        Elemental composition is included."""  
 
     atoms.info['data'] = {}
+    if composition is None:
+        raise ValueError('Composition must be specified. Otherwise use the monometallic function.')
     final_sites = []
     if True not in atoms.get_pbc():
+        if surface is None:
+            raise ValueError('Surface must be specified for a nanoparticle')
         system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
         cutoff = natural_cutoffs(atoms)
         nl = NeighborList(cutoff, self_interaction=False, bothways=True)
@@ -1263,23 +1273,24 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, second_she
             else:
                 raise ValueError('{0} sites do not have second shell'.format(site))
 
-    else:        
-        cna_sites = AdsorptionSites(atoms)
-        fcna = cna_sites.get_fullCNA()
-        fcc100_weight = fcc111_weight = 0
-        for s in fcna:
-            if str(s) in surface_dct['fcc100']:
-                fcc100_weight += 1
-            if str(s) in surface_dct['fcc111']:
-                fcc111_weight += 1
-        full_weights = [fcc100_weight, fcc111_weight]
-        if fcc100_weight == max(full_weights):
-            surface = 'fcc100'
-        elif fcc111_weight == max(full_weights): 
-            surface = 'fcc111'
+    else:
+        if surface is None: 
+            cna_sites = AdsorptionSites(atoms)
+            fcna = cna_sites.get_fullCNA()
+            fcc100_weight = fcc111_weight = 0
+            for s in fcna:
+                if str(s) in surface_dct['fcc100']:
+                    fcc100_weight += 1
+                if str(s) in surface_dct['fcc111']:
+                    fcc111_weight += 1
+            full_weights = [fcc100_weight, fcc111_weight]
+            if fcc100_weight == max(full_weights):
+                surface = 'fcc100'
+            elif fcc111_weight == max(full_weights): 
+                surface = 'fcc111'
         system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
         if site in ['ontop','bridge','fcc']:
-            sites = get_monometallic_sites(atoms, site, second_shell=False)
+            sites = get_monometallic_sites(atoms, site, surface, second_shell=False)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'ontop':
@@ -1298,7 +1309,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, second_she
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
                         final_sites.append(site)
         elif site in ['hcp','hollow']:
-            sites = get_monometallic_sites(atoms, site, second_shell=True)
+            sites = get_monometallic_sites(atoms, site, surface, second_shell=True)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'hcp':
@@ -1404,42 +1415,57 @@ def enumerate_bimetallic_sites(atoms, second_shell=False):
                     all_sites += hollow_sites
 
     else:
+        cna_sites = AdsorptionSites(atoms)
+        fcna = cna_sites.get_fullCNA()
+        fcc100_weight = fcc111_weight = 0
+        for s in fcna:
+            if str(s) in surface_dct['fcc100']:
+                fcc100_weight += 1
+            if str(s) in surface_dct['fcc111']:
+                fcc111_weight += 1
+        full_weights = [fcc100_weight, fcc111_weight]
+        if fcc100_weight == max(full_weights):
+            surface = 'fcc100'
+        elif fcc111_weight == max(full_weights): 
+            surface = 'fcc111'
         for composition in metals:
-            ontop_sites = get_bimetallic_sites(atoms, 'ontop', composition=composition, second_shell=False)
+            ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, second_shell=False)
             if ontop_sites:
                 all_sites += ontop_sites
         for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
-            bridge_sites = get_bimetallic_sites(atoms, 'bridge', composition=composition, second_shell=False)
+            bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, second_shell=False)
             if bridge_sites:
                 all_sites += bridge_sites
-        for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
-                            metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-            fcc_sites = get_bimetallic_sites(atoms, 'fcc', composition=composition, second_shell=False)
-            if fcc_sites:
-                all_sites += fcc_sites
-        for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
-                            metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-            if second_shell:
-                for second_shell_element in metals:
-                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', composition=composition, second_shell=second_shell_element)
+        if surface == 'fcc111':
+            for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
+                                metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
+                fcc_sites = get_bimetallic_sites(atoms, 'fcc', surface, composition, second_shell=False)
+                if fcc_sites:
+                    all_sites += fcc_sites
+            for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
+                                metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
+                if second_shell:
+                    for second_shell_element in metals:
+                        hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, second_shell=second_shell_element)
+                        if hcp_sites:
+                            all_sites += hcp_sites
+                else:
+                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, second_shell=False)
                     if hcp_sites:
                         all_sites += hcp_sites
-            else:
-                hcp_sites = get_bimetallic_sites(atoms, 'hcp', composition=composition, second_shell=False)
-                if hcp_sites:
-                    all_sites += hcp_sites
-        for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
-                            metals[0]+metals[0]+metals[1]+metals[1], metals[0]+metals[1]+metals[0]+metals[1], 
-                            metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
-            if second_shell:
-                for second_shell_element in metals:
-                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', composition=composition, second_shell=second_shell_element)
+        elif surface == 'fcc100':
+            for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
+                                metals[0]+metals[0]+metals[1]+metals[1], metals[0]+metals[1]+metals[0]+metals[1], 
+                                metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
+                if second_shell:
+                    for second_shell_element in metals:
+                        hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, composition, second_shell=second_shell_element)
+                        if hollow_sites:
+                            all_sites += hollow_sites
+                else:
+                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, composition, second_shell=False)
                     if hollow_sites:
                         all_sites += hollow_sites
-            else:
-                hollow_sites = get_bimetallic_sites(atoms, 'hollow', composition=composition, second_shell=False)
-                if hollow_sites:
-                    all_sites += hollow_sites
 
     return all_sites
 
