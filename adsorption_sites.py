@@ -862,7 +862,7 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
     return all_sites
 
 
-def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, second_shell=False, nsite=1, rmin=0.05):
+def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=None, second_shell=False, nsite=1, rmin=0.05):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes or 100 / 111 surface slab.
 
@@ -1075,7 +1075,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
         if site in ['ontop','bridge','fcc']:
             sites = get_monometallic_sites(atoms, site, second_shell=False)
             if not sites:
-                print('This site is not possible at all. Please check your input parameters.')
+                print('No such adsorption site found on this surface slab')
             elif site == 'ontop':
                 final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
             elif site == 'bridge':
@@ -1094,7 +1094,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
         elif site in ['hcp','hollow']:
             sites = get_monometallic_sites(atoms, site, second_shell=True)
             if not sites:
-                print('This site is not possible at all. Please check your input parameters.')
+                print('No such adsorption site found on this surface slab')
             elif site == 'hcp':
                 for site in sites:
                     a = atoms[site['indices'][0]].symbol
@@ -1158,15 +1158,14 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface, composition, secon
     return atoms
 
 
-def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
+def get_bimetallic_sites(atoms, site, surface=None, composition=None, second_shell=False):
     """Get all sites of a specific type from a bimetallic nanoparticle or slab.  
-       Elemental composition is included.""" 
+       Elemental composition is included."""  
 
-    system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
     atoms.info['data'] = {}
     final_sites = []
-
     if True not in atoms.get_pbc():
+        system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
         cutoff = natural_cutoffs(atoms)
         nl = NeighborList(cutoff, self_interaction=False, bothways=True)
         nl.update(atoms)
@@ -1265,10 +1264,24 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
                 raise ValueError('{0} sites do not have second shell'.format(site))
 
     else:        
+        cna_sites = AdsorptionSites(atoms)
+        fcna = cna_sites.get_fullCNA()
+        fcc100_weight = fcc111_weight = 0
+        for s in fcna:
+            if str(s) in surface_dct['fcc100']:
+                fcc100_weight += 1
+            if str(s) in surface_dct['fcc111']:
+                fcc111_weight += 1
+        full_weights = [fcc100_weight, fcc111_weight]
+        if fcc100_weight == max(full_weights):
+            surface = 'fcc100'
+        elif fcc111_weight == max(full_weights): 
+            surface = 'fcc111'
+        system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
         if site in ['ontop','bridge','fcc']:
             sites = get_monometallic_sites(atoms, site, second_shell=False)
             if not sites:
-                print('This site is not possible at all. Please check your input parameters.')
+                print('No such adsorption site found on this surface slab')
             elif site == 'ontop':
                 final_sites += [site for site in sites if atoms[site['indices'][0]].symbol == composition]
             elif site == 'bridge':
@@ -1287,7 +1300,7 @@ def get_bimetallic_sites(atoms, site, surface, composition, second_shell=False):
         elif site in ['hcp','hollow']:
             sites = get_monometallic_sites(atoms, site, second_shell=True)
             if not sites:
-                print('This site is not possible at all. Please check your input parameters.')
+                print('No such adsorption site found on this surface slab')
             elif site == 'hcp':
                 for site in sites:
                     a = atoms[site['indices'][0]].symbol
