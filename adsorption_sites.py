@@ -23,6 +23,12 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+# C is a scaling factor that depends on the average bond length of a surface slab.
+# The default value 1 is optimized for EMT-relaxed surface slabs.
+# Play around to find the optimal value for your system.
+# This won't affect nanoparticle systems.
+C = 1.
+
 # TODO: more robust way of going from key to surf site description
 # e.g. the dictionary could be arranged in a different way
 icosa_dct = {
@@ -96,22 +102,6 @@ tocta_dct = {
     str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
     'vertex': str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}),
     # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
-}
-
-
-surface_dct = {
-    # Step sites
-    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
-    'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
-    # Square sites
-    str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
-    # Kink sites
-    str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
-    'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
-    # Triangle sites
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
     'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
 }
@@ -432,13 +422,43 @@ def add_adsorbate(atoms, adsorbate, site):
     atoms.extend(ads)
 
 
-def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all', rmin=0.05):
+def identify_surface(atoms):
+    surface_dct = {
+        # Step sites
+        str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
+        'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
+        # Square sites
+        str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
+        'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
+        # Kink sites
+        str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
+        'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
+        # Triangle sites
+        str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+        'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    }
+    cna_sites = AdsorptionSites(atoms)
+    fcna = cna_sites.get_fullCNA()
+    fcc100_weight = fcc111_weight = 0
+    for s in fcna:
+        if str(s) in surface_dct['fcc100']:
+            fcc100_weight += 1
+        if str(s) in surface_dct['fcc111']:
+            fcc111_weight += 1
+    full_weights = [fcc100_weight, fcc111_weight]
+    if fcc100_weight == max(full_weights):
+        return 'fcc100'
+    elif fcc111_weight == max(full_weights): 
+        return 'fcc111'
+
+
+def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all', rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes, or a 100/111 surface slab.
 
     Parameters
     ----------
-    atoms: The nanoparticle onto which the adsorbate should be added.
+    atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
         
     adsorbate: The adsorbate. Must be one of the following three types:
         A string containing the chemical symbol for a single atom.
@@ -461,7 +481,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
 
     rmin: The minimum distance between two adsorbate atoms.
-        Default value 0.05 is good in most cases. Play around to find the best value.
+        Default value 0.1 is good in most cases. Play around to find the best value.
     
     Example
     ------- 
@@ -542,20 +562,8 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         if str(ads.symbols) != 'CO':
             ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
         if surface is None: 
-            cna_sites = AdsorptionSites(atoms)
-            fcna = cna_sites.get_fullCNA()
-            fcc100_weight = fcc111_weight = 0
-            for s in fcna:
-                if str(s) in surface_dct['fcc100']:
-                    fcc100_weight += 1
-                if str(s) in surface_dct['fcc111']:
-                    fcc111_weight += 1
-            full_weights = [fcc100_weight, fcc111_weight]
-            if fcc100_weight == max(full_weights):
-                surface = 'fcc100'
-            elif fcc111_weight == max(full_weights): 
-                surface = 'fcc111'
-                                                                                                                             
+            surface = identify_surface(atoms)            
+                                                                                              
         if surface == 'fcc100':
             if site == 'ontop':
                 site_positions = ads_sites[site]
@@ -574,7 +582,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
                         atoms.extend(ads_atoms)
             elif site in ['bridge', 'hollow']:
                 site_positions = ads_sites['bridge']
-                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.)) 
+                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.2*C)) 
                            for pos in site_positions]
                 bridge_positions = []
                 hollow_positions = []
@@ -621,12 +629,12 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
                         atoms.extend(ads_atoms)
             elif site in ['fcc', 'hcp']:
                 site_positions = ads_sites['hollow']
-                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5)) for pos in site_positions]
+                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5*C)) for pos in site_positions]
                 fcc_positions = []
                 hcp_positions = []
                 for (pos, nbrs) in nbr_lst: 
                     test_pos = pos + np.array([0,0,-4.2])
-                    new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5) 
+                    new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5*C) 
                     if not new_nbr_lst:                    
                         fcc_positions.append(pos)
                     else:                    
@@ -704,19 +712,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
         asf = AdsorbateSiteFinder(struct)
         ads_sites = asf.find_adsorption_sites()
         if surface is None:
-            cna_sites = AdsorptionSites(atoms)
-            fcna = cna_sites.get_fullCNA()
-            fcc100_weight = fcc111_weight = 0
-            for s in fcna:
-                if str(s) in surface_dct['fcc100']:
-                    fcc100_weight += 1
-                if str(s) in surface_dct['fcc111']:
-                    fcc111_weight += 1
-            full_weights = [fcc100_weight, fcc111_weight]
-            if fcc100_weight == max(full_weights):
-                surface = 'fcc100'
-            elif fcc111_weight == max(full_weights): 
-                surface = 'fcc111'
+            surface = identify_surface(atoms)             
                                                                                                                                                  
         if surface == 'fcc100':
             if site == 'ontop':
@@ -730,7 +726,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                     sites.append(special_site)            
             elif site in ['bridge', 'hollow']:
                 site_positions = ads_sites['bridge']
-                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.)) 
+                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.2*C)) 
                            for pos in site_positions]
                 nbr_lst = []
                 for tup1 in tup_lst:
@@ -750,7 +746,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                             sites.append(special_site)
                     else:
                         test_pos = pos + np.array([0,0,-2])
-                        new_tup_lst = get_neighbors_from_position(atoms, test_pos, cutoff=5.)                    
+                        new_tup_lst = get_neighbors_from_position(atoms, test_pos, cutoff=5.*C)
                         new_tup_lst.sort(key=operator.itemgetter(1))
                         if second_shell:
                             new_nbrs = [x[0] for x in new_tup_lst[:5]]
@@ -782,7 +778,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                 else:
                     for pos in site_positions:
                         special_site = {}                                    
-                        new_tup_lst = get_neighbors_from_position(atoms, pos, cutoff=3.)
+                        new_tup_lst = get_neighbors_from_position(atoms, pos, cutoff=3.*C)
                         new_tup_lst.sort(key=operator.itemgetter(1))
                         new_nbrs = [x[0] for x in new_tup_lst[:2]]                    
                         special_site['indices'] = tuple(new_nbrs)
@@ -793,7 +789,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                         sites.append(special_site)            
             elif site in ['fcc', 'hcp']:
                 site_positions = ads_sites['hollow']
-                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5)) for pos in site_positions]            
+                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5*C)) for pos in site_positions]            
                 for (pos, tup_lst) in nbr_lst:
                     test_pos = pos + np.array([0,0,-4.2])
                     new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5)
@@ -864,13 +860,13 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
     return all_sites
 
 
-def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=None, second_shell=False, nsite=1, rmin=0.05):
+def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=None, second_shell=False, nsite=1, rmin=0.1):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes or 100 / 111 surface slab.
 
     Parameters
     ----------
-    atoms: The nanoparticle onto which the adsorbate should be added.
+    atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
         
     adsorbate: The adsorbate. Must be one of the following three types:
         A string containing the chemical symbol for a single atom.
@@ -902,7 +898,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
 
     rmin: The minimum distance between two adsorbate atoms.                             
-        Default value 0.05 is good in most cases. Play around to find the best value.
+        Default value 0.1 is good in most cases. Play around to find the best value.
     
     Example
     -------
@@ -1275,19 +1271,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, second_she
 
     else:
         if surface is None: 
-            cna_sites = AdsorptionSites(atoms)
-            fcna = cna_sites.get_fullCNA()
-            fcc100_weight = fcc111_weight = 0
-            for s in fcna:
-                if str(s) in surface_dct['fcc100']:
-                    fcc100_weight += 1
-                if str(s) in surface_dct['fcc111']:
-                    fcc111_weight += 1
-            full_weights = [fcc100_weight, fcc111_weight]
-            if fcc100_weight == max(full_weights):
-                surface = 'fcc100'
-            elif fcc111_weight == max(full_weights): 
-                surface = 'fcc111'
+            surface = identify_surface(atoms)             
         system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, surface, composition, second_shell)
         if site in ['ontop','bridge','fcc']:
             sites = get_monometallic_sites(atoms, site, surface, second_shell=False)
@@ -1415,19 +1399,7 @@ def enumerate_bimetallic_sites(atoms, second_shell=False):
                     all_sites += hollow_sites
 
     else:
-        cna_sites = AdsorptionSites(atoms)
-        fcna = cna_sites.get_fullCNA()
-        fcc100_weight = fcc111_weight = 0
-        for s in fcna:
-            if str(s) in surface_dct['fcc100']:
-                fcc100_weight += 1
-            if str(s) in surface_dct['fcc111']:
-                fcc111_weight += 1
-        full_weights = [fcc100_weight, fcc111_weight]
-        if fcc100_weight == max(full_weights):
-            surface = 'fcc100'
-        elif fcc111_weight == max(full_weights): 
-            surface = 'fcc111'
+        surface = identify_surface(atoms)
         for composition in metals:
             ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, second_shell=False)
             if ontop_sites:
