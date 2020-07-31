@@ -42,6 +42,7 @@ To add adsorbate to bimetallic system, see example:
 from nanopads.adsorption_sites import bimetallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
+
 atoms = read('random_icosahedron_NiPt_309.traj')
 system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface='fcc111', composition='NiPt', second_shell=False, nsite='all')
 view(system)
@@ -52,6 +53,7 @@ view(system)
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
 ```
 from nanopads.adsorption_sites import enumerate_monometallic_sites
+
 all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
 ```
 
@@ -60,6 +62,7 @@ To get information of site occupancy, see example:
 ```
 from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
+
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)
 ```
@@ -73,6 +76,7 @@ A search algorithm is implemented to automatically generate adsorbate patterns w
 ```
 from nanopads.adsorbate_coverage import pattern_generator
 from ase.io import read, write
+
 atoms = read('random_surface_111.traj')
 pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)
 ```
