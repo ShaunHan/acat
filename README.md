@@ -35,7 +35,9 @@ system = monometallic_add_adsorbate(system, adsorbate='OH', site='fcc', nsite=7)
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='hcp', nsite=8)
 view(system)
 ```
-![](images/random_NiPt_111_surface_with_OH.png)
+Out:
+
+<img src="images/random_NiPt_111_surface_with_OH.png"  width="150" height="150">
 
 To add adsorbate to a bimetallic system, see example:
 ```
@@ -48,7 +50,9 @@ system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface=
 composition='NiPt', second_shell=False, nsite='all')
 view(system)
 ```
-![]<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="120" height="120">
+Out:
+
+<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="120" height="120">
 
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
@@ -63,10 +67,14 @@ To get information of site occupancy, see example:
 ```
 from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
+from ase.visualize import view
 
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)
+view(labeled_atoms)
 ```
+Out:
+
 ![](images/tagged_sites.png)
 
 If multiple species are present, please provide a list of the present adsorbates. Currently only support at most 2 species.
