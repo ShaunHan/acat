@@ -17,7 +17,7 @@ Clone this repository:
 ```git clone https://gitlab.com/shuanghan/nanopads.git```
 
 # Usage
-**Add adsorbates**
+**Add adsorbates**\
 The code can automatically identify the shape and surfaces of nanoparticles, or the type of surface slabs.
 ![](images/color_facets.png)
 To add adsorbate to monometallic system (or if you want to ignore the elemental composition), see example:
