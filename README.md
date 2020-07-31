@@ -31,7 +31,8 @@ system = monometallic_add_adsorbate(atoms, adsorbate='OH', site='ontop', nsite=5
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='bridge', nsite=6)
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='fcc', nsite=7)
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='hcp', nsite=8)
-view(system)```
+view(system)
+```
 ![](images/random_NiPt_111_surface_with_OH.png)
 To add adsorbate to bimetallic system, see example:
 ```from nanopads.adsorption_sites import bimetallic_add_adsorbate
@@ -39,7 +40,8 @@ from ase.io import read, write
 from ase.visualize import view
 atoms = read('random_icosahedron_NiPt_309.traj')
 system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface='fcc111', composition='NiPt', second_shell=False, nsite='all')
-view(system)```
+view(system)
+```
 ![](images/random_icosahedron_NiPt_309_with_OH.png)
 
 ### Enumerate sites 
