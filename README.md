@@ -37,7 +37,7 @@ view(system)
 ```
 Out:
 
-<img src="images/random_NiPt_111_surface_with_OH.png"  width="300" height="150">
+<img src="images/random_NiPt_111_surface_with_OH.png"  width="250" height="150">
 
 To add adsorbate to a bimetallic system, see example:
 ```
@@ -52,7 +52,7 @@ view(system)
 ```
 Out:
 
-<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="120" height="120">
+<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="150" height="150">
 
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
@@ -67,11 +67,9 @@ To get information of site occupancy, see example:
 ```
 from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
-from ase.visualize import view
 
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)
-view(labeled_atoms)
 ```
 ![](images/tagged_sites.png)
 
