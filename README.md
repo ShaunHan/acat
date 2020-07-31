@@ -22,7 +22,7 @@ The code can automatically identify the shape and surfaces of nanoparticles, or 
 
 ![](images/color_facets.png)
 
-To add adsorbate to monometallic system (or if you want to ignore the elemental composition), see example:
+To add adsorbate to a monometallic system (or if you want to ignore the elemental composition), see example:
 ```
 from nanopads.adsorption_sites import monometallic_add_adsorbate
 from ase.io import read, write
@@ -37,7 +37,7 @@ view(system)
 ```
 ![](images/random_NiPt_111_surface_with_OH.png)
 
-To add adsorbate to bimetallic system, see example:
+To add adsorbate to a bimetallic system, see example:
 ```
 from nanopads.adsorption_sites import bimetallic_add_adsorbate
 from ase.io import read, write
