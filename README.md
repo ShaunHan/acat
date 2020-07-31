@@ -48,7 +48,7 @@ system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface=
 composition='NiPt', second_shell=False, nsite='all')
 view(system)
 ```
-![](images/random_icosahedron_NiPt_309_with_OH.png)<!-- .element height="10%" width="10%" -->
+![](images/random_icosahedron_NiPt_309_with_OH.png)<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="120" height="120">
 
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
