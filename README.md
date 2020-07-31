@@ -37,7 +37,7 @@ view(system)
 ```
 Out:
 
-<img src="images/random_NiPt_111_surface_with_OH.png"  width="150" height="150">
+<img src="images/random_NiPt_111_surface_with_OH.png"  width="300" height="150">
 
 To add adsorbate to a bimetallic system, see example:
 ```
@@ -73,8 +73,6 @@ atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)
 view(labeled_atoms)
 ```
-Out:
-
 ![](images/tagged_sites.png)
 
 If multiple species are present, please provide a list of the present adsorbates. Currently only support at most 2 species.
