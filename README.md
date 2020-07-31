@@ -17,8 +17,8 @@ Clone this repository:
 ```git clone https://gitlab.com/shuanghan/nanopads.git```
 
 # Usage
-
-
+* Add adsorbates
+** Identify shape and surfaces of nanoparticles
 ![](images/color_facets.png)
 ![](images/tagged_sites.png)
 ![](images/labeled_sites.png)
