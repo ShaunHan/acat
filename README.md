@@ -24,7 +24,6 @@ To add adsorbate to monometallic system (or if you want to ignore the elemental 
 ```from nanopads.adsorption_sites import monometallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
-
 atoms = read('random_NiPt_111_surface.traj')
 system = monometallic_add_adsorbate(atoms, adsorbate='OH', site='ontop', nsite=5)
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='bridge', nsite=6)
@@ -36,7 +35,6 @@ To add adsorbate to bimetallic system, see example:
 ```from nanopads.adsorption_sites import bimetallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
-
 atoms = read('random_icosahedron_NiPt_309.traj')
 system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface='fcc111', composition='NiPt', second_shell=False, nsite='all')
 view(system)```
@@ -51,7 +49,6 @@ all_sites = enumerate_monometallic_sites(atoms, second_shell=True)```
 To get information of site occupancy, see example:
 ```from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
-
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)```
 ![](images/tagged_sites.png)
@@ -62,7 +59,6 @@ If multiple species are present, please provide a list of the present adsorbates
 A search algorithm is implemented to automatically generate adsorbate patterns with certain coverages. Example: to generate the adsorbate pattern on fcc111 surface with a 0.75 ML coverage, simply use the following code
 ```from nanopads.adsorbate_coverage import pattern_generator
 from ase.io import read, write
-
 atoms = read('random_surface_111.traj')
 pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)```
 The code can generate coverage patterns for various surfaces and nanoparticles.
