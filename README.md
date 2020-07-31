@@ -1,23 +1,23 @@
 # Nanopads: NANOParticle with ADSorbate
 A Python code for generating and encoding adsorbate coverage patterns on nanoparticles.
 
-# Developers: 
+## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
 
-# Dependencies
+## Dependencies
 * Python3
 * Numpy
 * ASE
 * Pymatgen
 * Asap3
 
-# Installation
+## Installation
 Clone this repository:
 
 ```git clone https://gitlab.com/shuanghan/nanopads.git```
 
-# Usage
-**Add adsorbates**\
+## Usage
+### Add adsorbates
 The code can automatically identify the shape and surfaces of nanoparticles, or the type of surface slabs.
 ![](images/color_facets.png)
 To add adsorbate to monometallic system (or if you want to ignore the elemental composition), see example:
@@ -42,6 +42,28 @@ system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface=
 view(system)```
 ![](images/random_icosahedron_NiPt_309_with_OH.png)
 
+### Enumerate sites 
+To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
+```from nanopads.adsorption_sites import enumerate_monometallic_sites
+all_sites = enumerate_monometallic_sites(atoms, second_shell=True)```
+
+### Label occupied sites
+To get information of site occupancy, see example:
+```from nanopads.adsorption_sites import label_occupied_sites
+from ase.io import read, write
+
+atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
+labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)```
 ![](images/tagged_sites.png)
+If multiple species are present, please provide a list of the present adsorbates. Currently only support at most 2 species.
 ![](images/labeled_sites.png)
+
+### Generate coverage pattern
+A search algorithm is implemented to automatically generate adsorbate patterns with certain coverages. Example: to generate the adsorbate pattern on fcc111 surface with a 0.75 ML coverage, simply use the following code
+```from nanopads.adsorbate_coverage import pattern_generator
+from ase.io import read, write
+
+atoms = read('random_surface_111.traj')
+pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)```
+The code can generate coverage patterns for various surfaces and nanoparticles.
 ![](images/all_coverage_patterns.png)
