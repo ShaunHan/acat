@@ -23,7 +23,8 @@ The code can automatically identify the shape and surfaces of nanoparticles, or 
 ![](images/color_facets.png)
 
 To add adsorbate to monometallic system (or if you want to ignore the elemental composition), see example:
-```from nanopads.adsorption_sites import monometallic_add_adsorbate
+```
+from nanopads.adsorption_sites import monometallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
 
@@ -37,7 +38,8 @@ view(system)
 ![](images/random_NiPt_111_surface_with_OH.png)
 
 To add adsorbate to bimetallic system, see example:
-```from nanopads.adsorption_sites import bimetallic_add_adsorbate
+```
+from nanopads.adsorption_sites import bimetallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
 atoms = read('random_icosahedron_NiPt_309.traj')
@@ -48,13 +50,15 @@ view(system)
 
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
-```from nanopads.adsorption_sites import enumerate_monometallic_sites
+```
+from nanopads.adsorption_sites import enumerate_monometallic_sites
 all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
 ```
 
 ### Label occupied sites
 To get information of site occupancy, see example:
-```from nanopads.adsorption_sites import label_occupied_sites
+```
+from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)
@@ -66,7 +70,8 @@ If multiple species are present, please provide a list of the present adsorbates
 
 ### Generate coverage pattern
 A search algorithm is implemented to automatically generate adsorbate patterns with certain coverages. Example: to generate the adsorbate pattern on fcc111 surface with a 0.75 ML coverage, simply use the following code
-```from nanopads.adsorbate_coverage import pattern_generator
+```
+from nanopads.adsorbate_coverage import pattern_generator
 from ase.io import read, write
 atoms = read('random_surface_111.traj')
 pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)
