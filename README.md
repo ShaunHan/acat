@@ -19,7 +19,9 @@ Clone this repository:
 ## Usage
 ### Add adsorbates
 The code can automatically identify the shape and surfaces of nanoparticles, or the type of surface slabs.
+
 ![](images/color_facets.png)
+
 To add adsorbate to monometallic system (or if you want to ignore the elemental composition), see example:
 ```from nanopads.adsorption_sites import monometallic_add_adsorbate
 from ase.io import read, write
