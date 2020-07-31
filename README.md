@@ -1,17 +1,18 @@
 # Nanopads: NANOParticle with ADSorbate
 A Python code for generating and encoding adsorbate coverage patterns on nanoparticles.
 
-## Developers: 
+# Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
 
-### Dependencies
+# Dependencies
 * Python3
 * Numpy
 * ASE
 * Pymatgen
-* ASAP3
+* Asap3
 
 # Installation
+Clone this repository:
 ```git clone https://gitlab.com/shuanghan/nanopads.git```
 
 # Usage
