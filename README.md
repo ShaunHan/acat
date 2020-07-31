@@ -44,10 +44,11 @@ from ase.io import read, write
 from ase.visualize import view
 
 atoms = read('random_icosahedron_NiPt_309.traj')
-system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface='fcc111', composition='NiPt', second_shell=False, nsite='all')
+system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface='fcc111', 
+composition='NiPt', second_shell=False, nsite='all')
 view(system)
 ```
-![](images/random_icosahedron_NiPt_309_with_OH.png)
+![](images/random_icosahedron_NiPt_309_with_OH.png =250x250)
 
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
