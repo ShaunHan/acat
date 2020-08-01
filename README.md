@@ -37,7 +37,7 @@ view(system)
 ```
 Out:
 
-<img src="images/random_NiPt_111_surface_with_OH.png"  width="230" height="150">
+<img src="images/random_NiPt_111_surface_with_OH.png"  width="450" height="300">
 
 To add adsorbate to a bimetallic system, see example:
 ```python
@@ -52,7 +52,7 @@ view(system)
 ```
 Out:
 
-<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="150" height="150">
+<img src="images/random_icosahedron_NiPt_309_with_OH.png"  width="300" height="300">
 
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
