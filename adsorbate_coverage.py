@@ -79,7 +79,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
         ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
     if True in atoms.get_pbc():
         surface = identify_surface(atoms) 
-    if not isinstance(surface , list):
+    if not isinstance(surface, list):
         surface = [surface]     
     final_sites = []
     positions = []
