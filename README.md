@@ -24,7 +24,7 @@ The code can automatically identify the shape and surfaces of nanoparticles, or 
 
 To add adsorbate to a monometallic system (or if you want to ignore the elemental composition), see example:
 ```python
-// from nanopads.adsorption_sites import monometallic_add_adsorbate
+from nanopads.adsorption_sites import monometallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
 
@@ -41,7 +41,7 @@ Out:
 
 To add adsorbate to a bimetallic system, see example:
 ```python
-// from nanopads.adsorption_sites import bimetallic_add_adsorbate
+from nanopads.adsorption_sites import bimetallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
 
@@ -57,7 +57,7 @@ Out:
 ### Enumerate sites 
 To enumerate all possible adsorption of a nanoparticle or surface slab, see example:
 ```python
-\\ from nanopads.adsorption_sites import enumerate_monometallic_sites
+from nanopads.adsorption_sites import enumerate_monometallic_sites
 
 all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
 ```
@@ -65,7 +65,7 @@ all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
 ### Label occupied sites
 To get information of site occupancy, see example:
 ```python
-\\ from nanopads.adsorption_sites import label_occupied_sites
+from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
 
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
@@ -79,7 +79,7 @@ If multiple species are present, please provide a list of the present adsorbates
 ### Generate coverage pattern
 A search algorithm is implemented to automatically generate adsorbate patterns with certain coverages. Example: to generate the adsorbate pattern on fcc111 surface with a 0.75 ML coverage, simply use the following code
 ```python
-\\from nanopads.adsorbate_coverage import pattern_generator
+from nanopads.adsorbate_coverage import pattern_generator
 from ase.io import read, write
 
 atoms = read('random_surface_111.traj')
