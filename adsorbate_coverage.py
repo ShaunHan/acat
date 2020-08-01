@@ -5,6 +5,7 @@ from ase.build import molecule
 from ase.neighborlist import NeighborList
 import networkx as nx
 from collections import defaultdict
+import copy
 
 
 adsorbates = 'SCHON'
@@ -187,7 +188,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
         elif coverage == 3/4:
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)            
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -217,6 +218,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
         elif coverage == 2/4:
             #c(2x2) pattern
             all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)
+            original_sites = copy.deepcopy(all_sites)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -247,7 +249,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
                                     count += 1
                             if count == 4:
                                 sites_to_delete.append(sitei)
-                    for s in sites:
+                    for s in original_sites:
                         if s['indices'] not in [st['indices'] for st in sites_to_delete]:
                             final_sites.append(s)
                             positions.append(s['adsorbate_position'])
