@@ -86,5 +86,9 @@ from ase.io import read, write
 atoms = read('random_surface_111.traj')
 pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)
 ```
+Out:
+
+![](images/fcc111_0.75ml.png)
+
 The code can generate coverage patterns for various surfaces and nanoparticles.
 ![](images/all_coverage_patterns.png)
