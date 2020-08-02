@@ -90,5 +90,5 @@ Out:
 
 <img src="images/fcc111_0.75ml.png"  width="400" height="240">
 
-The code can generate coverage patterns for various surfaces and nanoparticles.
+The code can generate coverage patterns for various surfaces and nanoparticles. Below shows all well-defined patterns.
 ![](images/all_coverage_patterns.png)
