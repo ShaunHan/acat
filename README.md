@@ -88,7 +88,7 @@ pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)
 ```
 Out:
 
-<img src="images/fcc111_0.75ml.png"  width="450" height="240">
+<img src="images/fcc111_0.75ml.png"  width="400" height="240">
 
 The code can generate coverage patterns for various surfaces and nanoparticles.
 ![](images/all_coverage_patterns.png)
