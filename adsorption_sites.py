@@ -27,7 +27,7 @@ warnings.filterwarnings('ignore')
 # The default value 1 is optimized for EMT-relaxed surface slabs.
 # Play around to find the optimal value for your system.
 # This won't affect nanoparticle systems.
-C = 1.
+C = 1
 
 # TODO: more robust way of going from key to surf site description
 # e.g. the dictionary could be arranged in a different way
@@ -1477,7 +1477,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                     for idx in indices:                
                         if atoms[idx].tag == 0:
                             atoms[idx].tag = label
-                        elif label not in str(atoms[idx].tag):
+                        else:
                             atoms[idx].tag = str(atoms[idx].tag) + label
                         if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]:
                             if atoms[idx].symbol == mA:
@@ -1501,7 +1501,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                 for idx in indices:                
                     if atoms[idx].tag == 0:
                         atoms[idx].tag = label
-                    elif label not in str(atoms[idx].tag):
+                    else:
                         atoms[idx].tag = str(atoms[idx].tag) + label
                     if atoms[idx].symbol == mA:
                         atoms[idx].symbol = species_pseudo_mapping[0][0]
@@ -1512,3 +1512,33 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
     print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
 
     return atoms
+
+
+def multi_label_counter(atoms, adsorbate, second_shell=False):
+    '''Encoding the labels into 5d numpy arrays. 
+       This can be further used as a fingerprint.
+       Atoms that constitute an occupied adsorption site will be labeled as 1.
+       If an atom contributes to multiple sites of same type, the number wil increase.
+       One atom can encompass multiple non-zero values if it contributes to multiple types of sites.
+
+       Note: Please provide atoms including adsorbate(s), with adsorbate being a string or a list of strings.
+             Set second_shell=True if you also want to label the second shell atoms.'''
+
+    labeled_atoms = label_occupied_sites(atoms, adsorbate, second_shell)
+    np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]
+    np_atoms = labeled_atoms[np_indices]
+    
+    counter_lst = []
+    for atom in np_atoms:
+        if atom.symbol not in adsorbates:
+            if atom.tag == 0:
+                counter_lst.append(np.zeros(5).astype(int).tolist())
+            else:
+                line = str(atom.tag)
+                cns = [int(s) for s in line]
+                lst = np.zeros(5).astype(int).tolist()
+                for idx in cns:
+                    lst[idx-1] += int(1)
+                counter_lst.append(lst)
+
+    return counter_lst
