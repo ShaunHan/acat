@@ -64,7 +64,7 @@ all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
 ```
 
 ### Label occupied sites
-To get information of site occupancy, see example:
+To get information of site occupation, see example:
 ```python
 from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
