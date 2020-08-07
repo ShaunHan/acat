@@ -3,6 +3,7 @@ A Python code for generating and encoding adsorbate coverage patterns on nanopar
 
 ## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
+Steen Lysgaard (stly@dtu.dk)
 
 ## Dependencies
 * Python3
