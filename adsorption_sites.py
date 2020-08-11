@@ -204,6 +204,9 @@ class AdsorptionSites(object):
                                             # hollow site found
                                             normal = self.get_surface_normal(
                                                 [s, n, m])
+                                            # Save the normals now and add them to the site later
+                                            for i in [s, n, m, k]:
+                                                normals_for_site[i].append(normal)
                                             ps = self.atoms[[
                                                 n, m, s, k]].positions
                                             pos = np.average(ps, 0)
