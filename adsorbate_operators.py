@@ -231,7 +231,7 @@ class AdsorbateOperator(OffspringCreator):
 
     def is_site_occupied_by(self, atoms, adsorbate, site, min_adsorbate_distance):
         """Returns True if the site on the atoms object is occupied by
-        a specified species"""
+        a specific species"""
         # if site['occupied']:
         #     return True
         if True not in atoms.get_pbc():
