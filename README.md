@@ -40,7 +40,7 @@ view(system)
 ```
 Out:
 
-<img src="images/random_NiPt_111_surface_with_OH.png"  width="450" height="280">
+<img src="images/random_NiPt_111_surface_with_OH.png"  width="600" height="280">
 
 To add adsorbate to a bimetallic system, see example:
 ```python
