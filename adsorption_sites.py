@@ -560,7 +560,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         top_indices = [a.index for a in atoms if a.tag==0 and a.position[2] > meanz]
         struct = AseAtomsAdaptor.get_structure(atoms)
         asf = AdsorbateSiteFinder(struct)
-        ads_sites = asf.find_adsorption_sites()
+        ads_sites = asf.find_adsorption_sites(symm_reduce=0)
         ads = molecule(adsorbate)[::-1]
         if str(ads.symbols) != 'CO':
             ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
@@ -713,7 +713,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
         top_indices = [a.index for a in atoms if a.tag==0 and a.position[2] > meanz]
         struct = AseAtomsAdaptor.get_structure(atoms)
         asf = AdsorbateSiteFinder(struct)
-        ads_sites = asf.find_adsorption_sites()
+        ads_sites = asf.find_adsorption_sites(symm_reduce=0)
         if surface is None:
             surface = identify_surface(atoms)             
                                                                                                                                                  
