@@ -49,8 +49,8 @@ from ase.io import read, write
 from ase.visualize import view
 
 atoms = read('random_icosahedron_NiPt_309.traj')
-system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='bridge', surface='fcc111', 
-composition='NiPt', second_shell=False, nsite='all')
+system = bimetallic_add_adsorbate(atoms, adsorbate='OH', site='hcp', surface='fcc111', 
+composition='NiNiPt', second_shell='Ni', nsite='all')
 view(system)
 ```
 Out:
