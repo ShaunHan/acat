@@ -2,11 +2,11 @@ from .adsorbate_operators import AdsorbateOperator, get_mic_distance
 from ase.cluster import Icosahedron, Octahedron
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
-from asap3.analysis import FullCNA, PTM
+from asap3.analysis import FullCNA
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.visualize import view
 from ase.build import molecule
-from ase.geometry import Cell
+from ase.geometry import Cell, get_layers
 from ase import Atom
 from pymatgen.analysis.adsorption import AdsorbateSiteFinder
 from pymatgen.io.ase import AseAtomsAdaptor
@@ -16,6 +16,7 @@ from itertools import combinations
 from ase.data import reference_states as refstate
 from ase.io import read, write
 from collections import Counter
+import math
 import re
 import random
 import warnings
@@ -23,14 +24,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-# C is a scaling factor that depends on the average bond length of a surface slab.
-# The default value 1 is optimized for EMT-relaxed surface slabs.
-# Play around to find the optimal value for your system.
-# This won't affect nanoparticle systems.
-C = 1
 
-# TODO: more robust way of going from key to surf site description
-# e.g. the dictionary could be arranged in a different way
 icosa_dct = {
     # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
@@ -108,7 +102,6 @@ tocta_dct = {
 
 
 adsorbates = 'SCHON'
-
 
 
 class AdsorptionSites(object):
@@ -448,8 +441,11 @@ def identify_surface(atoms):
             fcc100_weight += 1
         if str(s) in surface_dct['fcc111']:
             fcc111_weight += 1
+
     full_weights = [fcc100_weight, fcc111_weight]
-    if fcc100_weight == max(full_weights):
+    if fcc100_weight == fcc111_weight:
+        raise ValueError('Cannot identify the surface type. Please specify it!')
+    elif fcc100_weight == max(full_weights):
         return 'fcc100'
     elif fcc111_weight == max(full_weights): 
         return 'fcc111'
@@ -554,10 +550,19 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         if ads_indices:
             ads_atoms = atoms[ads_indices]
             atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
-        ptmdata = PTM(atoms, rmsd_max=0.2)
-        atoms.set_tags(ptmdata['structure'])
-        meanz = np.mean(atoms.positions[:,2])
-        top_indices = [a.index for a in atoms if a.tag==0 and a.position[2] > meanz]
+        top_indices = []
+        second_indices = []
+        layerlist = get_layers(atoms, (0,0,1), tolerance=0.5)[0].tolist()
+        nlayers = max(layerlist)
+        for atom in atoms:
+            i = atom.index
+            if layerlist[i] == nlayers:
+                top_indices.append(i)
+            elif layerlist[i] == nlayers-1:
+                second_indices.append(i)
+        layer_thickness = abs(np.mean(atoms[top_indices].positions[:,2]) - np.mean(atoms[second_indices].positions[:,2]))
+        d100 = math.sqrt(2)*layer_thickness 
+        d111 = math.sqrt(6)*layer_thickness/2
         struct = AseAtomsAdaptor.get_structure(atoms)
         asf = AdsorbateSiteFinder(struct)
         ads_sites = asf.find_adsorption_sites(symm_reduce=0)
@@ -565,8 +570,8 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
         if str(ads.symbols) != 'CO':
             ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
         if surface is None: 
-            surface = identify_surface(atoms)            
-                                                                                              
+            surface = identify_surface(atoms) 
+                                                  
         if surface == 'fcc100':
             if site == 'ontop':
                 site_positions = ads_sites[site]
@@ -585,7 +590,7 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
                         atoms.extend(ads_atoms)
             elif site in ['bridge', 'hollow']:
                 site_positions = ads_sites['bridge']
-                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.2*C)) 
+                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=1.4*d100)) 
                            for pos in site_positions]
                 bridge_positions = []
                 hollow_positions = []
@@ -632,12 +637,12 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, nsite='all'
                         atoms.extend(ads_atoms)
             elif site in ['fcc', 'hcp']:
                 site_positions = ads_sites['hollow']
-                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5*C)) for pos in site_positions]
+                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=1.9*d111)) for pos in site_positions]
                 fcc_positions = []
                 hcp_positions = []
                 for (pos, nbrs) in nbr_lst: 
-                    test_pos = pos + np.array([0,0,-4.2])
-                    new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5*C) 
+                    test_pos = pos - np.array([0,0,layer_thickness+2])
+                    new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5)
                     if not new_nbr_lst:                    
                         fcc_positions.append(pos)
                     else:                    
@@ -706,11 +711,20 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
         sites += special_sites
 
     else:
-        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
-        ptmdata = PTM(atoms, rmsd_max=0.2)
-        atoms.set_tags(ptmdata['structure'])
-        meanz = np.mean(atoms.positions[:,2])
-        top_indices = [a.index for a in atoms if a.tag==0 and a.position[2] > meanz]
+        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]        
+        top_indices = []
+        second_indices = []
+        layerlist = get_layers(atoms, (0,0,1), tolerance=0.5)[0].tolist()
+        nlayers = max(layerlist)
+        for atom in atoms:
+            i = atom.index
+            if layerlist[i] == nlayers:
+                top_indices.append(i)
+            elif layerlist[i] == nlayers-1:
+                second_indices.append(i)
+        layer_thickness = abs(np.mean(atoms[top_indices].positions[:,2]) - np.mean(atoms[second_indices].positions[:,2]))
+        d100 = math.sqrt(2)*layer_thickness 
+        d111 = math.sqrt(6)*layer_thickness/2
         struct = AseAtomsAdaptor.get_structure(atoms)
         asf = AdsorbateSiteFinder(struct)
         ads_sites = asf.find_adsorption_sites(symm_reduce=0)
@@ -729,7 +743,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                     sites.append(special_site)            
             elif site in ['bridge', 'hollow']:
                 site_positions = ads_sites['bridge']
-                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=3.2*C)) 
+                tup_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=1.4*d100)) 
                            for pos in site_positions]
                 nbr_lst = []
                 for tup1 in tup_lst:
@@ -748,8 +762,8 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                         if site == 'bridge':
                             sites.append(special_site)
                     else:
-                        test_pos = pos + np.array([0,0,-2])
-                        new_tup_lst = get_neighbors_from_position(atoms, test_pos, cutoff=5.*C)
+                        test_pos = pos - np.array([0,0,2])
+                        new_tup_lst = get_neighbors_from_position(atoms, test_pos, cutoff=2.2*d100)
                         new_tup_lst.sort(key=operator.itemgetter(1))
                         if second_shell:
                             new_nbrs = [x[0] for x in new_tup_lst[:5]]
@@ -781,7 +795,7 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                 else:
                     for pos in site_positions:
                         special_site = {}                                    
-                        new_tup_lst = get_neighbors_from_position(atoms, pos, cutoff=3.*C)
+                        new_tup_lst = get_neighbors_from_position(atoms, pos, cutoff=1.3*d111)
                         new_tup_lst.sort(key=operator.itemgetter(1))
                         new_nbrs = [x[0] for x in new_tup_lst[:2]]                    
                         special_site['indices'] = tuple(new_nbrs)
@@ -792,9 +806,9 @@ def get_monometallic_sites(atoms, site, surface=None, second_shell=False):
                         sites.append(special_site)            
             elif site in ['fcc', 'hcp']:
                 site_positions = ads_sites['hollow']
-                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=4.5*C)) for pos in site_positions]            
+                nbr_lst = [(pos, get_neighbors_from_position(atoms, pos, cutoff=1.9*d111)) for pos in site_positions]            
                 for (pos, tup_lst) in nbr_lst:
-                    test_pos = pos + np.array([0,0,-4.2])
+                    test_pos = pos - np.array([0,0,layer_thickness+2])
                     new_nbr_lst = get_neighbors_from_position(atoms, test_pos, cutoff=0.5)
                     if not new_nbr_lst:                    
                         special_site = {}
