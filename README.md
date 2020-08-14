@@ -19,7 +19,8 @@ Clone this repository:
 
 ```git clone https://gitlab.com/shuanghan/nanopads.git```
 
-Then edit ```~/.bashrc``` add
+Then edit ```~/.bashrc``` to add
+
 ```export PYTHONPATH=/path-to-nanopads/:$PYTHONPATH```
 ## Usage
 ### Add adsorbates
