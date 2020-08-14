@@ -1,5 +1,5 @@
 # Nanopads: NANOParticle with ADSorbate
-A Python code for generating and encoding adsorbate coverage patterns on nanoparticles.
+A Python code for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
