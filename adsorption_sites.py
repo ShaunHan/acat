@@ -1481,33 +1481,35 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
     sites = enumerate_monometallic_sites(atoms, second_shell)
     n_occupied_sites = 0
     atoms.set_tags(0)
-    if isinstance(adsorbate, list) and len(adsorbate) == 2:               
-        for site in sites:            
-            for ads in adsorbate:
-                k = adsorbate.index(ads)
-                ao = AdsorbateOperator(ads, sites)
-                if ao.is_site_occupied_by(atoms, ads, site, min_adsorbate_distance=0.01):
-                    site['occupied'] = 1
-                    site['adsorbate'] = ads
-                    indices = site['indices']
-                    label = site['label']
-                    for idx in indices:                
-                        if atoms[idx].tag == 0:
-                            atoms[idx].tag = label
-                        else:
-                            atoms[idx].tag = str(atoms[idx].tag) + label
-                        if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]:
-                            if atoms[idx].symbol == mA:
-                                atoms[idx].symbol = species_pseudo_mapping[k][0]
-                            elif atoms[idx].symbol == mB:
-                                atoms[idx].symbol = species_pseudo_mapping[k][1]
-                        else:
-                            if atoms[idx].symbol == species_pseudo_mapping[k-1][0]:
-                                atoms[idx].symbol = species_pseudo_mapping[2][0]
-                            elif atoms[idx].symbol == species_pseudo_mapping[k-1][1]:
-                                atoms[idx].symbol = species_pseudo_mapping[2][1]
-                    n_occupied_sites += 1 
-
+    if isinstance(adsorbate, list):               
+        if len(adsorbate) == 2:
+            for site in sites:            
+                for ads in adsorbate:
+                    k = adsorbate.index(ads)
+                    ao = AdsorbateOperator(ads, sites)
+                    if ao.is_site_occupied_by(atoms, ads, site, min_adsorbate_distance=0.01):
+                        site['occupied'] = 1
+                        site['adsorbate'] = ads
+                        indices = site['indices']
+                        label = site['label']
+                        for idx in indices:                
+                            if atoms[idx].tag == 0:
+                                atoms[idx].tag = label
+                            else:
+                                atoms[idx].tag = str(atoms[idx].tag) + label
+                            if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]:
+                                if atoms[idx].symbol == mA:
+                                    atoms[idx].symbol = species_pseudo_mapping[k][0]
+                                elif atoms[idx].symbol == mB:
+                                    atoms[idx].symbol = species_pseudo_mapping[k][1]
+                            else:
+                                if atoms[idx].symbol == species_pseudo_mapping[k-1][0]:
+                                    atoms[idx].symbol = species_pseudo_mapping[2][0]
+                                elif atoms[idx].symbol == species_pseudo_mapping[k-1][1]:
+                                    atoms[idx].symbol = species_pseudo_mapping[2][1]
+                        n_occupied_sites += 1 
+        else:
+            raise NotImplementedError
     else:
         ao = AdsorbateOperator(adsorbate, sites)
         for site in sites:
