@@ -1,4 +1,4 @@
-# Nanopads: NANOParticle with ADSorbate
+# Nanopads: **Nanop**article with **ads**orbate
 A Python code for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
@@ -22,6 +22,8 @@ Clone this repository:
 Then edit ```~/.bashrc``` to add
 
 ```export PYTHONPATH=/path-to-nanopads/:$PYTHONPATH```
+
+Remeber to ```source ~/.bashrc```
 ## Usage
 ### Add adsorbates
 The code can automatically identify the shape and surfaces of nanoparticles, or the type of surface slabs.
