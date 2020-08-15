@@ -34,7 +34,7 @@ from nanopads.adsorption_sites import monometallic_add_adsorbate
 from ase.io import read, write
 from ase.visualize import view
 
-atoms = read('random_NiPt_111_surface.traj')
+atoms = read('NiPt3_111_surface.traj')
 system = monometallic_add_adsorbate(atoms, adsorbate='OH', site='ontop', nsite=5)
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='bridge', nsite=6)
 system = monometallic_add_adsorbate(system, adsorbate='OH', site='fcc', nsite=7)
