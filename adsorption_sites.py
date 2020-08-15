@@ -1522,10 +1522,11 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                         atoms[idx].tag = label
                     else:
                         atoms[idx].tag = str(atoms[idx].tag) + label
-                    if atoms[idx].symbol == mA:
-                        atoms[idx].symbol = species_pseudo_mapping[0][0]
-                    elif atoms[idx].symbol == mB:
-                        atoms[idx].symbol = species_pseudo_mapping[0][1]
+                    # Map to pseudo elements even when there is only one adsorbate species (unnecessary)
+#                    if atoms[idx].symbol == mA:
+#                        atoms[idx].symbol = species_pseudo_mapping[0][0]
+#                    elif atoms[idx].symbol == mB:
+#                        atoms[idx].symbol = species_pseudo_mapping[0][1]
                 n_occupied_sites += 1
     tag_set = set([a.tag for a in atoms])
     print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
