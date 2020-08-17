@@ -43,7 +43,7 @@ def group_sites(atoms, sites):
     return grouped_sites
 
 
-def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
+def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, rmin=0.2):
     """A function for generating adsorbate coverage patterns.
        Parameters
        ----------
@@ -63,6 +63,10 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
            This is normal since the surface area can be too small to encompass the coverage pattern properly.
            We expect this function to work especially well on large nanoparticles and extended surfaces.
                                                                                                          
+       height: The height from the adsorbate to the surface.
+           Default is 'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 'hollow': 1.7 for nanoparticles 
+           and 2.0 for all sites on surface slabs.
+
        rmin: The minimum distance between two adsorbate atoms.
            Default value 0.2 is good for adsorbate coverage patterns. Play around to find the best value.
        
@@ -86,13 +90,13 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
     positions = []
     if 'fcc111' in surface: 
         if coverage == 1:
-            sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', second_shell=False)
+            sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
             if sites:
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
         elif coverage == 3/4:
             # Kagome pattern
-            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -121,8 +125,8 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
                             positions.append(s['adsorbate_position'])
         elif coverage == 2/4:
             # Honeycomb pattern
-            fcc_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', second_shell=False) 
-            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', second_shell=False) 
+            fcc_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False) 
+            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False) 
             all_sites = fcc_sites + hcp_sites
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
@@ -155,7 +159,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
                 final_sites = [s for s in final_sites if s['indices'] not in [st['indices'] for st in bad_sites]]
         elif coverage == 1/4:
             # Kagome pattern                                                                 
-            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -183,12 +187,12 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
 
     if 'fcc100' in surface:
         if coverage == 1:
-            sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)
+            sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
             if sites:
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
         elif coverage == 3/4:
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)            
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)            
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -217,7 +221,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
                             positions.append(s['adsorbate_position'])
         elif coverage == 2/4:
             #c(2x2) pattern
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
             original_sites = copy.deepcopy(all_sites)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
@@ -255,7 +259,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., rmin=0.2):
                             positions.append(s['adsorbate_position'])
         elif coverage == 1/4:
             #p(2x2) pattern
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
