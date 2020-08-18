@@ -1,4 +1,4 @@
-# Nanopads: a Python Toolkit for **Nanop**articles with **Ads**orbates
+# Nanopads: a Python Toolkit for **Nanop**articles with **ads**orbates
 A Python code for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
