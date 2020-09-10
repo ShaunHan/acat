@@ -89,9 +89,11 @@ A search algorithm is implemented to automatically generate adsorbate patterns w
 ```python
 from nanopads.adsorbate_coverage import pattern_generator
 from ase.io import read, write
+from ase.visualize import view
 
 atoms = read('random_surface_111.traj')
 pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)
+view(pattern)
 ```
 Out:
 
