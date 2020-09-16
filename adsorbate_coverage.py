@@ -446,7 +446,7 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
     return atoms
 
 
-def random_pattern_generator(atoms, adsorbate, nadsorbate, min_adsorbate_distance=2., heights=heights_dict):
+def random_pattern_generator(atoms, adsorbate, min_adsorbate_distance=2., heights=heights_dict):
     '''A function for generating random coverage patterns with constraint.
        Parameters
        ----------
@@ -455,19 +455,34 @@ def random_pattern_generator(atoms, adsorbate, nadsorbate, min_adsorbate_distanc
        adsorbate: The adsorbate. Must be one of the following three types:
            A string containing the chemical symbol for a single atom.
            An atom object.
-           An atoms object (for a molecular adsorbate).                                                                                                         
-       nadsorbate: The number of adsorbate.
-
+           An atoms object (for a molecular adsorbate).                                                                                                       
        min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
 
        heights: A dictionary that contains the adsorbate height for each site type.'''
 
     rmin = min_adsorbate_distance/2.9
+    ads_indices = [a.index for a in atoms if a.symbol in adsorbates]
+    ads_atoms = None
+    if ads_indices:
+        ads_atoms = atoms[ads_indices]
+        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
     all_sites = enumerate_monometallic_sites(atoms, heights, second_shell=False)
     random.shuffle(all_sites)    
+ 
+    if True not in atoms.get_pbc():
+        for site in all_sites:
+            add_adsorbate(atoms, molecule(adsorbate), site)
+    else:
+        ads = molecule(adsorbate)[::-1]
+        if str(ads.symbols) != 'CO':
+            ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
+        positions = [s['adsorbate_position'] for s in all_sites]
+        for pos in positions:
+            ads.translate(pos - ads[0].position)
+            atoms.extend(ads)
+        if ads_indices:
+            atoms.extend(ads_atoms)
 
-    for site in all_sites:
-        add_adsorbate(atoms, molecule(adsorbate), site)
     nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
     nl.update(atoms)            
     atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
