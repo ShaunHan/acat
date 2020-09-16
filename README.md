@@ -101,7 +101,7 @@ Out:
 
 To generate random adsorbate patterns with a constraint of minimum distance between two adsorbates, use the following code
 ```python
-from nanopads.adsorbate_coverage import symmetric_pattern_generator
+from nanopads.adsorbate_coverage import random_pattern_generator
 from ase.io import read, write
 from ase.visualize import view
 
