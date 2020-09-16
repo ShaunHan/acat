@@ -1,14 +1,37 @@
-from .adsorption_sites import AdsorptionSites, get_monometallic_sites, add_adsorbate, identify_surface
-from .adsorbate_operators import get_mic_distance
+from .adsorption_sites import AdsorptionSites, add_adsorbate, identify_surface
+from .adsorption_sites import get_monometallic_sites, enumerate_monometallic_sites
+from .adsorbate_operators import AdsorbateOperator, get_mic_distance
 from ase.io import read, write
 from ase.build import molecule
 from ase.neighborlist import NeighborList
 import networkx as nx
 from collections import defaultdict
+import numpy as np
+import random
 import copy
 
 
 adsorbates = 'SCHON'
+heights_dict = {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 'hollow': 1.7}
+
+
+def get_coverage(atoms, adsorbate, nfullsite=None):
+    """Get the coverage of a nanoparticle / surface with adsorbates.
+       Provide the number of adsorption sites under 1 ML coverage will
+       significantly accelerate the calculation."""
+
+    sites = enumerate_monometallic_sites(atoms, second_shell=False)
+    ao = AdsorbateOperator(adsorbate, sites)
+    if nfullsite is None:
+        pattern = pattern_generator(atoms, 'O', ['fcc111', 'fcc100'], coverage=1)
+        nfullsite = len([a for a in pattern if a.symbol == 'O'])
+    symbol = list(adsorbate)[0]
+    nadsorbate = 0
+    for a in atoms:
+        if a.symbol == symbol:
+            nadsorbate += 1
+
+    return nadsorbate / nfullsite
 
 
 def group_sites(atoms, sites):
@@ -43,8 +66,8 @@ def group_sites(atoms, sites):
     return grouped_sites
 
 
-def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, rmin=0.2):
-    """A function for generating adsorbate coverage patterns.
+def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], coverage=1., height=None, min_adsorbate_distance=0.6):
+    """A function for generating certain well-defined symmetric adsorbate coverage patterns.
        Parameters
        ----------
        atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
@@ -67,13 +90,14 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
            Default is 'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 'hollow': 1.7 for nanoparticles 
            and 2.0 for all sites on surface slabs.
 
-       rmin: The minimum distance between two adsorbate atoms.
+       min_adsorbate_distance: The minimum distance between two adsorbate atoms.
            Default value 0.2 is good for adsorbate coverage patterns. Play around to find the best value.
        
        Example
        ------- 
-       pattern_generator(atoms,adsorbate='CO',surface=['fcc100','fcc111'],coverage=3/4)"""
+       pattern_generator(atoms, adsorbate='CO', surface=['fcc100','fcc111'], coverage=3/4)"""
 
+    rmin = min_adsorbate_distance/2.9
     ads_indices = [a.index for a in atoms if a.symbol in adsorbates]
     ads_atoms = None
     if ads_indices:
@@ -94,6 +118,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
             if sites:
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
+
         elif coverage == 3/4:
             # Kagome pattern
             all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
@@ -123,6 +148,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                         if s['indices'] not in [st['indices'] for st in sites_to_delete]:
                             final_sites.append(s)
                             positions.append(s['adsorbate_position'])
+
         elif coverage == 2/4:
             # Honeycomb pattern
             fcc_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False) 
@@ -145,7 +171,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                                 sites_to_remain.append(sitej)
                     final_sites += sites_to_remain                                         
                     positions += [s['adsorbate_position'] for s in sites_to_remain]
-            if True not in atoms.get_pbc():
+            if True not in atoms.get_pbc():                                                                       
                 bad_sites = []
                 for sti in final_sites:
                     if sti['site'] == 'hcp':
@@ -157,6 +183,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                         if count != 0:
                             bad_sites.append(sti)
                 final_sites = [s for s in final_sites if s['indices'] not in [st['indices'] for st in bad_sites]]
+
         elif coverage == 1/4:
             # Kagome pattern                                                                 
             all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
@@ -191,6 +218,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
             if sites:
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
+
         elif coverage == 3/4:
             all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)            
             if True not in atoms.get_pbc():
@@ -219,6 +247,7 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                         if s['indices'] not in [st['indices'] for st in sites_to_delete]:
                             final_sites.append(s)
                             positions.append(s['adsorbate_position'])
+
         elif coverage == 2/4:
             #c(2x2) pattern
             all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
@@ -229,34 +258,17 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                 grouped_sites = {'pbc_sites': all_sites}
             for sites in grouped_sites.values():
                 if sites:
-                    sites_to_delete = [sites[0]]
-                    for sitei in sites_to_delete:
-                        common_site_indices = []
-                        non_common_sites = []
+                    sites_to_remain = [sites[0]]
+                    for sitei in sites_to_remain:
                         for sitej in sites:
-                            if sitej['indices'] == sitei['indices']:
-                                pass
-                            elif set(sitej['indices']) & set(sitei['indices']):
-                                for i in sitej['indices']:
-                                    common_site_indices.append(i)
-                            else:
-                                non_common_sites.append(sitej)
-                        for sitej in non_common_sites:
-                            overlap = sum([common_site_indices.count(i) for i in sitej['indices']])
-                            if overlap in [1, 4] and sitej['indices'] not in [s['indices'] for s in sites_to_delete]:
-                                sites_to_delete.append(sitej)
-                    for sitei in sites:
-                        if sitei['indices'] not in [s['indices'] for s in sites_to_delete]:
-                            count = 0
-                            for sitej['indices'] in [st['indices'] for st in sites_to_delete]:
-                                if len(set(sitej['indices']) & set(sitei['indices'])) == 1:
-                                    count += 1
-                            if count == 4:
-                                sites_to_delete.append(sitei)
+                            if (len(set(sitej['indices']) & set(sitei['indices'])) == 1) and \
+                            (sitej['indices'] not in [s['indices'] for s in sites_to_remain]):
+                                sites_to_remain.append(sitej)
                     for s in original_sites:
-                        if s['indices'] not in [st['indices'] for st in sites_to_delete]:
+                        if s['indices'] in [st['indices'] for st in sites_to_remain]:
                             final_sites.append(s)
                             positions.append(s['adsorbate_position'])
+
         elif coverage == 1/4:
             #p(2x2) pattern
             all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
@@ -286,6 +298,107 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                     positions += [s['adsorbate_position'] for s in sites if s['indices'] in [st['indices'] for st in sites_to_remain]]
 
     if True not in atoms.get_pbc():
+        if coverage == 1:
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            vertex_indices = [s['indices'][0] for s in vertex_sites]
+            ve_common_indices = set()
+            for esite in edge_sites:
+                if set(esite['indices']) & set(vertex_indices):
+                    for i in esite['indices']:
+                        if i not in vertex_indices:
+                            ve_common_indices.add(i)
+            for esite in edge_sites:
+                if not set(esite['indices']).issubset(ve_common_indices):
+                    final_sites.append(esite)
+                    positions.append(esite['adsorbate_position'])
+
+        if coverage == 3/4:
+            occupied_sites = final_sites.copy()
+            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False)
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            vertex_indices = [s['indices'][0] for s in vertex_sites]
+            ve_common_indices = set()
+            for esite in edge_sites:
+                if set(esite['indices']) & set(vertex_indices):
+                    for i in esite['indices']:
+                        if i not in vertex_indices:
+                            ve_common_indices.add(i)                
+            for esite in edge_sites:
+                if not set(esite['indices']).issubset(ve_common_indices):
+                    intermediate_indices = []
+                    for hsite in hcp_sites:
+                        if len(set(esite['indices']) & set(hsite['indices'])) == 2:
+                            intermediate_indices.append(min(set(esite['indices']) ^ set(hsite['indices'])))
+                    too_close = 0
+                    for s in occupied_sites:
+                        if len(set(esite['indices']) & set(s['indices'])) == 2:
+                            too_close += 1
+                    share = [0]
+                    for interi in intermediate_indices:
+                        share.append(len([s for s in occupied_sites if interi in s['indices']]))
+                    if max(share) <= 2 and too_close == 0:
+                        final_sites.append(esite)
+                        positions.append(esite['adsorbate_position'])
+
+        if coverage == 2/4:            
+            occupied_sites = final_sites.copy()
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            vertex_indices = [s['indices'][0] for s in vertex_sites]
+            ve_common_indices = set()
+            for esite in edge_sites:
+                if set(esite['indices']) & set(vertex_indices):
+                    for i in esite['indices']:
+                        if i not in vertex_indices:
+                            ve_common_indices.add(i)                
+            for esite in edge_sites:
+                if not set(esite['indices']).issubset(ve_common_indices):
+                    intermediate_indices = []
+                    for hsite in hcp_sites:
+                        if len(set(esite['indices']) & set(hsite['indices'])) == 2:
+                            intermediate_indices.append(min(set(esite['indices']) ^ set(hsite['indices'])))
+                    share = [0]
+                    for interi in intermediate_indices:
+                        share.append(len([s for s in occupied_sites if interi in s['indices']]))
+                    too_close = 0
+                    for s in occupied_sites:
+                        if len(set(esite['indices']) & set(s['indices'])) == 2:
+                            too_close += 1
+                    if max(share) <= 1 and too_close == 0:
+                        final_sites.append(esite)
+                        positions.append(esite['adsorbate_position'])
+
+        if coverage == 1/4:
+            occupied_sites = final_sites.copy()
+            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False)
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            vertex_indices = [s['indices'][0] for s in vertex_sites]
+            ve_common_indices = set()
+            for esite in edge_sites:
+                if set(esite['indices']) & set(vertex_indices):
+                    for i in esite['indices']:
+                        if i not in vertex_indices:
+                            ve_common_indices.add(i)                
+            for esite in edge_sites:
+                if not set(esite['indices']).issubset(ve_common_indices):
+                    intermediate_indices = []
+                    for hsite in hcp_sites:
+                        if len(set(esite['indices']) & set(hsite['indices'])) == 2:
+                            intermediate_indices.append(min(set(esite['indices']) ^ set(hsite['indices'])))
+                    share = [0]
+                    for interi in intermediate_indices:
+                        share.append(len([s for s in occupied_sites if interi in s['indices']]))
+                    too_close = 0
+                    for s in occupied_sites:
+                        if len(set(esite['indices']) & set(s['indices'])) > 0:
+                            too_close += 1
+                    if max(share) == 0 and too_close == 0:
+                        final_sites.append(esite)
+                        positions.append(esite['adsorbate_position'])
+
         if adsorbate == 'CO':
             for site in final_sites:
                 add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
@@ -322,11 +435,55 @@ def pattern_generator(atoms, adsorbate, surface=None, coverage=1., height=None, 
                 if overlap > 0:                                                                           
                     overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
             del atoms[overlap_atoms_indices]                                                                    
+
     else:
         for pos in positions:
             ads.translate(pos - ads[0].position)
             atoms.extend(ads)
         if ads_indices:
             atoms.extend(ads_atoms)
+
+    return atoms
+
+
+def random_pattern_generator(atoms, adsorbate, nadsorbate, min_adsorbate_distance=2., heights=heights_dict):
+    '''A function for generating random coverage patterns with constraint.
+       Parameters
+       ----------
+       atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
+           
+       adsorbate: The adsorbate. Must be one of the following three types:
+           A string containing the chemical symbol for a single atom.
+           An atom object.
+           An atoms object (for a molecular adsorbate).                                                                                                         
+       nadsorbate: The number of adsorbate.
+
+       min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
+
+       heights: A dictionary that contains the adsorbate height for each site type.'''
+
+    rmin = min_adsorbate_distance/2.9
+    all_sites = enumerate_monometallic_sites(atoms, heights, second_shell=False)
+    random.shuffle(all_sites)    
+
+    for site in all_sites:
+        add_adsorbate(atoms, molecule(adsorbate), site)
+    nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+    nl.update(atoms)            
+    atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
+    random.shuffle(atom_indices)
+    ads_symbols = molecule(adsorbate).get_chemical_symbols()
+    n_ads_atoms = len(ads_symbols)
+    overlap_atoms_indices = []
+    
+    for idx in atom_indices:   
+        neighbor_indices, _ = nl.get_neighbors(idx)
+        overlap = 0
+        for i in neighbor_indices:                                                                
+            if (atoms[i].symbol in adsorbates) and (i not in overlap_atoms_indices):                     
+                overlap += 1                                                                      
+        if overlap > 0:                                                                           
+            overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
+    del atoms[overlap_atoms_indices]
 
     return atoms
