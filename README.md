@@ -111,7 +111,7 @@ view(pattern)
 ```
 Out:
 
-<img src="images/random_cuboctahedron_NiPt_309_with_random_O_coverage.png"  width="400" height="250">
+<img src="images/random_cuboctahedron_NiPt_309_with_random_O_coverage.png"  width="300" height="250">
 
 The code can generate coverage patterns for various surfaces and nanoparticles. Below shows all well-defined symmetric patterns.
 ![](images/all_coverage_patterns.png)
