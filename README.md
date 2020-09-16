@@ -85,19 +85,33 @@ If multiple species are present, please provide a list of the present adsorbates
 ![](images/labeled_sites.png)
 
 ### Generate coverage pattern
-A search algorithm is implemented to automatically generate adsorbate patterns with certain coverages. Example: to generate the adsorbate pattern on fcc111 surface with a 0.75 ML coverage, simply use the following code
+A search algorithm is implemented to automatically generate adsorbate patterns with certain coverages. Example: to generate the "kagome" adsorbate pattern on fcc111 surface with a 0.75 ML coverage, use the following code
 ```python
-from nanopads.adsorbate_coverage import pattern_generator
+from nanopads.adsorbate_coverage import symmetric_pattern_generator
 from ase.io import read, write
 from ase.visualize import view
 
 atoms = read('random_surface_111.traj')
-pattern = pattern_generator(atoms, adsorbate='O', coverage=3/4)
+pattern = symmetric_pattern_generator(atoms, adsorbate='O', coverage=3/4)
 view(pattern)
 ```
 Out:
 
 <img src="images/fcc111_0.75ml.png"  width="400" height="250">
 
-The code can generate coverage patterns for various surfaces and nanoparticles. Below shows all well-defined patterns.
+To generate random adsorbate patterns with a constraint of minimum distance between two adsorbates, use the following code
+```python
+from nanopads.adsorbate_coverage import symmetric_pattern_generator
+from ase.io import read, write
+from ase.visualize import view
+
+atoms = read('random_cuboctahedron_NiPt_309.traj')
+pattern = random_pattern_generator(atoms, adsorbate='O', min_adsorbate_distance=2.)
+view(pattern)
+```
+Out:
+
+<img src="images/random_cuboctahedron_NiPt_309_with_random_O_coverage.png"  width="400" height="250">
+
+The code can generate coverage patterns for various surfaces and nanoparticles. Below shows all well-defined symmetric patterns.
 ![](images/all_coverage_patterns.png)
