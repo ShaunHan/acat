@@ -454,7 +454,7 @@ def identify_surface(atoms):
         return 'fcc111'
 
 
-def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None, nsite='all', rmin=0.1):
+def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None, nsite='all', min_adsorbate_distance=0.3):
     """A function for adding adsorbate to a specific adsorption site on a monometalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes, or a 100/111 surface slab.
 
@@ -486,13 +486,14 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
     nsite: The number of such adsorption site that is attached with the adsorbate. 
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
 
-    rmin: The minimum distance between two adsorbate atoms.
+    min_adsorbate_distance: The minimum distance between two adsorbate atoms.
         Default value 0.1 is good in most cases. Play around to find the best value.
     
     Example
     ------- 
     monometallic_add_adsorbate(atoms,adsorbate='CO',site='hollow',surface='fcc100',nsite='all')"""
 
+    rmin = min_adsorbate_distance/2.9
     atoms.info['data'] = {}        
 
     if True not in atoms.get_pbc():
@@ -508,7 +509,8 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
         for site in special_sites:
             sites.append(site)
         if not sites:
-            print('No such adsorption site found on this nanoparticle.')
+#            print('No such adsorption site found on this nanoparticle.')
+            None
         elif adsorbate == 'CO':
             if nsite == 'all':
                 for site in sites:                                            
@@ -862,7 +864,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
     return sites
 
 
-def enumerate_monometallic_sites(atoms, second_shell=False):
+def enumerate_monometallic_sites(atoms, heights=heights_dict, second_shell=False):
     """Get all sites from a nanoparticle or a surface slab. 
        Elemental composition is ignored.""" 
 
@@ -870,37 +872,44 @@ def enumerate_monometallic_sites(atoms, second_shell=False):
 
     if True not in atoms.get_pbc():
         for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
-            ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, second_shell=False)
+            ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, heights['ontop'], second_shell=False)
             if ontop_sites:
                 all_sites += ontop_sites
         for surface in ['edge', 'fcc100', 'fcc111']:
-            bridge_sites = get_monometallic_sites(atoms, 'bridge', surface, second_shell=False)
+            bridge_sites = get_monometallic_sites(atoms, 'bridge', surface, heights['bridge'], second_shell=False)
             if bridge_sites:
                 all_sites += bridge_sites
-        fcc_sites = get_monometallic_sites(atoms, 'fcc', 'fcc111', second_shell=False)
+        fcc_sites = get_monometallic_sites(atoms, 'fcc', 'fcc111', heights['fcc'], second_shell=False)
         if fcc_sites:
             all_sites += fcc_sites
-        hcp_sites = get_monometallic_sites(atoms, 'hcp', 'fcc111', second_shell)
+        hcp_sites = get_monometallic_sites(atoms, 'hcp', 'fcc111', heights['hcp'], second_shell)
         if hcp_sites:
             all_sites += hcp_sites
-        hollow_sites = get_monometallic_sites(atoms, 'hollow', 'fcc100', second_shell)
+        hollow_sites = get_monometallic_sites(atoms, 'hollow', 'fcc100', heights['hollow'], second_shell)
         if hollow_sites:
             all_sites += hollow_sites
 
     else:
-        for site in ['ontop', 'bridge', 'fcc']:
-            first_sites = get_monometallic_sites(atoms, site, second_shell=False)
-            if first_sites:
-                all_sites += first_sites
-        for site in ['hcp', 'hollow']:
-            second_sites = get_monometallic_sites(atoms, site, second_shell=second_shell)
-            if second_sites:
-                all_sites += second_sites
+        ontop_sites = get_monometallic_sites(atoms, 'ontop', height=heights['ontop'], second_shell=False)
+        if ontop_sites:
+            all_sites += ontop_sites
+        bridge_sites = get_monometallic_sites(atoms, 'bridge', height=heights['bridge'], second_shell=False)
+        if bridge_sites:
+            all_sites += bridge_sites
+        fcc_sites = get_monometallic_sites(atoms, 'fcc', height=heights['fcc'], second_shell=False)
+        if fcc_sites:
+            all_sites += fcc_sites
+        hcp_sites = get_monometallic_sites(atoms, 'hollow', height=heights['hcp'], second_shell=second_shell)
+        if hcp_sites:
+            all_sites += hcp_sites
+        hollow_sites = get_monometallic_sites(atoms, 'hollow', height=heights['hollow'], second_shell=second_shell)
+        if hollow_sites:
+            all_sites += hollow_sites
 
     return all_sites
 
 
-def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=None, second_shell=False, height=None, nsite=1, rmin=0.1):
+def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=None, second_shell=False, height=None, nsite=1, min_adsorbate_distance=0.3):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic nanoparticle in 
     icosahedron / cuboctahedron / decahedron / truncated-octahedron shapes or 100 / 111 surface slab.
 
@@ -941,7 +950,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
     nsite: The number of such adsorption site that is attached with the adsorbate. 
         Default is 1. Set nsite = 'all' to attach the adsorbate to all such sites.
 
-    rmin: The minimum distance between two adsorbate atoms.                             
+    min_adsorbate_distance: The minimum distance between two adsorbate atoms.                             
         Default value 0.1 is good in most cases. Play around to find the best value.
     
     Example
@@ -951,6 +960,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
 
     #print('System: adsorbate {0}, site {1}, surface {2}, composition {3}, second shell {4}'.format(
     #       adsorbate, site, surface, composition, second_shell))
+    rmin = min_adsorbate_distance/2.9
     atoms.info['data'] = {}
     if composition is None:
         raise ValueError('Composition must be specified. Otherwise use the monometallic function.')
@@ -1402,7 +1412,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
 
 
 
-def enumerate_bimetallic_sites(atoms, second_shell=False):
+def enumerate_bimetallic_sites(atoms, heights=heights_dict, second_shell=False):
     """Get all sites from a bimetallic nanoparticle or slab. 
        Elemental composition is included.""" 
 
@@ -1413,28 +1423,28 @@ def enumerate_bimetallic_sites(atoms, second_shell=False):
     if True not in atoms.get_pbc():
         for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
             for composition in metals:
-                ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, second_shell=False)
+                ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, heights['ontop'], second_shell=False)
                 if ontop_sites:
                     all_sites += ontop_sites
         for surface in ['edge', 'fcc100', 'fcc111']:
             for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
-                bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, second_shell=False)
+                bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, heights['bridge'], second_shell=False)
                 if bridge_sites:
                     all_sites += bridge_sites
         for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                             metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-            fcc_sites = get_bimetallic_sites(atoms, 'fcc', 'fcc111', composition, second_shell=False)
+            fcc_sites = get_bimetallic_sites(atoms, 'fcc', 'fcc111', composition, heights['fcc'], second_shell=False)
             if fcc_sites:
                 all_sites += fcc_sites
         for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                             metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
             if second_shell:
                 for second_shell_element in metals:
-                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell_element)
+                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, heights['hcp'], second_shell_element)
                     if hcp_sites:
                         all_sites += hcp_sites
             else:
-                hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, second_shell=False)
+                hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, heights['hcp'], second_shell=False)
                 if hcp_sites:
                     all_sites += hcp_sites
         for composition in [metals[0]+metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[0]+metals[1], 
@@ -1442,39 +1452,39 @@ def enumerate_bimetallic_sites(atoms, second_shell=False):
                             metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
             if second_shell:
                 for second_shell_element in metals:
-                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell_element)
+                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, heights['hollow'], second_shell_element)
                     if hollow_sites:
                         all_sites += hollow_sites
             else:
-                hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, second_shell=False)
+                hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition, heights['hollow'], second_shell=False)
                 if hollow_sites:
                     all_sites += hollow_sites
 
     else:
         surface = identify_surface(atoms)
         for composition in metals:
-            ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, second_shell=False)
+            ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, heights['ontop'], second_shell=False)
             if ontop_sites:
                 all_sites += ontop_sites
         for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
-            bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, second_shell=False)
+            bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, heights['bridge'], second_shell=False)
             if bridge_sites:
                 all_sites += bridge_sites
         if surface == 'fcc111':
             for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                                 metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-                fcc_sites = get_bimetallic_sites(atoms, 'fcc', surface, composition, second_shell=False)
+                fcc_sites = get_bimetallic_sites(atoms, 'fcc', surface, composition, heights['fcc'], second_shell=False)
                 if fcc_sites:
                     all_sites += fcc_sites
             for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                                 metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
                 if second_shell:
                     for second_shell_element in metals:
-                        hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, second_shell=second_shell_element)
+                        hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, heights['hcp'], second_shell=second_shell_element)
                         if hcp_sites:
                             all_sites += hcp_sites
                 else:
-                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, second_shell=False)
+                    hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, heights['hcp'], second_shell=False)
                     if hcp_sites:
                         all_sites += hcp_sites
         elif surface == 'fcc100':
@@ -1483,11 +1493,11 @@ def enumerate_bimetallic_sites(atoms, second_shell=False):
                                 metals[0]+metals[1]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]+metals[1]]:
                 if second_shell:
                     for second_shell_element in metals:
-                        hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, composition, second_shell=second_shell_element)
+                        hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, composition, heights['hollow'], second_shell=second_shell_element)
                         if hollow_sites:
                             all_sites += hollow_sites
                 else:
-                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, composition, second_shell=False)
+                    hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, composition, heights['hollow'], second_shell=False)
                     if hollow_sites:
                         all_sites += hollow_sites
 
@@ -1522,7 +1532,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                 for ads in adsorbate:
                     k = adsorbate.index(ads)
                     ao = AdsorbateOperator(ads, sites)
-                    if ao.is_site_occupied_by(atoms, ads, site, min_adsorbate_distance=0.01):
+                    if ao.is_site_occupied_by(atoms, ads, site, min_adsorbate_distance=0.2):
                         site['occupied'] = 1
                         site['adsorbate'] = ads
                         indices = site['indices']
@@ -1548,7 +1558,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
     else:
         ao = AdsorbateOperator(adsorbate, sites)
         for site in sites:
-            if ao.is_site_occupied(atoms, site, min_adsorbate_distance=0.01):
+            if ao.is_site_occupied(atoms, site, min_adsorbate_distance=0.2):
                 site['occupied'] = 1
                 indices = site['indices']
                 label = site['label']
