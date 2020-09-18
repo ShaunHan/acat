@@ -23,7 +23,7 @@ Then edit ```~/.bashrc``` to add
 
 ```export PYTHONPATH=/path-to-nanopads/:$PYTHONPATH```
 
-Remeber to ```source ~/.bashrc```
+Remember to ```source ~/.bashrc```
 ## Usage
 ### Add adsorbates
 The code can automatically identify the shape and surfaces of nanoparticles, or the type of surface slabs.
