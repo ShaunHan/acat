@@ -1133,7 +1133,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
             ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
         final_sites = []
         if site in ['ontop','bridge','fcc']:
-            sites = get_monometallic_sites(atoms, site, height=height, second_shell=False)
+            sites = get_monometallic_sites(atoms, site, surface, height=height, second_shell=False)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'ontop':
@@ -1152,7 +1152,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
                         final_sites.append(site)
         elif site in ['hcp','hollow']:
-            sites = get_monometallic_sites(atoms, site, height=height, second_shell=True)
+            sites = get_monometallic_sites(atoms, site, surface, height=height, second_shell=True)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'hcp':
