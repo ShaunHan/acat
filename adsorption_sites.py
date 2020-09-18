@@ -585,7 +585,8 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
             surface = identify_surface(atoms) 
         dummy = atoms.copy()
         #Expand cell for small unit cell
-        if surface == 'fcc100' and len(top_indices) < 8:            
+        if (surface == 'fcc100' and len(top_indices) < 8)\
+        or (surface == 'fcc111' and len(top_indices) < 4):            
             xcell = dummy.cell[0][0]
             ycell = dummy.cell[1][1]
             atoms *= (2,2,1)
@@ -654,6 +655,11 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
         elif surface == 'fcc111':
             if site in ['ontop', 'bridge']:
                 site_positions = [np.array([ary[0],ary[1],ary[2]+hdiff]) for ary in ads_sites[site]] 
+                if len(top_indices) < 4:
+                    atoms = dummy.copy()
+                    site_positions = [p for p in site_positions if (0 <= np.dot(p, np.linalg.inv(atoms.cell))[0] <= 1)\
+                    and (0 <= np.dot(p, np.linalg.inv(atoms.cell))[1] <= 1)]
+
                 if nsite == 'all':
                     for pos in site_positions:
                         ads.translate(pos - ads[0].position)
@@ -679,6 +685,14 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
                         fcc_positions.append(np.array([pos[0],pos[1],pos[2]+hdiff]))
                     else:                    
                         hcp_positions.append(np.array([pos[0],pos[1],pos[2]+hdiff]))
+
+                if len(top_indices) < 4:
+                    atoms = dummy.copy()
+                    fcc_positions = [p for p in fcc_positions if (0 <= np.dot(p, np.linalg.inv(atoms.cell))[0] <= 1)\
+                    and (0 <= np.dot(p, np.linalg.inv(atoms.cell))[1] <= 1)]
+                    hcp_positions = [p for p in hcp_positions if (0 <= np.dot(p, np.linalg.inv(atoms.cell))[0] <= 1)\
+                    and (0 <= np.dot(p, np.linalg.inv(atoms.cell))[1] <= 1)]
+
                 if nsite == 'all':
                     for pos in locals()['{}_positions'.format(site)]:
                         ads.translate(pos - ads[0].position)
