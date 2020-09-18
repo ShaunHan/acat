@@ -117,5 +117,5 @@ The code can generate coverage patterns for various surfaces and nanoparticles. 
 ![](images/all_coverage_patterns.png)
 
 ## Notice
-1. The code distinguishes between nanoparticle and surface structures by PBC, so before using the functions please set all directions as non-periodic for a nanoparticle and at least one periodic direction for a surface structure.
+1. The code distinguishes between nanoparticle and surface structures by PBC, so before using the functions **please set all directions as non-periodic for a nanoparticle and at least one periodic direction for a surface structure**.
 2. Please provide surface structures that have at least 8 surface atoms for 100 facet and at least 4 surface atoms for 111 facet. In this code, the indices that constitute a surface site must be all unique, so it requires at least 8 surface atoms for 100 facet and 4 atoms for 111 facet. The ```monometallic_add_adsorbate``` function still works for 100 facets with less than 8 surface atoms and 111 facets with less than 4 surface atoms, but other functions do not work.
