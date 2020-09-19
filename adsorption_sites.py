@@ -1067,8 +1067,8 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
     rmin = min_adsorbate_distance/2.9
     atoms.info['data'] = {}
     if composition is None:
-        raise ValueError('Composition must be specified. Otherwise use the i
-                          monometallic function.')
+        raise ValueError('Composition must be specified. '+
+                         'Otherwise use the monometallic function.')
 
     if True not in atoms.get_pbc():
         if surface is None:
@@ -1150,7 +1150,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                                 neighbor_indices = []
                                 for i in site['indices']:
                                     cutoff = natural_cutoffs(atoms)
-                                    nl = NeighborList(cutoff, self_interaction=False, i
+                                    nl = NeighborList(cutoff, self_interaction=False, 
                                                       bothways=True)
                                     nl.update(atoms)
                                     indices, offsets = nl.get_neighbors(i)
@@ -1344,8 +1344,8 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
 
     atoms.info['data'] = {}
     if composition is None:
-        raise ValueError('Composition must be specified. Otherwise use the monometallic 
-                          function.')
+        raise ValueError('Composition must be specified. ' +
+                         'Otherwise use the monometallic function.')
     final_sites = []
     if True not in atoms.get_pbc():
         if surface is None:
