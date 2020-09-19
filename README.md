@@ -92,7 +92,7 @@ from ase.io import read, write
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
 labeled_atoms = label_occupied_sites(atoms, adsorbate='OH', second_shell=True)
 ```
-<img src="images/tagged_sites.png"  width="900" height="300">
+<img src="images/tagged_sites.png"  width="700" height="300">
 
 If multiple species are present, please provide a list of the present adsorbates. Currently only support at most 2 species.
 ![](images/labeled_sites.png)
