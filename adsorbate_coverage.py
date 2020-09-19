@@ -503,7 +503,8 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None,
     final_sites = []
     positions = []
     if site == 'fcc':
-        return symmetric_pattern_generator(atoms, adsorbate, coverage=1, height=height, min_adsorbate_distance=min_adsorbate_distance)
+        return symmetric_pattern_generator(atoms, adsorbate, coverage=1, height=height, 
+                                           min_adsorbate_distance=min_adsorbate_distance)
     elif site == 'ontop':
         sites = get_monometallic_sites(atoms, site='ontop', surface='fcc100') +\
                 get_monometallic_sites(atoms, site='ontop', surface='fcc111') +\
