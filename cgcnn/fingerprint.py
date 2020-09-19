@@ -1,7 +1,5 @@
-from ..adsorption_sites import multi_label_counter
+from ..adsorbate_operators import multi_label_counter
 from ase.io import read, write
-import pickle
-from tqdm import tqdm
 from collections import defaultdict
 import numpy as np
 from scipy.spatial.distance import cdist
