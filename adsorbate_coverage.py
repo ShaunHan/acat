@@ -1,6 +1,6 @@
-from .adsorption_sites import AdsorptionSites, add_adsorbate, identify_surface
+from .adsorption_sites import AdsorptionSites, get_mic_distance, add_adsorbate, identify_surface
 from .adsorption_sites import get_monometallic_sites, enumerate_monometallic_sites
-from .adsorbate_operators import AdsorbateOperator, get_mic_distance
+from .adsorbate_operators import AdsorbateOperator 
 from ase.io import read, write
 from ase.build import molecule
 from ase.neighborlist import NeighborList
