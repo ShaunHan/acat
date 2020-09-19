@@ -69,6 +69,19 @@ from nanopads.adsorption_sites import enumerate_monometallic_sites
 
 all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
 ```
+To visualize the site enumeration, one can do
+```python
+from nanopads.adsorption_sites import enumerate_sites_with_adsorbates
+from ase.io import read, write
+from ase.visualize import view
+
+atoms = read('random_marks_decahedron_NiCu_318.traj')
+enumeration = enumerate_sites_with_adsorbates(atoms, 'H')
+view(enumeration)
+```
+Out:
+
+<img src="images/full_sites_enumeration.png"  width="300" height="300">
 
 ### Label occupied sites
 To get information of site occupation, see example:
