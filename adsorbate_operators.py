@@ -18,13 +18,10 @@ class AdsorbateOperator(OffspringCreator):
 
     Don't use this operator directly!"""
 
-    def __init__(self, adsorbate, adsorption_sites=None, num_muts=1):        
+    def __init__(self, adsorbate, num_muts=1):        
         OffspringCreator.__init__(self, num_muts=num_muts)
         self.adsorbate = self.convert_adsorbate(adsorbate)
         self.adsorbate_set = set(self.adsorbate.get_chemical_symbols())
-        if adsorption_sites is None:
-            raise NotImplementedError
-        self.adsorption_sites = adsorption_sites 
         self.descriptor = 'AdsorbateOperator'
 
     @classmethod
@@ -223,9 +220,10 @@ class AdsorbateOperator(OffspringCreator):
             return False
 
 
-    def is_site_occupied_by(self, atoms, adsorbate, site, min_adsorbate_distance):
-        """Returns True if the site on the atoms object is occupied by
-        a specific species"""
+    def is_site_occupied_by(self, atoms, adsorbate, site, 
+                            min_adsorbate_distance):
+        """Returns True if the site on the atoms object is occupied 
+        by a specific species"""
         # if site['occupied']:
         #     return True
         if True not in atoms.get_pbc():
@@ -261,7 +259,8 @@ class AdsorbateOperator(OffspringCreator):
             dists = []
             for a in atoms:
                 if a.symbol in set(ads_symbols):
-                    dists.append((a.index, get_mic_distance(pos, a.position, atoms)))
+                    dists.append((a.index, get_mic_distance(pos, a.position, 
+                                                            atoms)))
             for (i, d) in dists:
                 if d < min_adsorbate_distance:
                     site_ads_symbols = []
@@ -298,21 +297,7 @@ class AdsorbateOperator(OffspringCreator):
 class AddAdsorbate(AdsorbateOperator):
     """
     Use this operator to add adsorbates to the surface.
-
-    Supply a list of adsorption_sites of the form:
-    [{'adsorbate_position':[.., .., ..], 'normal':surface_normal_vector,
-    'height':height, 'site':site, 'surface':surface}, {...}, ...]
-
-    The adsorbate will be positioned at:
-    adsorbate_position + surface_normal_vector * height
-    The site and surface parameters are supplied to be able to keep
-    track of which sites and surfaces are filled - useful to determine
-    beforehand or know afterwards.
-
-    If the surface is allowed to change during the algorithm run,
-    a list of adsorbate sites should not be supplied. It would instead
-    be generated for every case, however this has not been implemented
-    here yet.
+    The surface is allowed to change during the algorithm run.
 
     Site and surface preference can be supplied. If both are supplied site
     will be considered first.
@@ -322,13 +307,11 @@ class AddAdsorbate(AdsorbateOperator):
     """
     def __init__(self, adsorbate,
                  min_adsorbate_distance=2.,
-                 adsorption_sites=None,
                  site_preference=None,
                  surface_preference=None,
                  tilt_angle=None,
                  num_muts=1):
         AdsorbateOperator.__init__(self, adsorbate,
-                                   adsorption_sites=adsorption_sites,
                                    num_muts=num_muts)
         self.descriptor = 'AddAdsorbate'
 
@@ -351,11 +334,7 @@ class AddAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        ads_sites = self.adsorption_sites[:]
-        # if self.adsorption_sites is None:
-        #     ads_sites = Ads_sites.get_sites()
-        # else:
-        #     ads_sites = self.adsorption_sites[:]
+        ads_sites = enumerate_monometallic_sites(indi)
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
 
@@ -383,12 +362,10 @@ class RemoveAdsorbate(AdsorbateOperator):
     """This operator removes an adsorbate from the surface. It works
     exactly (but doing the opposite) as the AddAdsorbate operator."""
     def __init__(self, adsorbate,
-                 adsorption_sites=None,
                  site_preference=None,
                  surface_preference=None,
                  num_muts=1):
         AdsorbateOperator.__init__(self, adsorbate,
-                                   adsorption_sites=adsorption_sites,
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
 
@@ -406,7 +383,7 @@ class RemoveAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        ads_sites = self.adsorption_sites[:]
+        ads_sites = enumerate_monometallic_sites(indi)
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
 
@@ -434,14 +411,12 @@ class MoveAdsorbate(AdsorbateOperator):
     again at a different position, i.e. effectively moving the adsorbate."""
     def __init__(self, adsorbate,
                  min_adsorbate_distance=2.,
-                 adsorption_sites=None,
                  site_preference_from=None,
                  surface_preference_from=None,
                  site_preference_to=None,
                  surface_preference_to=None,
                  num_muts=1):
         AdsorbateOperator.__init__(self, adsorbate,
-                                   adsorption_sites=adsorption_sites,
                                    num_muts=num_muts)
         self.descriptor = 'MoveAdsorbate'
 
@@ -462,8 +437,8 @@ class MoveAdsorbate(AdsorbateOperator):
 
         for atom in f:
             indi.append(atom)
-            
-        ads_sites = self.adsorption_sites[:]
+         
+        ads_sites = enumerate_monometallic_sites(indi)
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
             if self.surface_preference_from is not None:
@@ -537,14 +512,10 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         Default None meaning no rotation is performed
     """
     def __init__(self, adsorbate, blmin, keep_composition=True,
-                 fix_coverage=False, adsorption_sites=None,
-                 min_adsorbate_distance=2.,
+                 fix_coverage=False, min_adsorbate_distance=2.,
                  rotate_vectors=None, rotate_angles=None):
-        if not fix_coverage:
-            # Trick the AdsorbateOperator class to accept no adsorption_sites
-            adsorption_sites = [1]
-        AdsorbateOperator.__init__(self, adsorbate,
-                                   adsorption_sites=adsorption_sites)
+
+        AdsorbateOperator.__init__(self, adsorbate)
         self.blmin = blmin
         self.keep_composition = keep_composition
         self.fix_coverage = fix_coverage
@@ -718,7 +689,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         # Put the two parts together
         for atom in chain(tmpf, tmpm):
             indi.append(atom)
-            
+
+        ads_sites = enumerate_monometallic_sites(indi)           
         if self.fix_coverage:
             # Remove or add adsorbates as needed
             adsorbates_in_child = self.get_all_adsorbate_indices(indi)
@@ -726,7 +698,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             if diff < 0:
                 # Add adsorbates
                 for _ in range(abs(diff)):
-                    self.add_adsorbate(indi, self.adsorption_sites,
+                    self.add_adsorbate(indi, ads_sites,
                                        self.min_adsorbate_distance)
             elif diff > 0:
                 # Remove adsorbates
@@ -770,15 +742,22 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
 
 
 def label_occupied_sites(atoms, adsorbate, second_shell=False):
-    '''Assign labels to all occupied sites. Different labels represent different sites.
-       The label is defined as the number of atoms being labeled at that site (considering second shell).
-       Change the 2 metal elements to 2 pseudo elements for sites occupied by a certain species.
-       If multiple species are present, the 2 metal elements are assigned to multiple pseudo elements.
-       Atoms that are occupied by multiple species also need to be changed to new pseudo elements.
-       Currently only a maximum of 2 species is supported.
-       
-       Note: Please provide atoms including adsorbate(s), with adsorbate being a string or a list of strings.
-             Set second_shell=True if you also want to label the second shell atoms.'''
+    '''Assign labels to all occupied sites. Different labels represent 
+    different sites.
+    
+    The label is defined as the number of atoms being labeled at that site 
+    (considering second shell).
+    
+    Change the 2 metal elements to 2 pseudo elements for sites occupied by a 
+    certain species. If multiple species are present, the 2 metal elements 
+    are assigned to multiple pseudo elements. Atoms that are occupied by 
+    multiple species also need to be changed to new pseudo elements. Currently 
+    only a maximum of 2 species is supported.
+    
+    Note: Please provide atoms including adsorbate(s), with adsorbate being a 
+    string or a list of strings.
+    
+    Set second_shell=True if you also want to label the second shell atoms.'''
 
     species_pseudo_mapping = [('As','Sb'),('Se','Te'),('Br','I')]  
     elements = list(set(atoms.symbols))
@@ -797,7 +776,8 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                 for ads in adsorbate:
                     k = adsorbate.index(ads)
                     ao = AdsorbateOperator(ads, sites)
-                    if ao.is_site_occupied_by(atoms, ads, site, min_adsorbate_distance=0.2):
+                    if ao.is_site_occupied_by(atoms, ads, site, 
+                                              min_adsorbate_distance=0.2):
                         site['occupied'] = 1
                         site['adsorbate'] = ads
                         indices = site['indices']
@@ -807,16 +787,23 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                                 atoms[idx].tag = label
                             else:
                                 atoms[idx].tag = str(atoms[idx].tag) + label
-                            if atoms[idx].symbol not in species_pseudo_mapping[0]+species_pseudo_mapping[1]:
+                            if atoms[idx].symbol not in \
+                            species_pseudo_mapping[0]+species_pseudo_mapping[1]:
                                 if atoms[idx].symbol == mA:
-                                    atoms[idx].symbol = species_pseudo_mapping[k][0]
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[k][0]
                                 elif atoms[idx].symbol == mB:
-                                    atoms[idx].symbol = species_pseudo_mapping[k][1]
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[k][1]
                             else:
-                                if atoms[idx].symbol == species_pseudo_mapping[k-1][0]:
-                                    atoms[idx].symbol = species_pseudo_mapping[2][0]
-                                elif atoms[idx].symbol == species_pseudo_mapping[k-1][1]:
-                                    atoms[idx].symbol = species_pseudo_mapping[2][1]
+                                if atoms[idx].symbol == \
+                                   species_pseudo_mapping[k-1][0]:
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[2][0]
+                                elif atoms[idx].symbol == 
+                                     species_pseudo_mapping[k-1][1]:\
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[2][1]
                         n_occupied_sites += 1 
         else:
             raise NotImplementedError
@@ -832,27 +819,33 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                         atoms[idx].tag = label
                     else:
                         atoms[idx].tag = str(atoms[idx].tag) + label
-                    # Map to pseudo elements even when there is only one adsorbate species (unnecessary)
+                    # Map to pseudo elements even when there is only one 
+                    # adsorbate species (unnecessary)
                     #if atoms[idx].symbol == mA:
                     #    atoms[idx].symbol = species_pseudo_mapping[0][0]
                     #elif atoms[idx].symbol == mB:
                     #    atoms[idx].symbol = species_pseudo_mapping[0][1]
                 n_occupied_sites += 1
     tag_set = set([a.tag for a in atoms])
-    print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
+    print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, 
+                                                             tag_set))
 
     return atoms
 
 
 def multi_label_counter(atoms, adsorbate, second_shell=False):
     '''Encoding the labels into 5d numpy arrays. 
-       This can be further used as a fingerprint.
-       Atoms that constitute an occupied adsorption site will be labeled as 1.
-       If an atom contributes to multiple sites of same type, the number wil increase.
-       One atom can encompass multiple non-zero values if it contributes to multiple types of sites.
+    This can be further used as a fingerprint.
 
-       Note: Please provide atoms including adsorbate(s), with adsorbate being a string or a list of strings.
-             Set second_shell=True if you also want to label the second shell atoms.'''
+    Atoms that constitute an occupied adsorption site will be labeled as 1.
+    If an atom contributes to multiple sites of same type, the number wil 
+    increase. One atom can encompass multiple non-zero values if it 
+    contributes to multiple types of sites.
+
+    Note: Please provide atoms including adsorbate(s), with adsorbate being a 
+    string or a list of strings.
+
+    Set second_shell=True if you also want to label the second shell atoms.'''
 
     labeled_atoms = label_occupied_sites(atoms, adsorbate, second_shell)
     np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]
