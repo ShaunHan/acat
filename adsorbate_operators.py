@@ -769,7 +769,6 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                     yield atoms[i].position - atoms[j + i].position, min_dist
 
 
-
 def label_occupied_sites(atoms, adsorbate, second_shell=False):
     '''Assign labels to all occupied sites. Different labels represent different sites.
        The label is defined as the number of atoms being labeled at that site (considering second shell).
@@ -843,7 +842,6 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
     print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, tag_set))
 
     return atoms
-
 
 
 def multi_label_counter(atoms, adsorbate, second_shell=False):
