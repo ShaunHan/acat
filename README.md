@@ -86,7 +86,7 @@ Out:
 ### Label occupied sites
 To get information of site occupation, see example:
 ```python
-from nanopads.adsorption_sites import label_occupied_sites
+from nanopads.adsorbate_operators import label_occupied_sites
 from ase.io import read, write
 
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
