@@ -800,7 +800,7 @@ def label_occupied_sites(atoms, adsorbate, second_shell=False):
                                    species_pseudo_mapping[k-1][0]:
                                     atoms[idx].symbol = \
                                     species_pseudo_mapping[2][0]
-                                elif atoms[idx].symbol == 
+                                elif atoms[idx].symbol == \
                                      species_pseudo_mapping[k-1][1]:\
                                     atoms[idx].symbol = \
                                     species_pseudo_mapping[2][1]
