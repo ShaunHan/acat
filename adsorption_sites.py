@@ -1538,6 +1538,29 @@ def enumerate_bimetallic_sites(atoms, heights=heights_dict, second_shell=False):
     return all_sites
 
 
+
+def enumerate_sites_with_adsorbates(atoms, adsorbate, heights=heights_dict):
+    '''Add adsorbates to all possible sites.
+       Might be useful in some occasions (e.g. visualization).'''
+ 
+    all_sites = enumerate_monometallic_sites(atoms, heights, second_shell=False)
+                                                                                 
+    if True not in atoms.get_pbc():
+        for site in all_sites:
+            add_adsorbate(atoms, molecule(adsorbate), site)
+    else:
+        ads = molecule(adsorbate)[::-1]
+        if str(ads.symbols) != 'CO':
+            ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
+        positions = [s['adsorbate_position'] for s in all_sites]
+        for pos in positions:
+            ads.translate(pos - ads[0].position)
+            atoms.extend(ads)
+
+    return atoms
+
+
+
 def label_occupied_sites(atoms, adsorbate, second_shell=False):
     '''Assign labels to all occupied sites. Different labels represent different sites.
        The label is defined as the number of atoms being labeled at that site (considering second shell).
