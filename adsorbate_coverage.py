@@ -36,12 +36,14 @@ def get_coverage(atoms, adsorbate, nfullsite=None):
 
 def group_sites(atoms, sites):
     """A function that uses networkx to group one type of sites 
-       by geometrical facets of the nanoparticle"""
+    by geometrical facets of the nanoparticle"""
 
     # Find all indices of vertex and edge sites
-    vertex_sites = get_monometallic_sites(atoms, 'ontop', surface='vertex', second_shell=False) 
+    vertex_sites = get_monometallic_sites(atoms, 'ontop', surface='vertex', 
+                                          second_shell=False) 
     edge_sites = get_monometallic_sites(atoms, 'ontop', surface='edge', second_shell=False)
-    special_indices_tuples = [s['indices'] for s in vertex_sites] + [s['indices'] for s in edge_sites]
+    special_indices_tuples = [s['indices'] for s in vertex_sites] + \
+                             [s['indices'] for s in edge_sites]
     special_indices = set(list(sum(special_indices_tuples, ())))
     
     G=nx.Graph()
@@ -66,7 +68,8 @@ def group_sites(atoms, sites):
     return grouped_sites
 
 
-def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], coverage=1., height=None, min_adsorbate_distance=0.6):
+def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], coverage=1., 
+                                height=None, min_adsorbate_distance=0.6):
     """A function for generating certain well-defined symmetric adsorbate coverage patterns.
        Parameters
        ----------
@@ -82,16 +85,17 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
            Can either specify a string or a list of strings
 
        coverage: The coverage (ML) of the adsorbate.
-           Note that for small nanoparticles, the function might give results that do not correspond to the coverage.
-           This is normal since the surface area can be too small to encompass the coverage pattern properly.
-           We expect this function to work especially well on large nanoparticles and extended surfaces.
-                                                                                                         
+           Note that for small nanoparticles, the function might give results that do not 
+           correspond to the coverage. This is normal since the surface area can be too 
+           small to encompass the coverage pattern properly. We expect this function to 
+           work especially well on large nanoparticles and extended surfaces.                                                                                              
        height: The height from the adsorbate to the surface.
-           Default is 'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 'hollow': 1.7 for nanoparticles 
-           and 2.0 for all sites on surface slabs.
+           Default is {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 'hollow': 1.7}
+           for nanoparticles and 2.0 for all sites on surface slabs.
 
        min_adsorbate_distance: The minimum distance between two adsorbate atoms.
-           Default value 0.2 is good for adsorbate coverage patterns. Play around to find the best value.
+           Default value 0.2 is good for adsorbate coverage patterns. Play around to find 
+           the best value.
        
        Example
        ------- 
@@ -114,14 +118,16 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
     positions = []
     if 'fcc111' in surface: 
         if coverage == 1:
-            sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
+            sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', 
+                                           height=height, second_shell=False)
             if sites:
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
 
         elif coverage == 3/4:
             # Kagome pattern
-            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', 
+                                               height=height, second_shell=False)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -141,8 +147,10 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                             else:
                                 non_common_sites.append(sitej)
                         for sitej in non_common_sites:
-                            overlap = sum([common_site_indices.count(i) for i in sitej['indices']])
-                            if overlap == 1 and sitej['indices'] not in [s['indices'] for s in sites_to_delete]:
+                            overlap = sum([common_site_indices.count(i) \
+                                          for i in sitej['indices']])
+                            if overlap == 1 and sitej['indices'] not in [s['indices'] \
+                                                           for s in sites_to_delete]:
                                 sites_to_delete.append(sitej)                
                     for s in sites:
                         if s['indices'] not in [st['indices'] for st in sites_to_delete]:
@@ -151,8 +159,10 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
 
         elif coverage == 2/4:
             # Honeycomb pattern
-            fcc_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False) 
-            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False) 
+            fcc_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', 
+                                               height=height, second_shell=False) 
+            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', 
+                                               height=height, second_shell=False) 
             all_sites = fcc_sites + hcp_sites
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
@@ -167,7 +177,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                                 pass
                             elif len(set(sitej['indices']) & set(sitei['indices'])) == 1 \
                                  and sitej['site'] != sitei['site'] \
-                                 and sitej['indices'] not in [s['indices'] for s in sites_to_remain]:
+                                 and sitej['indices'] not in [s['indices'] \
+                                 for s in sites_to_remain]:
                                 sites_to_remain.append(sitej)
                     final_sites += sites_to_remain                                         
                     positions += [s['adsorbate_position'] for s in sites_to_remain]
@@ -182,11 +193,13 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                                     count += 1
                         if count != 0:
                             bad_sites.append(sti)
-                final_sites = [s for s in final_sites if s['indices'] not in [st['indices'] for st in bad_sites]]
+                final_sites = [s for s in final_sites if s['indices'] not in [st['indices'] \
+                                                                      for st in bad_sites]]
 
         elif coverage == 1/4:
             # Kagome pattern                                                                 
-            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', height=height, second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='fcc', surface='fcc111', 
+                                               height=height, second_shell=False)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -206,21 +219,26 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                             else:
                                 non_common_sites.append(sitej)
                         for sitej in non_common_sites:
-                            overlap = sum([common_site_indices.count(i) for i in sitej['indices']])
-                            if overlap == 1 and sitej['indices'] not in [s['indices'] for s in sites_to_remain]:
+                            overlap = sum([common_site_indices.count(i) \
+                                          for i in sitej['indices']])
+                            if overlap == 1 and sitej['indices'] not in [s['indices'] \
+                                                           for s in sites_to_remain]:
                                 sites_to_remain.append(sitej)               
                     final_sites += sites_to_remain
-                    positions += [s['adsorbate_position'] for s in sites if s['indices'] in [st['indices'] for st in sites_to_remain]]
+                    positions += [s['adsorbate_position'] for s in sites if \
+                                  s['indices'] in [st['indices'] for st in sites_to_remain]]
 
     if 'fcc100' in surface:
         if coverage == 1:
-            sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
+            sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', 
+                                           height=height, second_shell=False)
             if sites:
                 final_sites += sites
                 positions += [s['adsorbate_position'] for s in sites]
 
         elif coverage == 3/4:
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)            
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', 
+                                               height=height, second_shell=False)            
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -240,8 +258,10 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                             else:
                                 non_common_sites.append(sitej)
                         for sitej in non_common_sites:                        
-                            overlap = sum([common_site_indices.count(i) for i in sitej['indices']])                        
-                            if overlap in [1, 4] and sitej['indices'] not in [s['indices'] for s in sites_to_delete]:  
+                            overlap = sum([common_site_indices.count(i) \
+                                          for i in sitej['indices']])                        
+                            if overlap in [1, 4] and sitej['indices'] not in \
+                               [s['indices'] for s in sites_to_delete]:  
                                 sites_to_delete.append(sitej)
                     for s in sites:
                         if s['indices'] not in [st['indices'] for st in sites_to_delete]:
@@ -250,7 +270,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
 
         elif coverage == 2/4:
             #c(2x2) pattern
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', 
+                                               height=height, second_shell=False)
             original_sites = copy.deepcopy(all_sites)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
@@ -271,7 +292,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
 
         elif coverage == 1/4:
             #p(2x2) pattern
-            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
+            all_sites = get_monometallic_sites(atoms, site='hollow', surface='fcc100', 
+                                               height=height, second_shell=False)
             if True not in atoms.get_pbc():
                 grouped_sites = group_sites(atoms, all_sites)
             else:
@@ -291,16 +313,21 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                             else:
                                 non_common_sites.append(sitej)
                         for sitej in non_common_sites:              
-                            overlap = sum([common_site_indices.count(i) for i in sitej['indices']])                        
-                            if overlap in [1, 4] and sitej['indices'] not in [s['indices'] for s in sites_to_remain]:  
+                            overlap = sum([common_site_indices.count(i) \
+                                          for i in sitej['indices']])                        
+                            if overlap in [1, 4] and sitej['indices'] not in \
+                               [s['indices'] for s in sites_to_remain]:  
                                 sites_to_remain.append(sitej)
                     final_sites += sites_to_remain
-                    positions += [s['adsorbate_position'] for s in sites if s['indices'] in [st['indices'] for st in sites_to_remain]]
+                    positions += [s['adsorbate_position'] for s in sites if \
+                                  s['indices'] in [st['indices'] for st in sites_to_remain]]
 
     if True not in atoms.get_pbc():
         if coverage == 1:
-            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
-            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', 
+                                                height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', 
+                                                  height=height, second_shell=False)
             vertex_indices = [s['indices'][0] for s in vertex_sites]
             ve_common_indices = set()
             for esite in edge_sites:
@@ -315,9 +342,12 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
 
         if coverage == 3/4:
             occupied_sites = final_sites.copy()
-            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False)
-            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
-            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', 
+                                               height=height, second_shell=False)
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', 
+                                                height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', 
+                                                  height=height, second_shell=False)
             vertex_indices = [s['indices'][0] for s in vertex_sites]
             ve_common_indices = set()
             for esite in edge_sites:
@@ -330,22 +360,26 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                     intermediate_indices = []
                     for hsite in hcp_sites:
                         if len(set(esite['indices']) & set(hsite['indices'])) == 2:
-                            intermediate_indices.append(min(set(esite['indices']) ^ set(hsite['indices'])))
+                            intermediate_indices.append(min(set(esite['indices']) ^ \
+                                                            set(hsite['indices'])))
                     too_close = 0
                     for s in occupied_sites:
                         if len(set(esite['indices']) & set(s['indices'])) == 2:
                             too_close += 1
                     share = [0]
                     for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if interi in s['indices']]))
+                        share.append(len([s for s in occupied_sites if \
+                                          interi in s['indices']]))
                     if max(share) <= 2 and too_close == 0:
                         final_sites.append(esite)
                         positions.append(esite['adsorbate_position'])
 
         if coverage == 2/4:            
             occupied_sites = final_sites.copy()
-            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
-            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', 
+                                                height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', 
+                                                  height=height, second_shell=False)
             vertex_indices = [s['indices'][0] for s in vertex_sites]
             ve_common_indices = set()
             for esite in edge_sites:
@@ -358,10 +392,12 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                     intermediate_indices = []
                     for hsite in hcp_sites:
                         if len(set(esite['indices']) & set(hsite['indices'])) == 2:
-                            intermediate_indices.append(min(set(esite['indices']) ^ set(hsite['indices'])))
+                            intermediate_indices.append(min(set(esite['indices']) ^ \
+                                                            set(hsite['indices'])))
                     share = [0]
                     for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if interi in s['indices']]))
+                        share.append(len([s for s in occupied_sites if \
+                                          interi in s['indices']]))
                     too_close = 0
                     for s in occupied_sites:
                         if len(set(esite['indices']) & set(s['indices'])) == 2:
@@ -372,9 +408,12 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
 
         if coverage == 1/4:
             occupied_sites = final_sites.copy()
-            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False)
-            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', height=height, second_shell=False)
-            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', height=height, second_shell=False)
+            hcp_sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', 
+                                               height=height, second_shell=False)
+            edge_sites = get_monometallic_sites(atoms, site='bridge', surface='edge', 
+                                                height=height, second_shell=False)
+            vertex_sites = get_monometallic_sites(atoms, site='ontop', surface='vertex', 
+                                                  height=height, second_shell=False)
             vertex_indices = [s['indices'][0] for s in vertex_sites]
             ve_common_indices = set()
             for esite in edge_sites:
@@ -387,10 +426,12 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
                     intermediate_indices = []
                     for hsite in hcp_sites:
                         if len(set(esite['indices']) & set(hsite['indices'])) == 2:
-                            intermediate_indices.append(min(set(esite['indices']) ^ set(hsite['indices'])))
+                            intermediate_indices.append(min(set(esite['indices']) ^ \
+                                                            set(hsite['indices'])))
                     share = [0]
                     for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if interi in s['indices']]))
+                        share.append(len([s for s in occupied_sites if \
+                                          interi in s['indices']]))
                     too_close = 0
                     for s in occupied_sites:
                         if len(set(esite['indices']) & set(s['indices'])) > 0:
@@ -446,7 +487,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=['fcc100','fcc111'], c
     return atoms
 
 
-def full_coverage_pattern_generator(atoms, adsorbate, site, height=None, min_adsorbate_distance=0.6):
+def full_coverage_pattern_generator(atoms, adsorbate, site, height=None, 
+                                    min_adsorbate_distance=0.6):
     '''A function to generate different 1ML coverage patterns'''
 
     rmin = min_adsorbate_distance/2.9
@@ -463,16 +505,16 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None, min_ads
     if site == 'fcc':
         return symmetric_pattern_generator(atoms, adsorbate, coverage=1, height=height, min_adsorbate_distance=min_adsorbate_distance)
     elif site == 'ontop':
-        sites = get_monometallic_sites(atoms, site='ontop', surface='fcc100', second_shell=False) +\
-                get_monometallic_sites(atoms, site='ontop', surface='fcc111', second_shell=False) +\
-                get_monometallic_sites(atoms, site='ontop', surface='edge', second_shell=False) +\
-                get_monometallic_sites(atoms, site='ontop', surface='vertex', second_shell=False)
+        sites = get_monometallic_sites(atoms, site='ontop', surface='fcc100') +\
+                get_monometallic_sites(atoms, site='ontop', surface='fcc111') +\
+                get_monometallic_sites(atoms, site='ontop', surface='edge') +\
+                get_monometallic_sites(atoms, site='ontop', surface='vertex')
         if sites:
             final_sites += sites
             positions += [s['adsorbate_position'] for s in sites]
     elif site in ['hcp', 'hollow']:
-        sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height, second_shell=False) +\
-                get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height, second_shell=False)
+        sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height) +\
+                get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height)
         if sites:
             final_sites += sites
             positions += [s['adsorbate_position'] for s in sites]
@@ -525,7 +567,8 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None, min_ads
     return atoms
 
 
-def random_pattern_generator(atoms, adsorbate, min_adsorbate_distance=2., heights=heights_dict):
+def random_pattern_generator(atoms, adsorbate, min_adsorbate_distance=2., 
+                             heights=heights_dict):
     '''A function for generating random coverage patterns with constraint.
        Parameters
        ----------
