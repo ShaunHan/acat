@@ -67,7 +67,7 @@ To enumerate all possible adsorption of a nanoparticle or surface slab, see exam
 ```python
 from nanopads.adsorption_sites import enumerate_monometallic_sites
 
-all_sites = enumerate_monometallic_sites(atoms, second_shell=True)
+all_sites = enumerate_monometallic_sites(atoms, show_occupation=True, second_shell=True)
 ```
 To visualize the site enumeration, one can do
 ```python
@@ -86,7 +86,7 @@ Out:
 ### Label occupied sites
 To get information of site occupation, see example:
 ```python
-from nanopads.adsorbate_operators import label_occupied_sites
+from nanopads.adsorption_sites import label_occupied_sites
 from ase.io import read, write
 
 atoms = read('cuboctahedron_NiPt_309_with_OH.traj')
