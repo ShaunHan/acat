@@ -1,6 +1,6 @@
-from .adsorption_sites import AdsorptionSites, get_mic_distance, add_adsorbate, identify_surface
+from .adsorption_sites import AdsorptionSites
+from .adsorption_sites import get_mic_distance, add_adsorbate, identify_surface
 from .adsorption_sites import get_monometallic_sites, enumerate_monometallic_sites
-from .adsorbate_operators import AdsorbateOperator 
 from ase.io import read, write
 from ase.build import molecule
 from ase.neighborlist import NeighborList
@@ -21,7 +21,6 @@ def get_coverage(atoms, adsorbate, nfullsite=None):
        significantly accelerate the calculation."""
 
     sites = enumerate_monometallic_sites(atoms, second_shell=False)
-    ao = AdsorbateOperator(adsorbate, sites)
     if nfullsite is None:
         pattern = pattern_generator(atoms, 'O', ['fcc111', 'fcc100'], coverage=1)
         nfullsite = len([a for a in pattern if a.symbol == 'O'])
