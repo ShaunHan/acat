@@ -953,7 +953,8 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
     return sites
 
 
-def enumerate_monometallic_sites(atoms, heights=heights_dict, second_shell=False):
+def enumerate_monometallic_sites(atoms, show_occupation=False, heights=heights_dict, 
+                                 second_shell=False):
     """Get all sites from a nanoparticle or a surface slab. 
        Elemental composition is ignored.""" 
 
@@ -1004,6 +1005,11 @@ def enumerate_monometallic_sites(atoms, heights=heights_dict, second_shell=False
                                               second_shell=second_shell)
         if hollow_sites:
             all_sites += hollow_sites
+
+    if show_occupation:
+        for site in all_sites:
+            if _is_site_occupied(atoms, site, min_adsorbate_distance=0.2):
+                site['occupied'] = 1
 
     return all_sites
 
@@ -1538,7 +1544,8 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
     return final_sites
 
 
-def enumerate_bimetallic_sites(atoms, heights=heights_dict, second_shell=False):
+def enumerate_bimetallic_sites(atoms, show_occupation=False, heights=heights_dict, 
+                               second_shell=False):
     """Get all sites from a bimetallic nanoparticle or slab. 
        Elemental composition is included.""" 
 
@@ -1652,6 +1659,11 @@ def enumerate_bimetallic_sites(atoms, heights=heights_dict, second_shell=False):
                     if hollow_sites:
                         all_sites += hollow_sites
 
+    if show_occupation:
+        for site in all_sites:
+            if _is_site_occupied(atoms, site, min_adsorbate_distance=0.2):
+                site['occupied'] = 1
+
     return all_sites
 
 
@@ -1674,3 +1686,220 @@ def enumerate_sites_with_adsorbates(atoms, adsorbate, heights=heights_dict):
             atoms.extend(ads)
 
     return atoms
+
+
+def _is_site_occupied(atoms, site, min_adsorbate_distance=0.2):
+    """Returns True if the site on the atoms object is occupied by
+    creating a sphere of radius min_adsorbate_distance and checking
+    that no other adsorbate is inside the sphere.
+   
+    Don't call this function directly."""
+
+    # if site['occupied']:
+    #     return True
+    if True not in atoms.get_pbc():
+        height = site['height']
+        normal = np.array(site['normal'])
+        pos = np.array(site['adsorbate_position']) + normal * height
+        dists = [np.linalg.norm(pos - a.position)
+                 for a in atoms if a.symbol in adsorbates]
+        for d in dists:
+            if d < min_adsorbate_distance:
+                # print('under min d', d, pos)
+                # site['occupied'] = 1
+                return True
+        return False
+    else:
+        cell = atoms.get_cell()
+        pbc = np.array([cell[0][0], cell[1][1], 0])
+        pos = np.array(site['adsorbate_position'])
+        dists = [get_mic_distance(pos, a.position, atoms) 
+                 for a in atoms if a.symbol in adsorbates]
+        for d in dists:
+            if d < min_adsorbate_distance:
+                # print('under min d', d, pos)
+                # site['occupied'] = 1
+                return True
+        return False
+                                                                                   
+                                                                                   
+def _is_site_occupied_by(atoms, adsorbate, site, 
+                         min_adsorbate_distance=0.2):
+    """Returns True if the site on the atoms object is occupied 
+    by a specific species.
+    
+    Don't call this function directly."""
+    # if site['occupied']:
+    #     return True
+    if True not in atoms.get_pbc():
+        ads_symbols = molecule(adsorbate).get_chemical_symbols()
+        n_ads_atoms = len(ads_symbols)
+        # play aruond with the cutoff
+        height = site['height']
+        normal = np.array(site['normal'])
+        pos = np.array(site['adsorbate_position']) + normal * height
+        dists = []
+        for a in atoms:
+            if a.symbol in set(ads_symbols):
+                dists.append((a.index, np.linalg.norm(pos - a.position)))
+        for (i, d) in dists:
+            if d < min_adsorbate_distance:
+                site_ads_symbols = []
+                if n_ads_atoms > 1:
+                    for k in range(i,i+n_ads_atoms):
+                        site_ads_symbols.append(atoms[k].symbol)
+                else:
+                    site_ads_symbols.append(atoms[i].symbol)
+                if sorted(site_ads_symbols) == sorted(ads_symbols):               
+                # print('under min d', d, pos)
+                # site['occupied'] = 1
+                    return True
+        return False
+    else:
+        ads_symbols = molecule(adsorbate).get_chemical_symbols()
+        n_ads_atoms = len(ads_symbols)
+        cell = atoms.get_cell()
+        pbc = np.array([cell[0][0], cell[1][1], 0])
+        pos = np.array(site['adsorbate_position'])
+        dists = []
+        for a in atoms:
+            if a.symbol in set(ads_symbols):
+                dists.append((a.index, get_mic_distance(pos, a.position, 
+                                                        atoms)))
+        for (i, d) in dists:
+            if d < min_adsorbate_distance:
+                site_ads_symbols = []
+                if n_ads_atoms > 1:
+                    for k in range(i,i+n_ads_atoms):
+                        site_ads_symbols.append(atoms[k].symbol)
+                else:
+                    site_ads_symbols.append(atoms[i].symbol)
+                if sorted(site_ads_symbols) == sorted(ads_symbols):               
+                # print('under min d', d, pos)
+                # site['occupied'] = 1
+                    return True
+        return False
+
+
+def label_occupied_sites(atoms, adsorbate, second_shell=False):
+    '''Assign labels to all occupied sites. Different labels represent 
+    different sites.
+    
+    The label is defined as the number of atoms being labeled at that site 
+    (considering second shell).
+    
+    Change the 2 metal elements to 2 pseudo elements for sites occupied by a 
+    certain species. If multiple species are present, the 2 metal elements 
+    are assigned to multiple pseudo elements. Atoms that are occupied by 
+    multiple species also need to be changed to new pseudo elements. Currently 
+    only a maximum of 2 species is supported.
+    
+    Note: Please provide atoms including adsorbate(s), with adsorbate being a 
+    string or a list of strings.
+    
+    Set second_shell=True if you also want to label the second shell atoms.'''
+
+    species_pseudo_mapping = [('As','Sb'),('Se','Te'),('Br','I')]  
+    elements = list(set(atoms.symbols))
+    metals = [element for element in elements if element not in adsorbates]
+    mA = metals[0]
+    mB = metals[1]
+    if Atom(metals[0]).number > Atom(metals[1]).number:
+        mA = metals[1]
+        mB = metals[0]
+    sites = enumerate_monometallic_sites(atoms, second_shell=second_shell)
+    n_occupied_sites = 0
+    atoms.set_tags(0)
+    if isinstance(adsorbate, list):               
+        if len(adsorbate) == 2:
+            for site in sites:            
+                for ads in adsorbate:
+                    k = adsorbate.index(ads)
+                    if _is_site_occupied_by(atoms, ads, site, 
+                                            min_adsorbate_distance=0.2):
+                        site['occupied'] = 1
+                        site['adsorbate'] = ads
+                        indices = site['indices']
+                        label = site['label']
+                        for idx in indices:                
+                            if atoms[idx].tag == 0:
+                                atoms[idx].tag = label
+                            else:
+                                atoms[idx].tag = str(atoms[idx].tag) + label
+                            if atoms[idx].symbol not in \
+                            species_pseudo_mapping[0]+species_pseudo_mapping[1]:
+                                if atoms[idx].symbol == mA:
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[k][0]
+                                elif atoms[idx].symbol == mB:
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[k][1]
+                            else:
+                                if atoms[idx].symbol == \
+                                   species_pseudo_mapping[k-1][0]:
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[2][0]
+                                elif atoms[idx].symbol == \
+                                     species_pseudo_mapping[k-1][1]:\
+                                    atoms[idx].symbol = \
+                                    species_pseudo_mapping[2][1]
+                        n_occupied_sites += 1 
+        else:
+            raise NotImplementedError
+    else:
+        for site in sites:
+            if _is_site_occupied(atoms, site, min_adsorbate_distance=0.2):
+                site['occupied'] = 1
+                indices = site['indices']
+                label = site['label']
+                for idx in indices:                
+                    if atoms[idx].tag == 0:
+                        atoms[idx].tag = label
+                    else:
+                        atoms[idx].tag = str(atoms[idx].tag) + label
+                    # Map to pseudo elements even when there is only one 
+                    # adsorbate species (unnecessary)
+                    #if atoms[idx].symbol == mA:
+                    #    atoms[idx].symbol = species_pseudo_mapping[0][0]
+                    #elif atoms[idx].symbol == mB:
+                    #    atoms[idx].symbol = species_pseudo_mapping[0][1]
+                n_occupied_sites += 1
+    tag_set = set([a.tag for a in atoms])
+    print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, 
+                                                             tag_set))
+
+    return atoms
+
+
+def multi_label_counter(atoms, adsorbate, second_shell=False):
+    '''Encoding the labels into 5d numpy arrays. 
+    This can be further used as a fingerprint.
+
+    Atoms that constitute an occupied adsorption site will be labeled as 1.
+    If an atom contributes to multiple sites of same type, the number wil 
+    increase. One atom can encompass multiple non-zero values if it 
+    contributes to multiple types of sites.
+
+    Note: Please provide atoms including adsorbate(s), with adsorbate being a 
+    string or a list of strings.
+
+    Set second_shell=True if you also want to label the second shell atoms.'''
+
+    labeled_atoms = label_occupied_sites(atoms, adsorbate, second_shell)
+    np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]
+    np_atoms = labeled_atoms[np_indices]
+    
+    counter_lst = []
+    for atom in np_atoms:
+        if atom.symbol not in adsorbates:
+            if atom.tag == 0:
+                counter_lst.append(np.zeros(5).astype(int).tolist())
+            else:
+                line = str(atom.tag)
+                cns = [int(s) for s in line]
+                lst = np.zeros(5).astype(int).tolist()
+                for idx in cns:
+                    lst[idx-1] += int(1)
+                counter_lst.append(lst)
+
+    return counter_lst
