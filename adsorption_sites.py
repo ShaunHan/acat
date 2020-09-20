@@ -1010,7 +1010,7 @@ def enumerate_monometallic_sites(atoms, show_occupation=False, heights=heights_d
         for site in all_sites:
             if _is_site_occupied(atoms, site, min_adsorbate_distance=0.2):
                 site['occupied'] = 1
-
+                    
     return all_sites
 
 
