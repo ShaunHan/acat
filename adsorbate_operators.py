@@ -7,10 +7,9 @@ from ase import Atoms, Atom
 from ase.build import molecule
 from ase.ga.offspring_creator import OffspringCreator
 from ase.neighborlist import NeighborList, natural_cutoffs
-from .adsorption_sites import get_mic_distance, enumerate_monometallic_sites
-
-
-adsorbates = 'SCHON'
+from ase.calculators.emt import EMT
+from ase.optimize import FIRE
+from .adsorption_sites import enumerate_monometallic_sites
 
 
 class AdsorbateOperator(OffspringCreator):
@@ -431,7 +430,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     adsorbate: str or Atoms
         specifies the type of adsorbate, it will not be taken into account
         when keeping the correct size and composition
-    
+
     blmin: dict
         Dictionary of minimum distance between atomic numbers.
         e.g. {(28,29): 1.5}
@@ -628,8 +627,12 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         # Put the two parts together
         for atom in chain(tmpf, tmpm):
             indi.append(atom)
+                                                                              
+        indi.set_calculator(EMT())
+        opt = FIRE(indi, logfile=None) 
+        opt.run(fmax=0.1)
 
-        ads_sites = enumerate_monometallic_sites(indi, show_occupation=True)
+        ads_sites = enumerate_monometallic_sites(indi)
         indi.info['data']['adsorption_sites'] = ads_sites
         indi.info['data']['operation'] = 'crossover'
         if self.fix_coverage:
