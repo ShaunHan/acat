@@ -15,12 +15,12 @@ adsorbates = 'SCHON'
 heights_dict = {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 'hollow': 1.7}
 
 
-def get_coverage(atoms, adsorbate, nfullsite=None):
+def get_coverage(atoms, adsorbate, surface=None, nfullsite=None):
     """Get the coverage of a nanoparticle / surface with adsorbates.
        Provide the number of adsorption sites under 1 ML coverage will
        significantly accelerate the calculation."""
 
-    sites = enumerate_monometallic_sites(atoms, second_shell=False)
+    sites = enumerate_monometallic_sites(atoms, surface=surface, second_shell=False)
     if nfullsite is None:
         pattern = pattern_generator(atoms, 'O', ['fcc111', 'fcc100'], coverage=1)
         nfullsite = len([a for a in pattern if a.symbol == 'O'])
@@ -513,8 +513,11 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None,
             final_sites += sites
             positions += [s['adsorbate_position'] for s in sites]
     elif site in ['hcp', 'hollow']:
-        sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height) +\
-                get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height)
+        if True not in atoms.get_pbc():
+            sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height) +\
+                    get_monometallic_sites(atoms, site='hollow', surface='fcc100', height=height)
+        else:
+            sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height)
         if sites:
             final_sites += sites
             positions += [s['adsorbate_position'] for s in sites]
@@ -567,7 +570,8 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None,
     return atoms
 
 
-def random_pattern_generator(atoms, adsorbate, min_adsorbate_distance=2., 
+def random_pattern_generator(atoms, adsorbate, surface=None, 
+                             min_adsorbate_distance=2., 
                              heights=heights_dict):
     '''A function for generating random coverage patterns with constraint.
        Parameters
@@ -588,7 +592,8 @@ def random_pattern_generator(atoms, adsorbate, min_adsorbate_distance=2.,
     if ads_indices:
         ads_atoms = atoms[ads_indices]
         atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]
-    all_sites = enumerate_monometallic_sites(atoms, heights, second_shell=False)
+    all_sites = enumerate_monometallic_sites(atoms, surface=surface, 
+                                             heights=heights, second_shell=False)
     random.shuffle(all_sites)    
  
     if True not in atoms.get_pbc():
