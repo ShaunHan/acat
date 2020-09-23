@@ -6,7 +6,7 @@ from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.visualize import view
 from ase.build import molecule
 from ase.geometry import Cell, get_layers
-from ase import Atom
+from ase import Atom, Atoms
 from pymatgen.analysis.adsorption import AdsorbateSiteFinder
 from pymatgen.io.ase import AseAtomsAdaptor
 import operator
@@ -35,6 +35,21 @@ icosa_dct = {
     'vertex': str({(3, 2, 2): 5, (5, 5, 5): 1}),
 }
 
+ticosa_dct = {
+    # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
+    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    # Edge sites on outermost shell -- Icosa
+    str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
+    'edge': str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}),
+    # Vertice sites on outermost shell -- Icosa, Deca
+    str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
+    'vertex': str({(3, 2, 2): 5, (5, 5, 5): 1}),
+    # Vertice sites B on outermost shell -- Ticosa, Deca
+    str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1}): 'vertex',
+    'vertex': str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1}),
+}
+
 cubocta_dct = {
     # Edge sites on outermost shell -- Cubocta, Tocta
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
@@ -50,7 +65,7 @@ cubocta_dct = {
     'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
 }
 
-deca_dct = {
+mdeca_dct = {
     # Edge sites (111)-(111) on outermost shell -- Deca
     str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
     'edge': str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}),
@@ -66,10 +81,10 @@ deca_dct = {
     # Vertice sites on outermost shell -- Icosa, Deca
     str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
     'vertex': str({(3, 2, 2): 5, (5, 5, 5): 1}),
-    # Vertice sites A on outermost shell -- Deca
+    # Vertice sites A on outermost shell -- Mdeca
     str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
     'vertex': str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}),
-    # Vertice sites B on outermost shell -- Deca
+    # Vertice sites B on outermost shell -- Mdeca
     str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1}): 'vertex',
     'vertex': str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1}),
     # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
@@ -80,11 +95,23 @@ deca_dct = {
     'fcc111': str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}),
 }
 
+octa_dct = {
+    # Edge sites (111)-(111) on outermost shell -- Octa, Tocta
+    str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
+    'edge': str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}),
+    # Vertice sites on outermost shell -- Octa
+    str({(2, 0, 0): 4}): 'vertex',
+    'vertex': str({(2, 0, 0): 4}),
+    # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
+    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+}
+
 tocta_dct = {
     # Edge sites on outermost shell -- Cubocta, Tocta
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
     'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
-    # Edge sites (111)-(111) on outermost shell -- Tocta
+    # Edge sites (111)-(111) on outermost shell -- Octa
     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
     'edge': str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}),
     # Square sites on outermost shell -- Cubocta, Deca, Tocta
@@ -93,7 +120,7 @@ tocta_dct = {
     # Vertice sites on outermost shell -- Tocta
     str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
     'vertex': str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}),
-    # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
+    # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
     'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
 }
@@ -341,23 +368,33 @@ class AdsorptionSites(object):
 
     def get_site_dct(self):
         fcna = self.get_fullCNA()
-        icosa_weight = cubocta_weight = deca_weight = tocta_weight = 0
+        icosa_weight = ticosa_weight = cubocta_weight = \
+        mdeca_weight = octa_weight = tocta_weight = 0
         for s in fcna:
             if str(s) in icosa_dct:
                 icosa_weight += 1
+            if str(s) in ticosa_dct:
+                ticosa_weight += 1
             if str(s) in cubocta_dct:
                 cubocta_weight += 1
-            if str(s) in deca_dct:
-                deca_weight += 1
+            if str(s) in mdeca_dct:
+                mdeca_weight += 1
+            if str(s) in octa_dct:
+                octa_weight += 1
             if str(s) in tocta_dct:
                 tocta_weight += 1
-        full_weights = [icosa_weight, cubocta_weight, deca_weight, tocta_weight]
+        full_weights = [icosa_weight, ticosa_weight, cubocta_weight, 
+                        mdeca_weight, octa_weight, tocta_weight]
         if icosa_weight == max(full_weights):
             return icosa_dct
+        elif ticosa_weight == max(full_weights):
+            return ticosa_dct
         elif cubocta_weight == max(full_weights):
             return cubocta_dct
-        elif deca_weight == max(full_weights):
-            return deca_dct
+        elif mdeca_weight == max(full_weights):
+            return mdeca_dct
+        elif octa_weight == max(full_weights):
+            return octa_dct
         else:
             return tocta_dct
 
@@ -437,15 +474,15 @@ def add_adsorbate(atoms, adsorbate, site):
 
 def identify_surface(atoms):
     surface_dct = {
-        # Step sites
-        str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
-        'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
+#        # Step sites
+#        str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
+#        'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
         # Square sites
         str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
         'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
-        # Kink sites
-        str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
-        'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
+#        # Kink sites
+#        str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
+#        'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
         # Triangle sites
         str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
         'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
@@ -599,13 +636,13 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
                 top_indices.append(i)
             elif layerlist[i] == nlayers-1:
                 second_indices.append(i)
-        layer_thickness = abs(np.mean(atoms[top_indices].positions[:,2]) \
-                              - np.mean(atoms[second_indices].positions[:,2]))
+        layer_thickness = abs(np.mean(atoms.positions[top_indices,2]) \
+                              - np.mean(atoms.positions[second_indices,2]))
         d100 = np.sqrt(2)*layer_thickness 
         d111 = np.sqrt(6)*layer_thickness/2
 
         if surface is None: 
-            surface = identify_surface(atoms) 
+            surface = identify_surface(atoms[top_indices+second_indices]) 
         dummy = atoms.copy()
         #Expand cell for small unit cell
         if (surface == 'fcc100' and len(top_indices) < 8)\
@@ -758,6 +795,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
                  'hcp' : '4',
                  'hollow' : '5'}
     atoms.info['data'] = {}                      
+    atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]         
     sites = []
     if True not in atoms.get_pbc():
         if surface is None:
@@ -782,8 +820,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
                         for i in site['indices']:
                             indices, offsets = nl.get_neighbors(i)
                             for idx in indices:
-                                if atoms[idx].symbol not in adsorbates:
-                                    hcp_neighbor_indices.append(idx)
+                                hcp_neighbor_indices.append(idx)
                         second_shell_index = [key for key, count in \
                         Counter(hcp_neighbor_indices).items() if count == 3][0]
                         site['indices'] += (second_shell_index,)
@@ -791,8 +828,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
                         for i in site['indices']:
                             indices, offsets = nl.get_neighbors(i)
                             for idx in indices:
-                                if atoms[idx].symbol not in adsorbates:
-                                    hollow_neighbor_indices.append(idx)
+                                hollow_neighbor_indices.append(idx)
                         second_shell_index = [key for key, count in \
                         Counter(hollow_neighbor_indices).items() if count == 4][0]
                         site['indices'] += (second_shell_index,)
@@ -807,7 +843,6 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
             hdiff = 0
         else:
             hdiff = height-2.
-        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]        
         top_indices = []        
         second_indices = []
         layerlist = get_layers(atoms, (0,0,1), tolerance=0.5)[0].tolist()
@@ -818,18 +853,18 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
                 top_indices.append(i)
             elif layerlist[i] == nlayers-1:
                 second_indices.append(i)
-        layer_thickness = abs(np.mean(atoms[top_indices].positions[:,2]) \
-                              - np.mean(atoms[second_indices].positions[:,2]))
+        layer_thickness = abs(np.mean(atoms.positions[top_indices,2]) \
+                              - np.mean(atoms.positions[second_indices,2]))
         d100 = np.sqrt(2)*layer_thickness 
         d111 = np.sqrt(6)*layer_thickness/2
         if surface is None: 
-            surface = identify_surface(atoms) 
+            surface = identify_surface(atoms[top_indices+second_indices]) 
         struct = AseAtomsAdaptor.get_structure(atoms)
         asf = AdsorbateSiteFinder(struct)
         ads_sites = asf.find_adsorption_sites(symm_reduce=0) 
                                                                                                                                                  
         if surface == 'fcc100':
-            if len(top_indices) < 8:
+            if len(top_indices) < 4:
                 raise ValueError('Cell is too small to get complete site information')
             if site == 'ontop':
                 for i in top_indices:
@@ -953,10 +988,12 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, second_shell=
     return sites
 
 
-def enumerate_monometallic_sites(atoms, show_occupation=False, heights=heights_dict, 
-                                 second_shell=False):
+def enumerate_monometallic_sites(atoms, show_occupation=False, surface=None,
+                                 heights=heights_dict, second_shell=False):
     """Get all sites from a nanoparticle or a surface slab. 
-       Elemental composition is ignored.""" 
+       Elemental composition is ignored.
+
+       Please only specify the surface type for a surface structure."""
 
     all_sites = []
 
@@ -985,24 +1022,24 @@ def enumerate_monometallic_sites(atoms, show_occupation=False, heights=heights_d
             all_sites += hollow_sites
 
     else:
-        ontop_sites = get_monometallic_sites(atoms, 'ontop', height=heights['ontop'], 
-                                             second_shell=False)
+        ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, 
+                                             height=heights['ontop'], second_shell=False)
         if ontop_sites:
             all_sites += ontop_sites
-        bridge_sites = get_monometallic_sites(atoms, 'bridge', height=heights['bridge'],
-                                              second_shell=False)
+        bridge_sites = get_monometallic_sites(atoms, 'bridge', surface, 
+                                              height=heights['bridge'], second_shell=False)
         if bridge_sites:
             all_sites += bridge_sites
-        fcc_sites = get_monometallic_sites(atoms, 'fcc', height=heights['fcc'], 
-                                           second_shell=False)
+        fcc_sites = get_monometallic_sites(atoms, 'fcc', surface, 
+                                           height=heights['fcc'], second_shell=False)
         if fcc_sites:
             all_sites += fcc_sites
-        hcp_sites = get_monometallic_sites(atoms, 'hollow', height=heights['hcp'], 
-                                           second_shell=second_shell)
+        hcp_sites = get_monometallic_sites(atoms, 'hollow', surface, 
+                                           height=heights['hcp'], second_shell=second_shell)
         if hcp_sites:
             all_sites += hcp_sites
-        hollow_sites = get_monometallic_sites(atoms, 'hollow', height=heights['hollow'],
-                                              second_shell=second_shell)
+        hollow_sites = get_monometallic_sites(atoms, 'hollow', surface, 
+                                              height=heights['hollow'], second_shell=second_shell)
         if hollow_sites:
             all_sites += hollow_sites
 
@@ -1349,6 +1386,8 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
     Elemental composition is included."""  
 
     atoms.info['data'] = {}
+    atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]        
+
     if composition is None:
         raise ValueError('Composition must be specified. ' +
                          'Otherwise use the monometallic function.')
@@ -1397,8 +1436,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                             for i in site['indices']: 
                                 indices, offsets = nl.get_neighbors(i)
                                 for idx in indices:
-                                    if atoms[idx].symbol not in adsorbates:
-                                        neighbor_indices.append(idx)                        
+                                    neighbor_indices.append(idx)                        
                             second_shell_index = [key for key, count in \
                             Counter(neighbor_indices).items() if count == 3][0]
                             second_shell_element = atoms[second_shell_index].symbol
@@ -1433,8 +1471,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                                 for i in site['indices']:
                                     indices, offsets = nl.get_neighbors(i)
                                     for idx in indices:
-                                        if atoms[idx].symbol not in adsorbates:
-                                            neighbor_indices.append(idx)
+                                        neighbor_indices.append(idx)
                                 second_shell_index = [key for key, count in \
                                 Counter(neighbor_indices).items() if count == 4][0] 
                                 second_shell_element = atoms[second_shell_index].symbol
@@ -1450,8 +1487,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                             for i in site['indices']:
                                 indices, offsets = nl.get_neighbors(i)
                                 for idx in indices:
-                                    if atoms[idx].symbol not in adsorbates:
-                                        neighbor_indices.append(idx)
+                                    neighbor_indices.append(idx)
                             second_shell_index = [key for key, count in \
                             Counter(neighbor_indices).items() if count == 4][0]
                             second_shell_element = atoms[second_shell_index].symbol
@@ -1462,8 +1498,19 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                 raise ValueError('{0} sites do not have second shell'.format(site))
 
     else:
-        if surface is None: 
-            surface = identify_surface(atoms)             
+        if surface is None:            
+            top_indices = []        
+            second_indices = []
+            layerlist = get_layers(atoms, (0,0,1), tolerance=0.5)[0].tolist()
+            nlayers = max(layerlist)
+            for atom in atoms:
+                i = atom.index
+                if layerlist[i] == nlayers:
+                    top_indices.append(i)
+                elif layerlist[i] == nlayers-1:
+                    second_indices.append(i)
+            surface = identify_surface(atoms[top_indices+second_indices])             
+
         system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, 
                   surface, composition, second_shell)
         if site in ['ontop','bridge','fcc']:
@@ -1544,12 +1591,15 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
     return final_sites
 
 
-def enumerate_bimetallic_sites(atoms, show_occupation=False, heights=heights_dict, 
-                               second_shell=False):
+def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None, 
+                               heights=heights_dict, second_shell=False):
     """Get all sites from a bimetallic nanoparticle or slab. 
-       Elemental composition is included.""" 
+    Elemental composition is included.
+
+    Please only specify the surface type for a surface structure.""" 
 
     all_sites = []
+    atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]        
     elements = list(set(atoms.symbols))
     metals = [element for element in elements if element not in adsorbates]
 
@@ -1605,7 +1655,6 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, heights=heights_dic
                     all_sites += hollow_sites
 
     else:
-        surface = identify_surface(atoms)
         for composition in metals:
             ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, 
                                                heights['ontop'], second_shell=False)
