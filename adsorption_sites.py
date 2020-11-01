@@ -166,13 +166,14 @@ heights_dict = {'ontop': 2.0,
 
 class NanoparticleAdsorptionSites(object):
 
-    def __init__(self, atoms, heights=None, show_subsurface=False):
+    def __init__(self, atoms, show_composition=False, show_subsurface=False):
 
         assert True not in atoms.pbc
         atoms = atoms.copy()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbates]]
         self.atoms = atoms
+        self.show_composition = show_composition
         self.show_subsurface = show_subsurface
 
         self.fullCNA = {}
@@ -181,11 +182,6 @@ class NanoparticleAdsorptionSites(object):
         self.site_dict = self.get_site_dict()
         self.make_neighbor_list()
         self.surf_sites = self.get_surface_sites()
-
-        if heights is None:
-            self.heights = heights_dict                        
-        else:
-            self.heights = heights
 
         self.site_list = []
         self.populate_site_list()
@@ -216,8 +212,13 @@ class NanoparticleAdsorptionSites(object):
                         site.update({'site': 'bridge',
                                      'surface': site_surf,
                                      'position': pos,
-                                     'height': self.heights['bridge'],
                                      'indices': si})
+                        if self.show_composition:                         
+                            symbols = [(self.atoms[i].symbol, 
+                                        self.atoms[i].number) for i in si]
+                            comp = sorted(symbols, key=lambda x: x[1])
+                            composition = ''.join([c[0] for c in comp])
+                            site.update({'composition': composition})
                         sl.append(site)
                         usi.add(si)
                 # Find normal
@@ -239,27 +240,40 @@ class NanoparticleAdsorptionSites(object):
                                 this_site = 'hcp'
                             site_surf = 'fcc111'
 
-                            if this_site == 'hcp' and self.show_subsurface:
-                                hcp_nbr_indices = []
-                                for i in [s, n, m]:
-                                    indices = self.nlist.get_neighbors(i, 
-                                                              self.r + 1.)
-                                    for idx in indices:
-                                        hcp_nbr_indices.append(idx)
-                                subi = [key for key, count in \
-                                        Counter(hcp_nbr_indices).items() \
-                                        if count == 3][0]                      
-                            else:
-                                subi = None                   
-
                             site = self.new_site()
                             site.update({'site': this_site,
                                          'surface': site_surf,
                                          'position': pos,
                                          'normal': normal,
-                                         'height': self.heights[this_site],
-                                         'indices': si,
-                                         'subsurface_id': subi})
+                                         'indices': si})
+                            if self.show_composition:                       
+                                metals = list(set(self.atoms.symbols))
+                                ma, mb = metals[0], metals[1]
+                                if atomic_numbers[ma] > atomic_numbers[mb]:
+                                    ma, mb = metals[1], metals[0]
+                                symbols = [self.atoms[i].symbol for i in si]
+                                nma = symbols.count(ma)
+                                if nma == 0:
+                                    composition = 3*mb
+                                elif nma == 1:
+                                    composition = ma + 2*mb
+                                elif nma == 2:
+                                    composition = 2*ma + mb
+                                elif nma == 3:
+                                    composition = 3*ma
+                                site.update({'composition': composition})   
+
+                            if this_site == 'hcp' and self.show_subsurface:
+                                hcp_nbrs = []
+                                for i in si:
+                                    hcp_nbrs += list(self.nlist.get_neighbors(i, 
+                                                                self.r + 1.)[0])
+                                isub = [key for key, count in Counter(
+                                        hcp_nbrs).items() if count == 3][0]
+                                site.update({'subsurface_id': isub})
+                                if self.show_composition:
+                                    site.update({'subsurface_element': 
+                                                 self.atoms[isub].symbol})
                             sl.append(site)
                             usi.add(si)
 
@@ -285,37 +299,60 @@ class NanoparticleAdsorptionSites(object):
                                             ps = self.atoms[[
                                                 n, m, s, k]].positions
                                             pos = np.average(ps, 0)
-                                        
-                                            if self.show_subsurface:
-                                                fold4_nbr_indices = []
-                                                for i in [s, n, m]:
-                                                    indices = self.nlist.get_neighbors(i, 
-                                                                             self.r + 1.)
-                                                    for idx in indices:
-                                                        fold4_nbr_indices.append(idx)
-                                                subi = [key for key, count in \
-                                                        Counter(fold4_nbr_indices).items() \
-                                                        if count == 4][0]
-                                            else:
-                                                subi = None
-
+ 
                                             site = self.new_site()
                                             site.update({'site': '4fold',
                                                          'surface': site_surf,
                                                          'position': pos,
                                                          'normal': normal,
-                                                         'height': self.heights['4fold'],
-                                                         'indices': si,
-                                                         'subsurface_id':subi})
+                                                         'indices': si})
+                                            if self.show_composition:
+                                                metals = list(set(self.atoms.symbols))      
+                                                ma, mb = metals[0], metals[1]
+                                                if atomic_numbers[ma] > atomic_numbers[mb]:
+                                                    ma, mb = metals[1], metals[0]
+                                                symbols = [self.atoms[i].symbol for i in si]
+                                                nma = symbols.count(ma)
+                                                if nma == 0:
+                                                    composition = 4*mb
+                                                elif nma == 1:
+                                                    composition = ma + 3*mb
+                                                elif nma == 2:
+                                                    opp = max(list(si[1:]), key=lambda x: 
+                                                              np.linalg.norm(self.atoms[x].position
+                                                                     - self.atoms[si[0]].position)) 
+                                                    if self.atoms[opp].symbol == \
+                                                       self.atoms[si[0]].symbol:
+                                                        composition = ma + mb + ma + mb 
+                                                    else:
+                                                        composition = 2*ma + 2*mb 
+                                                elif nma == 3:
+                                                    composition = 3*ma + mb
+                                                elif nma == 4:
+                                                    composition = 4*ma
+                                                site.update({'composition': composition})    
+                                            if self.show_subsurface:                        
+                                                fold4_nbrs = []
+                                                for i in si:
+                                                    fold4_nbrs += list(self.nlist.get_neighbors(
+                                                                             i, self.r + 1.)[0])
+                                                isub = [key for key, count in Counter(
+                                                        fold4_nbrs).items() if count == 4][0]
+                                                site.update({'subsurface_id': isub})
+                                                if self.show_composition:
+                                                    site.update({'subsurface_element': 
+                                                                 self.atoms[isub].symbol})
                                             sl.append(site)
                                             usi.add(si)
 
                 # ontop sites
                 site = self.new_site()
-                site.update({'site': 'ontop', 'surface': surface,
+                site.update({'site': 'ontop', 
+                             'surface': surface,
                              'position': self.atoms[s].position,
-                             'height': self.heights['ontop'], 'indices': (s,)})
-                # Find normal
+                             'indices': (s,)})
+                if self.show_composition:
+                    site.update({'composition': self.atoms[s].symbol})
                 sl.append(site)
                 usi.add((s))
 
@@ -334,9 +371,8 @@ class NanoparticleAdsorptionSites(object):
 
 
     def new_site(self):
-        return {'site': None, 'surface': None, 'height': None,
-                'position': None, 'normal': None, 'indices': None,
-                'subsurface_id': None, 'occupied': 0}
+        return {'site': None, 'surface': None, 'position': None, 
+                'normal': None, 'indices': None}
 
     def get_all_sites_of_type(self, type):
         return [i for i in self.site_list
@@ -397,7 +433,7 @@ class NanoparticleAdsorptionSites(object):
                          'fcc100': [],
                          'edge': [],
                          'vertex': [], }
-        atoms = self.refatoms.copy()
+        atoms = self.atoms.copy()
         fcna = self.get_fullCNA()
         site_dict = self.site_dict
 
@@ -421,7 +457,7 @@ class NanoparticleAdsorptionSites(object):
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
-            self.fullCNA[rCut] = FullCNA(self.refatoms, 
+            self.fullCNA[rCut] = FullCNA(self.atoms, 
                                  rCut=rCut).get_normal_cna()
 
     def get_fullCNA(self, rCut=None):
@@ -430,7 +466,7 @@ class NanoparticleAdsorptionSites(object):
         return self.fullCNA[rCut]
 
     def make_neighbor_list(self, rMax=10.):
-        self.nlist = FullNeighborList(rCut=rMax, atoms=self.refatoms)
+        self.nlist = FullNeighborList(rCut=rMax, atoms=self.atoms)
 
     def get_site_dict(self):
         fcna = self.get_fullCNA()
@@ -465,7 +501,7 @@ class NanoparticleAdsorptionSites(object):
             return tocta_dict
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
-        atoms = self.refatoms
+        atoms = self.atoms
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
                 atoms.cell[j][j] = 12 
@@ -504,8 +540,7 @@ class NanoparticleAdsorptionSites(object):
 
 class SlabAdsorptionSites(object):
 
-    def __init__(self, atoms, surface=None, heights=None, 
-                 show_composition=False, 
+    def __init__(self, atoms, surface=None, show_composition=False, 
                  show_subsurface=False, tol=1e-5):
 
         assert True in atoms.pbc    
@@ -537,10 +572,6 @@ class SlabAdsorptionSites(object):
             self.surface = self.identify_surface()
         else:
             self.surface = surface
-        if heights is None:
-            self.heights = heights_dict                          
-        else:
-            self.heights = heights
 
         self.surf_ids, self.subsurf_ids = self.get_termination()        
         self.site_list = []
@@ -583,10 +614,9 @@ class SlabAdsorptionSites(object):
                          'surface': self.surface,
                          'geometry': geometry,
                          'position': self.atoms[s].position,
-                         'height': self.heights['ontop'],
                          'indices': si})
             if self.show_composition:
-                site.update({'composition': self.atoms.symbols[si]})
+                site.update({'composition': self.atoms[s].symbol})
             sl.append(site)
             usi.add(si)
 
@@ -756,9 +786,8 @@ class SlabAdsorptionSites(object):
                                  'surface': self.surface,
                                  'geometry': geometry,
                                  'position': pos,
-                                 'height': self.heights['bridge'],
                                  'indices': si})           
-                    if self.show_composition:                      
+                    if self.show_composition:                          
                         symbols = [(self.atoms[i].symbol, 
                                     self.atoms[i].number) for i in si]
                         comp = sorted(symbols, key=lambda x: x[1])
@@ -800,10 +829,9 @@ class SlabAdsorptionSites(object):
                                      'geometry': 'step100',
                                      'position': pos,
                                      'normal': normal,
-                                     'height': self.heights['4fold'],
                                      'indices': si})          
                         if self.show_composition:                        
-                            metals = list(set(self.atoms.symbols))
+                            metals = list(set(self.atoms.symbols))      
                             ma, mb = metals[0], metals[1]
                             if atomic_numbers[ma] > atomic_numbers[mb]:
                                 ma, mb = metals[1], metals[0]
@@ -875,7 +903,6 @@ class SlabAdsorptionSites(object):
                                  'geometry': geometry,
                                  'position': pos,
                                  'normal': normal,
-                                 'height': self.heights['fcc'],
                                  'indices': si})
                     if self.show_composition:                       
                         metals = list(set(self.atoms.symbols))
@@ -919,8 +946,7 @@ class SlabAdsorptionSites(object):
 
     def new_site(self):
         return {'site': None, 'surface': None, 'geometry': None, 
-                'height': None, 'position': None, 'normal': None, 
-                'indices': None, 'occupied': 0}
+                'position': None, 'normal': None, 'indices': None}
 
     def make_neighbor_list(self, dx=0.3, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
@@ -1096,19 +1122,25 @@ class SlabAdsorptionSites(object):
             return 'fcc311'
 
 
+def enumerate_sites(atoms, surface=None, show_composition=False, 
+                    show_subsurface=False):
 
+    if True not in atoms.pbc:
+        nas = NanoparticleAdsorptionSites(atoms, show_composition,
+                                          show_subsurface)
+        if surface is None:
+            all_sites = nas.site_list
+        else:
+            all_sites = []
+            for site in ['ontop', 'bridge', 'fcc', 'hcp', '4fold']:
+                all_sites += nas.get_sites_from_surface(site, surface) 
 
+    else:
+        sas = SlabAdsorptionSites(atoms, surface, show_composition, 
+                                  show_subsurface)
+        all_sites = sas.site_list       
 
-
-
-
-
-
-
-
-
-
-
+    return all_sites
 
 
 
