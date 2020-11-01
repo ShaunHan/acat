@@ -3,15 +3,17 @@ from .utilities import get_mic_distance, expand_cell
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
 from asap3.analysis import FullCNA
+from asap3 import EMT as asapEMT
 from ase.build import molecule
 from ase.geometry import Cell, get_layers
+from ase.optimize import BFGS, FIRE
 from ase import Atom, Atoms
 from pymatgen.analysis.adsorption import AdsorbateSiteFinder
 from pymatgen.io.ase import AseAtomsAdaptor
 from operator import itemgetter
 import numpy as np
 from itertools import combinations
-from ase.data import reference_states, covalent_radii
+from ase.data import reference_states, atomic_numbers, covalent_radii
 from ase.io import read, write
 from collections import Counter, defaultdict
 import networkx as nx
@@ -19,6 +21,7 @@ import scipy
 import re
 import random
 import warnings
+
 
 #warnings.filterwarnings('ignore')
 
@@ -136,13 +139,18 @@ surf_dict = {
     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'fcc110',
     'fcc110': [str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}), 
                str({(3, 1, 1): 4, (4, 2, 1): 7})],
-    # Triangle-Triangle sites
     str({(3, 1, 1): 4, (4, 2, 1): 7}): 'fcc110',
+    # Triangle-Triangle-Square sites
+    str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc211',
+    'fcc211': [str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}),
+               str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
+               str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2})],
+    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'fcc211',
+    str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc211',
     # Triangle-Square sites
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'fcc311',
     'fcc311': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
                str({(2, 1, 1): 1, (3, 1, 1): 4, (4, 2, 1): 5})],
-    # Triangle-Square sites
     str({(2, 1, 1): 1, (3, 1, 1): 4, (4, 2, 1): 5}): 'fcc311',
 }
 
@@ -158,14 +166,14 @@ heights_dict = {'ontop': 2.0,
 
 class NanoparticleAdsorptionSites(object):
 
-    def __init__(self, atoms, heights=None, include_subsurface=False):
+    def __init__(self, atoms, heights=None, show_subsurface=False):
 
         assert True not in atoms.pbc
         atoms = atoms.copy()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbates]]
         self.atoms = atoms
-        self.include_subsurface = include_subsurface
+        self.show_subsurface = show_subsurface
 
         self.fullCNA = {}
         self.make_fullCNA()
@@ -231,7 +239,7 @@ class NanoparticleAdsorptionSites(object):
                                 this_site = 'hcp'
                             site_surf = 'fcc111'
 
-                            if this_site == 'hcp' and self.include_subsurface:
+                            if this_site == 'hcp' and self.show_subsurface:
                                 hcp_nbr_indices = []
                                 for i in [s, n, m]:
                                     indices = self.nlist.get_neighbors(i, 
@@ -278,7 +286,7 @@ class NanoparticleAdsorptionSites(object):
                                                 n, m, s, k]].positions
                                             pos = np.average(ps, 0)
                                         
-                                            if self.include_subsurface:
+                                            if self.show_subsurface:
                                                 fold4_nbr_indices = []
                                                 for i in [s, n, m]:
                                                     indices = self.nlist.get_neighbors(i, 
@@ -389,7 +397,7 @@ class NanoparticleAdsorptionSites(object):
                          'fcc100': [],
                          'edge': [],
                          'vertex': [], }
-        atoms = self.atoms.copy()
+        atoms = self.refatoms.copy()
         fcna = self.get_fullCNA()
         site_dict = self.site_dict
 
@@ -413,8 +421,8 @@ class NanoparticleAdsorptionSites(object):
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
-            self.fullCNA[rCut] = FullCNA(
-                self.atoms, rCut=rCut).get_normal_cna()
+            self.fullCNA[rCut] = FullCNA(self.refatoms, 
+                                 rCut=rCut).get_normal_cna()
 
     def get_fullCNA(self, rCut=None):
         if rCut not in self.fullCNA:
@@ -422,7 +430,7 @@ class NanoparticleAdsorptionSites(object):
         return self.fullCNA[rCut]
 
     def make_neighbor_list(self, rMax=10.):
-        self.nlist = FullNeighborList(rCut=rMax, atoms=self.atoms)
+        self.nlist = FullNeighborList(rCut=rMax, atoms=self.refatoms)
 
     def get_site_dict(self):
         fcna = self.get_fullCNA()
@@ -457,7 +465,7 @@ class NanoparticleAdsorptionSites(object):
             return tocta_dict
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
-        atoms = self.atoms
+        atoms = self.refatoms
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
                 atoms.cell[j][j] = 12 
@@ -497,7 +505,8 @@ class NanoparticleAdsorptionSites(object):
 class SlabAdsorptionSites(object):
 
     def __init__(self, atoms, surface=None, heights=None, 
-                       include_subsurface=False, tol=1e-5):
+                 show_composition=False, 
+                 show_subsurface=False, tol=1e-5):
 
         assert True in atoms.pbc    
         atoms = atoms.copy() 
@@ -505,17 +514,26 @@ class SlabAdsorptionSites(object):
                                reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbates]]
         self.atoms = atoms
+        self.indices = [a.index for a in self.atoms] 
+        refatoms = self.atoms.copy()        
+        for a in refatoms:
+            a.symbol = 'Pt'
+        refatoms.calc = asapEMT()
+        opt = FIRE(refatoms, logfile=None)
+        opt.run(fmax=0.1) 
+        self.refatoms = refatoms
         self.cell = atoms.cell
         self.pbc = atoms.pbc
         self.tol = tol
-        self.include_subsurface = include_subsurface
+        self.show_composition = show_composition
+        self.show_subsurface = show_subsurface
         self.site_dict = surf_dict 
         self.set_first_neighbor_distance_from_rdf()
 
-        self.make_neighbor_list(dx=self.r*.1)
+        self.make_neighbor_list(dx=.3) 
         self.connectivity_matrix = self.get_connectivity()         
         if surface is None: 
-            self.fullCNA, self.surfCNA = self.get_CNA(rCut=self.r+.6)
+            self.fullCNA, self.surfCNA = self.get_CNA(rCut=self.r+.3)
             self.surface = self.identify_surface()
         else:
             self.surface = surface
@@ -552,19 +570,27 @@ class SlabAdsorptionSites(object):
                 elif occurence in [9, 11]:
                     geometry = 'terrace'
                 elif occurence == 10:
-                    geometry = 'corner'
+                    if self.surface == 'fcc211':
+                        geometry = 'corner'
+                    elif self.surface == 'fcc311':
+                        geometry = 'terrace'
+                else:
+                    print('Cannot identify site {}!'.format(s))
+                    continue
             si = (s,)
             site = self.new_site()
             site.update({'site': 'ontop',
                          'surface': self.surface,
                          'geometry': geometry,
-                         'position': self.atoms.positions[s],
+                         'position': self.atoms[s].position,
                          'height': self.heights['ontop'],
                          'indices': si})
+            if self.show_composition:
+                site.update({'composition': self.atoms.symbols[si]})
             sl.append(site)
             usi.add(si)
 
-        ext_index, ext_coords, _ = expand_cell(self.atoms, cutoff=5.0)
+        ext_index, ext_coords, _ = expand_cell(self.refatoms, cutoff=5.0)
         extended_top = np.where(np.in1d(ext_index, top_indices))[0]
         ext_surf_coords = ext_coords[extended_top]
         dt = scipy.spatial.Delaunay(ext_surf_coords[:,:2])
@@ -631,11 +657,8 @@ class SlabAdsorptionSites(object):
                 fold3_position = np.average(ext_surf_coords[corners], axis=0)
                 fold3_points += corners.tolist()
                 fold3_positions.append(fold3_position)
-               
         # Complete information of each site
-        for n, poss in enumerate([bridge_positions, 
-                                  fold3_positions, 
-                                  fold4_positions]):
+        for poss in [bridge_positions, fold3_positions]:
             if not poss:
                 continue
             fracs = np.dot(np.stack(poss, axis=0), np.linalg.pinv(self.cell))
@@ -649,7 +672,7 @@ class SlabAdsorptionSites(object):
             # Sort the index list of surface and subsurface atoms 
             # so that we can retrive original indices later
             sorted_indices = sorted(self.surf_ids + self.subsurf_ids)
-            top2atoms = self.atoms[sorted_indices]
+            top2atoms = self.refatoms[sorted_indices]
 
             # Make a new neighborlist including sites as dummy atoms
             dummies = Atoms('X{}'.format(reduced_poss.shape[0]), 
@@ -660,23 +683,28 @@ class SlabAdsorptionSites(object):
             ntop2 = len(top2atoms)
             testatoms = top2atoms.extend(dummies)
             nblist = PeriodicNeighborList(testatoms, 
+                                          dx=.1,   
                                           neighbor_number=1, 
                                           different_species=True) 
-            
-            if n == 0:
-                # Make bridge sites
-                new_fold4_poss = []
-                for i, pos in enumerate(reduced_poss):
+            # Make bridge sites  
+            if poss == bridge_positions:
+                fold4_poss = []
+                for i, refpos in enumerate(reduced_poss):
                     bridge_indices = nblist[ntop2+i]                     
                     bridgeids = [sorted_indices[j] for j in bridge_indices]
                     if len(bridgeids) != 2: 
-                        if self.surface in ['fcc211', 'fcc311']:
-                            new_fold4_poss.append(pos)
+                        if self.surface in ['fcc100', 'fcc211', 'fcc311']:
+                            fold4_poss.append(refpos)
+                        else:
+                            'Cannot identify site {}!'.format(bridgeids)
                         continue
 
-                    si = tuple(sorted(bridgeids)) 
+                    si = tuple(sorted(bridgeids))
+                    pos = np.mean([self.atoms[j].position 
+                                  for j in si], axis=0) 
                     occurence = np.sum(cm[bridgeids], axis=0)
                     sumo = np.sum(occurence)
+
                     if self.surface == 'fcc110':
                         if list(occurence).count(2) == 2:
                             geometry = 'step'
@@ -684,6 +712,9 @@ class SlabAdsorptionSites(object):
                             geometry = 'step111'
                         elif list(occurence).count(2) == 4:
                             geometry = 'terrace'
+                        else:
+                            print('Cannot identify site {}!'.format(si)) 
+                            continue         
 
                     elif self.surface == 'fcc311': 
                         if sumo == 14:
@@ -695,6 +726,9 @@ class SlabAdsorptionSites(object):
                                 geometry = 'step111'
                         elif sumo == 20:
                             geometry = 'terrace'
+                        else:
+                            print('Cannot identify site {}!'.format(si)) 
+                            continue         
  
                     elif self.surface == 'fcc211':                    
                         if sumo == 14:
@@ -709,8 +743,13 @@ class SlabAdsorptionSites(object):
                             geometry = 'terrace111'
                         elif sumo == 20:
                             geometry = 'corner'
-                    else:
-                        geometry = 'terrace'
+                        else:
+                            print('Cannot identify site {}!'.format(si)) 
+                            continue         
+                    elif self.surface == 'fcc100':
+                        geometry = 'terrace100'
+                    elif self.surface == 'fcc111':
+                        geometry = 'terrace111'
                                     
                     site = self.new_site()                         
                     site.update({'site': 'bridge',               
@@ -719,30 +758,39 @@ class SlabAdsorptionSites(object):
                                  'position': pos,
                                  'height': self.heights['bridge'],
                                  'indices': si})           
+                    if self.show_composition:                      
+                        symbols = [(self.atoms[i].symbol, 
+                                    self.atoms[i].number) for i in si]
+                        comp = sorted(symbols, key=lambda x: x[1])
+                        composition = ''.join([c[0] for c in comp])
+                        site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si)
 
-                if self.surface in ['fcc211', 'fcc311']:
-                    fold4atoms = Atoms('X{}'.format(len(new_fold4_poss)), 
-                                       positions=np.asarray(new_fold4_poss),
+                if self.surface in ['fcc100', 'fcc211', 'fcc311']:
+                    fold4atoms = Atoms('X{}'.format(len(fold4_poss)), 
+                                       positions=np.asarray(fold4_poss),
                                        cell=self.cell, 
                                        pbc=self.pbc)
                     sorted_top = sorted(self.surf_ids)
                     ntop = len(sorted_top)
-                    topatoms = self.atoms[sorted_top] 
+                    topatoms = self.refatoms[sorted_top] 
                     newatoms = topatoms.extend(fold4atoms)
                     newnblist = PeriodicNeighborList(newatoms, 
-                                                     dx=self.r*.02, 
+                                                     dx=.1, 
                                                      neighbor_number=2, 
                                                      different_species=True) 
-
-                    for i, pos in enumerate(new_fold4_poss):
+                    
+                    # Make 4-fold hollow sites
+                    for i, refpos in enumerate(fold4_poss):
                         fold4_indices = newnblist[ntop+i]                     
                         fold4ids = [sorted_top[j] for j in fold4_indices]
                         occurence = np.sum(cm[fold4ids], axis=0)
                         isub = np.where(occurence == 4)[0][0]
                         newfold4ids = [k for k in fold4ids if cm[k,isub] == 1]
                         si = tuple(sorted(newfold4ids))
+                        pos = np.mean([self.atoms[j].position 
+                                      for j in si], axis=0) 
                         normal = self.get_surface_normal(list(si))
                         for i in si:
                             normals_for_site[i].append(normal)
@@ -754,19 +802,49 @@ class SlabAdsorptionSites(object):
                                      'normal': normal,
                                      'height': self.heights['4fold'],
                                      'indices': si})          
+                        if self.show_composition:                        
+                            metals = list(set(self.atoms.symbols))
+                            ma, mb = metals[0], metals[1]
+                            if atomic_numbers[ma] > atomic_numbers[mb]:
+                                ma, mb = metals[1], metals[0]
+                            symbols = [self.atoms[i].symbol for i in si]
+                            nma = symbols.count(ma)
+                            if nma == 0:
+                                composition = 4*mb
+                            elif nma == 1:
+                                composition = ma + 3*mb
+                            elif nma == 2:
+                                opposite = np.where(
+                                           cm[si[1:],si[0]]==0)[0]
+                                opp = opposite[0] + si[1]         
+                                if self.atoms[opp].symbol == \
+                                   self.atoms[newfold4ids[0]].symbol:
+                                    composition = ma + mb + ma + mb 
+                                else:
+                                    composition = 2*ma + 2*mb 
+                            elif nma == 3:
+                                composition = 3*ma + mb
+                            elif nma == 4:
+                                composition = 4*ma
+                            site.update({'composition': composition})   
+                        if self.show_subsurface:
+                            site.update({'subsurface_id': isub})
+                            if self.show_composition:
+                                site.update({'subsurface_element': 
+                                             self.atoms[isub].symbol})
                         sl.append(site)
                         usi.add(si)
-                        if self.include_subsurface:
-                            site.update({'subsurface_id': isub})
              
-            if n == 1 and self.surface != 'fcc100':
-                # Make 3-fold hollow sites (differentiate fcc / hcp)
-                for i, pos in enumerate(reduced_poss):
+            # Make 3-fold hollow sites (differentiate fcc / hcp)
+            if poss == fold3_positions and self.surface != 'fcc100':
+                for i, refpos in enumerate(reduced_poss):
                     fold3_indices = nblist[ntop2+i]
                     fold3ids = [sorted_indices[j] for j in fold3_indices]
                     if len(fold3ids) != 3:
                         continue
                     si = tuple(sorted(fold3ids))
+                    pos = np.mean([self.atoms[j].position 
+                                  for j in si], axis=0) 
                     normal = self.get_surface_normal(list(si))
                     for i in si:
                         normals_for_site[i].append(normal)
@@ -776,19 +854,22 @@ class SlabAdsorptionSites(object):
                     if self.surface == 'fcc211':
                         if sumo == 23:
                             sitetype, geometry = 'hcp', 'step111'               
-                        elif sumo == 25:
+                        elif sumo in [24,25]:
                             sitetype, geometry = 'fcc', 'step111'                    
-                        elif sumo == 28:
+                        elif sumo in [27,28]:
                             sitetype, geometry = 'hcp', 'terrace111'
                         elif sumo == 29:
-                            sitetype, geometry = 'fcc', 'terrace111'                
+                            sitetype, geometry = 'fcc', 'terrace111'
+                        else:
+                            print('Cannot identify site {}!'.format(si))
+                            continue         
                     else: 
                         if np.max(occurence) == 3:
                             sitetype, geometry = 'hcp', 'terrace111'                  
                         else:
-                            sitetype, geometry = 'fcc', 'terrace111'                        
+                            sitetype, geometry = 'fcc', 'terrace111' 
 
-                    site = self.new_site()                      
+                    site = self.new_site() 
                     site.update({'site': sitetype,
                                  'surface': self.surface,
                                  'geometry': geometry,
@@ -796,38 +877,32 @@ class SlabAdsorptionSites(object):
                                  'normal': normal,
                                  'height': self.heights['fcc'],
                                  'indices': si})
-                    if sitetype == 'hcp' and self.include_subsurface:
+                    if self.show_composition:                       
+                        metals = list(set(self.atoms.symbols))
+                        ma, mb = metals[0], metals[1]
+                        if atomic_numbers[ma] > atomic_numbers[mb]:
+                            ma, mb = metals[1], metals[0]
+                        symbols = [self.atoms[i].symbol for i in si]
+                        nma = symbols.count(ma)
+                        if nma == 0:
+                            composition = 3*mb
+                        elif nma == 1:
+                            composition = ma + 2*mb
+                        elif nma == 2:
+                            composition = 2*ma + mb
+                        elif nma == 3:
+                            composition = 3*ma
+                        site.update({'composition': composition})   
+
+                    if sitetype == 'hcp' and self.show_subsurface:
                         isub = np.where(occurence == 3)[0][0]
                         site.update({'subsurface_id': isub})
+                        if self.show_composition:
+                            site.update({'subsurface_element': 
+                                         self.atoms[isub].symbol})
                     sl.append(site)
                     usi.add(si)
  
-            if n == 2 and self.surface == 'fcc100':
-                # Make 4-fold hollow sites
-                for i, pos in enumerate(reduced_poss):
-                    fold4_indices = nblist[ntop2+i]
-                    fold4ids = [sorted_indices[i] for i in fold4_indices]
-                    if len(fold4ids) != 4:
-                        continue
-                    si = tuple(sorted(fold4ids))
-                    normal = self.get_surface_normal(list(si))
-                    for i in si:
-                        normals_for_site[i].append(normal)
-                    site = self.new_site()                           
-                    site.update({'site': '4fold',
-                                 'surface': self.surface,
-                                 'geometry': 'terrace100',
-                                 'position': pos,
-                                 'normal': normal,
-                                 'height': self.heights['4fold'],
-                                 'indices': si})
-                    if self.include_subsurface:                        
-                        occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence == 4)[0][0]
-                        site.update({'subsurface_id': isub})
-                    sl.append(site)
-                    usi.add(si)
-
         for t in sl:
             # Add normals to ontop sites
             if t['site'] == 'ontop':
@@ -843,13 +918,13 @@ class SlabAdsorptionSites(object):
 
 
     def new_site(self):
-        return {'site': None, 'surface': None, 'height': None,
-               'position': None, 'normal': None, 'indices': None,
-               'subsurface_id': None, 'occupied': 0}
+        return {'site': None, 'surface': None, 'geometry': None, 
+                'height': None, 'position': None, 'normal': None, 
+                'indices': None, 'occupied': 0}
 
     def make_neighbor_list(self, dx=0.3, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
-        self.nlist = PeriodicNeighborList(self.atoms, dx, neighbor_number)
+        self.nlist = PeriodicNeighborList(self.refatoms, dx, neighbor_number)
 
     def get_connectivity(self):
         """Generate a connections matrix from PeriodicNeighborList."""       
@@ -863,7 +938,7 @@ class SlabAdsorptionSites(object):
 
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
-        indices = [a.index for a in self.atoms] 
+        indices = self.indices 
         coord = np.count_nonzero(cm[indices,:][:,indices], axis=1)
         allsurf = []
         bulk = []
@@ -875,7 +950,7 @@ class SlabAdsorptionSites(object):
                 bulk.append(a_s)
             else:
                 allsurf.append(a_s)
-        notsurf = [a.index for a in self.atoms if a.index not in allsurf]
+        notsurf = [a.index for a in self.refatoms if a.index not in allsurf]
         surfcm = cm.copy()
         surfcm[notsurf] = 0
         surfcm[:,notsurf] = 0
@@ -885,7 +960,8 @@ class SlabAdsorptionSites(object):
         G.add_edges_from(edges)
         components = nx.connected_components(G)
         surf = list(max(components, 
-                    key=lambda x:np.mean(self.atoms.positions[list(x),2])))
+                    key=lambda x:np.mean(
+                    self.refatoms.positions[list(x),2])))
         subsurf = []
         for a_b in bulk:
             for a_t in surf:
@@ -919,7 +995,7 @@ class SlabAdsorptionSites(object):
         return all(dists)
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
-        atoms = self.atoms.copy()
+        atoms = self.refatoms.copy()
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
                 atoms.cell[j][j] = 12 
@@ -934,7 +1010,7 @@ class SlabAdsorptionSites(object):
         self.r = x[i]
 
     def get_CNA(self, rCut=None):                  
-        atoms = self.atoms.copy()
+        atoms = self.refatoms.copy()
         _, extcoords, _ = expand_cell(atoms, cutoff=5.0)
         fracs = np.dot(extcoords, np.linalg.pinv(self.cell))
         xfracs, yfracs = fracs[:,0], fracs[:,1]
@@ -960,7 +1036,7 @@ class SlabAdsorptionSites(object):
 
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
-        indices = [a.index for a in self.atoms] 
+        indices = self.indices 
         coord = np.count_nonzero(cm[indices,:][:,indices], axis=1)
         allsurf = []
         bulk = []
@@ -971,7 +1047,7 @@ class SlabAdsorptionSites(object):
                 bulk.append(a_s)
             else:
                 allsurf.append(a_s)
-        notsurf = [a.index for a in self.atoms if a.index not in allsurf]
+        notsurf = [i for i in indices if i not in allsurf]
         surfcm = cm.copy()
         surfcm[notsurf] = 0
         surfcm[:,notsurf] = 0
@@ -981,7 +1057,8 @@ class SlabAdsorptionSites(object):
         G.add_edges_from(edges)
         components = nx.connected_components(G)
         surf = list(max(components, 
-                    key=lambda x:np.mean(self.atoms.positions[list(x),2])))
+                    key=lambda x:np.mean(
+                        atoms.positions[list(x),2])))
 
         surfCNA = [fullCNA[i] for i in surf]
         return fullCNA, surfCNA
@@ -992,25 +1069,20 @@ class SlabAdsorptionSites(object):
         fcc100_weight = fcc111_weight = fcc110_weight = \
         fcc211_weight = fcc311_weight = 0
         for s in scna:
-            found = 0
             if str(s) in sd['fcc100']:
                 fcc100_weight += 1
-                found += 1
             if str(s) in sd['fcc111']:
                 fcc111_weight += 1
-                found += 1
             if str(s) in sd['fcc110']:
                 fcc110_weight += 1
-                found += 1
+            if str(s) in sd['fcc211']:
+                fcc211_weight += 1
             if str(s) in sd['fcc311']:
                 fcc311_weight += 1
-                found += 1
-            if found == 0:
-                fcc211_weight += 1
  
         full_weights = [fcc100_weight, fcc111_weight, fcc110_weight,
                         fcc211_weight, fcc311_weight]
-        if len([w for w in full_weights if w == max(full_weights)]) > 1:
+        if full_weights.count(max(full_weights)) > 1:
             raise ValueError('Cannot identify the surface. Please specify it!')
         elif fcc100_weight == max(full_weights):
             return 'fcc100'
@@ -1342,15 +1414,15 @@ def monometallic_add_adsorbate(atoms, adsorbate, site, surface=None, height=None
     return atoms        
 
 
-def get_monometallic_sites(atoms, site, surface=None, height=None, include_subsurface=False): 
+def get_monometallic_sites(atoms, site, surface=None, height=None, show_subsurface=False): 
     """Get all sites of a specific type from a nanoparticle or surface slab and assign 
     a label to it. Elemental composition is ignored.""" 
 
-    label_dict = {'ontop' : '1', 
-                 'bridge' : '2', 
-                 'fcc' : '3', 
-                 'hcp' : '4',
-                 'hollow' : '5'}
+    label_dict = {'ontop': '1', 
+                  'bridge': '2', 
+                  'fcc': '3', 
+                  'hcp': '4',
+                  'hollow': '5'}
     atoms.info['data'] = {}                      
     atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbates]]         
     sites = []
@@ -1368,7 +1440,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, include_subsu
         if special_sites:
             for site in special_sites:                 
                 site_name = site['site']
-                if include_subsurface:
+                if show_subsurface:
                     hcp_neighbor_indices = []
                     hollow_neighbor_indices = []
                     if site_name == 'hcp':
@@ -1457,7 +1529,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, include_subsu
                         new_tup_lst = get_neighbors_from_position(atoms, test_pos, 
                                                                   cutoff=2.2*d100)
                         new_tup_lst.sort(key=itemgetter(1))
-                        if include_subsurface:
+                        if show_subsurface:
                             new_nbrs = [x[0] for x in new_tup_lst[:5]]
                             for n, nbridx in enumerate(new_nbrs):
                                 if nbridx not in top_indices:
@@ -1526,7 +1598,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, include_subsu
                     else:
                         special_site = {}
                         tup_lst.sort(key=itemgetter(1))
-                        if include_subsurface:
+                        if show_subsurface:
                             nbrs = [x[0] for x in tup_lst if x[0] in top_indices][:3] \
                                     + [new_nbr_lst[0][0]]
                         else:
@@ -1544,7 +1616,7 @@ def get_monometallic_sites(atoms, site, surface=None, height=None, include_subsu
 
 
 def enumerate_monometallic_sites(atoms, show_occupation=False, surface=None,
-                                 heights=heights_dict, include_subsurface=False):
+                                 heights=heights_dict, show_subsurface=False):
     """Get all sites from a nanoparticle or a surface slab. 
        Elemental composition is ignored.
 
@@ -1558,23 +1630,23 @@ def enumerate_monometallic_sites(atoms, show_occupation=False, surface=None,
 
     else:
         ontop_sites = get_monometallic_sites(atoms, 'ontop', surface, 
-                                             height=heights['ontop'], include_subsurface=False)
+                                             height=heights['ontop'], show_subsurface=False)
         if ontop_sites:
             all_sites += ontop_sites
         bridge_sites = get_monometallic_sites(atoms, 'bridge', surface, 
-                                              height=heights['bridge'], include_subsurface=False)
+                                              height=heights['bridge'], show_subsurface=False)
         if bridge_sites:
             all_sites += bridge_sites
         fcc_sites = get_monometallic_sites(atoms, 'fcc', surface, 
-                                           height=heights['fcc'], include_subsurface=False)
+                                           height=heights['fcc'], show_subsurface=False)
         if fcc_sites:
             all_sites += fcc_sites
         hcp_sites = get_monometallic_sites(atoms, 'hollow', surface, 
-                                           height=heights['hcp'], include_subsurface=include_subsurface)
+                                           height=heights['hcp'], show_subsurface=show_subsurface)
         if hcp_sites:
             all_sites += hcp_sites
         hollow_sites = get_monometallic_sites(atoms, 'hollow', surface, 
-                                              height=heights['hollow'], include_subsurface=include_subsurface)
+                                              height=heights['hollow'], show_subsurface=show_subsurface)
         if hollow_sites:
             all_sites += hollow_sites
 
@@ -1587,7 +1659,7 @@ def enumerate_monometallic_sites(atoms, show_occupation=False, surface=None,
 
 
 def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=None, 
-                             include_subsurface=False, height=None, nsite=1, 
+                             show_subsurface=False, height=None, nsite=1, 
                              min_adsorbate_distance=1.):
     """A function for adding adsorbate to a specific adsorption site on a bimetalic 
     nanoparticle in icosahedron / cuboctahedron / decahedron / truncated-octahedron 
@@ -1622,7 +1694,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
         'hollow' sites include 6 compositions: 'AAAA' or 'AAAB' or 'AABB' or 'ABAB' or 
          'ABBB' or 'BBBB'.
 
-    include_subsurface: The second shell element beneath the adsorption site.
+    show_subsurface: The second shell element beneath the adsorption site.
         Default is False. This keyword can only be set to 'A' or 'B' for 'hcp' and 'hollow'.
 
     height: The height from the adsorbate to the surface.
@@ -1638,10 +1710,10 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
     Example
     -------
     bimetallic_add_adsorbate(atoms, adsorbate='CO', site='hollow', surface='fcc100', 
-    composition='NiPtNiPt', include_subsurface='Pt', nsite='all')"""
+    composition='NiPtNiPt', show_subsurface='Pt', nsite='all')"""
 
     #print('System: adsorbate {0}, site {1}, surface {2}, composition {3}, 
-    #second shell {4}'.format(adsorbate, site, surface, composition, include_subsurface))
+    #second shell {4}'.format(adsorbate, site, surface, composition, show_subsurface))
 
     atoms.info['data'] = {}
     if composition is None:
@@ -1662,16 +1734,16 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
             print('This site is not possible at all. Please check your input parameters.')
         else:
             final_sites = []
-            if sites[0]['site'] == 'ontop' and not include_subsurface:
+            if sites[0]['site'] == 'ontop' and not show_subsurface:
                 final_sites += [site for site in sites if \
                                 atoms[site['indices'][0]].symbol == composition]
-            elif sites[0]['site'] == 'bridge' and not include_subsurface:
+            elif sites[0]['site'] == 'bridge' and not show_subsurface:
                 for site in sites:
                     a = atoms[site['indices'][0]].symbol
                     b = atoms[site['indices'][1]].symbol
                     if composition in [a+b, b+a]:
                         final_sites.append(site)
-            elif sites[0]['site'] == 'fcc' and not include_subsurface:
+            elif sites[0]['site'] == 'fcc' and not show_subsurface:
                 for site in sites:
                     a = atoms[site['indices'][0]].symbol
                     b = atoms[site['indices'][1]].symbol
@@ -1684,7 +1756,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                     b = atoms[site['indices'][1]].symbol
                     c = atoms[site['indices'][2]].symbol
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             neighbor_indices = []
@@ -1696,7 +1768,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                             subsurf_index = [key for key, count in \
                             Counter(neighbor_indices).items() if count == 3][0]
                             subsurf_element = atoms[subsurf_index].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 final_sites.append(site)
             elif sites[0]['site'] == 'hollow':
                 for site in sites:
@@ -1719,7 +1791,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                         c = atoms[site['indices'][idmax]].symbol
                         d = atoms[site['indices'][short[1]]].symbol                                                
                         if (a != b) and (a+b == c+d):
-                            if not include_subsurface:
+                            if not show_subsurface:
                                 final_sites.append(site)
                             else:
                                 neighbor_indices = []
@@ -1731,11 +1803,11 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                                 subsurf_index = [key for key, count in \
                                 Counter(neighbor_indices).items() if count == 4][0] 
                                 subsurf_element = atoms[subsurf_index].symbol
-                                if include_subsurface == subsurf_element:
+                                if show_subsurface == subsurf_element:
                                     final_sites.append(site)
                     elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, 
                                          c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             neighbor_indices = []
@@ -1747,7 +1819,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                             subsurf_index = [key for key, count in \
                             Counter(neighbor_indices).items() if count == 4][0]
                             subsurf_element = atoms[subsurf_index].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 final_sites.append(site)
             else:
                 raise ValueError('{0} sites do not have second shell'.format(site))
@@ -1809,7 +1881,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
         final_sites = []
         if site in ['ontop','bridge','fcc']:
             sites = get_monometallic_sites(atoms, site, surface, height=height, 
-                                           include_subsurface=False)
+                                           show_subsurface=False)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'ontop':
@@ -1830,7 +1902,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                         final_sites.append(site)
         elif site in ['hcp','hollow']:
             sites = get_monometallic_sites(atoms, site, surface, height=height, 
-                                           include_subsurface=True)
+                                           show_subsurface=True)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'hcp':
@@ -1839,11 +1911,11 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                     b = atoms[site['indices'][1]].symbol
                     c = atoms[site['indices'][2]].symbol
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             subsurf_element = atoms[site['indices'][-1]].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 final_sites.append(site)
             elif site == 'hollow':
                 for site in sites:
@@ -1866,19 +1938,19 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
                         c = atoms[site['indices'][idmax]].symbol
                         d = atoms[site['indices'][short[1]]].symbol                                                
                         if (a != b) and (a+b == c+d):
-                            if not include_subsurface:
+                            if not show_subsurface:
                                 final_sites.append(site)
                             else:
                                 subsurf_element = atoms[site['indices'][-1]].symbol
-                                if include_subsurface == subsurf_element:
+                                if show_subsurface == subsurf_element:
                                     final_sites.append(site)
                     elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, c+b+a+d, 
                                          c+d+a+b, d+a+b+c, d+c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             subsurf_element = atoms[site['indices'][-1]].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 final_sites.append(site)
         if nsite == 'all':
             for pos in [s['position'] for s in final_sites]:
@@ -1899,7 +1971,7 @@ def bimetallic_add_adsorbate(atoms, adsorbate, site, surface=None, composition=N
 
 
 def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=None, 
-                         include_subsurface=False):
+                         show_subsurface=False):
     """Get all sites of a specific type from a bimetallic nanoparticle or slab.  
     Elemental composition is included."""  
 
@@ -1914,7 +1986,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
         if surface is None:
             raise ValueError('Surface must be specified for a nanoparticle')
         system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, 
-                  surface, composition, include_subsurface)
+                  surface, composition, show_subsurface)
         if height is None:
             ads = NanoparticleAdsorptionSites(atoms)
         else:
@@ -1923,16 +1995,16 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
         nl = ads.nlist
         sites = ads.get_sites_from_surface(site, surface)
         if sites:            
-            if sites[0]['site'] == 'ontop' and not include_subsurface:
+            if sites[0]['site'] == 'ontop' and not show_subsurface:
                 final_sites += [site for site in sites if \
                                 atoms[site['indices'][0]].symbol == composition]
-            elif sites[0]['site'] == 'bridge' and not include_subsurface:
+            elif sites[0]['site'] == 'bridge' and not show_subsurface:
                 for site in sites:
                     a = atoms[site['indices'][0]].symbol
                     b = atoms[site['indices'][1]].symbol
                     if composition in [a+b, b+a]:
                         final_sites.append(site)
-            elif sites[0]['site'] == 'fcc' and not include_subsurface:
+            elif sites[0]['site'] == 'fcc' and not show_subsurface:
                 for site in sites:
                     a = atoms[site['indices'][0]].symbol
                     b = atoms[site['indices'][1]].symbol
@@ -1945,7 +2017,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                     b = atoms[site['indices'][1]].symbol
                     c = atoms[site['indices'][2]].symbol
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             neighbor_indices = []
@@ -1956,7 +2028,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                             subsurf_index = [key for key, count in \
                             Counter(neighbor_indices).items() if count == 3][0]
                             subsurf_element = atoms[subsurf_index].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 site['indices'] += (subsurf_index,)
                                 final_sites.append(site)
             elif sites[0]['site'] == 'hollow':
@@ -1980,7 +2052,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                         c = atoms[site['indices'][idmax]].symbol
                         d = atoms[site['indices'][short[1]]].symbol                                                
                         if (a != b) and (a+b == c+d):
-                            if not include_subsurface:
+                            if not show_subsurface:
                                 final_sites.append(site)
                             else:
                                 neighbor_indices = []
@@ -1991,12 +2063,12 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                                 subsurf_index = [key for key, count in \
                                 Counter(neighbor_indices).items() if count == 4][0] 
                                 subsurf_element = atoms[subsurf_index].symbol
-                                if include_subsurface == subsurf_element:
+                                if show_subsurface == subsurf_element:
                                     site['indices'] += (subsurf_index,)
                                     final_sites.append(site)
                     elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, 
                                          c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             neighbor_indices = []
@@ -2007,7 +2079,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                             subsurf_index = [key for key, count in \
                             Counter(neighbor_indices).items() if count == 4][0]
                             subsurf_element = atoms[subsurf_index].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 site['indices'] += (subsurf_index,)
                                 final_sites.append(site)
             else:
@@ -2028,9 +2100,9 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
             surface = identify_surface(atoms[top_indices+second_indices])             
 
         system = 'site {0}, surface {1}, composition {2}, second shell {3}'.format(site, 
-                  surface, composition, include_subsurface)
+                  surface, composition, show_subsurface)
         if site in ['ontop','bridge','fcc']:
-            sites = get_monometallic_sites(atoms, site, surface, height, include_subsurface=False)
+            sites = get_monometallic_sites(atoms, site, surface, height, show_subsurface=False)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'ontop':
@@ -2050,7 +2122,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
                         final_sites.append(site)
         elif site in ['hcp','hollow']:
-            sites = get_monometallic_sites(atoms, site, surface, height, include_subsurface=True)
+            sites = get_monometallic_sites(atoms, site, surface, height, show_subsurface=True)
             if not sites:
                 print('No such adsorption site found on this surface slab')
             elif site == 'hcp':
@@ -2059,11 +2131,11 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                     b = atoms[site['indices'][1]].symbol
                     c = atoms[site['indices'][2]].symbol
                     if composition in [a+b+c, a+c+b, b+a+c, b+c+a, c+a+b, c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             subsurf_element = atoms[site['indices'][-1]].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 final_sites.append(site)
             elif site == 'hollow':
                 for site in sites:
@@ -2086,19 +2158,19 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
                         c = atoms[site['indices'][idmax]].symbol
                         d = atoms[site['indices'][short[1]]].symbol                                                
                         if (a != b) and (a+b == c+d):
-                            if not include_subsurface:
+                            if not show_subsurface:
                                 final_sites.append(site)
                             else:
                                 subsurf_element = atoms[site['indices'][-1]].symbol
-                                if include_subsurface == subsurf_element:
+                                if show_subsurface == subsurf_element:
                                     final_sites.append(site)
                     elif composition in [a+b+c+d, a+d+c+b, b+a+d+c, b+c+d+a, 
                                          c+b+a+d, c+d+a+b, d+a+b+c, d+c+b+a]:
-                        if not include_subsurface:
+                        if not show_subsurface:
                             final_sites.append(site)
                         else:
                             subsurf_element = atoms[site['indices'][-1]].symbol
-                            if include_subsurface == subsurf_element:
+                            if show_subsurface == subsurf_element:
                                 final_sites.append(site)
     if final_sites:
         for site in final_sites:
@@ -2108,7 +2180,7 @@ def get_bimetallic_sites(atoms, site, surface=None, composition=None, height=Non
 
 
 def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None, 
-                               heights=heights_dict, include_subsurface=False):
+                               heights=heights_dict, show_subsurface=False):
     """Get all sites from a bimetallic nanoparticle or slab. 
     Elemental composition is included.
 
@@ -2123,25 +2195,25 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None,
         for surface in ['vertex', 'edge', 'fcc100', 'fcc111']:
             for composition in metals:
                 ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, 
-                                                   heights['ontop'], include_subsurface=False)
+                                                   heights['ontop'], show_subsurface=False)
                 if ontop_sites:
                     all_sites += ontop_sites
         for surface in ['edge', 'fcc100', 'fcc111']:
             for composition in [metals[0]+metals[0], metals[0]+metals[1], 
                                 metals[1]+metals[1]]:
                 bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, 
-                                                    heights['bridge'], include_subsurface=False)
+                                                    heights['bridge'], show_subsurface=False)
                 if bridge_sites:
                     all_sites += bridge_sites
         for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                             metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
             fcc_sites = get_bimetallic_sites(atoms, 'fcc', 'fcc111', composition, 
-                                             heights['fcc'], include_subsurface=False)
+                                             heights['fcc'], show_subsurface=False)
             if fcc_sites:
                 all_sites += fcc_sites
         for composition in [metals[0]+metals[0]+metals[0], metals[0]+metals[0]+metals[1], 
                             metals[0]+metals[1]+metals[1], metals[1]+metals[1]+metals[1]]:
-            if include_subsurface:
+            if show_subsurface:
                 for subsurf_element in metals:
                     hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, 
                                                      heights['hcp'], subsurf_element)
@@ -2149,7 +2221,7 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None,
                         all_sites += hcp_sites
             else:
                 hcp_sites = get_bimetallic_sites(atoms, 'hcp', 'fcc111', composition, 
-                                                 heights['hcp'], include_subsurface=False)
+                                                 heights['hcp'], show_subsurface=False)
                 if hcp_sites:
                     all_sites += hcp_sites
         for composition in [metals[0]+metals[0]+metals[0]+metals[0], 
@@ -2158,7 +2230,7 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None,
                             metals[0]+metals[1]+metals[0]+metals[1], 
                             metals[0]+metals[1]+metals[1]+metals[1], 
                             metals[1]+metals[1]+metals[1]+metals[1]]:
-            if include_subsurface:
+            if show_subsurface:
                 for subsurf_element in metals:
                     hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', 
                                    composition, heights['hollow'], subsurf_element)
@@ -2166,19 +2238,19 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None,
                         all_sites += hollow_sites
             else:
                 hollow_sites = get_bimetallic_sites(atoms, 'hollow', 'fcc100', composition,
-                                                    heights['hollow'], include_subsurface=False)
+                                                    heights['hollow'], show_subsurface=False)
                 if hollow_sites:
                     all_sites += hollow_sites
 
     else:
         for composition in metals:
             ontop_sites = get_bimetallic_sites(atoms, 'ontop', surface, composition, 
-                                               heights['ontop'], include_subsurface=False)
+                                               heights['ontop'], show_subsurface=False)
             if ontop_sites:
                 all_sites += ontop_sites
         for composition in [metals[0]+metals[0], metals[0]+metals[1], metals[1]+metals[1]]:
             bridge_sites = get_bimetallic_sites(atoms, 'bridge', surface, composition, 
-                                                heights['bridge'], include_subsurface=False)
+                                                heights['bridge'], show_subsurface=False)
             if bridge_sites:
                 all_sites += bridge_sites
         if surface == 'fcc111':
@@ -2187,22 +2259,22 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None,
                                 metals[0]+metals[1]+metals[1], 
                                 metals[1]+metals[1]+metals[1]]:
                 fcc_sites = get_bimetallic_sites(atoms, 'fcc', surface, composition, 
-                                                 heights['fcc'], include_subsurface=False)
+                                                 heights['fcc'], show_subsurface=False)
                 if fcc_sites:
                     all_sites += fcc_sites
             for composition in [metals[0]+metals[0]+metals[0], 
                                 metals[0]+metals[0]+metals[1], 
                                 metals[0]+metals[1]+metals[1], 
                                 metals[1]+metals[1]+metals[1]]:
-                if include_subsurface:
+                if show_subsurface:
                     for subsurf_element in metals:
                         hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition,
-                                    heights['hcp'], include_subsurface=subsurf_element)
+                                    heights['hcp'], show_subsurface=subsurf_element)
                         if hcp_sites:
                             all_sites += hcp_sites
                 else:
                     hcp_sites = get_bimetallic_sites(atoms, 'hcp', surface, composition, 
-                                                     heights['hcp'], include_subsurface=False)
+                                                     heights['hcp'], show_subsurface=False)
                     if hcp_sites:
                         all_sites += hcp_sites
         elif surface == 'fcc100':
@@ -2212,15 +2284,15 @@ def enumerate_bimetallic_sites(atoms, show_occupation=False, surface=None,
                                 metals[0]+metals[1]+metals[0]+metals[1], 
                                 metals[0]+metals[1]+metals[1]+metals[1], 
                                 metals[1]+metals[1]+metals[1]+metals[1]]:
-                if include_subsurface:
+                if show_subsurface:
                     for subsurf_element in metals:
                         hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, 
-                        composition, heights['hollow'], include_subsurface=subsurf_element)
+                        composition, heights['hollow'], show_subsurface=subsurf_element)
                         if hollow_sites:
                             all_sites += hollow_sites
                 else:
                     hollow_sites = get_bimetallic_sites(atoms, 'hollow', surface, 
-                                   composition, heights['hollow'], include_subsurface=False)
+                                   composition, heights['hollow'], show_subsurface=False)
                     if hollow_sites:
                         all_sites += hollow_sites
 
@@ -2236,7 +2308,7 @@ def enumerate_sites_with_adsorbates(atoms, adsorbate, heights=heights_dict):
     '''Add adsorbates to all possible sites.
     Might be useful in some occasions (e.g. visualization).'''
  
-    all_sites = enumerate_monometallic_sites(atoms, heights, include_subsurface=False)
+    all_sites = enumerate_monometallic_sites(atoms, heights, show_subsurface=False)
                                                                                  
     if True not in atoms.pbc:
         for site in all_sites:
@@ -2346,7 +2418,7 @@ def _is_site_occupied_by(atoms, adsorbate, site,
         return False
 
 
-def label_occupied_sites(atoms, adsorbate, include_subsurface=False):
+def label_occupied_sites(atoms, adsorbate, show_subsurface=False):
     '''Assign labels to all occupied sites. Different labels represent 
     different sites.
     
@@ -2362,7 +2434,7 @@ def label_occupied_sites(atoms, adsorbate, include_subsurface=False):
     Note: Please provide atoms including adsorbate(s), with adsorbate being a 
     string or a list of strings.
     
-    Set include_subsurface=True if you also want to label the second shell atoms.'''
+    Set show_subsurface=True if you also want to label the second shell atoms.'''
 
     species_pseudo_mapping = [('As','Sb'),('Se','Te'),('Br','I')]  
     elements = list(set(atoms.symbols))
@@ -2372,7 +2444,7 @@ def label_occupied_sites(atoms, adsorbate, include_subsurface=False):
     if Atom(metals[0]).number > Atom(metals[1]).number:
         mA = metals[1]
         mB = metals[0]
-    sites = enumerate_monometallic_sites(atoms, include_subsurface=include_subsurface)
+    sites = enumerate_monometallic_sites(atoms, show_subsurface=show_subsurface)
     n_occupied_sites = 0
     atoms.set_tags(0)
     if isinstance(adsorbate, list):               
@@ -2436,7 +2508,7 @@ def label_occupied_sites(atoms, adsorbate, include_subsurface=False):
     return atoms
 
 
-def multi_label_counter(atoms, adsorbate, include_subsurface=False):
+def multi_label_counter(atoms, adsorbate, show_subsurface=False):
     '''Encoding the labels into 5d numpy arrays. 
     This can be further used as a fingerprint.
 
@@ -2448,9 +2520,9 @@ def multi_label_counter(atoms, adsorbate, include_subsurface=False):
     Note: Please provide atoms including adsorbate(s), with adsorbate being a 
     string or a list of strings.
 
-    Set include_subsurface=True if you also want to label the second shell atoms.'''
+    Set show_subsurface=True if you also want to label the second shell atoms.'''
 
-    labeled_atoms = label_occupied_sites(atoms, adsorbate, include_subsurface)
+    labeled_atoms = label_occupied_sites(atoms, adsorbate, show_subsurface)
     np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]
     np_atoms = labeled_atoms[np_indices]
     
