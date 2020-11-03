@@ -2,7 +2,7 @@ from .utilities import PeriodicNeighborList, get_connectivity_matrix
 from .utilities import get_mic_distance, expand_cell
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
-from asap3.analysis import FullCNA
+from asap3.analysis import FullCNA, PTM
 from asap3 import EMT as asapEMT
 from ase.build import molecule
 from ase.geometry import Cell, get_layers
@@ -19,6 +19,7 @@ from collections import Counter, defaultdict
 import networkx as nx
 import scipy
 import re
+import math
 import random
 import warnings
 
@@ -29,22 +30,22 @@ import warnings
 icosa_dict = {
     # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
     # Edge sites on outermost shell -- Icosa
     str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
-    'edge': str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}),
+    'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2})],
     # Vertice sites on outermost shell -- Icosa, Deca
     str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
-    'vertex': str({(3, 2, 2): 5, (5, 5, 5): 1}),
+    'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1})],
 }
 
 ticosa_dict = {
     # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
     # Edge sites on outermost shell -- Icosa
     str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
-    'edge': str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}),
+    'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2})],
     # Vertice sites on outermost shell -- Icosa, Deca
     str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
     'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1}), 
@@ -56,16 +57,16 @@ ticosa_dict = {
 cubocta_dict = {
     # Edge sites on outermost shell -- Cubocta, Tocta
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
-    'edge': str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
+    'edge': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2})],
     # Square sites on outermost shell -- Cubocta, Deca, Tocta, (Surface)
     str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
+    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
     # Vertice sites on outermost shell -- Cubocta
     str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
-    'vertex': str({(2, 1, 1): 4, (4, 2, 1): 1}),
+    'vertex': [str({(2, 1, 1): 4, (4, 2, 1): 1})],
     # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta, (Surface)
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
 }
 
 mdeca_dict = {
@@ -80,7 +81,7 @@ mdeca_dict = {
     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
     # Square sites on outermost shell -- Cubocta, Deca, Tocta
     str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
+    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
     # Vertice sites on outermost shell -- Icosa, Deca
     str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
     'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1}), 
@@ -101,13 +102,13 @@ mdeca_dict = {
 octa_dict = {
     # Edge sites (111)-(111) on outermost shell -- Octa, Tocta
     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
-    'edge': str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}),
+    'edge': [str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1})],
     # Vertice sites on outermost shell -- Octa
     str({(2, 0, 0): 4}): 'vertex',
-    'vertex': str({(2, 0, 0): 4}),
+    'vertex': [str({(2, 0, 0): 4})],
     # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
 }
 
 tocta_dict = {
@@ -119,22 +120,28 @@ tocta_dict = {
     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
     # Square sites on outermost shell -- Cubocta, Deca, Tocta
     str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
+    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
     # Vertice sites on outermost shell -- Tocta
     str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
-    'vertex': str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}),
+    'vertex': [str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1})],
     # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
 }
 
 surf_dict = {
     # Square sites
     str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': str({(2, 1, 1): 4, (4, 2, 1): 4}),
+    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
     # Triangle sites
     str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3}),
+    str({(2, 0, 0): 2, (3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}),
+    str({(2, 0, 0): 2, (3, 1, 1): 6})],
+    # Triangle sites
+    str({(2, 0, 0): 2, (3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'fcc111',
+    # Triangle sites
+    str({(2, 0, 0): 2, (3, 1, 1): 6}): 'fcc111',
     # Triangle-Triangle sites
     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'fcc110',
     'fcc110': [str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}), 
@@ -144,9 +151,11 @@ surf_dict = {
     str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc211',
     'fcc211': [str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}),
                str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
-               str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2})],
+               str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2}),
+               str({(3, 1, 1): 6, (4, 2, 1): 3})],
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'fcc211',
     str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc211',
+    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc211',
     # Triangle-Square sites
     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'fcc311',
     'fcc311': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
@@ -319,8 +328,8 @@ class NanoparticleAdsorptionSites(object):
                                                     composition = ma + 3*mb
                                                 elif nma == 2:
                                                     opp = max(list(si[1:]), key=lambda x: 
-                                                              np.linalg.norm(self.atoms[x].position
-                                                                     - self.atoms[si[0]].position)) 
+                                                          np.linalg.norm(self.atoms[x].position
+                                                                 - self.atoms[si[0]].position)) 
                                                     if self.atoms[opp].symbol == \
                                                        self.atoms[si[0]].symbol:
                                                         composition = ma + mb + ma + mb 
@@ -372,9 +381,10 @@ class NanoparticleAdsorptionSites(object):
 
     def new_site(self):
         return {'site': None, 'surface': None, 'position': None, 
-                'normal': None, 'indices': None}
+                'normal': None, 'indices': None, 'composition': None,
+                'subsurface_id': None, 'subsurface_element': None}
 
-    def get_all_sites_of_type(self, type):
+    def get_all_sites_of_type(self, type):            
         return [i for i in self.site_list
                 if i['site'] == type]
 
@@ -501,7 +511,7 @@ class NanoparticleAdsorptionSites(object):
             return tocta_dict
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
-        atoms = self.atoms
+        atoms = self.atoms.copy()
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
                 atoms.cell[j][j] = 12 
@@ -550,6 +560,7 @@ class SlabAdsorptionSites(object):
         del atoms[[a.index for a in atoms if a.symbol in adsorbates]]
         self.atoms = atoms
         self.indices = [a.index for a in self.atoms] 
+
         refatoms = self.atoms.copy()        
         for a in refatoms:
             a.symbol = 'Pt'
@@ -557,23 +568,24 @@ class SlabAdsorptionSites(object):
         opt = FIRE(refatoms, logfile=None)
         opt.run(fmax=0.1) 
         self.refatoms = refatoms
+        self.delta_positions = atoms.positions - refatoms.positions
         self.cell = atoms.cell
         self.pbc = atoms.pbc
         self.tol = tol
         self.show_composition = show_composition
         self.show_subsurface = show_subsurface
         self.site_dict = surf_dict 
-        self.set_first_neighbor_distance_from_rdf()
+        self.r = 2.675
 
         self.make_neighbor_list(dx=.3) 
         self.connectivity_matrix = self.get_connectivity()         
+        self.surf_ids, self.subsurf_ids = self.get_termination()        
         if surface is None: 
             self.fullCNA, self.surfCNA = self.get_CNA(rCut=self.r+.3)
             self.surface = self.identify_surface()
         else:
             self.surface = surface
 
-        self.surf_ids, self.subsurf_ids = self.get_termination()        
         self.site_list = []
         self.populate_site_list()
 
@@ -593,8 +605,10 @@ class SlabAdsorptionSites(object):
 
         for s in top_indices:
             occurence = np.sum(cm[s], axis=0)
-            if self.surface in ['fcc100','fcc111']:
-                geometry = 'terrace'
+            if self.surface == 'fcc100':
+                geometry = 'terrace100'
+            elif self.surface == 'fcc111':
+                geometry = 'terrace111'
             else:
                 if occurence == 7:
                     geometry = 'step'
@@ -627,7 +641,7 @@ class SlabAdsorptionSites(object):
         neighbors = dt.neighbors
         simplices = dt.simplices
 
-        bridge_positions, fold3_positions, fold4_positions = [], [], []
+        bridge_positions, fold3_positions = [], []
         bridge_points, fold3_points, fold4_points = [], [], []
 
         for i, corners in enumerate(simplices):
@@ -678,7 +692,6 @@ class SlabAdsorptionSites(object):
                     oright = np.isclose(oangle, 0)
                     if oright:
                         fold4_points.append(potential_hollow)
-                        fold4_positions.append(bridge[j])
                 else:
                     bridge_points.append(edge)
                     bridge_positions.append(bridge[j])
@@ -688,6 +701,8 @@ class SlabAdsorptionSites(object):
                 fold3_points += corners.tolist()
                 fold3_positions.append(fold3_position)
         # Complete information of each site
+        self.bridge_positions = bridge_positions
+        self.fold3_positions = fold3_positions
         for poss in [bridge_positions, fold3_positions]:
             if not poss:
                 continue
@@ -719,6 +734,7 @@ class SlabAdsorptionSites(object):
             # Make bridge sites  
             if poss == bridge_positions:
                 fold4_poss = []
+                self.reduced_positions = reduced_poss
                 for i, refpos in enumerate(reduced_poss):
                     bridge_indices = nblist[ntop2+i]                     
                     bridgeids = [sorted_indices[j] for j in bridge_indices]
@@ -730,8 +746,7 @@ class SlabAdsorptionSites(object):
                         continue
 
                     si = tuple(sorted(bridgeids))
-                    pos = np.mean([self.atoms[j].position 
-                                  for j in si], axis=0) 
+                    pos = refpos + np.average(self.delta_positions[bridgeids], 0) 
                     occurence = np.sum(cm[bridgeids], axis=0)
                     sumo = np.sum(occurence)
 
@@ -818,8 +833,8 @@ class SlabAdsorptionSites(object):
                         isub = np.where(occurence == 4)[0][0]
                         newfold4ids = [k for k in fold4ids if cm[k,isub] == 1]
                         si = tuple(sorted(newfold4ids))
-                        pos = np.mean([self.atoms[j].position 
-                                      for j in si], axis=0) 
+                        pos = refpos + np.average(
+                              self.delta_positions[newfold4ids], 0) 
                         normal = self.get_surface_normal(list(si))
                         for i in si:
                             normals_for_site[i].append(normal)
@@ -871,8 +886,8 @@ class SlabAdsorptionSites(object):
                     if len(fold3ids) != 3:
                         continue
                     si = tuple(sorted(fold3ids))
-                    pos = np.mean([self.atoms[j].position 
-                                  for j in si], axis=0) 
+                    pos = refpos + np.average(
+                          self.delta_positions[fold3ids], 0) 
                     normal = self.get_surface_normal(list(si))
                     for i in si:
                         normals_for_site[i].append(normal)
@@ -929,24 +944,74 @@ class SlabAdsorptionSites(object):
                                          self.atoms[isub].symbol})
                     sl.append(site)
                     usi.add(si)
- 
+
+        index_list, pos_list, st_list = [], [], []
         for t in sl:
+            stids = t['indices']
             # Add normals to ontop sites
             if t['site'] == 'ontop':
-                n = np.average(normals_for_site[t['indices'][0]], 0)
+                n = np.average(normals_for_site[stids[0]], 0)
                 t['normal'] = n / np.linalg.norm(n)
             # Add normals to bridge sites
             elif t['site'] == 'bridge':
                 normals = []
-                for i in t['indices']:
+                for i in stids:
                     normals.extend(normals_for_site[i])
                 n = np.average(normals, 0)
                 t['normal'] = n / np.linalg.norm(n)                  
 
+            # Check duplicate indices. Happens when unit cell is small  
+            if t['site'] in ['fcc', 'hcp']:
+                if stids in index_list:
+                    slid = next(si for si in range(len(sl)) if 
+                                sl[si]['indices'] == stids)
+                    previd = index_list.index(stids)
+                    prevpos = pos_list[previd]
+                    prevst = st_list[previd]
+                    if min([np.linalg.norm(prevpos - pos) for pos 
+                       in self.atoms[self.subsurf_ids].positions]) < \
+                       min([np.linalg.norm(t['position'] - pos) for pos
+                       in self.atoms[self.subsurf_ids].positions]):
+                        t['site'] = 'fcc'
+                        if prevst == 'fcc':
+                            sl[slid]['site'] = 'hcp'
+                        if self.show_subsurface:
+                            t['subsurface_id'] = None
+                            if self.show_composition:
+                                t['subsurface_element'] = None 
+                    else:
+                        t['site'] = 'hcp'
+                        if t['site'] == 'hcp':
+                            sl[slid]['site'] = 'fcc'
+                        if self.show_subsurface:
+                            sl[slid]['subsurface_id'] = None
+                            if self.show_composition:
+                                sl[slid]['subsurface_element'] = None
+                else:
+                    index_list.append(t['indices'])
+                    pos_list.append(t['position'])
+                    st_list.append(t['site'])
 
     def new_site(self):
         return {'site': None, 'surface': None, 'geometry': None, 
-                'position': None, 'normal': None, 'indices': None}
+                'position': None, 'normal': None, 'indices': None,
+                'composition': None, 'subsurface_id': None,
+                'subsurface_element': None}
+
+    def get_all_sites_of_type(self, type):            
+        return [i for i in self.site_list
+                if i['site'] == type]
+                                                      
+    def get_all_fcc_sites(self):
+        return self.get_all_sites_of_type('fcc')
+                                                      
+    def get_all_from_geometry(self, surface):
+        return [i for i in self.site_list
+                if i['geometry'] == surface]
+                                                      
+    def get_sites_from_geometry(self, site, surface):
+        surf = self.get_all_from_surface(surface)
+        return [i for i in surf if i['site'] == site]
 
     def make_neighbor_list(self, dx=0.3, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
@@ -959,27 +1024,28 @@ class SlabAdsorptionSites(object):
     def get_termination(self):
         """Return lists surf and subsurf containing atom indices belonging to
         those subsets of a surface atoms object.
-        This function relies on the connectivity of the atoms.
+        This function relies on PTM and the connectivity of the atoms.
         """
+    
+        xcell = self.cell[0][0]
+        ycell = self.cell[1][1] 
+        xmul = math.ceil(12/xcell)
+        ymul = math.ceil(12/ycell) 
+        atoms = self.atoms*(xmul,ymul,1)
 
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
         indices = self.indices 
-        coord = np.count_nonzero(cm[indices,:][:,indices], axis=1)
-        allsurf = []
-        bulk = []
-        max_coord = np.max(coord)
-        dcoord = 0 if self.surface == 'fcc110' else 1
-        for i, c in enumerate(coord):
-            a_s = indices[i]
-            if c >= max_coord - dcoord: 
-                bulk.append(a_s)
-            else:
-                allsurf.append(a_s)
-        notsurf = [a.index for a in self.refatoms if a.index not in allsurf]
+
+        ptmdata = PTM(atoms, rmsd_max=0.2)
+        allbigsurf = np.where(ptmdata['structure'] == 0)[0]
+        allsurf = [i for i in allbigsurf if i < len(indices)]
+        bulk = [i for i in indices if i not in allsurf]
         surfcm = cm.copy()
-        surfcm[notsurf] = 0
-        surfcm[:,notsurf] = 0
+        surfcm[bulk] = 0
+        surfcm[:,bulk] = 0
+
+        # Use networkx to separate top layer and bottom layer
         rows, cols = np.where(surfcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G = nx.Graph()
@@ -1020,21 +1086,6 @@ class SlabAdsorptionSites(object):
                  for atom in self.atoms]
         return all(dists)
 
-    def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
-        atoms = self.refatoms.copy()
-        for j, L in enumerate(list(atoms.cell.diagonal())):
-            if L <= 10:
-                atoms.cell[j][j] = 12 
-        rdf = RadialDistributionFunction(atoms, rMax, nBins).get_rdf()
-        x = (np.arange(nBins) + 0.5) * rMax / nBins
-        rdf *= x**2
-        diff_rdf = np.gradient(rdf)
-
-        i = 0
-        while diff_rdf[i] >= 0:
-            i += 1
-        self.r = x[i]
-
     def get_CNA(self, rCut=None):                  
         atoms = self.refatoms.copy()
         _, extcoords, _ = expand_cell(atoms, cutoff=5.0)
@@ -1059,34 +1110,7 @@ class SlabAdsorptionSites(object):
         fullatoms = atoms.extend(ringatoms) 
         fullatoms.center(vacuum=5.)            
         fullCNA = FullCNA(fullatoms, rCut=rCut).get_normal_cna() 
-
-        cm = self.connectivity_matrix.copy()                               
-        np.fill_diagonal(cm, 0)
-        indices = self.indices 
-        coord = np.count_nonzero(cm[indices,:][:,indices], axis=1)
-        allsurf = []
-        bulk = []
-        max_coord = np.max(coord)
-        for i, c in enumerate(coord):
-            a_s = indices[i]
-            if c == max_coord: 
-                bulk.append(a_s)
-            else:
-                allsurf.append(a_s)
-        notsurf = [i for i in indices if i not in allsurf]
-        surfcm = cm.copy()
-        surfcm[notsurf] = 0
-        surfcm[:,notsurf] = 0
-        rows, cols = np.where(surfcm == 1)
-        edges = zip(rows.tolist(), cols.tolist())
-        G = nx.Graph()
-        G.add_edges_from(edges)
-        components = nx.connected_components(G)
-        surf = list(max(components, 
-                    key=lambda x:np.mean(
-                        atoms.positions[list(x),2])))
-
-        surfCNA = [fullCNA[i] for i in surf]
+        surfCNA = [fullCNA[i] for i in self.surf_ids]
         return fullCNA, surfCNA
                  
     def identify_surface(self):
@@ -1105,9 +1129,14 @@ class SlabAdsorptionSites(object):
                 fcc211_weight += 1
             if str(s) in sd['fcc311']:
                 fcc311_weight += 1
+            if str(s) not in sd['fcc100'] + sd['fcc111'] + sd['fcc110'] \
+                           + sd['fcc211'] + sd['fcc311']:
+                fcc110_weight += 1
+                fcc211_weight += 1
  
         full_weights = [fcc100_weight, fcc111_weight, fcc110_weight,
                         fcc211_weight, fcc311_weight]
+         
         if full_weights.count(max(full_weights)) > 1:
             raise ValueError('Cannot identify the surface. Please specify it!')
         elif fcc100_weight == max(full_weights):
@@ -1122,26 +1151,24 @@ class SlabAdsorptionSites(object):
             return 'fcc311'
 
 
-def enumerate_sites(atoms, surface=None, show_composition=False, 
-                    show_subsurface=False):
+def enumerate_surface_sites(atoms, surface=None, geometry=None, 
+                            show_composition=False, show_subsurface=False):
 
     if True not in atoms.pbc:
         nas = NanoparticleAdsorptionSites(atoms, show_composition,
                                           show_subsurface)
-        if surface is None:
-            all_sites = nas.site_list
-        else:
-            all_sites = []
-            for site in ['ontop', 'bridge', 'fcc', 'hcp', '4fold']:
-                all_sites += nas.get_sites_from_surface(site, surface) 
+        all_sites = nas.site_list
+        if surface:
+            all_sites = [s for s in all_sites if s['surface'] == surface] 
 
     else:
         sas = SlabAdsorptionSites(atoms, surface, show_composition, 
                                   show_subsurface)
-        all_sites = sas.site_list       
+        all_sites = sas.site_list
+        if geometry:
+            all_sites = [s for s in all_sites if s['geometry'] == geometry]       
 
     return all_sites
-
 
 
 def get_neighbors_from_position(atoms, position, cutoff=3.):
@@ -1157,9 +1184,9 @@ def get_neighbors_from_position(atoms, position, cutoff=3.):
     return lst
 
 
-def add_adsorbate(atoms, adsorbate, site):
+def add_adsorbate_to_site(atoms, adsorbate, site, height):            
     # Make the correct position
-    height = site['height']
+    site['height'] = height
     normal = np.array(site['normal'])
     pos = np.array(site['position']) + normal * height
 
