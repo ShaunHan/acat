@@ -11,7 +11,6 @@ Steen Lysgaard (stly@dtu.dk)
 * Numpy
 * NetworkX
 * ASE
-* Pymatgen
 * Asap3
 
 ## Installation
