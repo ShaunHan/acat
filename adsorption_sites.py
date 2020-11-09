@@ -1,5 +1,5 @@
 from .utilities import PeriodicNeighborList, get_connectivity_matrix
-from .utilities import get_mic_distance, expand_cell
+from .utilities import get_plane_normal, get_mic_distance, expand_cell
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
 from asap3.analysis import FullCNA, PTM
@@ -10,7 +10,7 @@ from ase.optimize import BFGS, FIRE
 from ase import Atom, Atoms
 from operator import itemgetter
 import numpy as np
-from itertools import combinations
+from itertools import combinations, groupby
 from ase.data import reference_states, atomic_numbers, covalent_radii
 from ase.io import read, write
 from collections import Counter, defaultdict
@@ -164,11 +164,6 @@ surf_dict = {
 
 # Set global variables
 adsorbates = 'SCHON'
-heights_dict = {'ontop': 2.0, 
-                'bridge': 1.8, 
-                'fcc': 1.8, 
-                'hcp': 1.8, 
-                '4fold': 1.7}
 
 
 class NanoparticleAdsorptionSites(object):
@@ -545,6 +540,30 @@ class NanoparticleAdsorptionSites(object):
         elif len(sites) == 3:
             return 'fcc111'
 
+    def get_unique_sites(self, unique_composition=False,               
+                         unique_subsurface=False):
+        sl = self.site_list.copy()
+        key_list = ['site', 'surface']
+        if unique_composition:
+            if not self.show_composition:
+                raise ValueError('The site list does not include \
+                                  information of composition')
+            key_list.append('composition')
+            if unique_subsurface:
+                if not self.show_subsurface:
+                    raise ValueError('The site list does not include \
+                                      information of subsurface')
+                key_list.append('subsurface_element') 
+        else:
+            if unique_subsurface:
+                raise ValueError('To include the subsurface element, \
+                                  unique_composition also need to \
+                                  be set to True')    
+        name_list = [[s[k] for k in key_list] for s in sl]
+        name_list.sort()
+ 
+        return list(name_list for name_list,_ in groupby(name_list))  
+
 
 class SlabAdsorptionSites(object):
 
@@ -581,8 +600,8 @@ class SlabAdsorptionSites(object):
         if surface is None: 
             self.fullCNA, self.surfCNA = self.get_CNA(rCut=self.r+.3)
             self.surface = self.identify_surface()
-            print('The surface is identified as {}'.format(self.surface))
-            print('Please specify the surface if it is wrong')
+            print('The surface is identified as {}. Please specify \
+                   the surface if it is incorrect'.format(self.surface))
         else:
             self.surface = surface
 
@@ -599,22 +618,21 @@ class SlabAdsorptionSites(object):
         top_indices = self.surf_ids
         sl = self.site_list
         usi = set()  # used_site_indices
-        cm = self.connectivity_matrix.copy() 
+        cm = self.connectivity_matrix 
 
         for s in top_indices:
-            occurence = np.sum(cm[s], axis=0)
-            if self.surface == 'fcc100':
-                geometry = 'terrace100'
-            elif self.surface == 'fcc111':
-                geometry = 'terrace111'
+            occurence = cm[s]
+            sumo = np.sum(occurence, axis=0)
+            if self.surface in ['fcc100', 'fcc111']:
+                geometry = self.surface[-3:]
             else:
-                if occurence == 7:
+                if sumo == 7:
                     geometry = 'step'
-                elif occurence in [9, 11]:
+                elif sumo in [9, 11]:
                     geometry = 'terrace'
-                elif occurence == 10:
+                elif sumo == 10:
                     if self.surface == 'fcc211':
-                        geometry = 'corner'
+                        geometry = 'lowerstep'
                     elif self.surface == 'fcc311':
                         geometry = 'terrace'
                 else:
@@ -630,8 +648,52 @@ class SlabAdsorptionSites(object):
                          'indices': si})
             if self.show_composition:
                 site.update({'composition': self.atoms[s].symbol})
+                if self.surface == 'fcc110' and geometry == 'terrace':
+                    site.update({'extra': np.where(occurence==1)[0]})
             sl.append(site)
             usi.add(si)
+
+        if self.surface == 'fcc110' and self.show_composition:
+            stepids = [s['indices'][0] for s in sl 
+                       if s['geometry'] == 'step']
+            for st in sl:
+                if 'extra' in st:
+                    extra = st['extra']
+                    extraids = [e for e in extra if e in stepids]
+                    if len(extraids) != 4:
+                        print('Cannot identify other 4 atoms \
+                               for this 5-fold site')
+                    metals = list(set(self.atoms.symbols))      
+                    ma, mb = metals[0], metals[1]
+                    if atomic_numbers[ma] > atomic_numbers[mb]:
+                        ma, mb = metals[1], metals[0]
+                    symbols = [self.atoms[i].symbol for i in extraids]
+                    nma = symbols.count(ma)
+                    if nma == 0:
+                        composition = 4*mb
+                    elif nma == 1:
+                        composition = ma + 3*mb
+                    elif nma == 2:
+                        idd = sorted(extraids[1:], key=lambda x: 
+                              np.linalg.norm(self.atoms[x].position
+                              - self.atoms[extraids[0]].position))
+                        opp = idd[-1]
+                        close = idd[0]
+                        if self.atoms[opp].symbol == \
+                        self.atoms[extraids[0]].symbol:
+                            composition = ma + mb + ma + mb 
+                        else:
+                            if self.atoms[close].symbol == \
+                            self.atoms[extraids[0]].symbol:
+                                composition = 2*ma + 2*mb 
+                            else:
+                                composition = ma + 2*mb + ma
+                    elif nma == 3:
+                        composition = 3*ma + mb
+                    elif nma == 4:
+                        composition = 4*ma
+                    st['composition'] += '-{}'.format(composition)
+                    del st['extra']
 
         ext_index, ext_coords, _ = expand_cell(self.refatoms, cutoff=5.0)
         extended_top = np.where(np.in1d(ext_index, top_indices))[0]
@@ -700,6 +762,7 @@ class SlabAdsorptionSites(object):
                 fold3_position = np.average(ext_surf_coords[corners], axis=0)
                 fold3_points += corners.tolist()
                 fold3_positions.append(fold3_position)
+
         # Complete information of each site
         for n, poss in enumerate([bridge_positions, fold3_positions, 
                                   fold4_positions]):
@@ -726,8 +789,7 @@ class SlabAdsorptionSites(object):
 
             ntop2 = len(top2atoms)
             testatoms = top2atoms.extend(dummies)
-            nblist = PeriodicNeighborList(testatoms, 
-                                          dx=.1,   
+            nblist = PeriodicNeighborList(testatoms, dx=.1,   
                                           neighbor_number=1, 
                                           different_species=True) 
             # Make bridge sites  
@@ -740,7 +802,7 @@ class SlabAdsorptionSites(object):
                         if self.surface in ['fcc100', 'fcc211', 'fcc311']:
                             fold4_poss.append(refpos)
                         else:
-                            'Cannot identify site {}!'.format(bridgeids)
+                            'Cannot identify site {}'.format(bridgeids)
                         continue
 
                     si = tuple(sorted(bridgeids))
@@ -752,8 +814,10 @@ class SlabAdsorptionSites(object):
                         if list(occurence).count(2) == 2:
                             geometry = 'step'
                         elif list(occurence).count(2) == 3:
-                            geometry = 'step111'
+                            geometry = '111'
                         elif list(occurence).count(2) == 4:
+                            extraids = [i for i in np.where(occurence==2)[0]
+                                        if i in self.surf_ids]
                             geometry = 'terrace'
                         else:
                             print('Cannot identify site {}'.format(si)) 
@@ -764,9 +828,9 @@ class SlabAdsorptionSites(object):
                             geometry = 'step'
                         elif sumo == 17:
                             if list(occurence).count(2) == 2:
-                                geometry = 'step100'
+                                geometry = '100'
                             elif list(occurence).count(2) == 3:
-                                geometry = 'step111'
+                                geometry = '111'
                         elif sumo == 20:
                             geometry = 'terrace'
                         else:
@@ -776,23 +840,21 @@ class SlabAdsorptionSites(object):
                     elif self.surface == 'fcc211':                    
                         if sumo == 14:
                             geometry = 'step'
-                        elif sumo == 16:
-                            geometry = 'step111'
+                        elif sumo in [15, 16]:
+                            geometry = 'upper111'
                         elif sumo == 17:
-                            geometry = 'step100'
-                        elif sumo == 18:
-                            geometry = 'terrace'
-                        elif sumo == 19:
-                            geometry = 'terrace111'
+                            geometry = '100'
+                        # sumo == 18 is actually terrace bridge, 
+                        # but equivalent to lower111 for fcc211
+                        elif sumo in [18, 19]:
+                            geometry = 'lower111'
                         elif sumo == 20:
-                            geometry = 'corner'
+                            geometry = 'lowerstep'
                         else:
                             print('Cannot identify site {}'.format(si)) 
                             continue         
-                    elif self.surface == 'fcc100':
-                        geometry = 'terrace100'
-                    elif self.surface == 'fcc111':
-                        geometry = 'terrace111'
+                    elif self.surface in ['fcc100', 'fcc111']:
+                        geometry = self.surface[-3:]
                                     
                     site = self.new_site()                         
                     site.update({'site': 'bridge',               
@@ -806,12 +868,20 @@ class SlabAdsorptionSites(object):
                                     self.atoms[i].number) for i in si]
                         comp = sorted(symbols, key=lambda x: x[1])
                         composition = ''.join([c[0] for c in comp])
+                        if self.surface == 'fcc110' and geometry == 'terrace':
+                            extrasymbols = [(self.atoms[i].symbol,
+                                             self.atoms[i].number) 
+                                             for i in extraids]
+                            extra = sorted(extrasymbols, key=lambda x: x[1])
+                            extracomp = ''.join([e[0] for e in extra])
+                            composition += '-{}'.format(extracomp)
                         site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si)
 
                 if self.surface in ['fcc100', 'fcc211', 'fcc311'] \
                 and fold4_poss:
+                  #  print(fold4_poss)
                     fold4atoms = Atoms('X{}'.format(len(fold4_poss)), 
                                        positions=np.asarray(fold4_poss),
                                        cell=self.cell, 
@@ -820,13 +890,12 @@ class SlabAdsorptionSites(object):
                     ntop = len(sorted_top)
                     topatoms = self.refatoms[sorted_top] 
                     newatoms = topatoms.extend(fold4atoms)
-                    newnblist = PeriodicNeighborList(newatoms, 
-                                                     dx=.1, 
+                    newnblist = PeriodicNeighborList(newatoms, dx=.1, 
                                                      neighbor_number=2, 
                                                      different_species=True) 
 
                     # Make 4-fold hollow sites
-                    for refpos in fold4_poss:
+                    for i, refpos in enumerate(fold4_poss):
                         fold4_indices = newnblist[ntop+i]                     
                         fold4ids = [sorted_top[j] for j in fold4_indices]
                         occurence = np.sum(cm[fold4ids], axis=0)
@@ -835,12 +904,10 @@ class SlabAdsorptionSites(object):
                         si = tuple(sorted(newfold4ids))
                         pos = refpos + np.average(
                               self.delta_positions[newfold4ids], 0)
-                        geometry = 'terrace100' if self.surface == 'fcc100' \
-                        else 'step100'
                         site = self.new_site() 
                         site.update({'site': '4fold',               
                                      'surface': self.surface,
-                                     'geometry': geometry,
+                                     'geometry': '100',
                                      'position': pos,
                                      'normal': np.array([0,0,1]),
                                      'indices': si})                     
@@ -860,7 +927,7 @@ class SlabAdsorptionSites(object):
                                            cm[si[1:],si[0]]==0)[0]
                                 opp = opposite[0] + si[1]         
                                 if self.atoms[opp].symbol == \
-                                   self.atoms[newfold4ids[0]].symbol:
+                                self.atoms[newfold4ids[0]].symbol:
                                     composition = ma + mb + ma + mb 
                                 else:
                                     composition = 2*ma + 2*mb 
@@ -892,21 +959,22 @@ class SlabAdsorptionSites(object):
                     sumo = np.sum(occurence)
                     if self.surface == 'fcc211':
                         if sumo == 23:
-                            sitetype, geometry = 'hcp', 'step111'               
-                        elif sumo in [24,25]:
-                            sitetype, geometry = 'fcc', 'step111'                    
-                        elif sumo in [27,28]:
-                            sitetype, geometry = 'hcp', 'terrace111'
+                            sitetype, geometry = 'hcp', 'upper111'        
+                        elif sumo in [24, 25]:
+                            sitetype, geometry = 'fcc', 'upper111'
+                        elif sumo in [27, 28]:
+                            sitetype, geometry = 'hcp', 'lower111'
                         elif sumo == 29:
-                            sitetype, geometry = 'fcc', 'terrace111'
+                            sitetype, geometry = 'fcc', 'lower111'                    
                         else:
+                            print(sumo)
                             print('Cannot identify site {}'.format(si))
                             continue         
                     else: 
                         if np.max(occurence) == 3:
-                            sitetype, geometry = 'hcp', 'terrace111'                  
+                            sitetype, geometry = 'hcp', '111'                  
                         else:
-                            sitetype, geometry = 'fcc', 'terrace111' 
+                            sitetype, geometry = 'fcc', '111' 
  
                     site = self.new_site()
                     site.update({'site': sitetype,
@@ -950,8 +1018,7 @@ class SlabAdsorptionSites(object):
                 ntop = len(sorted_top)
                 topatoms = self.refatoms[sorted_top] 
                 newatoms = topatoms.extend(fold4atoms)
-                newnblist = PeriodicNeighborList(newatoms, 
-                                                 dx=.1, 
+                newnblist = PeriodicNeighborList(newatoms, dx=.1, 
                                                  neighbor_number=2, 
                                                  different_species=True) 
 
@@ -967,7 +1034,7 @@ class SlabAdsorptionSites(object):
                     site = self.new_site()
                     site.update({'site': '4fold',
                                  'surface': self.surface,
-                                 'geometry': 'terrace100',
+                                 'geometry': '100',
                                  'position': pos,
                                  'normal': np.array([0,0,1]),
                                  'indices': si})                    
@@ -987,7 +1054,7 @@ class SlabAdsorptionSites(object):
                                        cm[si[1:],si[0]]==0)[0]
                             opp = opposite[0] + si[1]         
                             if self.atoms[opp].symbol == \
-                               self.atoms[newfold4ids[0]].symbol:
+                            self.atoms[newfold4ids[0]].symbol:
                                 composition = ma + mb + ma + mb 
                             else:
                                 composition = 2*ma + 2*mb 
@@ -1007,7 +1074,8 @@ class SlabAdsorptionSites(object):
         index_list, pos_list, st_list = [], [], []
         for t in sl:
             stids = t['indices']
-            # Check duplicate indices. Happens when unit cell is small  
+            # Take care of duplicate indices. When unit cell is small,
+            # different sites can have exactly same indices
             if t['site'] in ['fcc', 'hcp']:
                 if stids in index_list:
                     slid = next(si for si in range(len(sl)) if 
@@ -1038,6 +1106,24 @@ class SlabAdsorptionSites(object):
                     index_list.append(t['indices'])
                     pos_list.append(t['position'])
                     st_list.append(t['site'])
+
+      #TODO: Correct normal vectors for fcc110, 211 and 311
+       # if self.surface in ['fcc110', 'fcc211', 'fcc311']:
+          #  geometries = set([s['geometry'] for s in sl])
+          #  geo_normal_dict = {}
+          #  for geo in geometries:
+          #      gindices = list(set(sum([s['indices'] for s in sl 
+          #                  if s['geometry'] == geo], ())))
+          #      gpositions = self.atoms.positions[gindices]
+          #      gvec = get_plane_normal(gpositions)
+          #      geo_normal_dict[geo] = gvec
+          #  print(geo_normal_dict)
+       #     for st in sl:
+       #         gindices = list(st['indices'])
+       #         gpositions = self.atoms.positions[gindices]
+       #         gvec = get_plane_normal(gpositions)
+       #         st['normal'] = gvec
+
 
     def new_site(self):
         return {'site': None, 'surface': None, 'geometry': None, 
@@ -1161,7 +1247,8 @@ class SlabAdsorptionSites(object):
                         fcc211_weight, fcc311_weight]
          
         if full_weights.count(max(full_weights)) > 1:
-            raise ValueError('Cannot identify the surface. Please specify it!')
+            raise ValueError('Cannot identify the surface. \
+                              Please specify the surface')
         elif fcc100_weight == max(full_weights):
             return 'fcc100'
         elif fcc111_weight == max(full_weights): 
@@ -1173,9 +1260,34 @@ class SlabAdsorptionSites(object):
         elif fcc311_weight == max(full_weights):
             return 'fcc311'
 
+    def get_unique_sites(self, unique_composition=False,                
+                         unique_subsurface=False):
+        sl = self.site_list
+        key_list = ['site', 'geometry']
+        if unique_composition:
+            if not self.show_composition:
+                raise ValueError('The site list does not include \
+                                  information of composition')
+            key_list.append('composition')
+            if unique_subsurface:
+                if not self.show_subsurface:
+                    raise ValueError('The site list does not include \
+                                      information of subsurface')
+                key_list.append('subsurface_element') 
+        else:
+            if unique_subsurface:
+                raise ValueError('To include the subsurface element, \
+                                  unique_composition also need to \
+                                  be set to True')    
+        name_list = [[s[k] for k in key_list] for s in sl]
+        name_list.sort()
+ 
+        return list(name_list for name_list,_ in groupby(name_list))  
 
-def enumerate_surface_sites(atoms, surface=None, geometry=None, 
-                            show_composition=False, show_subsurface=False):
+
+def enumerate_adsorption_sites(atoms, surface=None, geometry=None, 
+                               show_composition=False, 
+                               show_subsurface=False):
 
     if True not in atoms.pbc:
         nas = NanoparticleAdsorptionSites(atoms, show_composition,
@@ -1192,220 +1304,3 @@ def enumerate_surface_sites(atoms, surface=None, geometry=None,
             all_sites = [s for s in all_sites if s['geometry'] == geometry]       
 
     return all_sites
-
-
-def _is_site_occupied(atoms, site, min_adsorbate_distance=0.5):
-    """Returns True if the site on the atoms object is occupied by
-    creating a sphere of radius min_adsorbate_distance and checking
-    that no other adsorbate is inside the sphere.
-   
-    Don't call this function directly."""
-
-    # if site['occupied']:
-    #     return True
-    if True not in atoms.pbc:
-        height = site['height']
-        normal = np.array(site['normal'])
-        pos = np.array(site['position']) + normal * height
-        dists = [np.linalg.norm(pos - a.position)
-                 for a in atoms if a.symbol in adsorbates]
-        for d in dists:
-            if d < min_adsorbate_distance:
-                # print('under min d', d, pos)
-                # site['occupied'] = 1
-                return True
-        return False
-    else:
-        cell = atoms.get_cell()
-        pbc = np.array([cell[0][0], cell[1][1], 0])
-        pos = np.array(site['position'])
-        dists = [get_mic_distance(pos, a.position, atoms.cell, atoms.pbc) 
-                 for a in atoms if a.symbol in adsorbates]
-        for d in dists:
-            if d < min_adsorbate_distance:
-                # print('under min d', d, pos)
-                # site['occupied'] = 1
-                return True
-        return False
-                                                                                   
-                                                                                   
-def _is_site_occupied_by(atoms, adsorbate, site, 
-                         min_adsorbate_distance=0.5):
-    """Returns True if the site on the atoms object is occupied 
-    by a specific species.
-    
-    Don't call this function directly."""
-    # if site['occupied']:
-    #     return True
-    if True not in atoms.pbc:
-        ads_symbols = molecule(adsorbate).get_chemical_symbols()
-        n_ads_atoms = len(ads_symbols)
-        # play aruond with the cutoff
-        height = site['height']
-        normal = np.array(site['normal'])
-        pos = np.array(site['position']) + normal * height
-        dists = []
-        for a in atoms:
-            if a.symbol in set(ads_symbols):
-                dists.append((a.index, np.linalg.norm(pos - a.position)))
-        for (i, d) in dists:
-            if d < min_adsorbate_distance:
-                site_ads_symbols = []
-                if n_ads_atoms > 1:
-                    for k in range(i,i+n_ads_atoms):
-                        site_ads_symbols.append(atoms[k].symbol)
-                else:
-                    site_ads_symbols.append(atoms[i].symbol)
-                if sorted(site_ads_symbols) == sorted(ads_symbols):               
-                # print('under min d', d, pos)
-                # site['occupied'] = 1
-                    return True
-        return False
-    else:
-        ads_symbols = molecule(adsorbate).get_chemical_symbols()
-        n_ads_atoms = len(ads_symbols)
-        cell = atoms.get_cell()
-        pbc = np.array([cell[0][0], cell[1][1], 0])
-        pos = np.array(site['position'])
-        dists = []
-        for a in atoms:
-            if a.symbol in set(ads_symbols):
-                dists.append((a.index, get_mic_distance(pos, a.position, 
-                                                        atoms.cell, atoms.pbc)))
-        for (i, d) in dists:
-            if d < min_adsorbate_distance:
-                site_ads_symbols = []
-                if n_ads_atoms > 1:
-                    for k in range(i,i+n_ads_atoms):
-                        site_ads_symbols.append(atoms[k].symbol)
-                else:
-                    site_ads_symbols.append(atoms[i].symbol)
-                if sorted(site_ads_symbols) == sorted(ads_symbols):               
-                # print('under min d', d, pos)
-                # site['occupied'] = 1
-                    return True
-        return False
-
-
-def label_occupied_sites(atoms, adsorbate, show_subsurface=False):
-    '''Assign labels to all occupied sites. Different labels represent 
-    different sites.
-    
-    The label is defined as the number of atoms being labeled at that site 
-    (considering second shell).
-    
-    Change the 2 metal elements to 2 pseudo elements for sites occupied by a 
-    certain species. If multiple species are present, the 2 metal elements 
-    are assigned to multiple pseudo elements. Atoms that are occupied by 
-    multiple species also need to be changed to new pseudo elements. Currently 
-    only a maximum of 2 species is supported.
-    
-    Note: Please provide atoms including adsorbate(s), with adsorbate being a 
-    string or a list of strings.
-    
-    Set show_subsurface=True if you also want to label the second shell atoms.'''
-
-    species_pseudo_mapping = [('As','Sb'),('Se','Te'),('Br','I')]  
-    elements = list(set(atoms.symbols))
-    metals = [element for element in elements if element not in adsorbates]
-    mA = metals[0]
-    mB = metals[1]
-    if Atom(metals[0]).number > Atom(metals[1]).number:
-        mA = metals[1]
-        mB = metals[0]
-    sites = enumerate_monometallic_sites(atoms, show_subsurface=show_subsurface)
-    n_occupied_sites = 0
-    atoms.set_tags(0)
-    if isinstance(adsorbate, list):               
-        if len(adsorbate) == 2:
-            for site in sites:            
-                for ads in adsorbate:
-                    k = adsorbate.index(ads)
-                    if _is_site_occupied_by(atoms, ads, site, 
-                                            min_adsorbate_distance=0.5):
-                        site['occupied'] = 1
-                        site['adsorbate'] = ads
-                        indices = site['indices']
-                        label = site['label']
-                        for idx in indices:                
-                            if atoms[idx].tag == 0:
-                                atoms[idx].tag = label
-                            else:
-                                atoms[idx].tag = str(atoms[idx].tag) + label
-                            if atoms[idx].symbol not in \
-                            species_pseudo_mapping[0]+species_pseudo_mapping[1]:
-                                if atoms[idx].symbol == mA:
-                                    atoms[idx].symbol = \
-                                    species_pseudo_mapping[k][0]
-                                elif atoms[idx].symbol == mB:
-                                    atoms[idx].symbol = \
-                                    species_pseudo_mapping[k][1]
-                            else:
-                                if atoms[idx].symbol == \
-                                   species_pseudo_mapping[k-1][0]:
-                                    atoms[idx].symbol = \
-                                    species_pseudo_mapping[2][0]
-                                elif atoms[idx].symbol == \
-                                     species_pseudo_mapping[k-1][1]:\
-                                    atoms[idx].symbol = \
-                                    species_pseudo_mapping[2][1]
-                        n_occupied_sites += 1 
-        else:
-            raise NotImplementedError
-    else:
-        for site in sites:
-            if _is_site_occupied(atoms, site, min_adsorbate_distance=0.5):
-                site['occupied'] = 1
-                indices = site['indices']
-                label = site['label']
-                for idx in indices:                
-                    if atoms[idx].tag == 0:
-                        atoms[idx].tag = label
-                    else:
-                        atoms[idx].tag = str(atoms[idx].tag) + label
-                    # Map to pseudo elements even when there is only one 
-                    # adsorbate species (unnecessary)
-                    #if atoms[idx].symbol == mA:
-                    #    atoms[idx].symbol = species_pseudo_mapping[0][0]
-                    #elif atoms[idx].symbol == mB:
-                    #    atoms[idx].symbol = species_pseudo_mapping[0][1]
-                n_occupied_sites += 1
-    tag_set = set([a.tag for a in atoms])
-    print('{0} sites labeled with tags including {1}'.format(n_occupied_sites, 
-                                                             tag_set))
-
-    return atoms
-
-
-def multi_label_counter(atoms, adsorbate, show_subsurface=False):
-    '''Encoding the labels into 5d numpy arrays. 
-    This can be further used as a fingerprint.
-
-    Atoms that constitute an occupied adsorption site will be labeled as 1.
-    If an atom contributes to multiple sites of same type, the number wil 
-    increase. One atom can encompass multiple non-zero values if it 
-    contributes to multiple types of sites.
-
-    Note: Please provide atoms including adsorbate(s), with adsorbate being a 
-    string or a list of strings.
-
-    Set show_subsurface=True if you also want to label the second shell atoms.'''
-
-    labeled_atoms = label_occupied_sites(atoms, adsorbate, show_subsurface)
-    np_indices = [a.index for a in labeled_atoms if a.symbol not in adsorbates]
-    np_atoms = labeled_atoms[np_indices]
-    
-    counter_lst = []
-    for atom in np_atoms:
-        if atom.symbol not in adsorbates:
-            if atom.tag == 0:
-                counter_lst.append(np.zeros(5).astype(int).tolist())
-            else:
-                line = str(atom.tag)
-                cns = [int(s) for s in line]
-                lst = np.zeros(5).astype(int).tolist()
-                for idx in cns:
-                    lst[idx-1] += int(1)
-                counter_lst.append(lst)
-
-    return counter_lst
