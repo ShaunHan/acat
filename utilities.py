@@ -2,11 +2,11 @@ from ase.data import covalent_radii
 from ase.geometry import find_mic
 from collections import defaultdict
 import numpy as np
+import scipy
 
-
-def PeriodicNeighborList(atoms, dx=0.2, neighbor_number=1, 
-                         different_species=False):
-    """Make dict of neighboring atoms for periodic system.
+def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
+                        different_species=False, mic=False):
+    """Make dict of neighboring shell atoms for periodic system.
 
     Possible to return neighbors from defined neighbor shell e.g. 1st, 2nd,
     3rd by changing the neighbor number.
@@ -16,8 +16,10 @@ def PeriodicNeighborList(atoms, dx=0.2, neighbor_number=1,
         Buffer to calculate nearest neighbor pairs.
     neighbor_number : int
         Neighbor shell.
-    different_species : bolean
+    different_species : boolean
         Whether each neighbor pair are different species or not
+    mic: boolean
+        Whether apply minimum image convention or not
     """
 
     assert True in atoms.pbc    
@@ -30,10 +32,12 @@ def PeriodicNeighborList(atoms, dx=0.2, neighbor_number=1,
         for atomj in atoms:
             if atomi.index != atomj.index:
                 if not (different_species & (atomi.symbol == atomj.symbol)):
-                    d = get_mic_distance(atomi.position,
-                                         atomj.position,
-                                         cell,
-                                         pbc)
+                    if mic:
+                        d = get_mic_distance(atomi.position,
+                                             atomj.position,
+                                             cell, pbc)
+                    else:
+                        d = np.linalg.norm(atomi.position - atomj.position)
                     cri = covalent_radii[atomi.number]
                     crj = covalent_radii[atomj.number]
                     if neighbor_number == 1:
@@ -68,7 +72,42 @@ def get_connectivity_matrix(neighborlist):
 def get_mic_distance(p1, p2, cell, pbc=True):
     '''Calculate the distance using the minimum image convention'''
 
-    return find_mic(np.asarray([p1]) - np.asarray([p2]), cell, pbc)[-1][0]
+    return find_mic(np.asarray([p1]) - np.asarray([p2]), 
+                    cell, pbc)[-1][0]
+
+def point_on_segment(point, position, normal, h):         
+    ap = point - position
+    b = position + normal * h
+    ab = b - position
+    t = np.dot(ap, ab) / np.dot(ab, ab)
+    # Make sure the projected point belongs to the segment
+    t = max(0, min(1, t))
+    projection = position + ab * t
+    return projection
+
+
+def get_plane_normal(positions):
+    """Return the surface normal vector to a plane of best fit. 
+    THIS CODE IS BORROWED FROM CATKIT
+
+    Parameters
+    ----------
+    positions : ndarray (n, 3)
+        3D points to fit plane to.
+
+    Returns
+    -------
+    vec : ndarray (1, 3)
+        Unit vector normal to the plane of best fit.
+    """
+    A = np.c_[positions[:, 0], positions[:, 1], 
+              np.ones(positions.shape[0])]
+    vec, _, _, _ = scipy.linalg.lstsq(A, positions[:, 2])
+    vec[2] = -1.0
+
+    vec /= -np.linalg.norm(vec)
+
+    return vec
 
 
 def expand_cell(atoms, cutoff=None, padding=None):
