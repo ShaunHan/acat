@@ -49,11 +49,17 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.unique_sites = adsorption_sites.get_unique_sites(
                             unique_composition=self.show_composition,
                             unique_subsurface=self.show_subsurface) 
-        self.label_dict = {'|'.join(k): v+1 for v, k in enumerate(self.unique_sites)}
-        self.chem_env_matrix = np.zeros((len(self.slab), len(self.unique_sites)))
+
+        self.label_dict = {'|'.join(k): v+1 for v, k in 
+                           enumerate(self.unique_sites)}
+        self.chem_env_matrix = np.zeros((len(self.slab), 
+                                         len(self.unique_sites)))
 
         self.label_occupied_sites()
-        self.coverage_matrix = np.dot(self.connectivity_matrix, self.chem_env_matrix)
+        self.surf_connectivity_matrix = \
+            self.connectivity_matrix[self.surf_ids][:,self.surf_ids] 
+        self.surf_chem_env_matrix = self.chem_env_matrix[self.surf_ids]
+        self.surf_chem_envs = sorted(self.surf_chem_env_matrix.tolist())
 
     def label_occupied_sites(self):
         sl = self.full_site_list
@@ -76,7 +82,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                         raise ValueError('To include the subsurface element, \
                                           show_composition also need to be \
                                           set to True in adsorption_sites')    
-                st['adsorbate'] = self.adsorbate_symbol  #TODO: different adsorbate species
+                #TODO: different adsorbate species
+                st['adsorbate'] = self.adsorbate_symbol  
                 st['occupied'] = 1
                 label = self.label_dict['|'.join(signature)]
                 st['label'] = label
@@ -89,45 +96,27 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 st['label'] = 0
 
     def get_surface_graph(self): 
-        import pynauty as nauty
-
-        surfcem = self.chem_env_matrix[self.surf_ids]
-        surfcm = self.connectivity_matrix[self.surf_ids][:,self.surf_ids]
-        cem_list = [''.join(row.astype(int).astype(str)) for row in surfcem]
- 
-        # Build adjacency dictionary from chemical environment matrix and 
-        # surface connectivity matrix
-
-        adj_dict = {np.array(cem_list)[i]: list(np.array(cem_list)[np.where(
-                    surfcm[i]==1)[0]]) for i in range(surfcm.shape[0])}
-        print(adj_dict)
-
-        G = nauty.Graph(number_of_vertices=len(self.surf_ids), directed=False,
-                        adjacency_dict = adj_dict, vertex_coloring=[]) 
-
-        self.graph = G
-        self.autgrp = nauty.autgrp(G)
-        print(self.autgrp)
-
-    def draw_surface_graph(self):
-        import matplotlib.pyplot as plt
-
-        surfcem = self.chem_env_matrix[self.surf_ids]
-        surfcm = self.connectivity_matrix[self.surf_ids][:,self.surf_ids]
+        surfcem = self.surf_chem_env_matrix
+        surfcm = self.surf_connectivity_matrix
         cem_list = [''.join(row.astype(int).astype(str)) for row in surfcem]
 
-        G = nx.Graph()                                                    
+        G = nx.Graph()                                                  
         # Add nodes from surface chemical environment matrix
+        G.add_nodes_from([(i, {'chem_env': np.array(cem_list)[i]}) 
+                                  for i in range(surfcm.shape[0])])
         # Add edges from surface connectivity matrix
         rows, cols = np.where(surfcm == 1)
-        edges = zip(np.array(cem_list)[rows], np.array(cem_list)[cols])
+        edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
+        return G
 
-        nx.draw(G, with_labels=True)
-       # plt.savefig("graph.png")
-        plt.show() 
-
-
+    #def draw_surface_graph(self):
+    #    import matplotlib.pyplot as plt
+    #
+    #    G = self.graph
+    #    nx.draw(G, with_labels=True)
+    #    #plt.savefig("graph.png")
+    #    plt.show() 
     
     @classmethod                                                     
     def convert_adsorbate(cls, adsorbate):
@@ -221,17 +210,20 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
     show_composition = False if composition is None else True
     show_subsurface = False if subsurface_element is None else True
     if composition:
-        comp = re.findall('[A-Z][^A-Z]*', composition)
-        if len(comp) != 4:
-            scomp = ''.join(sorted(comp, key=lambda x: Atom(x).number))
+        if '-' in composition:
+            scomp = composition
         else:
-            if comp[0] != comp[2]:
+            comp = re.findall('[A-Z][^A-Z]*', composition)
+            if len(comp) != 4:
                 scomp = ''.join(sorted(comp, key=lambda x: Atom(x).number))
             else:
-                if Atom(comp[0]).number > Atom(comp[1]).number:
-                    scomp = comp[1] + comp[0] + comp[3] + comp[2]
+                if comp[0] != comp[2]:
+                    scomp = ''.join(sorted(comp, key=lambda x: Atom(x).number))
                 else:
-                    scomp = ''.join(comp)
+                    if Atom(comp[0]).number > Atom(comp[1]).number:
+                        scomp = comp[1] + comp[0] + comp[3] + comp[2]
+                    else:
+                        scomp = ''.join(comp)
 
     if site_list:
         all_sites = site_list.copy()
