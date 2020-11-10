@@ -1,4 +1,4 @@
-from .utilities import PeriodicNeighborList, get_connectivity_matrix
+from .utilities import neighbor_shell_list, get_connectivity_matrix
 from .utilities import get_plane_normal, get_mic_distance, expand_cell
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
@@ -187,7 +187,7 @@ class NanoparticleAdsorptionSites(object):
 
         self.site_list = []
         self.populate_site_list()
-
+        
     def populate_site_list(self):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
            given an input nanoparticle and collect in a site list. 
@@ -371,7 +371,6 @@ class NanoparticleAdsorptionSites(object):
                 n = np.average(normals, 0)
                 t['normal'] = n / np.linalg.norm(n)                  
 
-
     def new_site(self):
         return {'site': None, 'surface': None, 'position': None, 
                 'normal': None, 'indices': None, 'composition': None,
@@ -542,7 +541,7 @@ class NanoparticleAdsorptionSites(object):
 
     def get_unique_sites(self, unique_composition=False,               
                          unique_subsurface=False):
-        sl = self.site_list.copy()
+        sl = self.site_list
         key_list = ['site', 'surface']
         if unique_composition:
             if not self.show_composition:
@@ -562,7 +561,7 @@ class NanoparticleAdsorptionSites(object):
         name_list = [[s[k] for k in key_list] for s in sl]
         name_list.sort()
  
-        return list(name_list for name_list,_ in groupby(name_list))  
+        return sorted(list(name_list for name_list,_ in groupby(name_list)))
 
 
 class SlabAdsorptionSites(object):
@@ -583,7 +582,8 @@ class SlabAdsorptionSites(object):
             a.symbol = 'Pt'
         refatoms.calc = asapEMT()
         opt = FIRE(refatoms, logfile=None)
-        opt.run(fmax=0.1) 
+        opt.run(fmax=0.1)
+        refatoms.calc = None 
         self.refatoms = refatoms
         self.delta_positions = atoms.positions - refatoms.positions
         self.cell = atoms.cell
@@ -607,7 +607,7 @@ class SlabAdsorptionSites(object):
 
         self.site_list = []
         self.populate_site_list()
-
+        
     def populate_site_list(self, allow_obtuse=True):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
            given an input slab based on Delaunay triangulation of 
@@ -674,9 +674,10 @@ class SlabAdsorptionSites(object):
                     elif nma == 1:
                         composition = ma + 3*mb
                     elif nma == 2:
-                        idd = sorted(extraids[1:], key=lambda x: 
-                              np.linalg.norm(self.atoms[x].position
-                              - self.atoms[extraids[0]].position))
+                        idd = sorted(extraids[1:], key=lambda x:    
+                              get_mic_distance(self.atoms[x].position,
+                              self.atoms[extraids[0]].position,
+                              self.cell, self.pbc))
                         opp = idd[-1]
                         close = idd[0]
                         if self.atoms[opp].symbol == \
@@ -789,9 +790,8 @@ class SlabAdsorptionSites(object):
 
             ntop2 = len(top2atoms)
             testatoms = top2atoms.extend(dummies)
-            nblist = PeriodicNeighborList(testatoms, dx=.1,   
-                                          neighbor_number=1, 
-                                          different_species=True) 
+            nblist = neighbor_shell_list(testatoms, dx=.1, neighbor_number=1, 
+                                         different_species=True, mic=True) 
             # Make bridge sites  
             if n == 0:
                 fold4_poss = []
@@ -890,9 +890,10 @@ class SlabAdsorptionSites(object):
                     ntop = len(sorted_top)
                     topatoms = self.refatoms[sorted_top] 
                     newatoms = topatoms.extend(fold4atoms)
-                    newnblist = PeriodicNeighborList(newatoms, dx=.1, 
-                                                     neighbor_number=2, 
-                                                     different_species=True) 
+                    newnblist = neighbor_shell_list(newatoms, dx=.1, 
+                                                    neighbor_number=2,
+                                                    different_species=True, 
+                                                    mic=True) 
 
                     # Make 4-fold hollow sites
                     for i, refpos in enumerate(fold4_poss):
@@ -925,7 +926,7 @@ class SlabAdsorptionSites(object):
                             elif nma == 2:
                                 opposite = np.where(
                                            cm[si[1:],si[0]]==0)[0]
-                                opp = opposite[0] + si[1]         
+                                opp = si[1+opposite[0]]         
                                 if self.atoms[opp].symbol == \
                                 self.atoms[newfold4ids[0]].symbol:
                                     composition = ma + mb + ma + mb 
@@ -1018,9 +1019,10 @@ class SlabAdsorptionSites(object):
                 ntop = len(sorted_top)
                 topatoms = self.refatoms[sorted_top] 
                 newatoms = topatoms.extend(fold4atoms)
-                newnblist = PeriodicNeighborList(newatoms, dx=.1, 
-                                                 neighbor_number=2, 
-                                                 different_species=True) 
+                newnblist = neighbor_shell_list(newatoms, dx=.1, 
+                                                neighbor_number=2,
+                                                different_species=True, 
+                                                mic=True) 
 
                 for i, refpos in enumerate(reduced_poss):
                     fold4_indices = newnblist[ntop+i]                     
@@ -1052,7 +1054,7 @@ class SlabAdsorptionSites(object):
                         elif nma == 2:
                             opposite = np.where(
                                        cm[si[1:],si[0]]==0)[0]
-                            opp = opposite[0] + si[1]         
+                            opp = si[1+opposite[0]]         
                             if self.atoms[opp].symbol == \
                             self.atoms[newfold4ids[0]].symbol:
                                 composition = ma + mb + ma + mb 
@@ -1124,7 +1126,6 @@ class SlabAdsorptionSites(object):
        #         gvec = get_plane_normal(gpositions)
        #         st['normal'] = gvec
 
-
     def new_site(self):
         return {'site': None, 'surface': None, 'geometry': None, 
                 'position': None, 'normal': None, 'indices': None,
@@ -1148,10 +1149,11 @@ class SlabAdsorptionSites(object):
 
     def make_neighbor_list(self, dx=0.3, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
-        self.nlist = PeriodicNeighborList(self.refatoms, dx, neighbor_number)
+        self.nlist = neighbor_shell_list(self.refatoms, dx, 
+                                         neighbor_number, mic=True)
 
     def get_connectivity(self):
-        """Generate a connections matrix from PeriodicNeighborList."""       
+        """Generate a connections matrix from neighbor_shell_list."""       
         return get_connectivity_matrix(self.nlist)
 
     def get_termination(self):
@@ -1282,7 +1284,22 @@ class SlabAdsorptionSites(object):
         name_list = [[s[k] for k in key_list] for s in sl]
         name_list.sort()
  
-        return list(name_list for name_list,_ in groupby(name_list))  
+        return sorted(list(name_list for name_list,_ in groupby(name_list)))
+
+    def get_neighbor_site_list(self, neighbor_number=1):
+        '''Returns the site_list index of all neighbor shell sites
+           for each site'''
+
+        sl = self.site_list
+        refposs = np.asarray([s['position'] - np.average(
+                  self.delta_positions[list(s['indices'])], 0) for s in sl])
+        statoms = Atoms('S{}'.format(len(sl)), 
+                        positions=refposs, 
+                        cell=self.cell, 
+                        pbc=self.pbc)
+
+        return neighbor_shell_list(statoms, dx=.1, mic=True, 
+                                   neighbor_number=neighbor_number)          
 
 
 def enumerate_adsorption_sites(atoms, surface=None, geometry=None, 
