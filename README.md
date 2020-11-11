@@ -1,4 +1,4 @@
-# Nanopads: a Python Toolkit for Catalysis on **BI**metallic **N**anoparticles and **S**urfaces
+# Cabins: a Python Toolkit for **CA**talysis on **BI**metallic **N**anoparticles and **S**urfaces
 A Python code for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
