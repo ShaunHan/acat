@@ -1,4 +1,4 @@
-# Nanopads: a Python Toolkit for Modelling **Nanop**article with **ads**orbates
+# Nanopads: a Python Toolkit for Catalysis on **BI**metallic **N**anoparticles and **S**urfaces
 A Python code for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
