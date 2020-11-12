@@ -6,7 +6,8 @@ import scipy
 
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
                         different_species=False, mic=False):
-    """Make dict of neighboring shell atoms for periodic system.
+    """Make dict of neighboring shell atoms for both periodic and 
+    non-periodic systems.
 
     Possible to return neighbors from defined neighbor shell e.g. 1st, 2nd,
     3rd by changing the neighbor number.
@@ -73,18 +74,17 @@ def get_mic_distance(p1, p2, cell, pbc=True):
     '''Calculate the distance using the minimum image convention'''
 
     return find_mic(np.asarray([p1]) - np.asarray([p2]), 
-                    cell, pbc)[-1][0]
+                    cell, pbc)[1][0]
 
-def point_on_segment(point, position, normal, h):         
+def point_projection_on_line(point, position, vec, h):         
+    '''Calculate the position of a point projection on a line'''
     ap = point - position
-    b = position + normal * h
+    b = position + vec * h
     ab = b - position
     t = np.dot(ap, ab) / np.dot(ab, ab)
-    # Make sure the projected point belongs to the segment
-    t = max(0, min(1, t))
     projection = position + ab * t
-    return projection
 
+    return projection
 
 def get_plane_normal(positions):
     """Return the surface normal vector to a plane of best fit. 
