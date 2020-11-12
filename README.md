@@ -1,5 +1,5 @@
-# Cabins: a Python package for **CA**talysis on **BI**metallic **N**anoparticles and **S**urfaces
-A Python code for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
+# cabins: a Python package for **CA**talysis on **BI**metallic **N**anoparticles and **S**urfaces
+A Python package for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
