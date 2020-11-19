@@ -3,9 +3,12 @@ from .utilities import *
 from ase.io import read, write
 from ase.build import molecule
 from ase.collections import g2
+from ase.data import covalent_radii, atomic_numbers
 from ase.neighborlist import NeighborList
+from ase.visualize import view
 from ase import Atom, Atoms
 from collections import defaultdict, Iterable, Counter
+from operator import itemgetter
 import networkx as nx
 import numpy as np
 import random
@@ -20,6 +23,71 @@ heights_dict = {'ontop': 2.0,
                 'fcc': 1.8, 
                 'hcp': 1.8, 
                 '4fold': 1.7}
+# Make your own adsorbate label dict
+adsorbate_label_dict = {'H': 1,
+                        'C': 2,
+                        'O': 3,
+                        'CH': 4,
+                        'OH': 5,
+                        'CO': 6,
+                        'CH2': 7, # Not supplied by ASE
+                        'H2O': 8,
+                        'COH': 9, # Vertical, Not supplied by ASE
+                        'CH3': 10,
+                        'H2CO': 11, # Vertical
+                        # Bidentate adsorbates
+                        'HCO': 12, 
+                        'CHOH': 13, # Not supplied by ASE
+                        'CH2O': 14, # Not supplied by ASE
+                        'CH3O': 15, 
+                        'H2COH': 16, 
+                        'CH3OH': 17} 
+
+
+def get_label_dict(surface):
+
+    if surface == 'fcc111':
+        return {'ontop|111': 1,
+                'bridge|111': 2,
+                'fcc|111': 3,
+                'hcp|111': 4}
+
+    elif surface == 'fcc100':
+        return {'ontop|100': 1,
+                'bridge|100': 2,
+                '4fold|100': 3}
+
+    elif surface == 'fcc110':
+        return {'ontop|step': 1,
+                'ontop|terrace': 2,
+                'bridge|step': 3, 
+                'bridge|terrace': 4, 
+                'bridge|111': 5,
+                'fcc|111': 6,
+                'hcp|111': 7}
+
+    elif surface == 'fcc211':
+        return {'ontop|step': 1,
+                'ontop|terrace': 2,
+                'ontop|lowerstep': 3, 
+                'bridge|step': 4,
+                'bridge|upper111': 5,
+                'bridge|lower111': 6,
+                'bridge|100': 7,
+                'fcc|111': 8,
+                'hcp|111': 9,
+                '4fold|100': 10}
+
+    elif surface == 'fcc311':
+        return {'ontop|step': 1,
+                'ontop|terrace': 2,
+                'bridge|step': 3,
+                'bridge|terrace': 4,
+                'bridge|111': 5,
+                'bridge|100': 6,
+                'fcc|111': 7,
+                'hcp|111': 8,
+                '4fold|100': 9}
 
 
 class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
@@ -28,8 +96,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
 class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
-    def __init__(self, atoms, adsorption_sites, surface=None, 
-                 hmax=2.5, rmax=0.5):
+    """dmax: maximum bond length (Å) that should be considered as an adsorbate"""
+
+    def __init__(self, atoms, adsorption_sites, surface=None, dmax=2.2):
  
         self.atoms = atoms.copy()
         self.ads_ids = [a.index for a in atoms if a.symbol in ads_elements]
@@ -37,11 +106,12 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
+        self.dmax = dmax
 
         self.ads_names = g2.names
-        self.ads_sorted_names = [sorted(re.findall('[A-Z][^A-Z]*', 
-                                 n)) for n in self.ads_names]
-        self.make_ads_neighbor_list(dx=.3)
+        self.ads_symbols = [sorted(molecule(n).get_chemical_symbols())
+                            for n in self.ads_names]
+        self.make_ads_neighbor_list()
         self.ads_connectivity_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
 
@@ -50,168 +120,448 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.show_composition = adsorption_sites.show_composition
         self.show_subsurface = adsorption_sites.show_subsurface
         self.surf_ids = adsorption_sites.surf_ids
-        self.hmax = hmax
-        self.rmax = rmax
-        self.connectivity_matrix = adsorption_sites.connectivity_matrix
         self.full_site_list = adsorption_sites.site_list.copy()
+        self.clean_list()
+
         self.unique_sites = adsorption_sites.get_unique_sites(
                             unique_composition=self.show_composition,
                             unique_subsurface=self.show_subsurface) 
 
-        self.label_dict = {'|'.join(k): v+1 for v, k in 
-                           enumerate(self.unique_sites)}
-        self.chem_env_matrix = np.zeros((len(self.slab), 
-                                         len(self.unique_sites)))
+        self.label_dict = self.get_bimetallic_label_dict() \
+                          if self.show_composition else \
+                          get_label_dict(self.surface)
 
+        self.label_list = ['0'] * len(self.full_site_list)
+        self.site_connectivity_matrix = self.get_site_connectivity()
         self.label_occupied_sites()
-        self.surf_connectivity_matrix = self.get_surf_connectivity()
-        self.surf_chem_env_matrix = self.chem_env_matrix[self.surf_ids]
-        self.surf_chem_envs = sorted(self.surf_chem_env_matrix.tolist())
+        self.labels = sorted(self.label_list)
 
     def identify_adsorbates(self):
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
-        rows, cols = np.where(adscm == 1)
-        edges = zip([self.ads_ids[row] for row in rows.tolist()], 
-                    [self.ads_ids[col] for col in cols.tolist()])
-        G.add_edges_from(edges)                        
-        SG = (G.subgraph(c) for c in nx.connected_components(G))
+      
+        if adscm.size != 0:
+            np.fill_diagonal(adscm, 1)
+            rows, cols = np.where(adscm == 1)
 
-        adsorbates = []
-        for sg in SG:
-            nodes = list(sg.nodes)
-            adsorbates += [nodes]
-        self.ads_list = adsorbates 
+            edges = zip([self.ads_ids[row] for row in rows.tolist()], 
+                        [self.ads_ids[col] for col in cols.tolist()])
+            G.add_edges_from(edges)                        
+            SG = (G.subgraph(c) for c in nx.connected_components(G))
+ 
+            adsorbates = []
+            for sg in SG:
+                nodes = list(sg.nodes)
+                adsorbates += [nodes]
+        else:
+            adsorbates = [self.ads_ids]
+        self.ads_list = adsorbates
+
+    def clean_list(self):
+        sl = self.full_site_list
+        entries = ['occupied', 'adsorbate', 'adsorbate_indices', 
+                   'bonded_index', 'bond_length', 'label', 'dentate']
+        for d in sl:
+            for k in entries:
+                if k in d:
+                    del d[k]
 
     def get_ads_connectivity(self):
         """Generate a connections matrix for adsorbate atoms."""
         return get_connectivity_matrix(self.ads_nblist) 
 
-    def get_surf_connectivity(self):
-        """Generate a connections matrix for surface atoms."""
-        cm = self.connectivity_matrix
-        return cm[self.surf_ids][:,self.surf_ids] 
+    def get_site_connectivity(self):
+        """Generate a connections matrix for adsorption sites."""
+        sl = self.full_site_list
+        conn_mat = []
+        for i, sti in enumerate(sl):
+            conn_x = []
+            for j, stj in enumerate(sl):
+                if i == j:
+                    conn_x.append(0.)
+                elif bool(set(sti['indices']).intersection(
+                stj['indices'])):
+                    conn_x.append(1.)                     
+                else:
+                    conn_x.append(0.)
+            conn_mat.append(conn_x)   
+
+        return np.asarray(conn_mat) 
 
     def label_occupied_sites(self):
         fsl = self.full_site_list
-        cem = self.chem_env_matrix
+        ll = self.label_list
         ads_list = self.ads_list
         ndentate_dict = {}
-       
-        for st in fsl:
-            adsid = next((i for i in self.ads_ids if 
-                          self.point_in_cylinder(
-                          self.atoms[i].position, st)), None)
-            if adsid:
-                signature = [st['site'], st['geometry']]
-                if self.show_composition:
-                    signature.append(st['composition'])
-                    if self.show_subsurface:
-                        signature.append(st['subsurface_element'])
-                else:
-                    if self.show_subsurface:
-                        raise ValueError('To include the subsurface element, ',
-                                         'show_composition also need to be ',
-                                         'set to True in adsorption_sites')    
+ 
+        for adsid in self.ads_ids:
+            tag = self.atoms[adsid].tag
+            if self.atoms[adsid].symbol == 'H' and tag > 1:
+                continue
 
-                adsids = next((l for l in ads_list if adsid in l))
+            def get_bond_length(site):
+                return get_mic_distance(self.atoms[adsid].position, 
+                                        site['position'], 
+                                        self.cell, self.pbc)
+            st, bl = min(((s, get_bond_length(s)) for s in fsl), 
+                           key=itemgetter(1))
+            if bl > self.dmax:
+                continue
+            adsids = next((l for l in ads_list if adsid in l), None)
+            adsi = tuple(sorted(adsids))
+            if 'occupied' in st:
+                if bl >= st['bond_length']:
+                    continue
+                else:
+                    ndentate_dict[adsi] -= 1
+
+            if tag != 0:
+                for k, v in adsorbate_label_dict.items():
+                    if v == tag:
+                        adssym = k
+            else:
                 adssyms = [self.atoms[i].symbol for i in adsids]
                 try:
-                    adssym = self.ads_names[
-                             self.ads_sorted_names.index(sorted(adssyms))]
-                #    print('Identified {}'.format(adssym))
+                    adssym = self.ads_names[self.ads_symbols.index(
+                                            sorted(adssyms))] 
                 except:
                     adssym = ''.join(adssyms)
- 
-                st['adsorbate'] = adssym
-                adsi = tuple(sorted(adsids))
-                st['adsorbate_indices'] = adsi
-                if adsi in ndentate_dict:
-                    ndentate_dict[adsi] += 1
-                else:
-                    ndentate_dict[adsi] = 1
-                st['occupied'] = 1
-                label = self.label_dict['|'.join(signature)]
-                st['label'] = label
-                for i in st['indices']:
-                    cem[i, label-1] += 1
-                
-            else:
-                st['adsorbate'] = st['adsorbate_indices'] = None
-                st['occupied'] = st['label'] = 0
 
-        # Get dentate number for each site     
-        for st in fsl:
+            st['adsorbate'] = adssym
+            st['adsorbate_group'] = adssym
+            st['adsorbate_indices'] = adsi
+            st['bonded_index'] = adsid
+            st['bond_length'] = bl
+            if adsi in ndentate_dict:
+                ndentate_dict[adsi] += 1
+            else:
+                ndentate_dict[adsi] = 1
+            st['occupied'] = 1            
+
+        # Get bidentate fragments, site matrix, label and dentate numbers   
+        for j, st in enumerate(fsl):
+            if 'occupied' not in st:
+                st['adsorbate'] = st['adsorbate_group'] = \
+                st['adsorbate_indices'] = st['bonded_index'] = \
+                st['bond_length'] = None
+                st['occupied'] = st['label'] = 0
+                continue
+
+            if st['adsorbate_group'] == 'HCO':
+                bondsym = self.atoms[st['bonded_index']].symbol
+                if bondsym == 'C':
+                    st['adsorbate'] = 'CH'
+                elif bondsym == 'O':
+                    st['adsorbate'] = 'O'
+            elif st['adsorbate_group'] == 'CHOH':
+                bondsym = self.atoms[st['bonded_index']].symbol
+                if bondsym == 'C':
+                    st['adsorbate'] = 'CH'
+                elif bondsym == 'O':
+                    st['adsorbate'] = 'OH'
+            elif st['adsorbate_group'] == 'CH2O':
+                bondsym = self.atoms[st['bonded_index']].symbol
+                if bondsym == 'C':
+                    st['adsorbate'] = 'CH2' 
+                elif bondsym == 'O':
+                    st['adsorbate'] = 'O'
+            elif st['adsorbate_group'] == 'CH3O':
+                bondsym = self.atoms[st['bonded_index']].symbol
+                if bondsym == 'C':
+                    st['adsorbate'] = 'CH3'
+                elif bondsym == 'O':
+                    st['adsorbate'] = 'O'
+            elif st['adsorbate_group'] == 'H2COH':
+                bondsym = self.atoms[st['bonded_index']].symbol
+                if bondsym == 'C':
+                    st['adsorbate'] = 'CH2'
+                elif bondsym == 'O':
+                    st['adsorbate'] = 'OH'
+            elif st['adsorbate_group'] == 'CH3OH':
+                bondsym = self.atoms[st['bonded_index']].symbol
+                if bondsym == 'C':
+                    st['adsorbate'] = 'CH3'
+                elif bondsym == 'O':
+                    st['adsorbate'] = 'OH'
+
             adsi = st['adsorbate_indices']
+            ads = st['adsorbate']
+
+            signature = [st['site'], st['geometry']]                        
+            if self.show_composition:
+                signature.append(st['composition'])
+                if self.show_subsurface:
+                    signature.append(st['subsurface_element'])
+            else:
+                if self.show_subsurface:
+                    raise ValueError('To include the subsurface element, ',
+                                     'show_composition also need to be ',
+                                     'set to True in adsorption_sites')    
+            stlab = self.label_dict['|'.join(signature)]
+            label = str(stlab) + st['adsorbate']
+            st['label'] = label
+            ll[j] = label
             if adsi in ndentate_dict:
                 st['dentate'] = ndentate_dict[adsi]
             else:
                 st['dentate'] = 0
 
-    def make_ads_neighbor_list(self, dx=0.3, neighbor_number=1):
+    def make_ads_neighbor_list(self, dx=.3, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=True)
 
-    def point_in_cylinder(self, point, site):
-        """Check if a point is in the cylinder space on a site"""
-        projection = point_projection_on_line(point, site['position'], 
-                     site['normal'], self.hmax)
-        maxpt = site['normal'] * self.hmax
-        within_rmax = get_mic_distance(point, projection, self.cell, 
-                      self.pbc) < self.rmax 
-        within_hmax = np.dot(point - maxpt, maxpt - site['position']) <= 0
-
-        return (within_rmax and within_hmax)
-
-    def get_surface_graph(self): 
-        surfcem = self.surf_chem_env_matrix
-        surfcm = self.surf_connectivity_matrix
-        cem_list = [''.join(r.astype(int).astype(str)) for r in surfcem]
+    def get_site_graph(self):                                         
+        ll = self.label_list
+        scm = self.site_connectivity_matrix
 
         G = nx.Graph()                                                  
-        # Add nodes from surface chemical environment matrix
-        G.add_nodes_from([(i, {'chem_env': np.array(cem_list)[i]}) 
-                                  for i in range(surfcm.shape[0])])
+        # Add nodes from label list
+        G.add_nodes_from([(i, {'label': ll[i]}) for 
+                           i in range(scm.shape[0])])
         # Add edges from surface connectivity matrix
-        rows, cols = np.where(surfcm == 1)
+        rows, cols = np.where(scm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
+
         return G
 
-    #def draw_surface_graph(self):
-    #    import matplotlib.pyplot as plt
-    #
-    #    G = self.graph
-    #    nx.draw(G, with_labels=True)
-    #    #plt.savefig("graph.png")
-    #    plt.show() 
-    
+    def draw_graph(self, G):
+        import matplotlib.pyplot as plt
 
-def add_adsorbate_to_site(atoms, adsorbate, site, height=None):            
+        nx.draw(G, with_labels=True)
+#        plt.savefig("graph.png")
+        plt.show() 
+
+    def get_bimetallic_label_dict(self):
+    
+        metals = list(set(self.slab.symbols))      
+        ma, mb = metals[0], metals[1]
+        if atomic_numbers[ma] > atomic_numbers[mb]:
+            ma, mb = metals[1], metals[0]
+ 
+        if self.surface == 'fcc111':
+            return {'ontop|111|{}'.format(ma): 1, 
+                    'ontop|111|{}'.format(mb): 2,
+                    'bridge|111|{}{}'.format(ma,ma): 3, 
+                    'bridge|111|{}{}'.format(ma,mb): 4,
+                    'bridge|111|{}{}'.format(mb,mb): 5, 
+                    'fcc|111|{}{}{}'.format(ma,ma,ma): 6,
+                    'fcc|111|{}{}{}'.format(ma,ma,mb): 7, 
+                    'fcc|111|{}{}{}'.format(ma,mb,mb): 8,
+                    'fcc|111|{}{}{}'.format(mb,mb,mb): 9,
+                    'hcp|111|{}{}{}'.format(ma,ma,ma): 10,
+                    'hcp|111|{}{}{}'.format(ma,ma,mb): 11,
+                    'hcp|111|{}{}{}'.format(ma,mb,mb): 12,
+                    'hcp|111|{}{}{}'.format(mb,mb,mb): 13}
+    
+        elif self.surface == 'fcc100':
+            return {'ontop|100|{}'.format(ma): 1, 
+                    'ontop|100|{}'.format(mb): 2,
+                    'bridge|100|{}{}'.format(ma,ma): 3, 
+                    'bridge|100|{}{}'.format(ma,mb): 4,
+                    'bridge|100|{}{}'.format(mb,mb): 5, 
+                    '4fold|100|{}{}{}{}'.format(ma,ma,ma,ma): 6,
+                    '4fold|100|{}{}{}{}'.format(ma,ma,ma,mb): 7, 
+                    '4fold|100|{}{}{}{}'.format(ma,ma,mb,mb): 8,
+                    '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 9, 
+                    '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 10,
+                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 11}
+    
+        elif self.surface == 'fcc110':
+            return {'ontop|step|{}'.format(ma): 1,
+                    'ontop|step|{}'.format(mb): 2,
+                   # neightbor elements count clockwise from shorter bond ma
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,ma,ma,ma): 3,
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,ma,ma,mb): 4,
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,ma,mb,mb): 5,
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,mb,ma,mb): 6,
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,mb,mb,ma): 7,
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,mb,mb,mb): 8,
+                    'ontop|terrace|{}-{}{}{}{}'.format(ma,mb,mb,mb,mb): 9,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,ma,ma,ma,ma): 10,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,ma,ma,ma,mb): 11,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,ma,ma,mb,mb): 12,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,ma,mb,ma,mb): 13,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,ma,mb,mb,ma): 14,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,ma,mb,mb,mb): 15,
+                    'ontop|terrace|{}-{}{}{}{}'.format(mb,mb,mb,mb,mb): 16,
+                    'bridge|step|{}{}'.format(ma,ma): 17,
+                    'bridge|step|{}{}'.format(ma,mb): 18,
+                    'bridge|step|{}{}'.format(mb,mb): 19, 
+                    'bridge|terrace|{}{}-{}{}'.format(ma,ma,ma,ma): 20,
+                    'bridge|terrace|{}{}-{}{}'.format(ma,ma,ma,mb): 21,
+                    'bridge|terrace|{}{}-{}{}'.format(ma,ma,mb,mb): 22,
+                    'bridge|terrace|{}{}-{}{}'.format(ma,mb,ma,ma): 23,
+                    'bridge|terrace|{}{}-{}{}'.format(ma,mb,ma,mb): 24,
+                    'bridge|terrace|{}{}-{}{}'.format(ma,mb,mb,mb): 25,
+                    'bridge|terrace|{}{}-{}{}'.format(mb,mb,ma,ma): 26,
+                    'bridge|terrace|{}{}-{}{}'.format(mb,mb,ma,mb): 27,
+                    'bridge|terrace|{}{}-{}{}'.format(mb,mb,mb,mb): 28,
+                    'bridge|111|{}{}'.format(ma,ma): 29,
+                    'bridge|111|{}{}'.format(ma,mb): 30,
+                    'bridge|111|{}{}'.format(mb,mb): 31,
+                    'fcc|111|{}{}{}'.format(ma,ma,ma): 32,
+                    'fcc|111|{}{}{}'.format(ma,ma,mb): 33, 
+                    'fcc|111|{}{}{}'.format(ma,mb,mb): 34,
+                    'fcc|111|{}{}{}'.format(mb,mb,mb): 35,
+                    'hcp|111|{}{}{}'.format(ma,ma,ma): 36,
+                    'hcp|111|{}{}{}'.format(ma,ma,mb): 37,
+                    'hcp|111|{}{}{}'.format(ma,mb,mb): 38,
+                    'hcp|111|{}{}{}'.format(mb,mb,mb): 39}
+    
+        elif self.surface == 'fcc211':
+            return {'ontop|step|{}'.format(ma): 1,
+                    'ontop|step|{}'.format(mb): 2,
+                    'ontop|terrace|{}'.format(ma): 3,
+                    'ontop|terrace|{}'.format(mb): 4,
+                    'ontop|lowerstep|{}'.format(mb): 5,
+                    'ontop|lowerstep|{}'.format(mb): 6,
+                    'bridge|step|{}{}'.format(ma,ma): 7, 
+                    'bridge|step|{}{}'.format(ma,mb): 8,
+                    'bridge|step|{}{}'.format(mb,mb): 9,
+                    'bridge|lowerstep|{}{}'.format(ma,ma): 10,
+                    'bridge|lowerstep|{}{}'.format(ma,mb): 11,
+                    'bridge|lowerstep|{}{}'.format(mb,mb): 12,
+                    'bridge|upper111|{}{}'.format(ma,ma): 13,
+                    'bridge|upper111|{}{}'.format(ma,mb): 14,
+                    'bridge|upper111|{}{}'.format(mb,mb): 15,
+                    # terrace bridge is equivalent to lower111 bridge
+                    'bridge|lower111|{}{}'.format(ma,ma): 16,
+                    'bridge|lower111|{}{}'.format(ma,mb): 17,
+                    'bridge|lower111|{}{}'.format(mb,mb): 18,
+                    'bridge|100|{}{}'.format(ma,ma): 19,
+                    'bridge|100|{}{}'.format(ma,mb): 20,
+                    'bridge|100|{}{}'.format(mb,mb): 21,
+                    'fcc|upper111|{}{}{}'.format(ma,ma,ma): 22,
+                    'fcc|upper111|{}{}{}'.format(ma,ma,mb): 23, 
+                    'fcc|upper111|{}{}{}'.format(ma,mb,mb): 24,
+                    'fcc|upper111|{}{}{}'.format(mb,mb,mb): 25,
+                    'hcp|upper111|{}{}{}'.format(ma,ma,ma): 26,
+                    'hcp|upper111|{}{}{}'.format(ma,ma,mb): 27,
+                    'hcp|upper111|{}{}{}'.format(ma,mb,mb): 28,
+                    'hcp|upper111|{}{}{}'.format(mb,mb,mb): 29,
+                    'fcc|lower111|{}{}{}'.format(ma,ma,ma): 30,
+                    'fcc|lower111|{}{}{}'.format(ma,ma,mb): 31,
+                    'fcc|lower111|{}{}{}'.format(ma,mb,mb): 32,
+                    'fcc|lower111|{}{}{}'.format(mb,mb,mb): 33,
+                    'hcp|lower111|{}{}{}'.format(ma,ma,ma): 34,
+                    'hcp|lower111|{}{}{}'.format(ma,ma,mb): 35,
+                    'hcp|lower111|{}{}{}'.format(ma,mb,mb): 36,
+                    'hcp|lower111|{}{}{}'.format(mb,mb,mb): 37,
+                    '4fold|100|{}{}{}{}'.format(ma,ma,ma,ma): 38,
+                    '4fold|100|{}{}{}{}'.format(ma,ma,ma,mb): 39, 
+                    '4fold|100|{}{}{}{}'.format(ma,ma,mb,mb): 40,
+                    '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 41, 
+                    '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 42,
+                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 43}
+    
+        elif self.surface == 'fcc311':
+            return {'ontop|step|{}'.format(ma): 1,
+                    'ontop|step|{}'.format(mb): 2,
+                    'ontop|terrace|{}'.format(ma): 3 ,
+                    'ontop|terrace|{}'.format(mb): 4,
+                    'bridge|step|{}{}'.format(ma,ma): 5,
+                    'bridge|step|{}{}'.format(ma,mb): 6,
+                    'bridge|step|{}{}'.format(mb,mb): 7,
+                    'bridge|terrace|{}{}'.format(ma,ma): 8,
+                    'bridge|terrace|{}{}'.format(ma,mb): 9,
+                    'bridge|terrace|{}{}'.format(mb,mb): 10,
+                    'bridge|111|{}{}'.format(ma,ma): 11,
+                    'bridge|111|{}{}'.format(ma,mb): 12,
+                    'bridge|111|{}{}'.format(mb,mb): 13,
+                    'bridge|100|{}{}'.format(ma,ma): 14,
+                    'bridge|100|{}{}'.format(ma,mb): 15,
+                    'bridge|100|{}{}'.format(mb,mb): 16,
+                    'fcc|111|{}{}{}'.format(ma,ma,ma): 17,
+                    'fcc|111|{}{}{}'.format(ma,ma,mb): 18,
+                    'fcc|111|{}{}{}'.format(ma,mb,mb): 19,
+                    'fcc|111|{}{}{}'.format(mb,mb,mb): 20,
+                    'hcp|111|{}{}{}'.format(ma,ma,ma): 21,
+                    'hcp|111|{}{}{}'.format(ma,ma,mb): 22,
+                    'hcp|111|{}{}{}'.format(ma,mb,mb): 23,
+                    'hcp|111|{}{}{}'.format(mb,mb,mb): 24,
+                    '4fold|100|{}{}{}{}'.format(ma,ma,ma,ma): 25,
+                    '4fold|100|{}{}{}{}'.format(ma,ma,ma,mb): 26, 
+                    '4fold|100|{}{}{}{}'.format(ma,ma,mb,mb): 27,
+                    '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 28, 
+                    '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 29,
+                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 30}                    
+ 
+
+def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
+                          rotation=None, tag=0):            
+
+    '''rotation: vector that the adsorbate is rotated into'''
+
     
     if height is None:
         height = heights_dict[site['site']]
 
     # Make the correct position
-    normal = np.array(site['normal'])
-    pos = np.array(site['position']) + normal * height
+    normal = site['normal']
+    pos = site['position'] + normal * height
 
-    if adsorbate == 'CO':
-        ads = molecule('CO')[::-1]
-    elif adsorbate == 'CH2':
-        ads = molecule('NH2')
-        ads[next(a.index for a in ads if a.symbol=='N')].symbol = 'C'
+    # Convert the adsorbate to an Atoms object
+    if isinstance(adsorbate, Atoms):
+        ads = adsorbate
+        if tag != 0:
+            for a in ads:
+                a.tag = tag
+    elif isinstance(adsorbate, Atom):
+        ads = Atoms([adsorbate])
+        if tag != 0:
+            for a in ads:
+                a.tag = tag
     else:
-        ads = molecule(adsorbate)
+        # Assume it is a string representing a molecule
+        if adsorbate in ['CO', 'OCS']:
+            ads = molecule(adsorbate)[::-1]
+        elif adsorbate in ['H2O', 'NH2']:
+            ads = molecule(adsorbate)
+            ads.rotate(180, 'y')
+        elif adsorbate == 'CH2':
+            ads = molecule('NH2')
+            ads[0].symbol = 'C'
+            ads.rotate(180, 'y')
+        elif adsorbate == 'COH':
+            ads = molecule('H2COH')
+            del ads[-2:]
+            ads.rotate(90, 'y') 
+        elif adsorbate == 'H2CO':
+            ads = molecule(adsorbate)[::-1]
+            newpos = ads.positions[:2]
+            del ads[:2]
+            ads.extend(Atoms('H2', newpos))
+        elif adsorbate == 'CH2O':
+            ads = molecule('H2CO')[::-1]
+            ads.rotate(-90, '-y')
+            newpos = ads.positions[:2]
+            del ads[:2]
+            ads.extend(Atoms('H2', newpos))
+        elif adsorbate == 'CHOH':
+            ads = molecule('H2COH')
+            del ads[-1]
+        else:
+            ads = molecule(adsorbate)
+ 
+        if len(ads) == 2 or (len(ads) > 2 and adsorbate in ['COH','H2CO']):
+            if len(ads) == 2 or adsorbate == 'COH':
+                adsi = [1]
+            else:
+                adsi = [a.index+1 for a in ads[1:] if a.symbol != 'H']
+            avg_pos = np.average(ads[adsi].positions, 0)
+            ads.rotate(avg_pos - ads[0].position, normal)
+            #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
+            #ads.rotate(-45, pvec, center=ads[0].position)
 
-    if len(ads) > 1:
-        avg_pos = np.average(ads[1:].positions, 0)
-        delta_pos = avg_pos - ads[0].position
-        if np.linalg.norm(delta_pos) != 0:
-            ads.rotate(delta_pos, normal)
-        #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
-        #ads.rotate(-45, pvec, center=ads[0].position)
+        # Set tags
+        if (tag == 0) and (adsorbate in adsorbate_label_dict):
+            for a in ads:
+                a.tag = adsorbate_label_dict[adsorbate]
+
+    if rotation is not None:
+        ads.rotate(np.average(ads.positions[1:],0) - ads[0].position, rotation)
     ads.translate(pos - ads[0].position)
 
     atoms.extend(ads)
@@ -277,6 +627,8 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
                         scomp = comp[1]+comp[0]+comp[3]+comp[2]
                     else:
                         scomp = ''.join(comp)
+    else:
+        scomp = None
 
     if site_list:
         all_sites = site_list.copy()
@@ -288,13 +640,19 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
         if not isinstance(indices, Iterable):
             indices = [indices]
         indices = tuple(sorted(indices))
-        si = next((s for s in all_sites if s['indices'] == indices))
+        si = next((s for s in all_sites if 
+                   s['indices'] == indices), None)
     else:
-        si = next((s for s in all_sites if s['site'] == site and
-                   s['composition'] == scomp and s['subsurface_element'] 
-                   == subsurface_element))
-            
-    add_adsorbate_to_site(atoms, adsorbate, si, height)
+        si = next((s for s in all_sites if 
+                   s['site'] == site and
+                   s['composition'] == scomp and 
+                   s['subsurface_element'] 
+                   == subsurface_element), None)
+
+    if not si:
+        print('No such site can be found')            
+    else:
+        add_adsorbate_to_site(atoms, adsorbate, si, height)
 
 
 def add_cluster(atoms, cluster, site, surface=None, geometry=None, 
@@ -765,12 +1123,12 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
         add_adsorbate_to_site(atoms, adsorbate, site, height)
 
     if min_adsorbate_distance > 0.:
-        remove_close_adsorbates(atoms, min_adsorbate_distance)
+        remove_adsorbates_too_close(atoms, min_adsorbate_distance)
 
     return atoms
 
 
-def remove_close_adsorbates(atoms, min_adsorbate_distance=0.6):
+def remove_adsorbates_too_close(atoms, min_adsorbate_distance=0.6):
  
     rmin = min_adsorbate_distance/2.9
     nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
