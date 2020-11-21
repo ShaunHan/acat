@@ -4,10 +4,11 @@ from ase.io import read, write
 from ase.build import molecule
 from ase.collections import g2
 from ase.data import covalent_radii, atomic_numbers
+from ase.formula import Formula
 from ase.neighborlist import NeighborList
 from ase.visualize import view
 from ase import Atom, Atoms
-from collections import defaultdict, Iterable, Counter
+from collections import defaultdict, Iterable
 from operator import itemgetter
 import networkx as nx
 import numpy as np
@@ -23,26 +24,30 @@ heights_dict = {'ontop': 2.0,
                 'fcc': 1.8, 
                 'hcp': 1.8, 
                 '4fold': 1.7}
-# Make your own adsorbate label dict
-adsorbate_label_dict = {'H': 1,
-                        'C': 2,
-                        'O': 3,
-                        'CH': 4,
-                        'OH': 5,
-                        'CO': 6,
-                        'CH2': 7, # Not supplied by ASE
-                        'H2O': 8,
-                        'COH': 9, # Vertical, Not supplied by ASE
-                        'CH3': 10,
-                        'H2CO': 11, # Vertical
-                        # Bidentate adsorbates
-                        'HCO': 12, 
-                        'CHOH': 13, # Not supplied by ASE
-                        'CH2O': 14, # Not supplied by ASE
-                        'CH3O': 15, 
-                        'H2COH': 16, 
-                        'CH3OH': 17} 
 
+# Make your own adsorbate list. Make sure you always sort the 
+# indices of the atoms in the same order as the symbol. 
+# First element always starts from bonded index or the 
+# bonded element with smaller atomic number if multi-dentate.
+                  # Monodentate (vertical)
+adsorbate_list = ['H','C','O','CH','OH','CO','CH2','OH2','COH','CH3','OCH','OCH2','OCH3', 
+                  # Bidentate (lateral)
+                  'CHO','CHOH','CH2O','CH3O','CH2OH','CH3OH'] 
+adsorbate_formula_dict = {k: ''.join(list(Formula(k))) for k in adsorbate_list}
+
+# Make your own bidentate fragment dict
+adsorbate_fragment_dict = {'CO': ['C','O'],     # Possible
+                           'OC': ['O','C'],     # to 
+                           'COH': ['C','OH'],   # bidentate
+                           'OCH': ['O','CH'],   # on
+                           'OCH2': ['O','CH2'], # rugged 
+                           'OCH3': ['O','CH3'], # surfaces
+                           'CHO': ['CH','O'],
+                           'CHOH': ['CH','OH'],
+                           'CH2O': ['CH2','O'],
+                           'CH3O': ['CH3','O'],
+                           'CH2OH': ['CH2','OH'],
+                           'CH3OH': ['CH3','OH']}
 
 def get_label_dict(surface):
 
@@ -96,9 +101,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
 class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
-    """dmax: maximum bond length (Å) that should be considered as an adsorbate"""
+    """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""
 
-    def __init__(self, atoms, adsorption_sites, surface=None, dmax=2.2):
+    def __init__(self, atoms, adsorption_sites, surface=None, dmax=2.5):
  
         self.atoms = atoms.copy()
         self.ads_ids = [a.index for a in atoms if a.symbol in ads_elements]
@@ -108,9 +113,6 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.pbc = atoms.pbc
         self.dmax = dmax
 
-        self.ads_names = g2.names
-        self.ads_symbols = [sorted(molecule(n).get_chemical_symbols())
-                            for n in self.ads_names]
         self.make_ads_neighbor_list()
         self.ads_connectivity_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
@@ -134,7 +136,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.label_list = ['0'] * len(self.full_site_list)
         self.site_connectivity_matrix = self.get_site_connectivity()
         self.label_occupied_sites()
-        self.labels = sorted(self.label_list)
+        self.labels = self.get_labels()
 
     def identify_adsorbates(self):
         G = nx.Graph()
@@ -159,7 +161,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
     def clean_list(self):
         sl = self.full_site_list
-        entries = ['occupied', 'adsorbate', 'adsorbate_indices', 
+        entries = ['occupied', 'adsorbate', 'adsorbate_indices', 'fragment',
                    'bonded_index', 'bond_length', 'label', 'dentate']
         for d in sl:
             for k in entries:
@@ -195,14 +197,14 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         ndentate_dict = {}
  
         for adsid in self.ads_ids:
-            tag = self.atoms[adsid].tag
-            if self.atoms[adsid].symbol == 'H' and tag > 1:
-                continue
+            if self.atoms[adsid].symbol == 'H':
+                if not [adsid] in ads_list:
+                    continue
 
             def get_bond_length(site):
+                pos = site['position']
                 return get_mic_distance(self.atoms[adsid].position, 
-                                        site['position'], 
-                                        self.cell, self.pbc)
+                                        pos, self.cell, self.pbc)
             st, bl = min(((s, get_bond_length(s)) for s in fsl), 
                            key=itemgetter(1))
             if bl > self.dmax:
@@ -212,104 +214,74 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             if 'occupied' in st:
                 if bl >= st['bond_length']:
                     continue
-                else:
-                    ndentate_dict[adsi] -= 1
-
-            if tag != 0:
-                for k, v in adsorbate_label_dict.items():
-                    if v == tag:
-                        adssym = k
-            else:
-                adssyms = [self.atoms[i].symbol for i in adsids]
-                try:
-                    adssym = self.ads_names[self.ads_symbols.index(
-                                            sorted(adssyms))] 
-                except:
-                    adssym = ''.join(adssyms)
-
-            st['adsorbate'] = adssym
-            st['adsorbate_group'] = adssym
-            st['adsorbate_indices'] = adsi
+                elif self.atoms[adsid].symbol != 'H':
+                    ndentate_dict[adsi] -= 1 
             st['bonded_index'] = adsid
             st['bond_length'] = bl
+
+            symbols = str(self.atoms[adsids].symbols)
+            adssym = next((k for k, v in adsorbate_formula_dict.items() 
+                           if v == symbols), symbols)
+            st['adsorbate'] = adssym
+            st['fragment'] = adssym
+            st['adsorbate_indices'] = adsi 
             if adsi in ndentate_dict:
                 ndentate_dict[adsi] += 1
             else:
                 ndentate_dict[adsi] = 1
             st['occupied'] = 1            
 
-        # Get bidentate fragments, site matrix, label and dentate numbers   
-        for j, st in enumerate(fsl):
+        # Get dentate numbers   
+        for st in fsl:
             if 'occupied' not in st:
-                st['adsorbate'] = st['adsorbate_group'] = \
-                st['adsorbate_indices'] = st['bonded_index'] = \
-                st['bond_length'] = None
-                st['occupied'] = st['label'] = 0
+                st['adsorbate'] = st['adsorbate_indices'] = st['fragment'] \
+                = st['bonded_index'] = st['bond_length'] = None
+                st['occupied'] = st['label'] = st['dentate'] = 0
                 continue
 
-            if st['adsorbate_group'] == 'HCO':
-                bondsym = self.atoms[st['bonded_index']].symbol
-                if bondsym == 'C':
-                    st['adsorbate'] = 'CH'
-                elif bondsym == 'O':
-                    st['adsorbate'] = 'O'
-            elif st['adsorbate_group'] == 'CHOH':
-                bondsym = self.atoms[st['bonded_index']].symbol
-                if bondsym == 'C':
-                    st['adsorbate'] = 'CH'
-                elif bondsym == 'O':
-                    st['adsorbate'] = 'OH'
-            elif st['adsorbate_group'] == 'CH2O':
-                bondsym = self.atoms[st['bonded_index']].symbol
-                if bondsym == 'C':
-                    st['adsorbate'] = 'CH2' 
-                elif bondsym == 'O':
-                    st['adsorbate'] = 'O'
-            elif st['adsorbate_group'] == 'CH3O':
-                bondsym = self.atoms[st['bonded_index']].symbol
-                if bondsym == 'C':
-                    st['adsorbate'] = 'CH3'
-                elif bondsym == 'O':
-                    st['adsorbate'] = 'O'
-            elif st['adsorbate_group'] == 'H2COH':
-                bondsym = self.atoms[st['bonded_index']].symbol
-                if bondsym == 'C':
-                    st['adsorbate'] = 'CH2'
-                elif bondsym == 'O':
-                    st['adsorbate'] = 'OH'
-            elif st['adsorbate_group'] == 'CH3OH':
-                bondsym = self.atoms[st['bonded_index']].symbol
-                if bondsym == 'C':
-                    st['adsorbate'] = 'CH3'
-                elif bondsym == 'O':
-                    st['adsorbate'] = 'OH'
-
             adsi = st['adsorbate_indices']
-            ads = st['adsorbate']
-
-            signature = [st['site'], st['geometry']]                        
-            if self.show_composition:
-                signature.append(st['composition'])
-                if self.show_subsurface:
-                    signature.append(st['subsurface_element'])
-            else:
-                if self.show_subsurface:
-                    raise ValueError('To include the subsurface element, ',
-                                     'show_composition also need to be ',
-                                     'set to True in adsorption_sites')    
-            stlab = self.label_dict['|'.join(signature)]
-            label = str(stlab) + st['adsorbate']
-            st['label'] = label
-            ll[j] = label
-            if adsi in ndentate_dict:
+            if adsi in ndentate_dict:              
                 st['dentate'] = ndentate_dict[adsi]
             else:
                 st['dentate'] = 0
+
+        # Identify bidentate fragments and assign labels 
+        for j, st in enumerate(fsl):
+            if st['occupied'] == 1:
+                if st['dentate'] > 1:
+                    bondsym = self.atoms[st['bonded_index']].symbol     
+                    adssym = st['adsorbate']
+                    if adssym in adsorbate_fragment_dict:
+                        fragsym = next((f for f in adsorbate_fragment_dict[adssym] 
+                                        if f[0] == bondsym), None)
+                        st['fragment'] = fragsym
+                    else:
+                        st['fragment'] = adssym
+ 
+                signature = [st['site'], st['geometry']]                     
+                if self.show_composition:
+                    signature.append(st['composition'])
+                    if self.show_subsurface:
+                        signature.append(st['subsurface_element'])
+                else:
+                    if self.show_subsurface:
+                        raise ValueError('To include the subsurface element, ',
+                                         'show_composition also need to be ',
+                                         'set to True in adsorption_sites')    
+                stlab = self.label_dict['|'.join(signature)]
+                label = str(stlab) + st['fragment']
+                st['label'] = label
+                ll[j] = label
 
     def make_ads_neighbor_list(self, dx=.3, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=True)
+
+    def get_labels(self):
+        ll = self.label_list
+        labs = [lab for lab in ll if lab != '0']
+        return sorted(labs)
 
     def get_site_graph(self):                                         
         ll = self.label_list
@@ -326,11 +298,12 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
         return G
 
-    def draw_graph(self, G):
+    def draw_graph(self, G, savefig=None):
         import matplotlib.pyplot as plt
-
-        nx.draw(G, with_labels=True)
-#        plt.savefig("graph.png")
+        labels = nx.get_node_attributes(G, 'label')
+        nx.draw(G, labels=labels, font_size=8)
+        if savefig:
+            plt.savefig(savefig)
         plt.show() 
 
     def get_bimetallic_label_dict(self):
@@ -490,7 +463,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
  
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
-                          rotation=None, tag=0):            
+                          rotation=None):            
 
     '''rotation: vector that the adsorbate is rotated into'''
 
@@ -505,20 +478,16 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     # Convert the adsorbate to an Atoms object
     if isinstance(adsorbate, Atoms):
         ads = adsorbate
-        if tag != 0:
-            for a in ads:
-                a.tag = tag
+
     elif isinstance(adsorbate, Atom):
         ads = Atoms([adsorbate])
-        if tag != 0:
-            for a in ads:
-                a.tag = tag
+
     else:
         # Assume it is a string representing a molecule
-        if adsorbate in ['CO', 'OCS']:
+        if adsorbate  == 'CO':
             ads = molecule(adsorbate)[::-1]
-        elif adsorbate in ['H2O', 'NH2']:
-            ads = molecule(adsorbate)
+        elif adsorbate == 'OH2':
+            ads = molecule('H2O')
             ads.rotate(180, 'y')
         elif adsorbate == 'CH2':
             ads = molecule('NH2')
@@ -527,41 +496,54 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
         elif adsorbate == 'COH':
             ads = molecule('H2COH')
             del ads[-2:]
-            ads.rotate(90, 'y') 
-        elif adsorbate == 'H2CO':
-            ads = molecule(adsorbate)[::-1]
-            newpos = ads.positions[:2]
-            del ads[:2]
-            ads.extend(Atoms('H2', newpos))
+            ads.rotate(90, 'y')
+        elif adsorbate == 'CHO':
+            ads = molecule('HCO')[[0,2,1]] 
+        elif adsorbate == 'OCH2':
+            ads = molecule('H2CO')
+            ads.rotate(180, 'y')
+        elif adsorbate == 'OCH3':
+            ads = molecule('CH3O')[[1,0,2,3,4]]
+            ads.rotate(90, '-x')
         elif adsorbate == 'CH2O':
-            ads = molecule('H2CO')[::-1]
-            ads.rotate(-90, '-y')
-            newpos = ads.positions[:2]
-            del ads[:2]
-            ads.extend(Atoms('H2', newpos))
+            ads = molecule('H2CO')[[1,2,3,0]]
+            ads.rotate(90, 'y')
+        elif adsorbate == 'CH3O':
+            ads = molecule('CH3O')[[0,2,3,4,1]]
+            ads.rotate(30, 'y')
         elif adsorbate == 'CHOH':
             ads = molecule('H2COH')
             del ads[-1]
+            ads = ads[[0,3,1,2]]
+        elif adsorbate == 'CH2OH':
+            ads = molecule('H2COH')[[0,3,4,1,2]]
+        elif adsorbate == 'CH3OH':
+            ads = molecule('CH3OH')[[0,2,4,5,1,3]]
+            ads.rotate(-30, 'y')
         else:
             ads = molecule(adsorbate)
  
-        if len(ads) == 2 or (len(ads) > 2 and adsorbate in ['COH','H2CO']):
-            if len(ads) == 2 or adsorbate == 'COH':
-                adsi = [1]
-            else:
-                adsi = [a.index+1 for a in ads[1:] if a.symbol != 'H']
-            avg_pos = np.average(ads[adsi].positions, 0)
-            ads.rotate(avg_pos - ads[0].position, normal)
+        if len(ads) == 2 or adsorbate == 'COH':
+            ads.rotate(ads[1].position - ads[0].position, normal)
             #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
             #ads.rotate(-45, pvec, center=ads[0].position)
 
-        # Set tags
-        if (tag == 0) and (adsorbate in adsorbate_label_dict):
-            for a in ads:
-                a.tag = adsorbate_label_dict[adsorbate]
+    if adsorbate not in adsorbate_list:
+        # Always sort the indices the same order as the input symbol.
+        # This is a naive sorting which might cause H in wrong order.
+        # Please sort your own adsorbate atoms by reindexing like above.
+        symout = list(Formula(adsorbate))
+        symin = list(ads.symbols)
+        newids = []
+        for elt in symout:
+            idx = symin.index(elt)
+            newids.append(idx)
+            symin[idx] = None
+        ads = ads[newids]
 
     if rotation is not None:
-        ads.rotate(np.average(ads.positions[1:],0) - ads[0].position, rotation)
+        ads.rotate(np.average(ads.positions[1:],0) - 
+                              ads[0].position, rotation)
     ads.translate(pos - ads[0].position)
 
     atoms.extend(ads)
@@ -1468,8 +1450,8 @@ def label_occupied_sites(atoms, adsorbate, show_subsurface=False):
                     #    atoms[idx].symbol = species_pseudo_mapping[0][1]
                 n_occupied_sites += 1
     tag_set = set([a.tag for a in atoms])
-    print('{0} sites labeled with tags including \
-           {1}'.format(n_occupied_sites, tag_set))
+    print('{} sites labeled with tags including '.format(n_occupied_sites),
+          '{}'.format(tag_set))
 
     return atoms
 
