@@ -27,8 +27,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     atoms = atoms.copy()
     cell = atoms.cell
     pbc = atoms.pbc
-                                                                           
-    conn = defaultdict(list)
+    conn = {k: [] for k in range(len(atoms))}
     for atomi in atoms:
         for atomj in atoms:
             if atomi.index != atomj.index:
@@ -39,6 +38,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
                                              cell, pbc)
                     else:
                         d = np.linalg.norm(atomi.position - atomj.position)
+
                     cri = covalent_radii[atomi.number]
                     crj = covalent_radii[atomj.number]
                     if neighbor_number == 1:
@@ -76,6 +76,15 @@ def get_mic_distance(p1, p2, cell, pbc=True):
     return find_mic(np.asarray([p1]) - np.asarray([p2]), 
                     cell, pbc)[1][0]
 
+
+def point_projection_on_line_old(point, position, vec):         
+    '''Calculate the position of a point projection on a line'''
+    ap = point - position
+    t = np.dot(ap, vec) / np.dot(vec, vec)
+    projection = position + vec * t
+
+    return projection
+
 def point_projection_on_line(point, position, vec, h):         
     '''Calculate the position of a point projection on a line'''
     ap = point - position
@@ -85,30 +94,6 @@ def point_projection_on_line(point, position, vec, h):
     projection = position + ab * t
 
     return projection
-
-def get_plane_normal(positions):
-    """Return the surface normal vector to a plane of best fit. 
-    THIS CODE IS BORROWED FROM CATKIT
-
-    Parameters
-    ----------
-    positions : ndarray (n, 3)
-        3D points to fit plane to.
-
-    Returns
-    -------
-    vec : ndarray (1, 3)
-        Unit vector normal to the plane of best fit.
-    """
-    A = np.c_[positions[:, 0], positions[:, 1], 
-              np.ones(positions.shape[0])]
-    vec, _, _, _ = scipy.linalg.lstsq(A, positions[:, 2])
-    vec[2] = -1.0
-
-    vec /= -np.linalg.norm(vec)
-
-    return vec
-
 
 def expand_cell(atoms, cutoff=None, padding=None):
     """Return Cartesian coordinates atoms within a supercell
