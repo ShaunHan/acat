@@ -1,28 +1,21 @@
-from .utilities import neighbor_shell_list, get_connectivity_matrix
-from .utilities import get_plane_normal, get_mic_distance, expand_cell
+from .utilities import * 
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
 from asap3.analysis import FullCNA, PTM
 from asap3 import EMT as asapEMT
-from ase.build import molecule
+from ase.data import reference_states, atomic_numbers, covalent_radii
 from ase.geometry import find_mic
 from ase.optimize import BFGS, FIRE
-from ase import Atom, Atoms
-from operator import itemgetter
-import numpy as np
-from itertools import combinations, groupby
-from ase.data import reference_states, atomic_numbers, covalent_radii
 from ase.io import read, write
+from ase import Atom, Atoms
 from collections import Counter, defaultdict
+from itertools import combinations, groupby
+import numpy as np
 import networkx as nx
-import scipy
-import re
-import math
 import random
-import warnings
-
-
-#warnings.filterwarnings('ignore')
+import scipy
+import math
+import re
 
 
 icosa_dict = {
@@ -164,6 +157,11 @@ surf_dict = {
 
 # Set global variables
 ads_elements = 'SCHON'
+heights_dict = {'ontop': 2.0, 
+                'bridge': 1.8,
+                'fcc': 1.8, 
+                'hcp': 1.8, 
+                '4fold': 1.7}
 
 
 class NanoparticleAdsorptionSites(object):
@@ -601,8 +599,8 @@ class SlabAdsorptionSites(object):
         if surface is None: 
             self.fullCNA, self.surfCNA = self.get_CNA(rCut=self.r+.3)
             self.surface = self.identify_surface()
-            print('The surface is identified as {}. Please specify ', 
-                  'the surface if it is incorrect'.format(self.surface))
+            print('The surface is identified as {}. '.format(self.surface),
+                  'Please specify the surface if it is incorrect')
         else:
             self.surface = surface
 
@@ -1180,8 +1178,8 @@ class SlabAdsorptionSites(object):
     
         xcell = self.cell[0][0]
         ycell = self.cell[1][1] 
-        xmul = math.ceil(12/xcell)
-        ymul = math.ceil(12/ycell) 
+        xmul = math.ceil(15/xcell)
+        ymul = math.ceil(15/ycell) 
         atoms = self.atoms*(xmul,ymul,1)
 
         cm = self.connectivity_matrix.copy()                               
@@ -1225,11 +1223,18 @@ class SlabAdsorptionSites(object):
     def get_surface_normal(self, sites):
         vec1, vec2 = self.get_two_vectors(sites)
         n = np.cross(vec1, vec2)
-        norm = np.linalg.norm(n)
-        n /= norm
+        l = np.sqrt(np.dot(n, n.conj()))
+        n /= l
         if n[2] < 0:
             n *= -1
-        return n 
+        return n
+
+    def no_atom_too_close_to_pos(self, pos, mindist):              
+        """Returns True if no atoms are closer than mindist to pos,
+        otherwise False."""
+        dists = [get_mic_distance(atom.position, pos, self.cell, 
+                 self.pbc) > mindist for atom in self.atoms]
+        return all(dists)                                          
 
     def get_CNA(self, rCut=None):                  
         atoms = self.refatoms.copy()
@@ -1327,18 +1332,26 @@ class SlabAdsorptionSites(object):
 
         sl = self.site_list
         refposs = np.asarray([s['position'] - np.average(
-                  self.delta_positions[list(s['indices'])], 0) for s in sl])
-        statoms = Atoms('S{}'.format(len(sl)), 
+                             self.delta_positions[list(
+                             s['indices'])], 0) + s['normal'] * \
+                             heights_dict[s['site']] for s in sl])
+        statoms = Atoms('P{}'.format(len(sl)), 
                         positions=refposs, 
                         cell=self.cell, 
                         pbc=self.pbc)
 
         return neighbor_shell_list(statoms, dx=.1, mic=True, 
-                                   neighbor_number=neighbor_number)          
+                                   neighbor_number=neighbor_number)
+
+    def update_positions(self, new_atoms):
+        sl = self.site_list
+        for st in sl:
+            si = list(st['indices'])
+            newpos = np.average(new_atoms[si].positions, 0) 
+            st['position'] = newpos
 
 
-def enumerate_adsorption_sites(atoms, surface=None, 
-                               geometry=None, 
+def enumerate_adsorption_sites(atoms, surface=None, geometry=None, 
                                show_composition=False, 
                                show_subsurface=False):
 
