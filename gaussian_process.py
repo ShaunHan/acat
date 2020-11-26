@@ -1,9 +1,10 @@
 from cabins.adsorption_sites import *
 from cabins.adsorbate_coverage import *
-from dscribe.descriptors import EwaldSumMatrix
+from dscribe.descriptors import ACSF
 from ase.io import read, write, Trajectory
 from itertools import combinations
 import numpy as np
+import scipy
 import random
 import pickle
 
@@ -11,114 +12,148 @@ import pickle
 adsorbate_elements = 'SCHON'
 
 
-def ewald_sum(atoms):
-    # Setting up the Ewald sum matrix descriptor
-    esm = EwaldSumMatrix(n_atoms_max=len(atoms), flatten=False)
-    ewald_matrix = esm.create(atoms, n_jobs=1)
-    return ewald_matrix
+acsf = ACSF(species=['H','C','O','Ni','Pt'],                    
+            rcut=6.5, 
+            g2_params=[[0.007,0],[0.011,0],[0.018,0],[0.029,0],
+                       [0.047,0],[0.076,0],[0.124,0],[0.202,0],
+                       [0.329,0],[0.996,4.626],[1.623,5.905],
+                       [2.644,7.538],[4.309,9.622]],
+            g4_params=[[0.007,1,1],[0.007,2,-1],[0.014,1,-1],
+                       [0.014,2,-1],[0.029,1,-1],[0.029,2,-1],
+                       [0.029,2,1],[0.06,1,1],[0.06,2,-1]])
 
-def fingerprint(atoms, site_list):
-    fsl = site_list
-    nst = len(fsl)
-    finger = np.zeros((nst, nst)))
-    ads_ids = fsl.ads_ids 
-    ads_atoms = atoms[ads_ids]
-    ewald_matrix = ewald_sum(ads_atoms)
 
-    frag_dict = {}
-    for i, st in enumerate(fsl):
-        if st['occupied'] == 1:
-            frag_dict[i] = st['fragment_indices']
+class GaussianProcess(object):
+    def __init__(self, X, y, load_kernel=None, lmbda=0):                 
+        super().__init__()
+        self.X = X
+        self.y = y
+        self.N = len(self.X)
+        self.lmbda = lmbda
+        self.sigma = []
+        self.mean = []
+        self.load_kernel = load_kernel if load_kernel else \
+                           self.squared_exponential_kernel
+        self.setup_sigma()
 
-    combs = combinations(frag_dict.keys(), 2)
-    for comb in combs:
-        stid1 = comb[0]
-        stid2 = comb[1]
-        frag1 = frag_dict[stid1]
-        frag2 = frag_dict[stid2]
-        ess12, ess21 = [], []
-        for i in frag1:
-            fid2 = np.where(np.isin(ads_ids, frag2))[0]
-            es12 = np.sum(ewald_matrix[ads_ids.index(i), fid2])
-            ess12.append(es12)
-        for j in frag2:
-            fid1 = np.where(np.isin(ads_ids, frag1))[0]
-            es21 = np.sum(ewald_matrix[ads_ids.index(j), fid1])
-            ess21.append(es21)
-        e12, e21 = np.sum(ess12), np.sum(ess21)
-        finger[stid1,stid2] = e12
-        finger[stid2,stid1] = e21
+    # Different types of kernels can be added as @classmethod
+    @classmethod
+    def squared_exponential_kernel(cls, x1, x2, w=0.5):
+        return np.exp(-np.linalg.norm([x1 - x2], 2)**2 / (2*w**2))
 
-    return finger
+    @classmethod
+    def generate_kernel(cls, kernel, w=0.5):
+        def wrapper(*args, **kwargs):
+            kwargs.update({'width': w})
+            return kernel(*args, **kwargs)
+        return wrapper
 
-def get_Elat(atoms, Eads_dict)
-    labels = atoms.info['data']['labels']
-    Eads = atoms.info['data']['Eads']
-    Elabs = [Eads_dict[lab] for lab in labels]
-    Elat = Eads - np.sum(Elabs)
+    @classmethod
+    def calculate_sigma(cls, x, load_kernel, lmbda=0):
+        N = len(x)
+        sigma = np.ones((N, N))
+        for i in range(N):
+            for j in range(i+1, N):
+                cov = load_kernel(x[i], x[j])
+                sigma[i][j] = cov
+                sigma[j][i] = cov
 
-    return Elat                
+        sigma = sigma + lmbda * np.eye(N)
+        return sigma
 
-def squared_exponential_kernel(x1, x2, w):
-    return np.exp(-np.linalg.norm([x1 - x2], 2)**2/(2*w**2))
+    def setup_sigma(self):
+        self.sigma = self.calculate_sigma(self.X, self.load_kernel, self.lmbda)
 
-def kernel(X1, X2, w):
-    K = np.empty((len(X1), len(X2)))
-    for i, x1 in enumerate(X1):
-        for j, x2 in enumerate(X2):
-            K[i, j] = squared_exponential_kernel(x1, x2, w)
-    return K
+    def predict(self, x):
+        cov = 1 + self.lmbda * self.load_kernel(x, x)
+        sigma_1_2 = np.zeros((self.N, 1))
+        for i in range(self.N):
+            sigma_1_2[i] = self.load_kernel(self.X[i], x)
 
-def train(X, y, test_size=0.2):
-    """Train a GPR model and returns the mean and covariance matrix"""
-    train_index = int((1-test_size) * len(X))
-    X_train, X_test = X[:train_index], X[train_index:]
-    y_train, y_test = y[:train_index], y[train_index:]
+        K = sigma_1_2.T * np.mat(self.sigma).I
+        mu = K * np.mat(self.y).T
+        sigma_pred = cov + self.lmbda - K * sigma_1_2
+        std = np.sqrt(np.diag(sigma_pred))
+        return mu, std
 
-    Kst = kernel(X_test,  X_train)
-    Ktt = kernel(X_train, X_train)
-    Kss = kernel(X_test,  X_test)
-    Kts = kernel(X_train, X_test)
-    KstKtt = np.dot(Kst, np.linalg.inv(Ktt))
-    mean = np.dot(KstKtt, y_train)
-    cov = Kss - np.dot(KstKtt, Kts)
+    @staticmethod
+    def get_probability(sigma, y, lmbda):
+        multiplier = np.power(np.linalg.det(2 * np.pi * sigma), -1/2)
+        return multiplier * np.exp((-1/2 * (np.mat(y) * np.dot(np.mat(sigma).I, y).T))
 
-    return mean, cov
+    def optimize(self, lmbda_list, beta_list):
+        def load_kernel_proxy(w, f):
+            def wrapper(*args, **kwargs):
+                kwargs.update({'width': w})
+                return f(*args, **kwargs)
+            return wrapper
+        best = (0, 0, 0)
+        history = []
+        for l in lmbda_list:
+            best_beta = (0, 0)
+            for b in beta_list:
+                sigma = gaus.calculate_sigma(self.X, load_kernel_proxy(b, self.load_kernel), l)
+                marginal = b* float(self.get_probability(sigma, self.y, l))
+                if marginal > best_beta[0]:
+                    best_beta = (marginal, b)
+            history.append((best_beta[0], l, best_beta[1]))
+        return sorted(history)[-1], np.mat(history)
 
-def predict(x, mean, cov)
-    """Predict the mean and std of a new data point x"""
-    pred = np.random.multivariate_normal(mean, cov)
-    std = np.sqrt(np.diag(cov))
 
-    return pred, std
+def normalize(X, centering=False, scaling_params=None):
+    X_min = scaling_params[0] if scaling_params else X.min(axis=0)
+    ptp = scaling_params[1] if scaling_params else X.ptp(axis=0)                         
+    X_norm = (X - X_min) / ptp
+    scaling_params = [X_min, ptp]
+    if centering:
+        mu = scaling_params[2] if scaling_params else X_norm.mean(axis=0)
+        X_norm -= mu
+        scaling_params.append(mu)
+        
+    return X_norm, scaling_params
 
-def process_data(images, adsorpition_sites, old_data=None):
-    sas = adsorption_sites
-    if not old_data:
-        xs, ys = [], []
+        
+def fingerprint(atoms, surf_ids, acsf):
+    surf_acsfs = acsf.create_single(atoms, positions=surf_ids)
+    surf_nums = atoms.numbers[surf_ids]
+    res = np.hstack([surf_nums[:,None], surf_acsfs]) 
+
+    return res.ravel() 
+    
+
+def collate_data(images, load_pkl_data=None, save_pkl_data=None):
+    if load_pkl_data:
+        with open(load_pkl_data, 'rb') as input:
+            data = pickle.load(input)
+            xs, ys = data[0], data[1]
     else:
-        None #TODO: Read old data
+        xs, ys = [], []
 
     for atoms in images:
-        sas.update_positions(atoms)
-        sac = SlabAdsorbateCoverage(atoms, sas)
-        fsl = sac.full_site_list
-        finger = fingerprint(atoms, fsl)
-        Elat = get_Elat(atoms, Eads_dict)
-        atoms.info['data']['Elat'] = Elat
+        finger = fingerprint(atoms, surf_ids=???, acsf) 
+        Eads = atoms.info['data']['Eads']
         xs.append(finger)
-        ys.append(Elat)
+        ys.append(Eads)
+    X, y = np.asarray(xs), np.asarray(ys)
 
-    return np.array(xs), np.array(ys)
+    if save_pkl_data:
+        lst = [X, y]
+        with open(save_pkl_data, 'wb') as output:
+            pickle.dump(lst, output) 
+    X_norm, scaling_params = normalize(X, centering=True)
+
+    return X_norm, y, scaling_params
+
 
 def main():
-    X, y = process_data(old, sas, old_data=None)
-    mean, cov = train(X, y)
+    X, y, scaling_params = collate_data(old_images, 
+                                        load_pkl_data=None
+                                        save_pkl_data=None)
+    gpr = GaussianProcess(X, y)
     new_images = read('xxx.traj', index=':')
     for atoms in new_images:
-        pred, std = predict(finger(x), mean, cov)
-        eps = pred + 2 * std
-        
-
-if __name__ == "__main__":
-    main()
+        x = fingerprint(atoms, surf_ids, acsf)
+        x_norm = normalize(x, centering=True, 
+                           scaling_params=scaling_params)
+        mu, std = gpr.predict(x_norm)
+        upper = mu + 2 * std
