@@ -1,26 +1,7 @@
-from cabins.adsorption_sites import *
-from cabins.adsorbate_coverage import *
+from ase.io import read, write
 from dscribe.descriptors import ACSF
-from ase.io import read, write, Trajectory
-from itertools import combinations
 import numpy as np
-import scipy
-import random
 import pickle
-
-
-adsorbate_elements = 'SCHON'
-
-
-acsf = ACSF(species=['H','C','O','Ni','Pt'],                    
-            rcut=6.5, 
-            g2_params=[[0.007,0],[0.011,0],[0.018,0],[0.029,0],
-                       [0.047,0],[0.076,0],[0.124,0],[0.202,0],
-                       [0.329,0],[0.996,4.626],[1.623,5.905],
-                       [2.644,7.538],[4.309,9.622]],
-            g4_params=[[0.007,1,1],[0.007,2,-1],[0.014,1,-1],
-                       [0.014,2,-1],[0.029,1,-1],[0.029,2,-1],
-                       [0.029,2,1],[0.06,1,1],[0.06,2,-1]])
 
 
 class GaussianProcess(object):
@@ -121,39 +102,62 @@ def fingerprint(atoms, surf_ids, acsf):
     return res.ravel() 
     
 
-def collate_data(images, load_pkl_data=None, save_pkl_data=None):
+def collate_data(structures, surf_ids, acsf, 
+                 load_pkl_data=None, 
+                 save_pkl_data=None):
     if load_pkl_data:
         with open(load_pkl_data, 'rb') as input:
             data = pickle.load(input)
-            xs, ys = data[0], data[1]
+        xs, ys = data[0], data[1]
     else:
         xs, ys = [], []
 
-    for atoms in images:
-        finger = fingerprint(atoms, surf_ids=???, acsf) 
+    for atoms in structures:
+        finger = fingerprint(atoms, surf_ids, acsf) 
         Eads = atoms.info['data']['Eads']
         xs.append(finger)
         ys.append(Eads)
-    X, y = np.asarray(xs), np.asarray(ys)
-
     if save_pkl_data:
-        lst = [X, y]
         with open(save_pkl_data, 'wb') as output:
-            pickle.dump(lst, output) 
+            pickle.dump((xs, ys), output) 
+
+    X, y = np.asarray(xs), np.asarray(ys)
     X_norm, scaling_params = normalize(X, centering=True)
 
     return X_norm, y, scaling_params
 
 
 def main():
-    X, y, scaling_params = collate_data(old_images, 
-                                        load_pkl_data=None
-                                        save_pkl_data=None)
+    dft_structures = read('NiPt3_311_1_reax.traj', index=':')
+    with open('adsorption_sites_NiPt3_311.pkl', 'rb') as f:
+        sas = pickle.load(f)
+    surf_ids = sas.surf_ids
+    acsf = ACSF(species=['H','C','O','Ni','Pt'],                   
+                rcut=6.5, 
+                g2_params=[[0.007,0],[0.011,0],[0.018,0],[0.029,0],
+                           [0.047,0],[0.076,0],[0.124,0],[0.202,0],
+                           [0.329,0],[0.996,4.626],[1.623,5.905],
+                           [2.644,7.538],[4.309,9.622]],
+                g4_params=[[0.007,1,1],[0.007,2,-1],[0.014,1,-1],
+                           [0.014,2,-1],[0.029,1,-1],[0.029,2,-1],
+                           [0.029,2,1],[0.06,1,1],[0.06,2,-1]])    
+
+    X, y, params = collate_data(dft_structures, surf_ids, acsf,
+                                load_pkl_data=None,
+                                save_pkl_data='data_NiPt3_311_1_reax.pkl')
     gpr = GaussianProcess(X, y)
-    new_images = read('xxx.traj', index=':')
-    for atoms in new_images:
+    new_structures = read('NiPt2_311_2_reax.traj', index=':')
+    low_energy_structures = []
+    for atoms in new_structures:
         x = fingerprint(atoms, surf_ids, acsf)
         x_norm = normalize(x, centering=True, 
-                           scaling_params=scaling_params)
+                           scaling_params=params)
         mu, std = gpr.predict(x_norm)
         upper = mu + 2 * std
+        if upper < Ecut:
+            low_energy_structures.append(atoms)
+    write('NiPt3_311_3_reax.traj', low_energy_structures)                
+
+
+if __name__ == "__main__":
+    main()
