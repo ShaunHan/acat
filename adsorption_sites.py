@@ -156,7 +156,7 @@ surf_dict = {
 
 
 # Set global variables
-ads_elements = 'SCHON'
+adsorbate_elements = 'SCHON'
 heights_dict = {'ontop': 2.0, 
                 'bridge': 1.8,
                 'fcc': 1.8, 
@@ -171,17 +171,19 @@ class NanoparticleAdsorptionSites(object):
         assert True not in atoms.pbc
         atoms = atoms.copy()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
-        del atoms[[a.index for a in atoms if a.symbol in ads_elements]]
+        del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
         self.show_composition = show_composition
         self.show_subsurface = show_subsurface
+        self.cell = atoms.cell
+        self.pbc = atoms.pbc
 
         self.fullCNA = {}
         self.make_fullCNA()
         self.set_first_neighbor_distance_from_rdf()
         self.site_dict = self.get_site_dict()
         self.make_neighbor_list()
-        self.surf_sites = self.get_surface_sites()
+        self.surf_ids, self.surf_sites = self.get_surface_sites()
 
         self.site_list = []
         self.populate_site_list()
@@ -415,7 +417,7 @@ class NanoparticleAdsorptionSites(object):
     def get_angle(self, sites):
         vec1, vec2 = self.get_two_vectors(sites)
         p = np.dot(vec1, vec2)/(np.linalg.norm(vec1) * np.linalg.norm(vec1))
-        return np.arccos(p)
+        return np.arccos(np.clip(p, -1,1))
 
     def no_atom_too_close_to_pos(self, pos, mindist):              
         """Returns True if no atoms are closer than mindist to pos,
@@ -436,24 +438,25 @@ class NanoparticleAdsorptionSites(object):
         atoms = self.atoms.copy()
         fcna = self.get_fullCNA()
         site_dict = self.site_dict
+        ptmdata = PTM(atoms, rmsd_max=0.25)
+        surface_ids = list(np.where(ptmdata['structure'] == 0)[0])
 
-        for i in range(len(atoms)):
-#            if i == 185:
+        for i in surface_ids:
+#            if i in [284, 310]:
 #                print(fcna[i])
-            if sum(fcna[i].values()) < 12:
-                surface_sites['all'].append(i)
-                if str(fcna[i]) not in site_dict:
-                    # The structure is distorted from the original, giving
-                    # a larger cutoff should overcome this problem
-                    r = self.r + 0.6
-                    fcna = self.get_fullCNA(rCut=r)
-                if str(fcna[i]) not in site_dict:
-                    # If this does not solve the problem we probably have a
-                    # reconstruction of the surface and will leave this
-                    # atom unused this time
-                    continue
-                surface_sites[site_dict[str(fcna[i])]].append(i)
-        return surface_sites  
+            surface_sites['all'].append(i)
+            if str(fcna[i]) not in site_dict:
+                # The structure is distorted from the original, giving
+                # a larger cutoff should overcome this problem
+                r = self.r + 0.6
+                fcna = self.get_fullCNA(rCut=r)
+            if str(fcna[i]) not in site_dict:
+                # If this does not solve the problem we probably have a
+                # reconstruction of the surface and will leave this
+                # atom unused this time
+                continue
+            surface_sites[site_dict[str(fcna[i])]].append(i)
+        return surface_ids, surface_sites  
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
@@ -470,35 +473,26 @@ class NanoparticleAdsorptionSites(object):
 
     def get_site_dict(self):
         fcna = self.get_fullCNA()
-        icosa_weight = ticosa_weight = cubocta_weight = \
-        mdeca_weight = octa_weight = tocta_weight = 0
+        icosa_weight = cubocta_weight = mdeca_weight = tocta_weight = 0
         for s in fcna:
             if str(s) in icosa_dict:
                 icosa_weight += 1
-            if str(s) in ticosa_dict:
-                ticosa_weight += 1
             if str(s) in cubocta_dict:
                 cubocta_weight += 1
             if str(s) in mdeca_dict:
                 mdeca_weight += 1
-            if str(s) in octa_dict:
-                octa_weight += 1
             if str(s) in tocta_dict:
                 tocta_weight += 1
-        full_weights = [icosa_weight, ticosa_weight, cubocta_weight, 
-                        mdeca_weight, octa_weight, tocta_weight]
+        full_weights = [icosa_weight, cubocta_weight, 
+                        mdeca_weight, tocta_weight]
         if icosa_weight == max(full_weights):
             return icosa_dict
-        elif ticosa_weight == max(full_weights):
-            return ticosa_dict
         elif cubocta_weight == max(full_weights):
             return cubocta_dict
-        elif mdeca_weight == max(full_weights):
-            return mdeca_dict
-        elif octa_weight == max(full_weights):
-            return octa_dict
-        else:
+        elif tocta_weight == max(full_weights):
             return tocta_dict
+        else:
+            return mdeca_dict
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
         atoms = self.atoms.copy()
@@ -527,17 +521,22 @@ class NanoparticleAdsorptionSites(object):
             s0 = sd[str(fcna[sites[0]])]
             s1 = sd[str(fcna[sites[1]])]
             ss01 = tuple(sorted([s0, s1]))
-            if ss01 in [('edge', 'edge'), ('edge', 'vertex'),
+            if ss01 in [('edge', 'edge'), 
+                        ('edge', 'vertex'),
                         ('vertex', 'vertex')]:
                 return 'edge'
-            elif ss01 in [('edge', 'fcc111'), ('fcc111', 'fcc111')]:
+            elif ss01 in [('fcc111', 'vertex'), 
+                          ('edge', 'fcc111'), 
+                          ('fcc111', 'fcc111')]:
                 return 'fcc111'
-            elif ss01 in [('edge', 'fcc100'), ('fcc100', 'fcc100')]:
+            elif ss01 in [('fcc100', 'vertex'), 
+                          ('edge', 'fcc100'), 
+                          ('fcc100', 'fcc100')]:
                 return 'fcc100'
         elif len(sites) == 3:
             return 'fcc111'
 
-    def get_unique_sites(self, unique_composition=False,               
+    def get_unique_sites(self, unique_composition=False,         
                          unique_subsurface=False):
         sl = self.site_list
         key_list = ['site', 'surface']
@@ -556,11 +555,32 @@ class NanoparticleAdsorptionSites(object):
                 raise ValueError('To include the subsurface element, ',
                                  'unique_composition also need to ',
                                  'be set to True')    
-        name_list = [[s[k] for k in key_list] for s in sl]
-        name_list.sort()
+        sklist = sorted([[s[k] for k in key_list] for s in sl])
  
-        return sorted(list(name_list for name_list, _ 
-                           in groupby(name_list)))
+        return sorted(list(sklist for sklist, _ in groupby(sklist)))
+
+    def get_neighbor_site_list(self, neighbor_number=1):           
+        """Returns the site_list index of all neighbor 
+        shell sites for each site
+        """
+
+        sl = self.site_list
+        adsposs = np.asarray([s['position'] + s['normal'] * \
+                             heights_dict[s['site']] for s in sl])
+        statoms = Atoms('Si{}'.format(len(sl)), 
+                        positions=adsposs, 
+                        cell=self.cell, 
+                        pbc=self.pbc)
+
+        return neighbor_shell_list(statoms, dx=.1, mic=False, 
+                                   neighbor_number=neighbor_number)
+
+    def update_positions(self, new_atoms):
+        sl = self.site_list
+        for st in sl:
+            si = list(st['indices'])
+            newpos = np.average(new_atoms[si].positions, 0) 
+            st['position'] = newpos
 
 
 class SlabAdsorptionSites(object):
@@ -572,7 +592,7 @@ class SlabAdsorptionSites(object):
         atoms = atoms.copy() 
         del atoms[[a.index for a in atoms if 'a' not in 
                                reference_states[a.number]]]
-        del atoms[[a.index for a in atoms if a.symbol in ads_elements]]
+        del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
         self.indices = [a.index for a in self.atoms] 
 
@@ -1320,22 +1340,21 @@ class SlabAdsorptionSites(object):
                 raise ValueError('To include the subsurface element ',
                                  'unique_composition also need to ',
                                  'be set to True')    
-        name_list = [[s[k] for k in key_list] for s in sl]
-        name_list.sort()
+        sklist = sorted([[s[k] for k in key_list] for s in sl])
  
-        return sorted(list(name_list for name_list, _ 
-                           in groupby(name_list)))
+        return sorted(list(sklist for sklist, _ in groupby(sklist)))
 
-    def get_neighbor_site_list(self, neighbor_number=1):
-        '''Returns the site_list index of all neighbor shell sites
-           for each site'''
+    def get_neighbor_site_list(self, neighbor_number=1):           
+        """Returns the site_list index of all neighbor 
+        shell sites for each site
+        """
 
         sl = self.site_list
         refposs = np.asarray([s['position'] - np.average(
                              self.delta_positions[list(
                              s['indices'])], 0) + s['normal'] * \
                              heights_dict[s['site']] for s in sl])
-        statoms = Atoms('P{}'.format(len(sl)), 
+        statoms = Atoms('Si{}'.format(len(sl)), 
                         positions=refposs, 
                         cell=self.cell, 
                         pbc=self.pbc)
@@ -1345,10 +1364,10 @@ class SlabAdsorptionSites(object):
 
     def update_positions(self, new_atoms):
         sl = self.site_list
+        shifted_positions = new_atoms.positions - self.atoms.positions
         for st in sl:
             si = list(st['indices'])
-            newpos = np.average(new_atoms[si].positions, 0) 
-            st['position'] = newpos
+            st['position'] += np.average(shifted_positions[si], 0) 
 
 
 def enumerate_adsorption_sites(atoms, surface=None, geometry=None, 
