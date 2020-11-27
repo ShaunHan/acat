@@ -60,7 +60,7 @@ class GaussianProcess(object):
     @staticmethod
     def get_probability(sigma, y, lmbda):
         multiplier = np.power(np.linalg.det(2 * np.pi * sigma), -1/2)
-        return multiplier * np.exp((-1/2 * (np.mat(y) * np.dot(np.mat(sigma).I, y).T))
+        return multiplier * np.exp((-1/2 * (np.mat(y) * np.dot(np.mat(sigma).I, y).T)))
 
     def optimize(self, lmbda_list, beta_list):
         def load_kernel_proxy(w, f):
@@ -144,7 +144,7 @@ def main():
 
     X, y, params = collate_data(dft_structures, surf_ids, acsf,
                                 load_pkl_data=None,
-                                save_pkl_data='data_NiPt3_311_1_reax.pkl')
+                                save_pkl_data='training_data_NiPt3_311.pkl')
     gpr = GaussianProcess(X, y)
     new_structures = read('NiPt2_311_2_reax.traj', index=':')
     low_energy_structures = []
