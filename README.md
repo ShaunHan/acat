@@ -1,4 +1,4 @@
-# Cabins: a Python package for **Ca**talysis on **bi**metallic **n**anoparticles and **s**urfaces
+# Allocat: A Python package for atomistic modelling of **allo**y **cat**alysts
 A Python package for generating and encoding adsorbate coverage patterns on surfaces and nanoparticles.
 
 ## Developers: 
