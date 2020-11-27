@@ -23,7 +23,8 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
         Whether apply minimum image convention or not
     """
 
-    assert True in atoms.pbc    
+    if mic:
+        assert True in atoms.pbc    
     atoms = atoms.copy()
     cell = atoms.cell
     pbc = atoms.pbc
