@@ -7,11 +7,11 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 Steen Lysgaard (stly@dtu.dk)
 
 ## Dependencies
-* Python3
-* Numpy
-* NetworkX
-* ASE
-* Asap3
+* python3
+* numpy
+* networkx
+* ase
+* asap3
 
 ## Installation
 Clone this repository:
