@@ -1,9 +1,10 @@
-from cabins.adsorbate_coverage import *
-from cabins.adsorption_sites import *
+from allocat.adsorbate_coverage import *
+from allocat.adsorption_sites import *
 from ase.io import read, write, Trajectory
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
 from ase.geometry import find_mic
+from ase.calculators.lammpslib import LAMMPSlib
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 import numpy as np
@@ -87,8 +88,13 @@ for image in starting_images:
 
     for k, nst in enumerate(newsites): 
         atoms = image.copy()
-        #TODO: select adsorbate with probablity weighed by performance
-        adsorbate = random.choice(adsorbates) 
+        # Prohibit adsorbates with more than 1 atom from entering subsurf sites
+        subsurf_site = True
+        adsorbate = None
+        while subsurf_site:
+            #TODO: select adsorbate with probablity weighed by performance
+            adsorbate = random.choice(adsorbates) 
+            subsurf_site = (len(adsorbate) > 1 and nst['site'] == 'subsurf')
 
         if adsorbate in bidentate_adsorbates:
         # Rotate a bidentate adsorbate to the direction of a randomly 
@@ -121,6 +127,7 @@ for image in starting_images:
                                     if labels_list[i] == labs]
                 if any(H for H in potential_graphs if 
                 nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                    print('Duplicate found')
                     continue            
 
 #        # MC step
@@ -132,6 +139,7 @@ for image in starting_images:
         atoms.calc = EMT()                 
 #        opt = FIRE(atoms, logfile=None)
 #        opt.run(fmax=0.1)
+#        sas.update_positions(atoms)
         Etot = atoms.get_potential_energy()
         Eads = Etot - Eslab 
         atoms.info['data'] = {'Eads': Eads}
