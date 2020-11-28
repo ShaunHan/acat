@@ -4,8 +4,6 @@ A Python package for identifying adsorption sites and generating adsorbate cover
 ## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
 
-Steen Lysgaard (stly@dtu.dk)
-
 ## Dependencies
 * python3
 * numpy
