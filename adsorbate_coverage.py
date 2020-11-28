@@ -22,7 +22,8 @@ heights_dict = {'ontop': 2.0,
                 'bridge': 1.8, 
                 'fcc': 1.8, 
                 'hcp': 1.8, 
-                '4fold': 1.7}
+                '4fold': 1.7,
+                'subsurf': 0.}
 
 # Make your own adsorbate list. Make sure you always sort the 
 # indices of the atoms in the same order as the symbol. 
@@ -59,7 +60,8 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
     def __init__(self, atoms, adsorption_sites, dmax=2.5):
  
         self.atoms = atoms.copy()
-        self.ads_ids = [a.index for a in atoms if a.symbol in adsorbate_elements]
+        self.ads_ids = [a.index for a in atoms if 
+                        a.symbol in adsorbate_elements]
         assert len(self.ads_ids) > 0 
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
@@ -72,15 +74,16 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
         nas = adsorption_sites
         self.slab = nas.atoms
+        self.sites_on_subsurface = nas.sites_on_subsurface
         self.show_composition = nas.show_composition
-        self.show_subsurface = nas.show_subsurface
+        if nas.show_subsurface:
+            raise NotImplementedError
+
         self.surf_ids = nas.surf_ids
         self.full_site_list = nas.site_list.copy()
         self.clean_list()
-        self.unique_sites = nas.get_unique_sites(
-                            unique_composition=self.show_composition,
-                            unique_subsurface=self.show_subsurface) 
-
+        self.unique_sites = nas.get_unique_sites(unique_composition=
+                                                 self.show_composition) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.show_composition else \
                           self.get_monometallic_label_dict()
@@ -136,7 +139,15 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                     conn_x.append(0.)
                 elif bool(set(sti['indices']).intersection(
                 stj['indices'])):
-                    conn_x.append(1.)                     
+                    if self.sites_on_subsurface:         
+                        if sti['site'] == 'subsurf':
+                            if (stj['site'] == 'subsurf') or (stj['site'] 
+                            == 'fcc' and stj['indices'] == sti['indices']):
+                                conn_x.append(1.)
+                        else:
+                            conn_x.append(1.)
+                    else:
+                        conn_x.append(1.)                     
                 else:
                     conn_x.append(0.)
             conn_mat.append(conn_x)   
@@ -224,13 +235,6 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 signature = [st['site'], st['surface']]                     
                 if self.show_composition:
                     signature.append(st['composition'])
-                    if self.show_subsurface:
-                        signature.append(st['subsurface_element'])
-                else:
-                    if self.show_subsurface:
-                        raise ValueError('To include the subsurface element, ',
-                                         'show_composition also need to be ',
-                                         'set to True in adsorption_sites')    
                 stlab = self.label_dict['|'.join(signature)]
                 label = str(stlab) + st['fragment']
                 st['label'] = label
@@ -281,10 +285,10 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 'bridge|fcc100': 7,
                 'fcc|fcc111': 8,
                 'hcp|fcc111': 9,
-                '4fold|fcc100': 10}
+                '4fold|fcc100': 10,
+                'subsurf|fcc111': 11}
 
-    def get_bimetallic_label_dict(self):
-    
+    def get_bimetallic_label_dict(self): 
         metals = list(set(self.slab.symbols))      
         ma, mb = metals[0], metals[1]
         if atomic_numbers[ma] > atomic_numbers[mb]:
@@ -320,7 +324,11 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 '4fold|fcc100|{}{}{}{}'.format(ma,ma,mb,mb): 28,
                 '4fold|fcc100|{}{}{}{}'.format(ma,mb,ma,mb): 29, 
                 '4fold|fcc100|{}{}{}{}'.format(ma,mb,mb,mb): 30,
-                '4fold|fcc100|{}{}{}{}'.format(mb,mb,mb,mb): 31}
+                '4fold|fcc100|{}{}{}{}'.format(mb,mb,mb,mb): 31,
+                'subsurf|fcc111|{}{}{}'.format(ma,ma,ma): 32,
+                'subsurf|fcc111|{}{}{}'.format(ma,ma,mb): 33,
+                'subsurf|fcc111|{}{}{}'.format(ma,mb,mb): 34,
+                'subsurf|fcc111|{}{}{}'.format(mb,mb,mb): 35}
 
  
 class SlabAdsorbateCoverage(SlabAdsorptionSites):
@@ -330,7 +338,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
     def __init__(self, atoms, adsorption_sites, surface=None, dmax=2.5):
  
         self.atoms = atoms.copy()
-        self.ads_ids = [a.index for a in atoms if a.symbol in adsorbate_elements]
+        self.ads_ids = [a.index for a in atoms if 
+                        a.symbol in adsorbate_elements]
         assert len(self.ads_ids) > 0 
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
@@ -344,15 +353,16 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         sas = adsorption_sites 
         self.slab = sas.atoms
         self.surface = sas.surface
+        self.sites_on_subsurface = sas.sites_on_subsurface
         self.show_composition = sas.show_composition
-        self.show_subsurface = sas.show_subsurface
+        if sas.show_subsurface:
+            raise NotImplementedError
+
         self.surf_ids = sas.surf_ids
         self.full_site_list = sas.site_list.copy()
         self.clean_list()
-        self.unique_sites = sas.get_unique_sites(
-                            unique_composition=self.show_composition,
-                            unique_subsurface=self.show_subsurface) 
-
+        self.unique_sites = sas.get_unique_sites(unique_composition=
+                                                 self.show_composition) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.show_composition else \
                           self.get_monometallic_label_dict()
@@ -408,7 +418,15 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     conn_x.append(0.)
                 elif bool(set(sti['indices']).intersection(
                 stj['indices'])):
-                    conn_x.append(1.)                     
+                    if self.sites_on_subsurface:         
+                        if sti['site'] == 'subsurf':
+                            if (stj['site'] == 'subsurf') or (stj['site'] 
+                            == 'fcc' and stj['indices'] == sti['indices']):
+                                conn_x.append(1.)
+                        else:
+                            conn_x.append(1.)
+                    else:
+                        conn_x.append(1.) 
                 else:
                     conn_x.append(0.)
             conn_mat.append(conn_x)   
@@ -497,13 +515,6 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 signature = [st['site'], st['geometry']]                     
                 if self.show_composition:
                     signature.append(st['composition'])
-                    if self.show_subsurface:
-                        signature.append(st['subsurface_element'])
-                else:
-                    if self.show_subsurface:
-                        raise ValueError('To include the subsurface element, ',
-                                         'show_composition also need to be ',
-                                         'set to True in adsorption_sites')    
                 stlab = self.label_dict['|'.join(signature)]
                 label = str(stlab) + st['fragment']
                 st['label'] = label
@@ -544,13 +555,13 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
     # Use this label dictionary when site compostion is 
     # not considered. Useful for monometallic surfaces.
-    def get_monometallic_label_dict(self):
-    
+    def get_monometallic_label_dict(self): 
         if self.surface == 'fcc111':
             return {'ontop|111': 1,
                     'bridge|111': 2,
                     'fcc|111': 3,
-                    'hcp|111': 4}
+                    'hcp|111': 4,
+                    'subsurf|111': 5}
     
         elif self.surface == 'fcc100':
             return {'ontop|100': 1,
@@ -564,7 +575,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'bridge|terrace': 4, 
                     'bridge|111': 5,
                     'fcc|111': 6,
-                    'hcp|111': 7}
+                    'hcp|111': 7,
+                    'subsurf|111': 8}
     
         elif self.surface == 'fcc211':
             return {'ontop|step': 1,
@@ -576,7 +588,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'bridge|100': 7,
                     'fcc|111': 8,
                     'hcp|111': 9,
-                    '4fold|100': 10}
+                    '4fold|100': 10,
+                    'subsurf|111': 11}
     
         elif self.surface == 'fcc311':
             return {'ontop|step': 1,
@@ -587,10 +600,10 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'bridge|100': 6,
                     'fcc|111': 7,
                     'hcp|111': 8,
-                    '4fold|100': 9}
+                    '4fold|100': 9,
+                    'subsurf|111': 10}
     
-    def get_bimetallic_label_dict(self):
-    
+    def get_bimetallic_label_dict(self): 
         metals = list(set(self.slab.symbols))      
         ma, mb = metals[0], metals[1]
         if atomic_numbers[ma] > atomic_numbers[mb]:
@@ -609,7 +622,11 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|111|{}{}{}'.format(ma,ma,ma): 10,
                     'hcp|111|{}{}{}'.format(ma,ma,mb): 11,
                     'hcp|111|{}{}{}'.format(ma,mb,mb): 12,
-                    'hcp|111|{}{}{}'.format(mb,mb,mb): 13}
+                    'hcp|111|{}{}{}'.format(mb,mb,mb): 13,
+                    'subsurf|111|{}{}{}'.format(ma,ma,ma): 14,
+                    'subsurf|111|{}{}{}'.format(ma,ma,mb): 15,
+                    'subsurf|111|{}{}{}'.format(ma,mb,mb): 16,
+                    'subsurf|111|{}{}{}'.format(mb,mb,mb): 17}
     
         elif self.surface == 'fcc100':
             return {'ontop|100|{}'.format(ma): 1, 
@@ -664,7 +681,11 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|111|{}{}{}'.format(ma,ma,ma): 36,
                     'hcp|111|{}{}{}'.format(ma,ma,mb): 37,
                     'hcp|111|{}{}{}'.format(ma,mb,mb): 38,
-                    'hcp|111|{}{}{}'.format(mb,mb,mb): 39}
+                    'hcp|111|{}{}{}'.format(mb,mb,mb): 39,
+                    'subsurf|111|{}{}{}'.format(ma,ma,ma): 40,
+                    'subsurf|111|{}{}{}'.format(ma,ma,mb): 41,
+                    'subsurf|111|{}{}{}'.format(ma,mb,mb): 42,
+                    'subsurf|111|{}{}{}'.format(mb,mb,mb): 43}
     
         elif self.surface == 'fcc211':
             return {'ontop|step|{}'.format(ma): 1,
@@ -710,7 +731,15 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '4fold|100|{}{}{}{}'.format(ma,ma,mb,mb): 40,
                     '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 41, 
                     '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 42,
-                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 43}
+                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 43,
+                    'subsurf|upper111|{}{}{}'.format(ma,ma,ma): 44,
+                    'subsurf|upper111|{}{}{}'.format(ma,ma,mb): 45,
+                    'subsurf|upper111|{}{}{}'.format(ma,mb,mb): 46,
+                    'subsurf|upper111|{}{}{}'.format(mb,mb,mb): 47,
+                    'subsurf|lower111|{}{}{}'.format(ma,ma,ma): 48,
+                    'subsurf|lower111|{}{}{}'.format(ma,ma,mb): 49,
+                    'subsurf|lower111|{}{}{}'.format(ma,mb,mb): 50,
+                    'subsurf|lower111|{}{}{}'.format(mb,mb,mb): 51}
     
         elif self.surface == 'fcc311':
             return {'ontop|step|{}'.format(ma): 1,
@@ -742,7 +771,11 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '4fold|100|{}{}{}{}'.format(ma,ma,mb,mb): 27,
                     '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 28, 
                     '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 29,
-                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 30}                    
+                    '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 30,
+                    'subsurf|111|{}{}{}'.format(ma,ma,ma): 31,
+                    'subsurf|111|{}{}{}'.format(ma,ma,mb): 32,
+                    'subsurf|111|{}{}{}'.format(ma,mb,mb): 33,
+                    'subsurf|111|{}{}{}'.format(mb,mb,mb): 34}                    
  
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
