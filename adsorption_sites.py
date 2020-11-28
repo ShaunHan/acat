@@ -161,18 +161,21 @@ heights_dict = {'ontop': 2.0,
                 'bridge': 1.8,
                 'fcc': 1.8, 
                 'hcp': 1.8, 
-                '4fold': 1.7}
+                '4fold': 1.7,
+                'subsurf': 0.}
 
 
 class NanoparticleAdsorptionSites(object):
 
-    def __init__(self, atoms, show_composition=False, show_subsurface=False):
+    def __init__(self, atoms, sites_on_subsurface=False, 
+                 show_composition=False, show_subsurface=False):
 
         assert True not in atoms.pbc
         atoms = atoms.copy()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
+        self.sites_on_subsurface = sites_on_subsurface
         self.show_composition = show_composition
         self.show_subsurface = show_subsurface
         self.cell = atoms.cell
@@ -269,7 +272,7 @@ class NanoparticleAdsorptionSites(object):
                                 hcp_nbrs = []
                                 for i in si:
                                     hcp_nbrs += list(self.nblist.get_neighbors(i, 
-                                                                self.r + 1.)[0])
+                                                     self.r + 1.)[0])
                                 isub = [key for key, count in Counter(
                                         hcp_nbrs).items() if count == 3][0]
                                 site.update({'subsurface_index': isub})
@@ -293,13 +296,11 @@ class NanoparticleAdsorptionSites(object):
                                         d2 = self.atoms.get_distance(m, k)
                                         if self.is_eq(d2, self.r, 0.2):
                                             # 4-fold hollow site found
-                                            normal = self.get_surface_normal(
-                                                [s, n, m])
+                                            normal = self.get_surface_normal([s, n, m])
                                             # Save the normals now and add them to the site later
                                             for i in [s, n, m, k]:
                                                 normals_for_site[i].append(normal)
-                                            ps = self.atoms[[
-                                                n, m, s, k]].positions
+                                            ps = self.atoms[[n, m, s, k]].positions
                                             pos = np.average(ps, 0)
  
                                             site = self.new_site()
@@ -322,9 +323,9 @@ class NanoparticleAdsorptionSites(object):
                                                 elif nma == 2:
                                                     opp = max(list(si[1:]), key=lambda x: 
                                                           np.linalg.norm(self.atoms[x].position
-                                                                 - self.atoms[si[0]].position)) 
+                                                          - self.atoms[si[0]].position)) 
                                                     if self.atoms[opp].symbol == \
-                                                       self.atoms[si[0]].symbol:
+                                                    self.atoms[si[0]].symbol:
                                                         composition = ma + mb + ma + mb 
                                                     else:
                                                         composition = 2*ma + 2*mb 
@@ -337,7 +338,7 @@ class NanoparticleAdsorptionSites(object):
                                                 fold4_nbrs = []
                                                 for i in si:
                                                     fold4_nbrs += list(self.nblist.get_neighbors(
-                                                                             i, self.r + 1.)[0])
+                                                                       i, self.r + 1.)[0])
                                                 isub = [key for key, count in Counter(
                                                         fold4_nbrs).items() if count == 4][0]
                                                 site.update({'subsurface_index': isub})
@@ -358,6 +359,9 @@ class NanoparticleAdsorptionSites(object):
                 sl.append(site)
                 usi.add((s))
 
+        if self.sites_on_subsurface:
+            dh = 5/6 * self.r
+            subsurf_ids = self.get_subsurface()
         for t in sl:
             # Add normals to ontop sites
             if t['site'] == 'ontop':
@@ -369,7 +373,23 @@ class NanoparticleAdsorptionSites(object):
                 for i in t['indices']:
                     normals.extend(normals_for_site[i])
                 n = np.average(normals, 0)
-                t['normal'] = n / np.linalg.norm(n)                  
+                t['normal'] = n / np.linalg.norm(n)
+            # Add subsurf sites
+            if self.sites_on_subsurface:
+                if t['site'] == 'fcc':  
+                    site = t.copy()
+                    subpos = t['position'] - t['normal'] * dh 
+                    site.update({'site': 'subsurf',      
+                                 'position': subpos})
+                    if self.show_subsurface:                                          
+                        def get_distance(x):
+                            return np.linalg.norm(self.atoms[x].position - subpos)
+                        subsi = sorted(sorted(subsurf_ids, key=get_distance)[:3])
+                        subsyms = ''.join([a.symbol for a in self.atoms[list(subsi)]])
+                        site.update({'subsurface_index': tuple(subsi),
+                                     'subsurface_element': subsyms})  
+                    sl.append(site)
+                    usi.add(si) 
 
     def new_site(self):
         return {'site': None, 'surface': None, 'position': None, 
@@ -435,10 +455,9 @@ class NanoparticleAdsorptionSites(object):
                          'fcc100': [],
                          'edge': [],
                          'vertex': [], }
-        atoms = self.atoms.copy()
         fcna = self.get_fullCNA()
         site_dict = self.site_dict
-        ptmdata = PTM(atoms, rmsd_max=0.25)
+        ptmdata = PTM(self.atoms, rmsd_max=0.25)
         surface_ids = list(np.where(ptmdata['structure'] == 0)[0])
 
         for i in surface_ids:
@@ -457,6 +476,11 @@ class NanoparticleAdsorptionSites(object):
                 continue
             surface_sites[site_dict[str(fcna[i])]].append(i)
         return surface_ids, surface_sites  
+
+    def get_subsurface(self):
+        notsurf = [a.index for a in self.atoms if a.index not in self.surf_ids]
+        ptmdata = PTM(self.atoms[notsurf], rmsd_max=0.25)
+        return list(np.where(ptmdata['structure'] == 0)[0])
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
@@ -585,8 +609,8 @@ class NanoparticleAdsorptionSites(object):
 
 class SlabAdsorptionSites(object):
 
-    def __init__(self, atoms, surface=None, show_composition=False, 
-                 show_subsurface=False, tol=1e-5):
+    def __init__(self, atoms, surface=None, sites_on_subsurface=False,
+                 show_composition=False, show_subsurface=False, tol=1e-5):
 
         assert True in atoms.pbc    
         atoms = atoms.copy() 
@@ -605,12 +629,14 @@ class SlabAdsorptionSites(object):
         refatoms.calc = None 
         self.refatoms = refatoms
         self.delta_positions = atoms.positions - refatoms.positions
+        self.site_dict = surf_dict 
         self.cell = atoms.cell
         self.pbc = atoms.pbc
-        self.tol = tol
+
+        self.sites_on_subsurface = sites_on_subsurface
         self.show_composition = show_composition
         self.show_subsurface = show_subsurface
-        self.site_dict = surf_dict 
+        self.tol = tol
         self.r = 2.675
 
         self.make_neighbor_list(dx=.3) 
@@ -638,7 +664,7 @@ class SlabAdsorptionSites(object):
         sl = self.site_list
         normals_for_site = dict(list(zip(top_indices, 
                             [[] for _ in top_indices])))
-        usi = set()  # used_site_indices
+        usi = set() # used_site_indices
         cm = self.connectivity_matrix 
 
         for s in top_indices:
@@ -675,8 +701,8 @@ class SlabAdsorptionSites(object):
             usi.add(si)
 
         if self.surface == 'fcc110' and self.show_composition:
-            stepids = [s['indices'][0] for s in sl 
-                       if s['geometry'] == 'step']
+            stepids = [s['indices'][0] for s in sl if 
+                       s['geometry'] == 'step']
             for st in sl:
                 if 'extra' in st:
                     extra = st['extra']
@@ -900,8 +926,7 @@ class SlabAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si)
 
-                if self.surface in ['fcc100', 'fcc211', 'fcc311'] \
-                and fold4_poss:
+                if self.surface in ['fcc100','fcc211','fcc311'] and fold4_poss:
                     fold4atoms = Atoms('X{}'.format(len(fold4_poss)), 
                                        positions=np.asarray(fold4_poss),
                                        cell=self.cell, 
@@ -1004,7 +1029,7 @@ class SlabAdsorptionSites(object):
                         else:
                             sitetype, geometry = 'fcc', '111' 
  
-                    site = self.new_site()
+                    site = self.new_site()               
                     site.update({'site': sitetype,
                                  'surface': self.surface,
                                  'geometry': geometry,
@@ -1036,7 +1061,7 @@ class SlabAdsorptionSites(object):
                                          self.atoms[isub].symbol})
                     sl.append(site)
                     usi.add(si)
-            
+ 
             if n == 2 and self.surface == 'fcc100' and list(reduced_poss):
                 fold4atoms = Atoms('X{}'.format(len(reduced_poss)), 
                                    positions=np.asarray(reduced_poss),
@@ -1159,6 +1184,27 @@ class SlabAdsorptionSites(object):
                     index_list.append(t['indices'])
                     pos_list.append(t['position'])
                     st_list.append(t['site'])
+
+        # Add subsurf sites
+        if self.sites_on_subsurface:
+            dh = 1/2*(np.average(self.atoms.positions[self.surf_ids][:,2], 0) \
+                 - np.average(self.atoms.positions[self.subsurf_ids][:,2], 0))
+            for st in sl:                
+                if st['site'] == 'fcc':
+                    site = st.copy()
+                    subpos = st['position'] - st['normal'] * dh 
+                    site.update({'site': 'subsurf',
+                                 'position': subpos})
+                    if self.show_subsurface:                                          
+                        def get_distance(x):
+                            return get_mic_distance(self.atoms[x].position, subpos, 
+                                                    self.cell, self.pbc)
+                        subsi = sorted(sorted(self.subsurf_ids, key=get_distance)[:3])
+                        subsyms = ''.join([a.symbol for a in self.atoms[list(subsi)]])
+                        site.update({'subsurface_index': tuple(subsi),
+                                     'subsurface_element': subsyms}) 
+                    sl.append(site)
+                    usi.add(si)
 
     def new_site(self):
         return {'site': None, 'surface': None, 'geometry': None, 
@@ -1339,7 +1385,7 @@ class SlabAdsorptionSites(object):
             if unique_subsurface:
                 raise ValueError('To include the subsurface element ',
                                  'unique_composition also need to ',
-                                 'be set to True')    
+                                 'be set to True') 
         sklist = sorted([[s[k] for k in key_list] for s in sl])
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
@@ -1370,12 +1416,15 @@ class SlabAdsorptionSites(object):
             st['position'] += np.average(shifted_positions[si], 0) 
 
 
-def enumerate_adsorption_sites(atoms, surface=None, geometry=None, 
+def enumerate_adsorption_sites(atoms, surface=None, 
+                               geometry=None, 
+                               sites_on_subsurface=False,
                                show_composition=False, 
                                show_subsurface=False):
 
     if True not in atoms.pbc:
         nas = NanoparticleAdsorptionSites(atoms, 
+                                          sites_on_subsurface,
                                           show_composition,
                                           show_subsurface)
         all_sites = nas.site_list
@@ -1384,7 +1433,8 @@ def enumerate_adsorption_sites(atoms, surface=None, geometry=None,
                          s['surface'] == surface] 
 
     else:
-        sas = SlabAdsorptionSites(atoms, surface, 
+        sas = SlabAdsorptionSites(atoms, surface,
+                                  sites_on_subsurface, 
                                   show_composition, 
                                   show_subsurface)
         all_sites = sas.site_list
