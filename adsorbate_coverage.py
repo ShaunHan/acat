@@ -902,10 +902,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 54}
 
 
-def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
-                          rotation=None):            
-
-    '''rotation: vector that the adsorbate is rotated into'''
+def add_adsorbate_to_site(atoms, adsorbate, site, height=None, rotation=None):            
+    """rotation: vector that the adsorbate will be rotated into"""
 
     
     if height is None:
