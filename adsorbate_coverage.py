@@ -1007,7 +1007,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None, rotation=None):
 
 def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None, 
                   indices=None, height=None, composition=None, 
-                  subsurface_element=None, site_list=None):
+                  rotation=None, subsurface_element=None, site_list=None):
     """
     A function for adding adsorbate to a specific adsorption site on a 
     monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
