@@ -7,7 +7,7 @@ from ase.formula import Formula
 from ase.neighborlist import NeighborList
 from ase.visualize import view
 from ase import Atom, Atoms
-from collections import defaultdict, Iterable
+from collections import defaultdict, Iterable, Counter
 from operator import itemgetter
 import networkx as nx
 import numpy as np
@@ -19,10 +19,10 @@ import re
 # Set global variables
 adsorbate_elements = 'SCHON'
 heights_dict = {'ontop': 2.0, 
-                'bridge': 1.8, 
-                'fcc': 1.8, 
-                'hcp': 1.8, 
-                '4fold': 1.7,
+                'bridge': 2.0, 
+                'fcc': 2.0, 
+                'hcp': 2.0, 
+                '4fold': 2.0,
                 'subsurf': 0.}
 
 # Make your own adsorbate list. Make sure you always sort the 
@@ -134,15 +134,14 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         conn_mat = []
         for i, sti in enumerate(sl):
             conn_x = []
-            for j, stj in enumerate(sl):
+            for j, stj in enumerate(sl): 
+                overlap = len(set(sti['indices']).intersection(stj['indices']))
                 if i == j:
                     conn_x.append(0.)
-                elif bool(set(sti['indices']).intersection(
-                stj['indices'])):
-                    if self.sites_on_subsurface:         
+                elif overlap > 0:
+                    if self.sites_on_subsurface: 
                         if sti['site'] == 'subsurf':
-                            if (stj['site'] == 'subsurf') or (stj['site'] 
-                            == 'fcc' and stj['indices'] == sti['indices']):
+                            if stj['site'] == 'fcc' and overlap == 3:
                                 conn_x.append(1.)
                         else:
                             conn_x.append(1.)
@@ -203,7 +202,8 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 st['bonded_index'] = st['bond_length'] = None
                 st['occupied'] = st['label'] = st['dentate'] = 0
                 continue
-            noccupied += 1
+            if st['site'] != 'subsurf':
+                noccupied += 1
             adsi = st['adsorbate_indices']
             if adsi in ndentate_dict:              
                 st['dentate'] = ndentate_dict[adsi]
@@ -289,10 +289,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 'subsurf|fcc111': 11}
 
     def get_bimetallic_label_dict(self): 
-        metals = list(set(self.slab.symbols))      
+        metals = sorted(list(set(self.slab.symbols)),
+                        key=lambda x: atomic_numbers[x])
         ma, mb = metals[0], metals[1]
-        if atomic_numbers[ma] > atomic_numbers[mb]:
-            ma, mb = metals[1], metals[0]
  
         return {'ontop|vertex|{}'.format(ma): 1, 
                 'ontop|vertex|{}'.format(mb): 2,
@@ -325,10 +324,30 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 '4fold|fcc100|{}{}{}{}'.format(ma,mb,ma,mb): 29, 
                 '4fold|fcc100|{}{}{}{}'.format(ma,mb,mb,mb): 30,
                 '4fold|fcc100|{}{}{}{}'.format(mb,mb,mb,mb): 31,
-                'subsurf|fcc111|{}{}{}'.format(ma,ma,ma): 32,
-                'subsurf|fcc111|{}{}{}'.format(ma,ma,mb): 33,
-                'subsurf|fcc111|{}{}{}'.format(ma,mb,mb): 34,
-                'subsurf|fcc111|{}{}{}'.format(mb,mb,mb): 35}
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 32,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 33,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 34,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 35,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 36,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 37,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 38,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 39,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 40,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 41,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 42,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 43,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 44,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 45,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 46,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 47,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 48,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 49,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 50,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 51,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 52,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 53,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 54,
+                'subsurf|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 55}
 
  
 class SlabAdsorbateCoverage(SlabAdsorptionSites):
@@ -359,6 +378,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             raise NotImplementedError
 
         self.surf_ids = sas.surf_ids
+        self.subsurf_ids = sas.subsurf_ids
+        self.connectivity_matrix = sas.connectivity_matrix
         self.full_site_list = sas.site_list.copy()
         self.clean_list()
         self.unique_sites = sas.get_unique_sites(unique_composition=
@@ -414,14 +435,13 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         for i, sti in enumerate(sl):
             conn_x = []
             for j, stj in enumerate(sl):
+                overlap = len(set(sti['indices']).intersection(stj['indices']))
                 if i == j:
                     conn_x.append(0.)
-                elif bool(set(sti['indices']).intersection(
-                stj['indices'])):
+                elif overlap > 0:
                     if self.sites_on_subsurface:         
                         if sti['site'] == 'subsurf':
-                            if (stj['site'] == 'subsurf') or (stj['site'] 
-                            == 'fcc' and stj['indices'] == sti['indices']):
+                            if stj['site'] == 'fcc' and overlap == 3:
                                 conn_x.append(1.)
                         else:
                             conn_x.append(1.)
@@ -483,7 +503,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 st['bonded_index'] = st['bond_length'] = None
                 st['occupied'] = st['label'] = st['dentate'] = 0
                 continue
-            noccupied += 1
+            if st['site'] != 'subsurf':
+                noccupied += 1
             adsi = st['adsorbate_indices']
             if adsi in ndentate_dict:              
                 st['dentate'] = ndentate_dict[adsi]
@@ -553,6 +574,34 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             plt.savefig(savefig)
         plt.show() 
 
+    def get_surface_bond_count_matrix(self, species):
+        fsl = self.full_site_list
+        cm = self.connectivity_matrix
+        atoms = self.atoms
+        numbers = atoms.numbers
+        symbols = atoms.symbols
+        specs = species
+        specs.sort(key=lambda x: atomic_numbers[x])
+        ncols = len(specs) + 1
+        sbcm = np.zeros((len(atoms), ncols))
+        for st in fsl:
+            frags = list(Formula(st['fragment']))
+            counts = Counter(frags)
+            for i in st['indices']:
+                for j, spec in enumerate(specs):
+                    sbcm[i,j] += counts[spec]
+        top_ids = self.surf_ids + self.subsurf_ids if \
+                  self.sites_on_subsurface else self.surf_ids
+        for si in top_ids:
+            nbids = np.where(cm[si]==1)[0]
+            nbs = [symbols[i] for i in nbids]
+            nbcounts = Counter(nbs)
+            for j, spec in enumerate(specs):
+                sbcm[si,j] += nbcounts[spec]
+            sbcm[si,ncols-1] = numbers[si] 
+
+        return sbcm[top_ids]
+
     # Use this label dictionary when site compostion is 
     # not considered. Useful for monometallic surfaces.
     def get_monometallic_label_dict(self): 
@@ -604,10 +653,9 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'subsurf|111': 10}
     
     def get_bimetallic_label_dict(self): 
-        metals = list(set(self.slab.symbols))      
+        metals = sorted(list(set(self.slab.symbols)),
+                        key=lambda x: atomic_numbers[x])
         ma, mb = metals[0], metals[1]
-        if atomic_numbers[ma] > atomic_numbers[mb]:
-            ma, mb = metals[1], metals[0]
  
         if self.surface == 'fcc111':
             return {'ontop|111|{}'.format(ma): 1, 
@@ -623,11 +671,31 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|111|{}{}{}'.format(ma,ma,mb): 11,
                     'hcp|111|{}{}{}'.format(ma,mb,mb): 12,
                     'hcp|111|{}{}{}'.format(mb,mb,mb): 13,
-                    'subsurf|111|{}{}{}'.format(ma,ma,ma): 14,
-                    'subsurf|111|{}{}{}'.format(ma,ma,mb): 15,
-                    'subsurf|111|{}{}{}'.format(ma,mb,mb): 16,
-                    'subsurf|111|{}{}{}'.format(mb,mb,mb): 17}
-    
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 14,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 15,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 16,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 17,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 18,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 19,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 20,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 21,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 22,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 23,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 24,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 25,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 26,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 27,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 28,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 29,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 30,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 31,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 32,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 33,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 34,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 35,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 36,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 37}
+ 
         elif self.surface == 'fcc100':
             return {'ontop|100|{}'.format(ma): 1, 
                     'ontop|100|{}'.format(mb): 2,
@@ -682,10 +750,30 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|111|{}{}{}'.format(ma,ma,mb): 37,
                     'hcp|111|{}{}{}'.format(ma,mb,mb): 38,
                     'hcp|111|{}{}{}'.format(mb,mb,mb): 39,
-                    'subsurf|111|{}{}{}'.format(ma,ma,ma): 40,
-                    'subsurf|111|{}{}{}'.format(ma,ma,mb): 41,
-                    'subsurf|111|{}{}{}'.format(ma,mb,mb): 42,
-                    'subsurf|111|{}{}{}'.format(mb,mb,mb): 43}
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 40,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 41,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 42,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 43,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 44,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 45,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 46,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 47,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 48,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 49,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 50,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 51,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 52,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 53,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 54,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 55,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 56,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 57,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 58,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 59,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 60,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 61,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 62,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 63}
     
         elif self.surface == 'fcc211':
             return {'ontop|step|{}'.format(ma): 1,
@@ -732,15 +820,31 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 41, 
                     '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 42,
                     '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 43,
-                    'subsurf|upper111|{}{}{}'.format(ma,ma,ma): 44,
-                    'subsurf|upper111|{}{}{}'.format(ma,ma,mb): 45,
-                    'subsurf|upper111|{}{}{}'.format(ma,mb,mb): 46,
-                    'subsurf|upper111|{}{}{}'.format(mb,mb,mb): 47,
-                    'subsurf|lower111|{}{}{}'.format(ma,ma,ma): 48,
-                    'subsurf|lower111|{}{}{}'.format(ma,ma,mb): 49,
-                    'subsurf|lower111|{}{}{}'.format(ma,mb,mb): 50,
-                    'subsurf|lower111|{}{}{}'.format(mb,mb,mb): 51}
-    
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 44,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 45,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 46,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 47,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 48,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 49,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 50,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 51,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 52,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 53,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 54,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 55,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 56,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 57,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 58,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 59,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 60,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 61,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 62,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 63,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 64,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 65,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 66,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 67}
+                     
         elif self.surface == 'fcc311':
             return {'ontop|step|{}'.format(ma): 1,
                     'ontop|step|{}'.format(mb): 2,
@@ -772,11 +876,31 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '4fold|100|{}{}{}{}'.format(ma,mb,ma,mb): 28, 
                     '4fold|100|{}{}{}{}'.format(ma,mb,mb,mb): 29,
                     '4fold|100|{}{}{}{}'.format(mb,mb,mb,mb): 30,
-                    'subsurf|111|{}{}{}'.format(ma,ma,ma): 31,
-                    'subsurf|111|{}{}{}'.format(ma,ma,mb): 32,
-                    'subsurf|111|{}{}{}'.format(ma,mb,mb): 33,
-                    'subsurf|111|{}{}{}'.format(mb,mb,mb): 34}                    
- 
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 31,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 32,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 33,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 34,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 35,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 36,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 37,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 38,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 39,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 40,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 41,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 42,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 43,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 44,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 45,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 46,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 47,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 48,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 49,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 50,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 51,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 52,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 53,
+                    'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 54}
+
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
                           rotation=None):            
