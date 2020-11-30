@@ -11,7 +11,6 @@ import networkx.algorithms.isomorphism as iso
 import numpy as np
 import random
 import pickle
-from ase.visualize import view
 
 
 # Read input trajectory of the previous generation
@@ -22,6 +21,10 @@ traj = Trajectory('NiPt3_311_2_reax.traj', mode='a')
 monodentate_adsorbates = ['H','C','O','OH','CH','CO','OH2','CH2','COH','CH3','OCH2','OCH3']
 bidentate_adsorbates = ['CHO','CHOH','CH2O','CH3O','CH2OH','CH3OH']
 adsorbates = monodentate_adsorbates + bidentate_adsorbates
+# Weights of adding each adsorbate according to collision theory
+adsorbate_weights = [1/np.sqrt(np.sum(ads.get_masses())) for ads in adsorbates]
+# Scaled by pressure (proportional to stoichiometry). The only difference here is H
+adsorbate_weights[0] *= 2
 # Provide energy (eV) of the clean slab
 Eslab = -325.32297835924203
 # Provide number of new structures generated in this generation
@@ -46,15 +49,15 @@ calc = LAMMPSlib(lmpcmds = cmds, lammps_header=header,
 with open('adsorption_sites_NiPt3_311.pkl', 'rb') as input:
     sas = pickle.load(input)
 
-Emin = min([struct.info['data']['Eads'] for struct in structures])
-Ecutoff = 1.6 # Set a very large cutoff for the 1st generation
+#Emin = min([struct.info['data']['Eads_dft'] for struct in structures])
+Ecut = 1.6 # Set a very large cutoff for the 1st generation
 starting_images = []
 old_labels_list = []
 old_graph_list = []
 
 for struct in structures:
     # Remain only the configurations with enegy below a threshold
-    if struct.info['data']['Eads'] < Emin + Ecutoff:
+#    if struct.info['data']['Eads_dft'] < Ecut:  #+Emin?
 #        sac = SlabAdsorbateCoverage(struct, sas)
 #        fsl = sac.full_site_list
 #        labs = sac.labels
@@ -74,7 +77,8 @@ for struct in structures:
         starting_images.append(struct)
 
 site_list = sas.site_list.copy()
-site_nblist = sas.get_neighbor_site_list()
+bidentate_nblist = sas.get_neighbor_site_list(neighbor_number=1)
+site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
 
 labels_list = []
 graph_list = []
@@ -92,8 +96,11 @@ while Nnew < Ngen:
                 selfids.append(j)
     nbsids = [v for v in nbstids if v not in selfids]
 
-    #TODO: select adsorbate with probablity weighed by performance
-    adsorbate = random.choice(adsorbates) 
+    # Select adsorbate with probablity weighted by 1/sqrt(mass)
+    adsorbate = random.choices(k=1, population=adsorbates,
+                               weights=adsorbate_weights) 
+    # Only add one adsorabte to a site at least 2 shells 
+    # away from currently occupied sites
     nsids = [i for i, s in enumerate(fsl) if i not in nbstids]
     # Prohibit adsorbates with more than 1 atom from entering subsurf sites
     subsurf_site = True
@@ -102,18 +109,16 @@ while Nnew < Ngen:
         nsi = random.choice(nsids)
         subsurf_site = (len(adsorbate) > 1 and fsl[nsi]['site'] == 'subsurf')
     nst = fsl[nsi]
-    newnbs = site_nblist[nsi]
-    # Only add one adsorabte to a site at least 2 shells 
-    # away from currently occupied sites
-    newnbids = [n for n in newnbs if n not in nbstids]
-    if not newnbids:
-        continue
 
+    binbs = bidentate_nblist[nsi]    
+    binbids = [n for n in binbs if n not in nbstids]
+    if not binbids:
+        continue
     atoms = image.copy()
     if adsorbate in bidentate_adsorbates:
-    # Rotate a bidentate adsorbate to the direction of a randomly 
-    # choosed neighbor site
-        nbst = fsl[random.choice(newnbids)]
+        # Rotate a bidentate adsorbate to the direction of a randomly 
+        # choosed neighbor site
+        nbst = fsl[random.choice(binbids)]
         pos = nst['position'] 
         nbpos = nbst['position'] 
         rotation = find_mic(np.array([nbpos-pos]), atoms.cell)[0][0]
@@ -143,10 +148,6 @@ while Nnew < Ngen:
             nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
                 print('Duplicate found')
                 continue            
-
-#    # MC step
-#    p_normal = np.minimum(1, (np.exp(-(new_e - e) / (kB * T)))) 
-#    if np.random.rand() < p_normal:
     labels_list.append(labs)
     graph_list.append(G)
     
@@ -156,6 +157,6 @@ while Nnew < Ngen:
 #    sas.update_positions(atoms)
     Etot = atoms.get_potential_energy()
     Eads = Etot - Eslab 
-    atoms.info['data'] = {'Eads': Eads}
+    atoms.info['data'] = {'Eads_dft': Eads}
     traj.write(atoms)
     Nnew += 1
