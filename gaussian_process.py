@@ -1,8 +1,13 @@
+from allocat.adsorbate_coverage import SlabAdsorbateCoverage
 from ase.io import read, write
-from dscribe.descriptors import ACSF
+from ase.units import kB
 import numpy as np
 import pickle
 
+Eads_dict = {'1H': -1.1,'1C': -1.2,'1O': -1.3,'1CH': -1.0,'1CH2': -1.4,'1CH3': -1.2,'1OH': -0.9,'1CO': -1.4,'1COH': -0.7,
+             '12H': -1.1,'12C': -1.2,'12O': -1.3,'12CH': -1.0,'12CH2': -1.4,'12CH3': -1.2,'12OH': -0.9,'12CO': -1.4,'12COH': -0.7,
+             '23H': -1.1,'23C': -1.2,'23O': -1.3,'23CH': -1.0,'23CH2': -1.4,'23CH3': -1.2,'23OH': -0.9,'23CO': -1.4,'23COH': -0.7,}
+Edis_dict = {'NiNi': 2.0422, 'NiPt': 2.7983, 'PtNi': 2.7983, 'PtPt': 3.142}
 
 class GaussianProcess(object):
     def __init__(self, X, y, load_kernel=None, lmbda=0):                 
@@ -94,15 +99,32 @@ def normalize(X, centering=False, scaling_params=None):
     return X_norm, scaling_params
 
         
-def fingerprint(atoms, surf_ids, acsf):
-    surf_acsfs = acsf.create_single(atoms, positions=surf_ids)
-    surf_nums = atoms.numbers[surf_ids]
-    res = np.hstack([surf_nums[:,None], surf_acsfs]) 
+def fingerprint(atoms, adsorption_sites, alpha=1.):
+    """alpha: Importance factor of metal-metal interactions
+    compared to metal-adsorbate interactions
+    """
+    sac = SlabAdsorbateCoverage(atoms, adsorption_sites)
+    fsl = sac.full_site_list
+    cm = sac.connectivity_matrix
+    surf_ids = sac.surf_ids
+    symbols = atoms.symbols
+    finger = np.zeros(len(atoms))
+    for st in fsl:
+        Eads = Eads_dict[st['label']]
+        indices = st['indices'][:3] if st['site'] == 'subsurf' else st['indices']
+        for i in indices:
+            finger[i] += Eads / len(indices)
+    for si in surf_ids:
+        nbids = np.where(cm[si]==1)[0]
+        Edis = np.sum([Edis_dict[symbols[si]+symbols[i]] for i in nbids])
+        finger[si] += alpha * Edis
 
-    return res.ravel() 
+    return finger[surf_ids]
     
 
-def collate_data(structures, surf_ids, acsf, 
+def collate_data(structures, 
+                 adsorption_sites, 
+                 alpha=1.,
                  load_pkl_data=None, 
                  save_pkl_data=None):
     if load_pkl_data:
@@ -113,8 +135,9 @@ def collate_data(structures, surf_ids, acsf,
         xs, ys = [], []
 
     for atoms in structures:
-        finger = fingerprint(atoms, surf_ids, acsf) 
-        Eads = atoms.info['data']['Eads']
+        sas = adsorption_sites
+        finger = fingerprint(atoms, sas, alpha) 
+        Eads = atoms.info['data']['Eads_dft']
         xs.append(finger)
         ys.append(Eads)
     if save_pkl_data:
@@ -128,34 +151,31 @@ def collate_data(structures, surf_ids, acsf,
 
 
 def main():
+    # Temperature for MC step(K)
+    T = 300
     dft_structures = read('NiPt3_311_1_reax.traj', index=':')
     with open('adsorption_sites_NiPt3_311.pkl', 'rb') as f:
         sas = pickle.load(f)
-    surf_ids = sas.surf_ids
-    acsf = ACSF(species=['H','C','O','Ni','Pt'],                   
-                rcut=6.5, 
-                g2_params=[[0.007,0],[0.011,0],[0.018,0],[0.029,0],
-                           [0.047,0],[0.076,0],[0.124,0],[0.202,0],
-                           [0.329,0],[0.996,4.626],[1.623,5.905],
-                           [2.644,7.538],[4.309,9.622]],
-                g4_params=[[0.007,1,1],[0.007,2,-1],[0.014,1,-1],
-                           [0.014,2,-1],[0.029,1,-1],[0.029,2,-1],
-                           [0.029,2,1],[0.06,1,1],[0.06,2,-1]])    
-
-    X, y, params = collate_data(dft_structures, surf_ids, acsf,
+    X, y, params = collate_data(dft_structures, sas,
+                                alpha=1.,
                                 load_pkl_data=None,
                                 save_pkl_data='training_data_NiPt3_311.pkl')
     gpr = GaussianProcess(X, y)
     new_structures = read('NiPt2_311_2_reax.traj', index=':')
     low_energy_structures = []
     for atoms in new_structures:
-        x = fingerprint(atoms, surf_ids, acsf)
+        x = fingerprint(atoms, sas)
         x_norm = normalize(x, centering=True, 
                            scaling_params=params)
         mu, std = gpr.predict(x_norm)
-        upper = mu + 2 * std
-        if upper < Ecut:
-            low_energy_structures.append(atoms)
+        Eupper = mu + 2 * std
+        if Eupper < Ecut:
+            # Metropolis MC step
+            Eprev = atoms.info['data']['Eads_dft']
+            p_normal = np.minimum(1, (np.exp(-(Eupper - Eprev) / (kB * T))))
+            if np.random.rand() < p_normal:
+                atoms.info['data']['Eads_gpr'] = (mu, std)                     
+                low_energy_structures.append(atoms)
     write('NiPt3_311_3_reax.traj', low_energy_structures)                
 
 
