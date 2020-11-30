@@ -158,10 +158,10 @@ surf_dict = {
 # Set global variables
 adsorbate_elements = 'SCHON'
 heights_dict = {'ontop': 2.0, 
-                'bridge': 1.8,
-                'fcc': 1.8, 
-                'hcp': 1.8, 
-                '4fold': 1.7,
+                'bridge': 2.0,
+                'fcc': 2.0, 
+                'hcp': 2.0, 
+                '4fold': 2.0,
                 'subsurf': 0.}
 
 
@@ -180,6 +180,8 @@ class NanoparticleAdsorptionSites(object):
         self.show_subsurface = show_subsurface
         self.cell = atoms.cell
         self.pbc = atoms.pbc
+        self.metals = sorted(list(set(atoms.symbols)), 
+                             key=lambda x: atomic_numbers[x])
 
         self.fullCNA = {}
         self.make_fullCNA()
@@ -252,10 +254,8 @@ class NanoparticleAdsorptionSites(object):
                                          'normal': normal,
                                          'indices': si})
                             if self.show_composition:                       
-                                metals = list(set(self.atoms.symbols))
+                                metals = self.metals
                                 ma, mb = metals[0], metals[1]
-                                if atomic_numbers[ma] > atomic_numbers[mb]:
-                                    ma, mb = metals[1], metals[0]
                                 symbols = [self.atoms[i].symbol for i in si]
                                 nma = symbols.count(ma)
                                 if nma == 0:
@@ -310,10 +310,8 @@ class NanoparticleAdsorptionSites(object):
                                                          'normal': normal,
                                                          'indices': si})
                                             if self.show_composition:
-                                                metals = list(set(self.atoms.symbols))      
+                                                metals = self.metals 
                                                 ma, mb = metals[0], metals[1]
-                                                if atomic_numbers[ma] > atomic_numbers[mb]:
-                                                    ma, mb = metals[1], metals[0]
                                                 symbols = [self.atoms[i].symbol for i in si]
                                                 nma = symbols.count(ma)
                                                 if nma == 0:
@@ -378,16 +376,39 @@ class NanoparticleAdsorptionSites(object):
             if self.sites_on_subsurface:
                 if t['site'] == 'fcc':  
                     site = t.copy()
-                    subpos = t['position'] - t['normal'] * dh 
+                    subpos = t['position'] - t['normal'] * dh                                   
+                    def get_distance(x):
+                        return np.linalg.norm(self.atoms[x].position - subpos)
+                    subsi = sorted(sorted(subsurf_ids, key=get_distance)[:3])     
+                    si = site['indices']
                     site.update({'site': 'subsurf',      
-                                 'position': subpos})
-                    if self.show_subsurface:                                          
-                        def get_distance(x):
-                            return np.linalg.norm(self.atoms[x].position - subpos)
-                        subsi = sorted(sorted(subsurf_ids, key=get_distance)[:3])
-                        subsyms = ''.join([a.symbol for a in self.atoms[list(subsi)]])
-                        site.update({'subsurface_index': tuple(subsi),
-                                     'subsurface_element': subsyms})  
+                                 'position': subpos,
+                                 'indices': si+tuple(subsi)})      
+                    if self.show_composition:
+                        metals = self.metals   
+                        ma, mb = metals[0], metals[1]
+                        comp = site['composition']
+                        subsyms = [self.atoms[subi].symbol for subi in subsi]
+                        nma = subsyms.count(ma)
+                        if nma == 0:
+                            composition = '-'.join([comp, 3*mb])
+                        elif nma == 1:
+                            ia = subsi[subsyms.index(ma)]
+                            subpos = self.atoms[ia].position
+                            if self.atoms[max(si, key=get_distance)].symbol == ma:
+                                composition = '-'.join([comp, 2*mb + ma])
+                            else:
+                                composition = '-'.join([comp, ma + 2*mb])
+                        elif nma == 2:
+                            ib = subsi[subsyms.index(mb)]
+                            subpos = self.atoms[ib].position
+                            if self.atoms[max(si, key=get_distance)].symbol == mb:
+                                composition = '-'.join([comp, 2*ma + mb])
+                            else:
+                                composition = '-'.join([comp, mb + 2*ma])
+                        elif nma == 3:
+                            composition = '-'.join([comp, 3*ma])
+                    site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si) 
 
@@ -583,7 +604,7 @@ class NanoparticleAdsorptionSites(object):
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
 
-    def get_neighbor_site_list(self, neighbor_number=1):           
+    def get_neighbor_site_list(self, neighbor_number=1, span=True):           
         """Returns the site_list index of all neighbor 
         shell sites for each site
         """
@@ -591,13 +612,16 @@ class NanoparticleAdsorptionSites(object):
         sl = self.site_list
         adsposs = np.asarray([s['position'] + s['normal'] * \
                              heights_dict[s['site']] for s in sl])
-        statoms = Atoms('Si{}'.format(len(sl)), 
+        statoms = Atoms('X{}'.format(len(sl)), 
                         positions=adsposs, 
                         cell=self.cell, 
                         pbc=self.pbc)
-
-        return neighbor_shell_list(statoms, dx=.1, mic=False, 
-                                   neighbor_number=neighbor_number)
+        cr = 0.55 
+        if neighbor_number == 1:
+            cr += 0.1
+                                                                   
+        return neighbor_shell_list(statoms, 0.1, neighbor_number,
+                                   mic=False, radius=cr, span=span)
 
     def update_positions(self, new_atoms):
         sl = self.site_list
@@ -632,6 +656,8 @@ class SlabAdsorptionSites(object):
         self.site_dict = surf_dict 
         self.cell = atoms.cell
         self.pbc = atoms.pbc
+        self.metals = sorted(list(set(atoms.symbols)), 
+                             key=lambda x: atomic_numbers[x])
 
         self.sites_on_subsurface = sites_on_subsurface
         self.show_composition = show_composition
@@ -710,10 +736,8 @@ class SlabAdsorptionSites(object):
                     if len(extraids) != 4:
                         print('Cannot identify other 4 atoms ',
                               'for this 5-fold site')
-                    metals = list(set(self.atoms.symbols))      
+                    metals = self.metals 
                     ma, mb = metals[0], metals[1]
-                    if atomic_numbers[ma] > atomic_numbers[mb]:
-                        ma, mb = metals[1], metals[0]
                     symbols = [self.atoms[i].symbol for i in extraids]
                     nma = symbols.count(ma)
                     if nma == 0:
@@ -963,10 +987,8 @@ class SlabAdsorptionSites(object):
                                      'normal': normal,
                                      'indices': si})                     
                         if self.show_composition:                        
-                            metals = list(set(self.atoms.symbols))      
+                            metals = self.metals    
                             ma, mb = metals[0], metals[1]
-                            if atomic_numbers[ma] > atomic_numbers[mb]:
-                                ma, mb = metals[1], metals[0]
                             symbols = [self.atoms[i].symbol for i in si]
                             nma = symbols.count(ma)
                             if nma == 0:
@@ -1037,10 +1059,8 @@ class SlabAdsorptionSites(object):
                                  'normal': normal,
                                  'indices': si})
                     if self.show_composition:                       
-                        metals = list(set(self.atoms.symbols))
+                        metals = self.metals
                         ma, mb = metals[0], metals[1]
-                        if atomic_numbers[ma] > atomic_numbers[mb]:
-                            ma, mb = metals[1], metals[0]
                         symbols = [self.atoms[i].symbol for i in si]
                         nma = symbols.count(ma)
                         if nma == 0:
@@ -1098,10 +1118,8 @@ class SlabAdsorptionSites(object):
                                  'normal': normal,
                                  'indices': si})                    
                     if self.show_composition:                       
-                        metals = list(set(self.atoms.symbols))      
+                        metals = self.metals 
                         ma, mb = metals[0], metals[1]
-                        if atomic_numbers[ma] > atomic_numbers[mb]:
-                            ma, mb = metals[1], metals[0]
                         symbols = [self.atoms[i].symbol for i in si]
                         nma = symbols.count(ma)
                         if nma == 0:
@@ -1192,17 +1210,42 @@ class SlabAdsorptionSites(object):
             for st in sl:                
                 if st['site'] == 'fcc':
                     site = st.copy()
-                    subpos = st['position'] - st['normal'] * dh 
-                    site.update({'site': 'subsurf',
-                                 'position': subpos})
-                    if self.show_subsurface:                                          
-                        def get_distance(x):
-                            return get_mic_distance(self.atoms[x].position, subpos, 
+                    subpos = st['position'] - st['normal'] * dh                                
+                    def get_distance(x):
+                        return get_mic_distance(self.atoms[x].position, subpos, 
                                                     self.cell, self.pbc)
-                        subsi = sorted(sorted(self.subsurf_ids, key=get_distance)[:3])
-                        subsyms = ''.join([a.symbol for a in self.atoms[list(subsi)]])
-                        site.update({'subsurface_index': tuple(subsi),
-                                     'subsurface_element': subsyms}) 
+                    subsi = sorted(sorted(self.subsurf_ids, key=get_distance)[:3])     
+                    si = site['indices']
+                    site.update({'site': 'subsurf',      
+                                 'position': subpos,
+                                 'indices': si+tuple(subsi)})      
+                    if self.surface == 'fcc211':
+                        site.update({'geometry': '111'})           
+                    if self.show_composition:
+                        metals = self.metals   
+                        ma, mb = metals[0], metals[1]
+                        comp = site['composition']
+                        subsyms = [self.atoms[subi].symbol for subi in subsi]
+                        nma = subsyms.count(ma)
+                        if nma == 0:
+                            composition = '-'.join([comp, 3*mb])
+                        elif nma == 1:
+                            ia = subsi[subsyms.index(ma)]
+                            subpos = self.atoms[ia].position
+                            if self.atoms[max(si, key=get_distance)].symbol == ma:
+                                composition = '-'.join([comp, 2*mb + ma])
+                            else:
+                                composition = '-'.join([comp, ma + 2*mb])
+                        elif nma == 2:
+                            ib = subsi[subsyms.index(mb)]
+                            subpos = self.atoms[ib].position
+                            if self.atoms[max(si, key=get_distance)].symbol == mb:
+                                composition = '-'.join([comp, 2*ma + mb])
+                            else:
+                                composition = '-'.join([comp, mb + 2*ma])
+                        elif nma == 3:
+                            composition = '-'.join([comp, 3*ma])
+                    site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si)
 
@@ -1390,7 +1433,7 @@ class SlabAdsorptionSites(object):
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
 
-    def get_neighbor_site_list(self, neighbor_number=1):           
+    def get_neighbor_site_list(self, neighbor_number=1, span=True):           
         """Returns the site_list index of all neighbor 
         shell sites for each site
         """
@@ -1400,17 +1443,22 @@ class SlabAdsorptionSites(object):
                              self.delta_positions[list(
                              s['indices'])], 0) + s['normal'] * \
                              heights_dict[s['site']] for s in sl])
-        statoms = Atoms('Si{}'.format(len(sl)), 
+        statoms = Atoms('X{}'.format(len(sl)), 
                         positions=refposs, 
                         cell=self.cell, 
                         pbc=self.pbc)
+        cr = 0.55 
+        if neighbor_number == 1:
+            cr += 0.1
 
-        return neighbor_shell_list(statoms, dx=.1, mic=True, 
-                                   neighbor_number=neighbor_number)
+        return neighbor_shell_list(statoms, 0.1, neighbor_number,
+                                   mic=True, radius=cr, span=span)
 
     def update_positions(self, new_atoms):
         sl = self.site_list
-        shifted_positions = new_atoms.positions - self.atoms.positions
+        new_slab = new_atoms[[a.index for a in new_atoms if 
+                              a.symbol not in adsorbate_elements]]
+        shifted_positions = new_slab.positions - self.atoms.positions
         for st in sl:
             si = list(st['indices'])
             st['position'] += np.average(shifted_positions[si], 0) 
