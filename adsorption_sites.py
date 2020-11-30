@@ -1434,9 +1434,7 @@ class SlabAdsorptionSites(object):
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
 
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
-        """Returns the site_list index of all neighbor 
-        shell sites for each site
-        """
+        """Returns the site_list index of all neighbor shell sites"""
 
         sl = self.site_list
         refposs = np.asarray([s['position'] - np.average(
