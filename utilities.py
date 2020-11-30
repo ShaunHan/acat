@@ -5,7 +5,8 @@ import numpy as np
 import scipy
 
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
-                        different_species=False, mic=False):
+                        different_species=False, mic=False,
+                        radius=None, span=False):
     """Make dict of neighboring shell atoms for both periodic and 
     non-periodic systems.
 
@@ -20,7 +21,11 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     different_species : boolean
         Whether each neighbor pair are different species or not
     mic: boolean
-        Whether apply minimum image convention or not
+        Whether to apply minimum image convention
+    radius: float
+        The radius of each shell. If not specified, use covalent radii 
+    span: boolean
+        Whether to include all neighbors spanned within the shell
     """
 
     if mic:
@@ -40,9 +45,9 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
                     else:
                         d = np.linalg.norm(atomi.position - atomj.position)
 
-                    cri = covalent_radii[atomi.number]
-                    crj = covalent_radii[atomj.number]
-                    if neighbor_number == 1:
+                    cri = radius if radius else covalent_radii[atomi.number]
+                    crj = radius if radius else covalent_radii[atomj.number]
+                    if neighbor_number == 1 or span:
                         d_max1 = 0.
                     else:
                         d_max1 = ((neighbor_number - 1) * (crj + cri)) + dx
