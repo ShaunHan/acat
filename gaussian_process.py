@@ -98,10 +98,8 @@ def normalize(X, centering=False, scaling_params=None):
     return X_norm, scaling_params
 
         
-def fingerprint(atoms, adsorption_sites, alpha=1.):
-    """alpha: Importance factor of metal-metal interactions
-    compared to metal-adsorbate interactions
-    """
+def fingerprint(atoms, adsorption_sites):
+
     sac = SlabAdsorbateCoverage(atoms, adsorption_sites)
     fsl = sac.full_site_list
     cm = sac.connectivity_matrix
@@ -113,17 +111,16 @@ def fingerprint(atoms, adsorption_sites, alpha=1.):
         indices = st['indices'][:3] if st['site'] == 'subsurf' else st['indices']
         for i in indices:
             finger[i] += Eads / len(indices)
-    for si in surf_ids:
-        nbids = np.where(cm[si]==1)[0]
-        Edis = np.sum([Edis_dict[symbols[si]+symbols[i]] for i in nbids])
-        finger[si] += alpha * Edis
+#    for si in surf_ids:
+#        nbids = np.where(cm[si]==1)[0]
+#        Edis = np.sum([Edis_dict[symbols[si]+symbols[i]] for i in nbids])
+#        finger[si] += alpha * Edis
 
     return finger[surf_ids]
     
 
 def collate_data(structures, 
                  adsorption_sites, 
-                 alpha=1.,
                  load_pkl_data=None, 
                  save_pkl_data=None):
     if load_pkl_data:
@@ -135,7 +132,7 @@ def collate_data(structures,
 
     for atoms in structures:
         sas = adsorption_sites
-        finger = fingerprint(atoms, sas, alpha) 
+        finger = fingerprint(atoms, sas) 
         Eads = atoms.info['data']['Eads_dft']
         xs.append(finger)
         ys.append(Eads)
@@ -156,7 +153,6 @@ def main():
     with open('adsorption_sites_NiPt3_311.pkl', 'rb') as f:
         sas = pickle.load(f)
     X, y, params = collate_data(dft_structures, sas,
-                                alpha=1.,
                                 load_pkl_data=None,
                                 save_pkl_data='training_data_NiPt3_311.pkl')
     gpr = GaussianProcess(X, y)
