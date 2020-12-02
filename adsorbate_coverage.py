@@ -1011,6 +1011,15 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     atoms.extend(ads)
 
 
+def remove_adosorbate_from_site(atoms, site, remove_fragment=False):
+
+    if not remove_fragment:
+        si = list(site['adsorbate_indices'])
+    else:
+        si = list(site['fragment_indices'])
+    del atoms[si]
+
+
 def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None, 
                   indices=None, height=None, composition=None, 
                   subsurface_element=None, site_list=None):
