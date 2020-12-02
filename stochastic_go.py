@@ -16,9 +16,9 @@ import pickle
 
 
 # Read input trajectory of the previous generation
-structures = read('NiPt3_311_2_reax.traj', index=':')
+structures = read('NiPt3_311_6_reax.traj', index=':')
 # Write output trajectory of the current generation
-traj = Trajectory('NiPt3_311_3_reax.traj', mode='w')
+traj = Trajectory('NiPt3_311_7_reax.traj', mode='w')
 # Designate adsorbates
 monodentate_adsorbates = ['H','C','O','OH','CH','CO','OH2','CH2','COH','CH3']#,'OCH2','OCH3']
 bidentate_adsorbates = ['CHO']#,'CHOH','CH2O','CH3O','CH2OH','CH3OH']
@@ -26,7 +26,7 @@ adsorbates = monodentate_adsorbates + bidentate_adsorbates
 # Weights of adding each adsorbate according to collision theory
 adsorbate_weights = [1/np.sqrt(np.sum([atomic_masses_legacy[atomic_numbers[s]] 
                      for s in list(Formula(ads))])) for ads in adsorbates]
-# Scaled by pressure (proportional to stoichiometry). The only difference here is H
+# Scaled by partial pressure of each species
 adsorbate_weights[0] *= 2
 # Provide energy (eV) of the clean slab
 Eslab = -319.5669510338692
@@ -100,9 +100,8 @@ while Nnew < Ngen:
     nbsids = [v for v in nbstids if v not in selfids]
 
     # Select adsorbate with probablity weighted by 1/sqrt(mass)
-#    adsorbate = random.choices(k=1, population=adsorbates,
-#                               weights=adsorbate_weights) 
-    adsorbate = random.choice(adsorbates)
+    adsorbate = random.choices(k=1, population=adsorbates,
+                               weights=adsorbate_weights)[0] 
 
     # Only add one adsorabte to a site at least 2 shells 
     # away from currently occupied sites
