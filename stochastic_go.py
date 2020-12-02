@@ -27,7 +27,7 @@ adsorbates = monodentate_adsorbates + bidentate_adsorbates
 adsorbate_weights = [1/np.sqrt(np.sum([atomic_masses_legacy[atomic_numbers[s]] 
                      for s in list(Formula(ads))])) for ads in adsorbates]
 # Scaled by partial pressure of each species
-adsorbate_weights[0] *= 2
+adsorbate_weights = [w*p for w,p in zip(adsorbate_weights,adsorbate_pressures)]
 # Provide energy (eV) of the clean slab
 Eslab = -319.5669510338692
 # Provide number of new structures generated in this generation
