@@ -12,8 +12,8 @@ import pickle
 
 slab = read('NiPt3_311_surface_small.traj')
 
-monodentate_adsorbates = ['H','C','O','OH','CH','CO','OH2','CH2','COH','CH3','OCH2','OCH3']
-bidentate_adsorbates = ['CHO','CHOH','CH2O','CH3O','CH2OH','CH3OH']
+monodentate_adsorbates = ['H','C','O','OH','CH','CO','OH2','CH2','COH','CH3']#,'OCH2','OCH3']
+bidentate_adsorbates = ['CHO']#,'CHOH','CH2O','CH3O','CH2OH','CH3OH']
 adsorbates = monodentate_adsorbates + bidentate_adsorbates
 
 traj = Trajectory('NiPt3_311_1_reax.traj', mode='w')
@@ -33,8 +33,8 @@ calc = LAMMPSlib(lmpcmds = cmds, lammps_header=header,
                  atom_types={'H':1,'C':2,'O':3,'Ni':4,'Pt':5}, 
                  keep_alive=True, log_file='lammpslib.log')
 slab.calc = calc
-opt = FIRE(slab, logfile=None)
-opt.run(fmax=0.1)
+#opt = FIRE(slab, logfile=None)
+#opt.run(fmax=0.1)
 Eslab = slab.get_potential_energy()
 print(Eslab)
 
@@ -42,7 +42,7 @@ with open('adsorption_sites_NiPt3_311.pkl', 'rb') as input:
     sas = pickle.load(input)
 
 site_list = sas.site_list
-site_nblist = sas.get_neighbor_site_list()
+site_nblist = sas.get_neighbor_site_list(neighbor_number=1)
 unis = sas.get_unique_sites(unique_composition=True)
 print(unis)
 
@@ -63,7 +63,7 @@ for uni in unis:
         Etot = atoms.get_potential_energy()
         Eads = Etot - Eslab
         atoms.info['data'] = {'Eads_dft': Eads}
-        atoms.info['data'] = {'Eads_gpr': None}
+        atoms.info['data'] = {'Eads_krr': None}
         sac = SlabAdsorbateCoverage(atoms, sas)
         labels = sac.labels
         atoms.info['data']['labels'] = labels
@@ -91,7 +91,7 @@ for uni in unis:
         Etot = atoms.get_potential_energy()
         Eads = Etot - Eslab
         atoms.info['data'] = {'Eads_dft': Eads}
-        atoms.info['data'] = {'Eads_gpr': None}
+        atoms.info['data'] = {'Eads_krr': None}
         sac = SlabAdsorbateCoverage(atoms, sas)
         labels = sac.labels
         atoms.info['data']['labels'] = labels
