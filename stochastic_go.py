@@ -46,7 +46,7 @@ def get_arguments(arg_list=None):
         "-surface",
         type=str,
         default=None,
-        help="Surface type (close-packing + miller index)",
+        help="Surface type (crytal structure + miller index)",
     )
     parser.add_argument(
         "-adsorbates",
