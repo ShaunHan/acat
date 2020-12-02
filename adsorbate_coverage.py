@@ -140,9 +140,11 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                     conn_x.append(0.)
                 elif overlap > 0:
                     if self.sites_on_subsurface: 
-                        if sti['site'] == 'subsurf':
-                            if stj['site'] == 'fcc' and overlap == 3:
+                        if 'subsurf' in [sti['site'], stj['site']]: 
+                            if overlap == 3:                            
                                 conn_x.append(1.)
+                            else:
+                                conn_x.append(0.)
                         else:
                             conn_x.append(1.)
                     else:
@@ -440,9 +442,11 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     conn_x.append(0.)
                 elif overlap > 0:
                     if self.sites_on_subsurface:         
-                        if sti['site'] == 'subsurf':
-                            if stj['site'] == 'fcc' and overlap == 3:
+                        if 'subsurf' in [sti['site'], stj['site']]: 
+                            if overlap == 3:
                                 conn_x.append(1.)
+                            else:
+                                conn_x.append(0.)
                         else:
                             conn_x.append(1.)
                     else:
@@ -902,8 +906,10 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 54}
 
 
-def add_adsorbate_to_site(atoms, adsorbate, site, height=None, rotation=None):            
-    """rotation: vector that the adsorbate will be rotated into"""
+def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
+                          rotation=None):            
+
+    '''rotation: vector that the adsorbate is rotated into'''
 
     
     if height is None:
@@ -1007,7 +1013,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None, rotation=None):
 
 def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None, 
                   indices=None, height=None, composition=None, 
-                  rotation=None, subsurface_element=None, site_list=None):
+                  subsurface_element=None, site_list=None):
     """
     A function for adding adsorbate to a specific adsorption site on a 
     monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
