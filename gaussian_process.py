@@ -7,6 +7,7 @@ import pickle
 Eads_dict = {'1H': -1.1,'1C': -1.2,'1O': -1.3,'1CH': -1.0,'1CH2': -1.4,'1CH3': -1.2,'1OH': -0.9,'1CO': -1.4,'1COH': -0.7,
              '12H': -1.1,'12C': -1.2,'12O': -1.3,'12CH': -1.0,'12CH2': -1.4,'12CH3': -1.2,'12OH': -0.9,'12CO': -1.4,'12COH': -0.7,
              '23H': -1.1,'23C': -1.2,'23O': -1.3,'23CH': -1.0,'23CH2': -1.4,'23CH3': -1.2,'23OH': -0.9,'23CO': -1.4,'23COH': -0.7,}
+Edis_dict = {'NiNi': 2.0422, 'NiPt': 2.7983, 'PtNi': 2.7983, 'PtPt': 3.142}
 
 class GaussianProcess(object):
     def __init__(self, X, y, load_kernel=None, lmbda=0):                 
@@ -173,7 +174,7 @@ def main():
             Eprev = atoms.info['data']['Eads_dft']
             p_normal = np.minimum(1, (np.exp(-(Eupper - Eprev) / (kB * T))))
             if np.random.rand() < p_normal:
-                atoms.info['data']['Eads_gpr'] = (mu, std)                     
+                atoms.info['data']['Eads_krr'] = (mu, std)                     
                 low_energy_structures.append(atoms)
     write('NiPt3_311_3_reax.traj', low_energy_structures)                
 
