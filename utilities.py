@@ -1,6 +1,7 @@
 from ase.data import covalent_radii
 from ase.geometry import find_mic
 from collections import defaultdict
+import networkx as nx
 import numpy as np
 import scipy
 
@@ -83,24 +84,6 @@ def get_mic_distance(p1, p2, cell, pbc=True):
                     cell, pbc)[1][0]
 
 
-def point_projection_on_line_old(point, position, vec):         
-    '''Calculate the position of a point projection on a line'''
-    ap = point - position
-    t = np.dot(ap, vec) / np.dot(vec, vec)
-    projection = position + vec * t
-
-    return projection
-
-def point_projection_on_line(point, position, vec, h):         
-    '''Calculate the position of a point projection on a line'''
-    ap = point - position
-    b = position + vec * h
-    ab = b - position
-    t = np.dot(ap, ab) / np.dot(ab, ab)
-    projection = position + ab * t
-
-    return projection
-
 def expand_cell(atoms, cutoff=None, padding=None):
     """Return Cartesian coordinates atoms within a supercell
     which contains repetitions of the unit cell which contains
@@ -167,3 +150,11 @@ def expand_cell(atoms, cutoff=None, padding=None):
     offsets = offsets.reshape(ncell, 3)
 
     return index, coords, offsets
+
+def draw_graph(G, savefig=None):         
+    import matplotlib.pyplot as plt
+    labels = nx.get_node_attributes(G, 'label')
+    nx.draw(G, labels=labels, font_size=8)
+    if savefig:
+        plt.savefig(savefig)
+    plt.show() 
