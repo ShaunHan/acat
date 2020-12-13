@@ -106,7 +106,6 @@ def fingerprint(atoms, adsorption_sites):
     fsl = sac.full_site_list
     metals = sac.metals
     surf_ids = sac.surf_ids
-    nsurf = len(surf_ids)                                 
     surf_symbols = atoms.symbols[surf_ids]    
     surfcm = sac.connectivity_matrix[surf_ids][:,surf_ids]
 
@@ -150,7 +149,7 @@ def fingerprint(atoms, adsorption_sites):
     fingers = ([iso_dict[metals[i]] for i in range(2)] + 
               [dstrb_dict[bonds[j]] for j in range(4)] + 
               [dstrb_dict[bonds[k]] for k in range(4)] +
-              [sac.n_occupied]) / nsurf
+              [sac.n_occupied]) / len(surf_ids)
 
     return np.asarray(fingers)
  
