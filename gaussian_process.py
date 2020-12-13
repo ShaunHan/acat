@@ -149,8 +149,8 @@ def fingerprint(atoms, adsorption_sites):
     bonds = [''.join(a) for a in product(metals, repeat=2)]
     fingers = ([iso_dict[metals[i]] for i in range(2)] + 
               [dstrb_dict[bonds[j]] for j in range(4)] + 
-              [dstrb_dict[bonds[k]] for k in range(4)]
-              ) / nsurf + [sac.n_occupied]
+              [dstrb_dict[bonds[k]] for k in range(4)] +
+              [sac.n_occupied]) / nsurf
 
     return np.asarray(fingers)
  
