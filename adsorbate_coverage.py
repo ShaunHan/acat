@@ -53,6 +53,67 @@ adsorbate_fragment_dict = {'CO': ['C','O'],     # Possible
                            'CHOO': ['CH','O','O'],
                            'CO2': ['C','O','O']}
 
+# Make your own adsorbate molecules
+def adsorbate_molecule(adsorbate):
+    # The ase.build.molecule module has many issues.       
+    # Adjust positions, angles and indexing for your needs.
+    if adsorbate  == 'CO':
+        ads = molecule(adsorbate)[::-1]
+    elif adsorbate == 'OH2':
+        ads = molecule('H2O')
+        ads.rotate(180, 'y')
+    elif adsorbate == 'CH2':
+        ads = molecule('NH2')
+        ads[0].symbol = 'C'
+        ads.rotate(180, 'y')
+    elif adsorbate == 'COH':
+        ads = molecule('H2COH')
+        del ads[-2:]
+        ads.rotate(90, 'y')
+    elif adsorbate == 'CHO':
+        ads = molecule('HCO')[[0,2,1]] 
+    elif adsorbate == 'OCH2':
+        ads = molecule('H2CO')
+        ads.rotate(180, 'y')
+    elif adsorbate == 'OCH3':
+        ads = molecule('CH3O')[[1,0,2,3,4]]
+        ads.rotate(90, '-x')
+    elif adsorbate == 'CH2O':
+        ads = molecule('H2CO')[[1,2,3,0]]
+        ads.rotate(90, 'y')
+    elif adsorbate == 'CH3O':
+        ads = molecule('CH3O')[[0,2,3,4,1]]
+        ads.rotate(30, 'y')
+    elif adsorbate == 'CHOH':
+        ads = molecule('H2COH')
+        del ads[-1]
+        ads = ads[[0,3,1,2]]
+    elif adsorbate == 'CH2OH':
+        ads = molecule('H2COH')[[0,3,4,1,2]]
+    elif adsorbate == 'CH3OH':
+        ads = molecule('CH3OH')[[0,2,4,5,1,3]]
+        ads.rotate(-30, 'y')
+    elif adsorbate == 'CHOOH':
+        ads = molecule('HCOOH')[[1,4,2,0,3]]
+    elif adsorbate == 'COOH':
+        ads = molecule('HCOOH')
+        del ads[-1]
+        ads = ads[[1,2,0,3]]
+        ads.rotate(90, '-x')
+        ads.rotate(15, '-y')
+    elif adsorbate == 'CHOO':
+        ads = molecule('HCOOH')
+        del ads[-2]
+        ads = ads[[1,3,2,0]]
+        ads.rotate(90, 'x')
+        ads.rotate(15, 'y')
+    elif adsorbate == 'CO2':
+        ads = molecule(adsorbate)
+        ads.rotate(-90, 'y')
+    else:
+        ads = molecule(adsorbate)
+    return ads
+
 
 class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""       
@@ -79,6 +140,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         if nas.show_subsurface:
             raise NotImplementedError
 
+        self.metals = nas.metals
         self.surf_ids = nas.surf_ids
         self.full_site_list = nas.site_list.copy()
         self.clean_list()
@@ -196,7 +258,8 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             st['occupied'] = 1            
 
         # Get dentate numbers and coverage  
-        noccupied = 0
+        self.n_occupied = 0
+        n_surf_occupied = 0
         for st in fsl:
             if 'occupied' not in st:
                 st['adsorbate'] = st['adsorbate_indices'] = \
@@ -204,14 +267,15 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 st['bonded_index'] = st['bond_length'] = None
                 st['occupied'] = st['label'] = st['dentate'] = 0
                 continue
+            self.n_occupied += 1
             if st['site'] != 'subsurf':
-                noccupied += 1
+                n_surf_occupied += 1
             adsi = st['adsorbate_indices']
             if adsi in ndentate_dict:              
                 st['dentate'] = ndentate_dict[adsi]
             else:
                 st['dentate'] = 0
-        self.coverage = noccupied / len(self.surf_ids)
+        self.coverage = n_surf_occupied / len(self.surf_ids)
 
         # Identify bidentate fragments and assign labels 
         for j, st in enumerate(fsl):
@@ -291,9 +355,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 'subsurf|fcc111': 11}
 
     def get_bimetallic_label_dict(self): 
-        metals = sorted(list(set(self.slab.symbols)),
-                        key=lambda x: atomic_numbers[x])
-        ma, mb = metals[0], metals[1]
+        ma, mb = self.metals[0], self.metals[1]
  
         return {'ontop|vertex|{}'.format(ma): 1, 
                 'ontop|vertex|{}'.format(mb): 2,
@@ -379,6 +441,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         if sas.show_subsurface:
             raise NotImplementedError
 
+        self.metals = sas.metals
         self.surf_ids = sas.surf_ids
         self.subsurf_ids = sas.subsurf_ids
         self.connectivity_matrix = sas.connectivity_matrix
@@ -499,7 +562,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             st['occupied'] = 1            
 
         # Get dentate numbers and coverage  
-        noccupied = 0
+        self.n_occupied = 0
+        n_surf_occupied = 0
         for st in fsl:
             if 'occupied' not in st:
                 st['adsorbate'] = st['adsorbate_indices'] = \
@@ -507,14 +571,15 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 st['bonded_index'] = st['bond_length'] = None
                 st['occupied'] = st['label'] = st['dentate'] = 0
                 continue
+            self.n_occupied += 1
             if st['site'] != 'subsurf':
-                noccupied += 1
+                n_surf_occupied += 1
             adsi = st['adsorbate_indices']
             if adsi in ndentate_dict:              
                 st['dentate'] = ndentate_dict[adsi]
             else:
                 st['dentate'] = 0
-        self.coverage = noccupied / len(self.surf_ids)
+        self.coverage = n_surf_occupied / len(self.surf_ids)
 
         # Identify bidentate fragments and assign labels 
         for j, st in enumerate(fsl):
@@ -569,14 +634,6 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         G.add_edges_from(edges)
 
         return G
-
-    def draw_graph(self, G, savefig=None):
-        import matplotlib.pyplot as plt
-        labels = nx.get_node_attributes(G, 'label')
-        nx.draw(G, labels=labels, font_size=8)
-        if savefig:
-            plt.savefig(savefig)
-        plt.show() 
 
     def get_surface_bond_count_matrix(self, species):
         fsl = self.full_site_list
@@ -657,9 +714,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'subsurf|111': 10}
     
     def get_bimetallic_label_dict(self): 
-        metals = sorted(list(set(self.slab.symbols)),
-                        key=lambda x: atomic_numbers[x])
-        ma, mb = metals[0], metals[1]
+        ma, mb = self.metals[0], self.metals[1]
  
         if self.surface == 'fcc111':
             return {'ontop|111|{}'.format(ma): 1, 
@@ -927,64 +982,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
 
     # Or assume it is a string representing a molecule
     else:
-        # The ase.build.molecule module has many issues. 
-        # Adjust positions, angles and indexing for your needs.
-        if adsorbate  == 'CO':
-            ads = molecule(adsorbate)[::-1]
-        elif adsorbate == 'OH2':
-            ads = molecule('H2O')
-            ads.rotate(180, 'y')
-        elif adsorbate == 'CH2':
-            ads = molecule('NH2')
-            ads[0].symbol = 'C'
-            ads.rotate(180, 'y')
-        elif adsorbate == 'COH':
-            ads = molecule('H2COH')
-            del ads[-2:]
-            ads.rotate(90, 'y')
-        elif adsorbate == 'CHO':
-            ads = molecule('HCO')[[0,2,1]] 
-        elif adsorbate == 'OCH2':
-            ads = molecule('H2CO')
-            ads.rotate(180, 'y')
-        elif adsorbate == 'OCH3':
-            ads = molecule('CH3O')[[1,0,2,3,4]]
-            ads.rotate(90, '-x')
-        elif adsorbate == 'CH2O':
-            ads = molecule('H2CO')[[1,2,3,0]]
-            ads.rotate(90, 'y')
-        elif adsorbate == 'CH3O':
-            ads = molecule('CH3O')[[0,2,3,4,1]]
-            ads.rotate(30, 'y')
-        elif adsorbate == 'CHOH':
-            ads = molecule('H2COH')
-            del ads[-1]
-            ads = ads[[0,3,1,2]]
-        elif adsorbate == 'CH2OH':
-            ads = molecule('H2COH')[[0,3,4,1,2]]
-        elif adsorbate == 'CH3OH':
-            ads = molecule('CH3OH')[[0,2,4,5,1,3]]
-            ads.rotate(-30, 'y')
-        elif adsorbate == 'CHOOH':
-            ads = molecule('HCOOH')[[1,4,2,0,3]]
-        elif adsorbate == 'COOH':
-            ads = molecule('HCOOH')
-            del ads[-1]
-            ads = ads[[1,2,0,3]]
-            ads.rotate(90, '-x')
-            ads.rotate(15, '-y')
-        elif adsorbate == 'CHOO':
-            ads = molecule('HCOOH')
-            del ads[-2]
-            ads = ads[[1,3,2,0]]
-            ads.rotate(90, 'x')
-            ads.rotate(15, 'y')
-        elif adsorbate == 'CO2':
-            ads = molecule(adsorbate)
-            ads.rotate(-90, 'y')
-        else:
-            ads = molecule(adsorbate)
- 
+        ads = adsorbate_molecule(adsorbate) 
         if len(ads) == 2 or adsorbate == 'COH':
             ads.rotate(ads[1].position - ads[0].position, normal)
             #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
