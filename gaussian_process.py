@@ -1,6 +1,8 @@
 from allocat.adsorbate_coverage import SlabAdsorbateCoverage
 from ase.io import read, write
 from ase.units import kB
+from collections import defaultdict
+from itertools import product
 import numpy as np
 import pickle
 
@@ -102,22 +104,56 @@ def fingerprint(atoms, adsorption_sites):
 
     sac = SlabAdsorbateCoverage(atoms, adsorption_sites)
     fsl = sac.full_site_list
-    cm = sac.connectivity_matrix
+    metals = sac.metals
     surf_ids = sac.surf_ids
-    symbols = atoms.symbols
-    finger = np.zeros(len(atoms))
+    nsurf = len(surf_ids)                                 
+    surf_symbols = atoms.symbols[surf_ids]    
+    surfcm = sac.connectivity_matrix[surf_ids][:,surf_ids]
+
+    # Distribute adsorption energies on each surface atom
+    dstrbs = np.zeros(len(atoms))                                              
     for st in fsl:
         Eads = Eads_dict[st['label']]
         indices = st['indices'][:3] if st['site'] == 'subsurf' else st['indices']
         for i in indices:
-            finger[i] += Eads / len(indices)
-#    for si in surf_ids:
-#        nbids = np.where(cm[si]==1)[0]
-#        Edis = np.sum([Edis_dict[symbols[si]+symbols[i]] for i in nbids])
-#        finger[si] += alpha * Edis
+            dstrbs[i] += Eads / len(indices)
+    surf_dstrbs = dstrbs[surf_ids]
 
-    return finger[surf_ids]
-    
+    # Sum Eads distributions of all surface atoms
+    iso_dict = defaultdict(int)
+    for i, e in enumerate(surf_distrbs):
+        comp = str(surf_symbols[i])
+        iso_dict[comp] += e
+
+    # Find first nearest neighbors and sum distributions
+    rows, cols = np.where(surfcm > 0)
+    dstrb_dict = defaultdict(int)
+    for i in zip(rows, cols):
+        entries = list(i)
+        comp = str(surf_symbols[entries])
+        dstrb_sum = np.sum(surf_dstrbs[entries])
+        dstrb_dict[comp] += dstrb_sum
+
+    # Find second nearest neighbors and sum distributions
+    flipcm = np.logical_not(surfcm).astype(int)
+    newcm = np.linalg.matrix_power(surfcm, 2) * flipcm
+    np.fill_diagonal(newcm, 0)
+    newrows, newcols = np.where(newcm > 0)
+    newdstrb_dict = defaultdict(int)
+    for j in zip(newrows, newcols):
+        entries = list(j)
+        comp = str(surf_symbols[entries])
+        dstrb_sum = np.sum(surf_dstrbs[entries])
+        newdstrb_dict[comp] += dtrb_sum
+
+    bonds = [''.join(a) for a in product(metals, repeat=2)]
+    fingers = ([iso_dict[metals[i]] for i in range(2)] + 
+              [dstrb_dict[bonds[j]] for j in range(4)] + 
+              [dstrb_dict[bonds[k]] for k in range(4)]
+              ) / nsurf + [sac.n_occupied]
+
+    return np.asarray(fingers)
+ 
 
 def collate_data(structures, 
                  adsorption_sites, 
