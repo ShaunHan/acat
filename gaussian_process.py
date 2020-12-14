@@ -1,4 +1,4 @@
-from allocat.adsorbate_coverage import SlabAdsorbateCoverage
+from act.adsorbate_coverage import SlabAdsorbateCoverage
 from ase.io import read, write
 from ase.units import kB
 from collections import defaultdict
@@ -127,8 +127,8 @@ def fingerprint(atoms, adsorption_sites):
     # Find first nearest neighbors and sum distributions
     rows, cols = np.where(surfcm > 0)
     dstrb_dict = defaultdict(int)
-    for i in zip(rows, cols):
-        entries = list(i)
+    for j in zip(rows, cols):
+        entries = list(j)
         comp = str(surf_symbols[entries])
         dstrb_sum = np.sum(surf_dstrbs[entries])
         dstrb_dict[comp] += dstrb_sum
@@ -139,8 +139,8 @@ def fingerprint(atoms, adsorption_sites):
     np.fill_diagonal(newcm, 0)
     newrows, newcols = np.where(newcm > 0)
     newdstrb_dict = defaultdict(int)
-    for j in zip(newrows, newcols):
-        entries = list(j)
+    for k in zip(newrows, newcols):
+        entries = list(k)
         comp = str(surf_symbols[entries])
         dstrb_sum = np.sum(surf_dstrbs[entries])
         newdstrb_dict[comp] += dtrb_sum
