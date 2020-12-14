@@ -115,12 +115,11 @@ def expand_cell(atoms, cutoff=None, padding=None):
     pos = atoms.positions
 
     if padding is None and cutoff is None:
-        diags = np.sqrt((
-            np.dot([[1, 1, 1],
-                    [-1, 1, 1],
-                    [1, -1, 1],
-                    [-1, -1, 1]],
-                   cell)**2).sum(1))
+        diags = np.sqrt((np.dot([[1, 1, 1],
+                                [-1, 1, 1],
+                                [1, -1, 1],
+                                [-1, -1, 1]],
+                         cell)**2).sum(1))
 
         if pos.shape[0] == 1:
             cutoff = max(diags) / 2.
