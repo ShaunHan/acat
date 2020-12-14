@@ -1,5 +1,5 @@
-from allocat.adsorption_sites import *
-from allocat.adsorbate_coverage import *
+from act.adsorption_sites import *
+from act.adsorbate_coverage import *
 from ase.io import read, write, Trajectory
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
@@ -148,7 +148,7 @@ def main():
         # Remain only the configurations with enegy below a threshold
     #    if struct.info['data']['Eads_dft'] < Ecut:  #+Emin?
     #        sac = SlabAdsorbateCoverage(struct, sas)
-    #        fsl = sac.full_site_list
+    #        hsl = sac.hetero_site_list
     #        labs = sac.labels
     #        G = sac.get_site_graph()
     #                                                                    
@@ -178,10 +178,10 @@ def main():
                                       sites_on_subsurface=True,
                                       show_composition=True)
         sac = SlabAdsorbateCoverage(image, sas)
-        fsl = sac.full_site_list
+        hsl = sac.hetero_site_list
         nbstids = []
         selfids = []
-        for j, st in enumerate(fsl):
+        for j, st in enumerate(hsl):
             if st['occupied'] == 1:
                 nbstids += site_nblist[j]
                 selfids.append(j)
@@ -196,14 +196,14 @@ def main():
  
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
-        nsids = [i for i, s in enumerate(fsl) if i not in nbstids]
+        nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
         # Prohibit adsorbates with more than 1 atom from entering subsurf sites
         subsurf_site = True
         nsi = None
         while subsurf_site: 
             nsi = random.choice(nsids)
-            subsurf_site = (len(adsorbate) > 1 and fsl[nsi]['site'] == 'subsurf')
-        nst = fsl[nsi]
+            subsurf_site = (len(adsorbate) > 1 and hsl[nsi]['site'] == 'subsurf')
+        nst = hsl[nsi]
  
         binbs = bidentate_nblist[nsi]    
         binbids = [n for n in binbs if n not in nbstids]
@@ -213,7 +213,7 @@ def main():
         if adsorbate in multi_adsorbates:
             # Rotate a bidentate adsorbate to the direction of a randomly 
             # choosed neighbor site
-            nbst = fsl[random.choice(binbids)]
+            nbst = hsl[random.choice(binbids)]
             pos = nst['position'] 
             nbpos = nbst['position'] 
             rotation = find_mic(np.array([nbpos-pos]), atoms.cell)[0][0]
@@ -223,11 +223,11 @@ def main():
             add_adsorbate_to_site(atoms, adsorbate, nst)        
  
         nsac = SlabAdsorbateCoverage(atoms, sas)
-        nfsl = nsac.full_site_list
+        nhsl = nsac.hetero_site_list
  
         # Make sure there no new site too close to previous sites after 
         # adding the adsorbate. Useful when adding large molecules
-        if any(s for i, s in enumerate(nfsl) if (s['occupied'] == 1)
+        if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
         and (i in nbsids)):
             print('Site too close')
             continue
