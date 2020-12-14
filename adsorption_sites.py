@@ -516,6 +516,11 @@ class NanoparticleAdsorptionSites(object):
     def make_neighbor_list(self, rMax=10.):
         self.nblist = FullNeighborList(rCut=rMax, atoms=self.atoms)
 
+    def get_connectivity(self):                                      
+        """Generate a connections matrix from neighbor_shell_list."""
+        nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
+        return get_connectivity_matrix(nbslist)                  
+
     def get_site_dict(self):
         fcna = self.get_fullCNA()
         icosa_weight = cubocta_weight = mdeca_weight = tocta_weight = 0
@@ -604,6 +609,15 @@ class NanoparticleAdsorptionSites(object):
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
 
+    def get_graph(self):                             
+        cm = self.get_connectivity()
+        G = nx.Graph()                               
+        # Add edges from surface connectivity matrix
+        rows, cols = np.where(cm == 1)
+        edges = zip(rows.tolist(), cols.tolist())
+        G.add_edges_from(edges)
+        return G
+
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
         """Returns the site_list index of all neighbor 
         shell sites for each site
@@ -647,10 +661,12 @@ class SlabAdsorptionSites(object):
         refatoms = self.atoms.copy()        
         for a in refatoms:
             a.symbol = 'Pt'
+        refatoms.set_constraint()
         refatoms.calc = asapEMT()
         opt = FIRE(refatoms, logfile=None)
         opt.run(fmax=0.1)
-        refatoms.calc = None 
+        refatoms.calc = None
+
         self.refatoms = refatoms
         self.delta_positions = atoms.positions - refatoms.positions
         self.site_dict = surf_dict 
@@ -679,7 +695,7 @@ class SlabAdsorptionSites(object):
         self.site_list = []
         self.populate_site_list()
         
-    def populate_site_list(self, allow_obtuse=True):
+    def populate_site_list(self, allow_obtuse=True, cutoff = 5.0):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
            given an input slab based on Delaunay triangulation of 
            surface atoms of a super-cell and collect in a site list. 
@@ -749,8 +765,7 @@ class SlabAdsorptionSites(object):
                               get_mic_distance(self.atoms[x].position,
                               self.atoms[extraids[0]].position,
                               self.cell, self.pbc))
-                        opp = idd[-1]
-                        close = idd[0]
+                        opp, close = idd[-1], idd[0]
                         if self.atoms[opp].symbol == \
                         self.atoms[extraids[0]].symbol:
                             composition = ma + mb + ma + mb 
@@ -767,9 +782,12 @@ class SlabAdsorptionSites(object):
                     st['composition'] += '-{}'.format(composition)
                     del st['extra']
 
-        ext_index, ext_coords, _ = expand_cell(self.refatoms, cutoff=5.0)
+        ext_index, ext_coords, _ = expand_cell(self.refatoms, cutoff)
         extended_top = np.where(np.in1d(ext_index, top_indices))[0]
-        ext_surf_coords = ext_coords[extended_top]
+        meansurfz = np.average(self.atoms.positions[self.surf_ids][:,2], 0)
+        ext_all_coords = ext_coords[extended_top]
+        surf_screen = np.where(abs(ext_all_coords[:,2] - meansurfz) < cutoff)
+        ext_surf_coords = ext_all_coords[surf_screen]
         dt = scipy.spatial.Delaunay(ext_surf_coords[:,:2])
         neighbors = dt.neighbors
         simplices = dt.simplices
@@ -789,7 +807,6 @@ class SlabAdsorptionSites(object):
             # Angle types
             right = np.isclose(angles, 0)
             obtuse = (angles < self.tol)
-
             rh_corner = corners[right]
             edge_neighbors = neighbors[i]
 
@@ -955,7 +972,7 @@ class SlabAdsorptionSites(object):
                                        positions=np.asarray(fold4_poss),
                                        cell=self.cell, 
                                        pbc=self.pbc)
-                    sorted_top = sorted(self.surf_ids)
+                    sorted_top = self.surf_ids
                     ntop = len(sorted_top)
                     topatoms = self.refatoms[sorted_top] 
                     newatoms = topatoms.extend(fold4atoms)
@@ -969,15 +986,18 @@ class SlabAdsorptionSites(object):
                         fold4_indices = newnblist[ntop+i]                     
                         fold4ids = [sorted_top[j] for j in fold4_indices]
                         occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence == 4)[0][0]
-                        newfold4ids = [k for k in fold4ids if cm[k,isub] == 1]
-                        si = tuple(sorted(newfold4ids))
+                        isub = np.where(occurence >= 4)[0][0]
+                        allfold4ids = [k for k in fold4ids if cm[k,isub] == 1]                        
+                        srt = sorted(allfold4ids, key=lambda x: np.sum(cm[x]))
+                        res = [r for r in srt[2:] if np.sum(cm[r,srt[:2]]) < 2]
+                        newfold4ids = res + srt[:2]
+                        si = tuple(sorted(newfold4ids)) 
                         pos = refpos + np.average(
                               self.delta_positions[newfold4ids], 0)
                         normal = self.get_surface_normal(
                                  [si[0], si[1], si[2]])
-                        for i in si:
-                            normals_for_site[i].append(normal)
+                        for idx in si:
+                            normals_for_site[idx].append(normal)
 
                         site = self.new_site() 
                         site.update({'site': '4fold',               
@@ -1029,8 +1049,8 @@ class SlabAdsorptionSites(object):
                           self.delta_positions[fold3ids], 0)
                     normal = self.get_surface_normal(
                              [si[0], si[1], si[2]])
-                    for i in si:
-                        normals_for_site[i].append(normal)
+                    for idx in si:
+                        normals_for_site[idx].append(normal)
                     occurence = np.sum(cm[fold3ids], axis=0)
                     sumo = np.sum(occurence)
                     if self.surface == 'fcc211':
@@ -1087,7 +1107,7 @@ class SlabAdsorptionSites(object):
                                    positions=np.asarray(reduced_poss),
                                    cell=self.cell, 
                                    pbc=self.pbc)
-                sorted_top = sorted(self.surf_ids)
+                sorted_top = self.surf_ids
                 ntop = len(sorted_top)
                 topatoms = self.refatoms[sorted_top] 
                 newatoms = topatoms.extend(fold4atoms)
@@ -1107,8 +1127,8 @@ class SlabAdsorptionSites(object):
                           self.delta_positions[newfold4ids], 0)
                     normal = self.get_surface_normal(
                              [si[0], si[1], si[2]])
-                    for i in si:
-                        normals_for_site[i].append(normal)
+                    for idx in si:
+                        normals_for_site[idx].append(normal)
  
                     site = self.new_site()
                     site.update({'site': '4fold',
@@ -1205,8 +1225,8 @@ class SlabAdsorptionSites(object):
 
         # Add subsurf sites
         if self.sites_on_subsurface:
-            dh = 1/2*(np.average(self.atoms.positions[self.surf_ids][:,2], 0) \
-                 - np.average(self.atoms.positions[self.subsurf_ids][:,2], 0))
+            dh = 1/2*(meansurfz - np.average(
+                      self.atoms.positions[self.subsurf_ids][:,2], 0))
             for st in sl:                
                 if st['site'] == 'fcc':
                     site = st.copy()
@@ -1275,7 +1295,7 @@ class SlabAdsorptionSites(object):
         self.nblist = neighbor_shell_list(self.refatoms, dx, 
                                           neighbor_number, mic=True)
 
-    def get_connectivity(self):
+    def get_connectivity(self):                                      
         """Generate a connections matrix from neighbor_shell_list."""       
         return get_connectivity_matrix(self.nblist)                   
 
@@ -1433,8 +1453,19 @@ class SlabAdsorptionSites(object):
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
 
+    def get_graph(self):                              
+        cm = self.connectivity_matrix
+        G = nx.Graph()                                                  
+        # Add edges from surface connectivity matrix
+        rows, cols = np.where(cm == 1)
+        edges = zip(rows.tolist(), cols.tolist())
+        G.add_edges_from(edges)
+        return G
+
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
-        """Returns the site_list index of all neighbor shell sites"""
+        """Returns the site_list index of all neighbor 
+        shell sites for each site
+        """
 
         sl = self.site_list
         refposs = np.asarray([s['position'] - np.average(
