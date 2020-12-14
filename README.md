@@ -1,4 +1,4 @@
-# Allocat: A Python package for atomistic modelling of **allo**y **cat**alysts
+# ase: **A**lloy **C**atalysis **T**ookit
 A Python package for identifying adsorption sites and generating adsorbate coverage patterns on metal / alloy surfaces and nanoparticles.
 
 ## Developers: 
