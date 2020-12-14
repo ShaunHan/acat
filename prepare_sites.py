@@ -1,13 +1,15 @@
-from allocat.adsorption_sites import *
+from act.adsorption_sites import *
 from ase.io import read, write
 import pickle
 
-slab = read('NiPt3_311_surface_small.traj')
-slab.calc = None
+slab = read('Ni3Pt_111_slab.traj')
 
-sas = SlabAdsorptionSites(slab, surface='fcc311', 
+sas = SlabAdsorptionSites(slab, surface='fcc111', 
                           sites_on_subsurface=True,
                           show_composition=True)
 
-with open('adsorption_sites_NiPt3_311.pkl', 'wb') as output:
+for s in sas.site_list:
+    print(s)
+
+with open('Ni3Pt_111_sites.pkl', 'wb') as output:
     pickle.dump(sas, output, pickle.HIGHEST_PROTOCOL)       
