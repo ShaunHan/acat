@@ -1,5 +1,5 @@
-from allocat.adsorbate_coverage import *
-from allocat.adsorption_sites import *
+from act.adsorbate_coverage import *
+from act.adsorption_sites import *
 from ase.io import read, write, Trajectory
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
@@ -37,7 +37,7 @@ for struct in structures:
     # Remain only the configurations with enegy below a threshold
 #    if struct.info['data']['Eads'] < Ecut:
 #        sac = SlabAdsorbateCoverage(struct, sas)
-#        fsl = sac.full_site_list
+#        hsl = sac.hetero_site_list
 #        labs = sac.labels
 #        G = sac.get_site_graph()
 #                                                                    
@@ -64,10 +64,10 @@ graph_list = []
 random.shuffle(starting_images) 
 for image in starting_images: 
     sac = SlabAdsorbateCoverage(image, sas)
-    fsl = sac.full_site_list
+    hsl = sac.hetero_site_list
     nbstids = []
     selfids = []
-    for j, st in enumerate(fsl):
+    for j, st in enumerate(hsl):
         if st['occupied'] == 1:
                 nbstids += site_nblist[j]
                 selfids.append(j)
@@ -76,7 +76,7 @@ for image in starting_images:
     # Only add one adsorabte to a site at least 2 shells away from
     # currently occupied sites
     newsites, binbids = [], []
-    for i, s in enumerate(fsl):
+    for i, s in enumerate(hsl):
         if i not in nbstids:
             binbs = bidentate_nblist[i]
             binbis = [n for n in binbs if n not in nbstids]
@@ -100,7 +100,7 @@ for image in starting_images:
                 if adsorbate in bidentate_adsorbates:
                     # Rotate a bidentate adsorbate to all possible directions of
                     # a neighbor site
-                    nbst = fsl[ni]
+                    nbst = hsl[ni]
                     pos = nst['position'] 
                     nbpos = nbst['position'] 
                     rotation = find_mic(np.array([nbpos-pos]), atoms.cell)[0][0]
@@ -110,11 +110,11 @@ for image in starting_images:
                     add_adsorbate_to_site(atoms, adsorbate, nst)        
  
                 nsac = SlabAdsorbateCoverage(atoms, sas)
-                nfsl = nsac.full_site_list
+                nhsl = nsac.hetero_site_list
  
                 # Make sure there no new site too close to previous sites after 
                 # adding the adsorbate. Useful when adding large molecules
-                if any(s for i, s in enumerate(nfsl) if (s['occupied'] == 1)
+                if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
                 and (i in nbsids)):
                     print('Site too close')
                     continue
