@@ -142,7 +142,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
         self.metals = nas.metals
         self.surf_ids = nas.surf_ids
-        self.full_site_list = nas.site_list.copy()
+        self.hetero_site_list = nas.site_list.copy()
         self.clean_list()
         self.unique_sites = nas.get_unique_sites(unique_composition=
                                                  self.show_composition) 
@@ -150,7 +150,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                           if self.show_composition else \
                           self.get_monometallic_label_dict()
 
-        self.label_list = ['0'] * len(self.full_site_list)
+        self.label_list = ['0'] * len(self.hetero_site_list)
         self.site_connectivity_matrix = self.get_site_connectivity()
         self.label_occupied_sites()
         self.labels = self.get_labels()
@@ -177,7 +177,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         self.ads_list = adsorbates
 
     def clean_list(self):
-        sl = self.full_site_list
+        sl = self.hetero_site_list
         entries = ['occupied', 'adsorbate', 'adsorbate_indices', 
                    'fragment', 'fragment_indices', 'bonded_index', 
                    'bond_length', 'label', 'dentate']
@@ -192,7 +192,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
     def get_site_connectivity(self):
         """Generate a connections matrix for adsorption sites."""
-        sl = self.full_site_list
+        sl = self.hetero_site_list
         conn_mat = []
         for i, sti in enumerate(sl):
             conn_x = []
@@ -218,7 +218,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         return np.asarray(conn_mat) 
 
     def label_occupied_sites(self):
-        fsl = self.full_site_list
+        hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
         ndentate_dict = {}
@@ -231,7 +231,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             def get_bond_length(site):
                 pos = site['position']
                 return np.linalg.norm(self.atoms[adsid].position - pos)
-            st, bl = min(((s, get_bond_length(s)) for s in fsl), 
+            st, bl = min(((s, get_bond_length(s)) for s in hsl), 
                            key=itemgetter(1))
             if bl > self.dmax:
                 continue
@@ -260,7 +260,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         # Get dentate numbers and coverage  
         self.n_occupied = 0
         n_surf_occupied = 0
-        for st in fsl:
+        for st in hsl:
             if 'occupied' not in st:
                 st['adsorbate'] = st['adsorbate_indices'] = \
                 st['fragment'] = st['fragment_indices'] = \
@@ -278,7 +278,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         self.coverage = n_surf_occupied / len(self.surf_ids)
 
         # Identify bidentate fragments and assign labels 
-        for j, st in enumerate(fsl):
+        for j, st in enumerate(hsl):
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
                     bondid = st['bonded_index']
@@ -445,7 +445,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.surf_ids = sas.surf_ids
         self.subsurf_ids = sas.subsurf_ids
         self.connectivity_matrix = sas.connectivity_matrix
-        self.full_site_list = sas.site_list.copy()
+        self.hetero_site_list = sas.site_list.copy()
         self.clean_list()
         self.unique_sites = sas.get_unique_sites(unique_composition=
                                                  self.show_composition) 
@@ -453,7 +453,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                           if self.show_composition else \
                           self.get_monometallic_label_dict()
 
-        self.label_list = ['0'] * len(self.full_site_list)
+        self.label_list = ['0'] * len(self.hetero_site_list)
         self.site_connectivity_matrix = self.get_site_connectivity()
         self.label_occupied_sites()
         self.labels = self.get_labels()
@@ -480,7 +480,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.ads_list = adsorbates
 
     def clean_list(self):
-        sl = self.full_site_list
+        sl = self.hetero_site_list
         entries = ['occupied', 'adsorbate', 'adsorbate_indices', 
                    'fragment', 'fragment_indices', 'bonded_index', 
                    'bond_length', 'label', 'dentate']
@@ -495,7 +495,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
     def get_site_connectivity(self):
         """Generate a connections matrix for adsorption sites."""
-        sl = self.full_site_list
+        sl = self.hetero_site_list
         conn_mat = []
         for i, sti in enumerate(sl):
             conn_x = []
@@ -521,7 +521,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         return np.asarray(conn_mat) 
 
     def label_occupied_sites(self):
-        fsl = self.full_site_list
+        hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
         ndentate_dict = {}
@@ -535,7 +535,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 pos = site['position']
                 return get_mic_distance(self.atoms[adsid].position, 
                                         pos, self.cell, self.pbc)
-            st, bl = min(((s, get_bond_length(s)) for s in fsl), 
+            st, bl = min(((s, get_bond_length(s)) for s in hsl), 
                            key=itemgetter(1))
             if bl > self.dmax:
                 continue
@@ -564,7 +564,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         # Get dentate numbers and coverage  
         self.n_occupied = 0
         n_surf_occupied = 0
-        for st in fsl:
+        for st in hsl:
             if 'occupied' not in st:
                 st['adsorbate'] = st['adsorbate_indices'] = \
                 st['fragment'] = st['fragment_indices'] = \
@@ -582,7 +582,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.coverage = n_surf_occupied / len(self.surf_ids)
 
         # Identify bidentate fragments and assign labels 
-        for j, st in enumerate(fsl):
+        for j, st in enumerate(hsl):
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
                     bondid = st['bonded_index']
@@ -636,7 +636,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         return G
 
     def get_surface_bond_count_matrix(self, species):
-        fsl = self.full_site_list
+        hsl = self.hetero_site_list
         cm = self.connectivity_matrix
         atoms = self.atoms
         numbers = atoms.numbers
@@ -645,7 +645,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         specs.sort(key=lambda x: atomic_numbers[x])
         ncols = len(specs) + 1
         sbcm = np.zeros((len(atoms), ncols))
-        for st in fsl:
+        for st in hsl:
             frags = list(Formula(st['fragment']))
             counts = Counter(frags)
             for i in st['indices']:
