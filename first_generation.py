@@ -1,44 +1,23 @@
-from allocat.adsorbate_coverage import *
-from allocat.adsorption_sites import *
+from act.adsorbate_coverage import *
+from act.adsorption_sites import *
 from ase.io import read, write, Trajectory
-from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
 from ase.geometry import find_mic
-from ase.calculators.lammpslib import LAMMPSlib
 import numpy as np
 import random
 import pickle
 
 
-slab = read('NiPt3_311_surface_small.traj')
+root = '/home/energy/shuha/project/6-rgo/1-Ni3Pt_surface/111/' 
+slab = read(root + 'Ni3Pt_111_slab.traj')
+traj = Trajectory('Ni3Pt_111_1.traj', mode='w')
 
 monodentate_adsorbates = ['H','C','O','OH','CH','CO','OH2','CH2','COH','CH3']#,'OCH2','OCH3']
 bidentate_adsorbates = ['CHO']#,'CHOH','CH2O','CH3O','CH2OH','CH3OH']
 adsorbates = monodentate_adsorbates + bidentate_adsorbates
 
-traj = Trajectory('NiPt3_311_1_reax.traj', mode='w')
-
-# Reaxff model
-model_dir = '/home/energy/shuha/project/4-NiPt_with_adsorbate'
-
-header=['units real',
-        'atom_style charge',
-        'atom_modify map array sort 0 0']
-
-cmds = ['pair_style reax/c NULL checkqeq yes safezone 1.6 mincap 100',
-        'pair_coeff * * {}/ffield_NiPt.reax H C O Ni Pt'.format(model_dir),
-        'fix 1 all qeq/reax 1 0.0 10.0 1.0e-6 reax/c']
-
-calc = LAMMPSlib(lmpcmds = cmds, lammps_header=header, 
-                 atom_types={'H':1,'C':2,'O':3,'Ni':4,'Pt':5}, 
-                 keep_alive=True, log_file='lammpslib.log')
-slab.calc = calc
-#opt = FIRE(slab, logfile=None)
-#opt.run(fmax=0.1)
-Eslab = slab.get_potential_energy()
-print(Eslab)
-
-with open('adsorption_sites_NiPt3_311.pkl', 'rb') as input:
+Eslab = slab.get_potential_energy() 
+with open(root + 'Ni3Pt_111_sites.pkl', 'rb') as input:
     sas = pickle.load(input)
 
 site_list = sas.site_list
