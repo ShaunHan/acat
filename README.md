@@ -1,4 +1,4 @@
-# ase: **A**lloy **C**atalysis **T**ookit
+# ACT: **A**lloy **C**atalysis **T**ookit
 A Python package for identifying adsorption sites and generating adsorbate coverage patterns on metal / alloy surfaces and nanoparticles.
 
 ## Developers: 
