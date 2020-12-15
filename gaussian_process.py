@@ -1,4 +1,4 @@
-from act.adsorbate_coverage import SlabAdsorbateCoverage
+from asac.adsorbate_coverage import SlabAdsorbateCoverage
 from ase.io import read, write
 from ase.units import kB
 from collections import defaultdict
