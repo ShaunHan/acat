@@ -133,19 +133,19 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         self.ads_connectivity_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
 
-        nas = adsorption_sites
-        self.slab = nas.atoms
-        self.allow_subsurf_sites = nas.allow_subsurf_sites
-        self.composition_effect = nas.composition_effect
-        if nas.subsurf_effect:
+        self.nas = adsorption_sites
+        self.slab = self.nas.atoms
+        self.allow_subsurf_sites = self.nas.allow_subsurf_sites
+        self.composition_effect = self.nas.composition_effect
+        if self.nas.subsurf_effect:
             raise NotImplementedError
 
-        self.metals = nas.metals
-        self.surf_ids = nas.surf_ids
-        self.hetero_site_list = nas.site_list.copy()
+        self.metals = self.nas.metals
+        self.surf_ids = self.nas.surf_ids
+        self.hetero_site_list = self.nas.site_list.copy()
         self.clean_list()
-        self.unique_sites = nas.get_unique_sites(unique_composition=
-                                                 self.composition_effect) 
+        self.unique_sites = self.nas.get_unique_sites(unique_composition=
+                                                  self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.composition_effect else \
                           self.get_monometallic_label_dict()
@@ -258,17 +258,20 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             st['occupied'] = 1            
 
         # Get dentate numbers and coverage  
-        self.n_occupied = 0
-        n_surf_occupied = 0
+        self.n_occupied, n_surf_occupied, self.n_subsurf_occupied = 0, 0, 0
         for st in hsl:
             if 'occupied' not in st:
-                st['adsorbate'] = st['adsorbate_indices'] = \
-                st['fragment'] = st['fragment_indices'] = \
                 st['bonded_index'] = st['bond_length'] = None
-                st['occupied'] = st['label'] = st['dentate'] = 0
+                st['adsorbate'] = st['fragment'] = None
+                st['adsorbate_indices'] = None
+                st['occupied'] = st['dentate'] = 0
+                st['fragment_indices'] = None
+                st['label'] = 0
                 continue
             self.n_occupied += 1
-            if st['site'] != 'subsurf':
+            if st['site'] == 'subsurf':
+                self.n_subsurf_occupied += 1
+            else:
                 n_surf_occupied += 1
             adsi = st['adsorbate_indices']
             if adsi in ndentate_dict:              
@@ -331,13 +334,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
         return G
 
-    def draw_graph(self, G, savefig=None):
-        import matplotlib.pyplot as plt
-        labels = nx.get_node_attributes(G, 'label')
-        nx.draw(G, labels=labels, font_size=8)
-        if savefig:
-            plt.savefig(savefig)
-        plt.show() 
+    def get_subsurf_coverage(self):
+        nsubsurf = len(self.nas.get_subsurface())
+        return self.n_subsurf_occupied / nsubsurf
 
     # Use this label dictionary when site compostion is 
     # not considered. Useful for monometallic surfaces.
@@ -433,22 +432,22 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.ads_connectivity_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
 
-        sas = adsorption_sites 
-        self.slab = sas.atoms
-        self.surface = sas.surface
-        self.allow_subsurf_sites = sas.allow_subsurf_sites
-        self.composition_effect = sas.composition_effect
-        if sas.subsurf_effect:
+        self.sas = adsorption_sites 
+        self.slab = self.sas.atoms
+        self.surface = self.sas.surface
+        self.allow_subsurf_sites = self.sas.allow_subsurf_sites
+        self.composition_effect = self.sas.composition_effect
+        if self.sas.subsurf_effect:
             raise NotImplementedError
 
-        self.metals = sas.metals
-        self.surf_ids = sas.surf_ids
-        self.subsurf_ids = sas.subsurf_ids
-        self.connectivity_matrix = sas.connectivity_matrix
-        self.hetero_site_list = sas.site_list.copy()
+        self.metals = self.sas.metals
+        self.surf_ids = self.sas.surf_ids
+        self.subsurf_ids = self.sas.subsurf_ids
+        self.connectivity_matrix = self.sas.connectivity_matrix
+        self.hetero_site_list = self.sas.site_list.copy()
         self.clean_list()
-        self.unique_sites = sas.get_unique_sites(unique_composition=
-                                                 self.composition_effect) 
+        self.unique_sites = self.sas.get_unique_sites(unique_composition=
+                                                  self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.composition_effect else \
                           self.get_monometallic_label_dict()
