@@ -1,4 +1,4 @@
-# **A**lloy **C**atalysis **T**ookit
+# ASAC: A Python Toolkit for **A**tomic **S**cale **A**lloy **C**atalysis
 A Python package for identifying adsorption sites and generating adsorbate coverage patterns on metal / alloy surfaces and nanoparticles.
 
 ## Developers: 
