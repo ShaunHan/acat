@@ -135,9 +135,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
 
         nas = adsorption_sites
         self.slab = nas.atoms
-        self.sites_on_subsurface = nas.sites_on_subsurface
-        self.show_composition = nas.show_composition
-        if nas.show_subsurface:
+        self.allow_subsurf_sites = nas.allow_subsurf_sites
+        self.composition_effect = nas.composition_effect
+        if nas.subsurf_effect:
             raise NotImplementedError
 
         self.metals = nas.metals
@@ -145,9 +145,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         self.hetero_site_list = nas.site_list.copy()
         self.clean_list()
         self.unique_sites = nas.get_unique_sites(unique_composition=
-                                                 self.show_composition) 
+                                                 self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
-                          if self.show_composition else \
+                          if self.composition_effect else \
                           self.get_monometallic_label_dict()
 
         self.label_list = ['0'] * len(self.hetero_site_list)
@@ -201,7 +201,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 if i == j:
                     conn_x.append(0.)
                 elif overlap > 0:
-                    if self.sites_on_subsurface: 
+                    if self.allow_subsurf_sites: 
                         if 'subsurf' in [sti['site'], stj['site']]: 
                             if overlap == 3:                            
                                 conn_x.append(1.)
@@ -299,7 +299,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 else:
                     st['fragment_indices'] = st['adsorbate_indices'] 
                 signature = [st['site'], st['surface']]                     
-                if self.show_composition:
+                if self.composition_effect:
                     signature.append(st['composition'])
                 stlab = self.label_dict['|'.join(signature)]
                 label = str(stlab) + st['fragment']
@@ -436,9 +436,9 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         sas = adsorption_sites 
         self.slab = sas.atoms
         self.surface = sas.surface
-        self.sites_on_subsurface = sas.sites_on_subsurface
-        self.show_composition = sas.show_composition
-        if sas.show_subsurface:
+        self.allow_subsurf_sites = sas.allow_subsurf_sites
+        self.composition_effect = sas.composition_effect
+        if sas.subsurf_effect:
             raise NotImplementedError
 
         self.metals = sas.metals
@@ -448,9 +448,9 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.hetero_site_list = sas.site_list.copy()
         self.clean_list()
         self.unique_sites = sas.get_unique_sites(unique_composition=
-                                                 self.show_composition) 
+                                                 self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
-                          if self.show_composition else \
+                          if self.composition_effect else \
                           self.get_monometallic_label_dict()
 
         self.label_list = ['0'] * len(self.hetero_site_list)
@@ -504,7 +504,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 if i == j:
                     conn_x.append(0.)
                 elif overlap > 0:
-                    if self.sites_on_subsurface:         
+                    if self.allow_subsurf_sites:         
                         if 'subsurf' in [sti['site'], stj['site']]: 
                             if overlap == 3:
                                 conn_x.append(1.)
@@ -562,17 +562,20 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             st['occupied'] = 1            
 
         # Get dentate numbers and coverage  
-        self.n_occupied = 0
-        n_surf_occupied = 0
+        self.n_occupied, n_surf_occupied, n_subsurf_occupied = 0, 0, 0
         for st in hsl:
             if 'occupied' not in st:
-                st['adsorbate'] = st['adsorbate_indices'] = \
-                st['fragment'] = st['fragment_indices'] = \
                 st['bonded_index'] = st['bond_length'] = None
-                st['occupied'] = st['label'] = st['dentate'] = 0
+                st['adsorbate'] = st['fragment'] = None
+                st['adsorbate_indices'] = None
+                st['occupied'] = st['dentate'] = 0
+                st['fragment_indices'] = None
+                st['label'] = 0
                 continue
             self.n_occupied += 1
-            if st['site'] != 'subsurf':
+            if st['site'] == 'subsurf':
+                n_subsurf_occupied += 1
+            else:
                 n_surf_occupied += 1
             adsi = st['adsorbate_indices']
             if adsi in ndentate_dict:              
@@ -580,6 +583,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             else:
                 st['dentate'] = 0
         self.coverage = n_surf_occupied / len(self.surf_ids)
+        self.subsurf_coverage = n_subsurf_occupied / len(self.subsurf_ids)
 
         # Identify bidentate fragments and assign labels 
         for j, st in enumerate(hsl):
@@ -603,7 +607,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 else:
                     st['fragment_indices'] = st['adsorbate_indices'] 
                 signature = [st['site'], st['geometry']]                     
-                if self.show_composition:
+                if self.composition_effect:
                     signature.append(st['composition'])
                 stlab = self.label_dict['|'.join(signature)]
                 label = str(stlab) + st['fragment']
@@ -652,7 +656,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 for j, spec in enumerate(specs):
                     sbcm[i,j] += counts[spec]
         top_ids = self.surf_ids + self.subsurf_ids if \
-                  self.sites_on_subsurface else self.surf_ids
+                  self.allow_subsurf_sites else self.surf_ids
         for si in top_ids:
             nbids = np.where(cm[si]==1)[0]
             nbs = [symbols[i] for i in nbids]
@@ -1020,7 +1024,7 @@ def remove_adosorbate_from_site(atoms, site, remove_fragment=False):
 
 def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None, 
                   indices=None, height=None, composition=None, 
-                  subsurface_element=None, site_list=None):
+                  subsurf_element=None, site_list=None):
     """
     A function for adding adsorbate to a specific adsorption site on a 
     monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
@@ -1059,8 +1063,8 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
 
     if height is None:
         height = heights_dict[site]
-    show_composition = False if composition is None else True
-    show_subsurface = False if subsurface_element is None else True
+    composition_effect = False if composition is None else True
+    subsurf_effect = False if subsurf_element is None else True
     if composition:
         if '-' in composition:
             scomp = composition
@@ -1085,7 +1089,7 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
         all_sites = site_list.copy()
     else:
         all_sites = enumerate_adsorption_sites(atoms, surface,
-                    geometry, show_composition, show_subsurface)
+                    geometry, composition_effect, subsurf_effect)
 
     if indices:
         if not isinstance(indices, Iterable):
@@ -1097,8 +1101,8 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
         si = next((s for s in all_sites if 
                    s['site'] == site and
                    s['composition'] == scomp and 
-                   s['subsurface_element'] 
-                   == subsurface_element), None)
+                   s['subsurf_element'] 
+                   == subsurf_element), None)
 
     if not si:
         print('No such site can be found')            
@@ -1679,7 +1683,7 @@ def random_pattern_generator(atoms, adsorbate, surface=None,
         ads_atoms = atoms[ads_indices]
         atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbate_elements]]
     all_sites = enumerate_monometallic_sites(atoms, surface=surface, 
-                                             heights=heights, show_subsurface=False)
+                                             heights=heights, subsurf_effect=False)
     random.shuffle(all_sites)    
  
     if True not in atoms.pbc:
