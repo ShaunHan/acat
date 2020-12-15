@@ -1,5 +1,5 @@
-from act.adsorption_sites import *
-from act.adsorbate_coverage import *
+from asac.adsorption_sites import *
+from asac.adsorbate_coverage import *
 from ase.io import read, write, Trajectory
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
@@ -56,7 +56,7 @@ def get_arguments(arg_list=None):
     )
     parser.add_argument(
         "-fix_surfcomp",
-        action="store_true",
+        asacion="store_true",
         help="Fix the elemental composition of surface atoms",
     )
     parser.add_argument(
@@ -68,7 +68,7 @@ def get_arguments(arg_list=None):
     )
     parser.add_argument(
         "-assign_weights",
-        action="store_true",
+        asacion="store_true",
         help="Assign weights (probabilities) of adding each species",
     )
     parser.add_argument(
@@ -139,7 +139,7 @@ def main():
         else:
             sas = SlabAdsorptionSites(structures[0], surface=args.surface,
                                       sites_on_subsurf=True,
-                                      show_composition=True)
+                                      composition_effect=True)
 
     Ecut = args.cutoff # Set a very large cutoff for the 1st generation
     starting_images = []
@@ -175,8 +175,8 @@ def main():
         image = random.choice(starting_images)
         if not args.fix_surfcomp: 
             sas = SlabAdsorptionSites(image, args.surface,
-                                      sites_on_subsurface=True,
-                                      show_composition=True)
+                                      allow_subsurf_sites=True,
+                                      composition_effect=True)
         sac = SlabAdsorbateCoverage(image, sas)
         hsl = sac.hetero_site_list
         nbstids = []
