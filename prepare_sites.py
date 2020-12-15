@@ -1,12 +1,12 @@
-from act.adsorption_sites import *
+from asac.adsorption_sites import *
 from ase.io import read, write
 import pickle
 
 slab = read('Ni3Pt_111_slab.traj')
 
 sas = SlabAdsorptionSites(slab, surface='fcc111', 
-                          sites_on_subsurface=True,
-                          show_composition=True)
+                          allow_subsurf_sites=True,
+                          composition_effect=True)
 
 for s in sas.site_list:
     print(s)
