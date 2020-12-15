@@ -1,5 +1,5 @@
-from act.adsorbate_coverage import *
-from act.adsorption_sites import *
+from asac.adsorbate_coverage import *
+from asac.adsorption_sites import *
 from ase.io import read, write, Trajectory
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
