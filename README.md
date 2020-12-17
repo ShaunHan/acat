@@ -14,11 +14,11 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 ## Installation
 Clone this repository:
 
-```git clone https://gitlab.com/shuanghan/nanopads.git```
+```git clone https://gitlab.com/shuanghan/asac.git```
 
 Then edit ```~/.bashrc``` to add
 
-```export PYTHONPATH=/path-to-nanopads/:$PYTHONPATH```
+```export PYTHONPATH=/path-to-asac/:$PYTHONPATH```
 
 Remember to ```source ~/.bashrc```
 ## Usage
