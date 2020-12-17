@@ -1267,7 +1267,7 @@ class SlabAdsorptionSites(object):
                                 composition = '-'.join([comp, mb + 2*ma])
                         elif nma == 3:
                             composition = '-'.join([comp, 3*ma])
-                    site.update({'composition': composition})
+                        site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si)
 
