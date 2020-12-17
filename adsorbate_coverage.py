@@ -3,11 +3,13 @@ from .utilities import *
 from ase.io import read, write
 from ase.build import molecule
 from ase.data import covalent_radii, atomic_numbers
+from ase.geometry import find_mic
 from ase.formula import Formula
-from ase.neighborlist import NeighborList
+from asap3 import FullNeighborList
 from ase.visualize import view
 from ase import Atom, Atoms
-from collections import defaultdict, Iterable, Counter
+from collections import defaultdict 
+from collections import Iterable, Counter
 from operator import itemgetter
 import networkx as nx
 import numpy as np
@@ -228,13 +230,13 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 if [adsid] not in ads_list:
                     continue
 
-            def get_bond_length(site):
-                pos = site['position']
-                return np.linalg.norm(self.atoms[adsid].position - pos)
-            st, bl = min(((s, get_bond_length(s)) for s in hsl), 
-                           key=itemgetter(1))
+            adspos = self.atoms[adsid].position                                 
+            bls = np.linalg.norm(np.asarray([s['position'] - adspos for s in hsl]))
+            stid, bl = min(enumerate(bls), key=itemgetter(1))
+            st = hsl[stid]
             if bl > self.dmax:
                 continue
+
             adsids = next((l for l in ads_list if adsid in l), None)
             adsi = tuple(sorted(adsids))
             if 'occupied' in st:
@@ -523,21 +525,20 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
-        ndentate_dict = {}
- 
+        ndentate_dict = {} 
         for adsid in self.ads_ids:
             if self.atoms[adsid].symbol == 'H':
                 if [adsid] not in ads_list:
                     continue
 
-            def get_bond_length(site):
-                pos = site['position']
-                return get_mic_distance(self.atoms[adsid].position, 
-                                        pos, self.cell, self.pbc)
-            st, bl = min(((s, get_bond_length(s)) for s in hsl), 
-                           key=itemgetter(1))
+            adspos = self.atoms[adsid].position                                 
+            _, bls = find_mic(np.asarray([s['position'] - adspos for s in hsl]), 
+                              cell=self.cell, pbc=True) 
+            stid, bl = min(enumerate(bls), key=itemgetter(1))
+            st = hsl[stid]
             if bl > self.dmax:
                 continue
+
             adsids = next((l for l in ads_list if adsid in l), None)
             adsi = tuple(sorted(adsids))
             if 'occupied' in st:
@@ -558,7 +559,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 ndentate_dict[adsi] += 1
             else:
                 ndentate_dict[adsi] = 1
-            st['occupied'] = 1            
+            st['occupied'] = 1        
 
         # Get dentate numbers and coverage  
         self.n_occupied, n_surf_occupied, n_subsurf_occupied = 0, 0, 0
@@ -1009,7 +1010,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
                               ads[0].position, rotation)
     ads.translate(pos - ads[0].position)
 
-    atoms.extend(ads)
+    atoms += ads
 
 
 def remove_adosorbate_from_site(atoms, site, remove_fragment=False):
@@ -1558,7 +1559,7 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
 def remove_adsorbates_too_close(atoms, min_adsorbate_distance=0.6):
  
     rmin = min_adsorbate_distance/2.9
-    nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+    nl = FullNeighborList(rCut=rmin, atoms=atoms)   
     nl.update(atoms)            
     atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
     ads_symbols = molecule(adsorbate).get_chemical_symbols()
@@ -1652,9 +1653,9 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None,
     else:
         for pos in positions:
             ads.translate(pos - ads[0].position)
-            atoms.extend(ads)
+            atoms += ads
         if ads_indices:
-            atoms.extend(ads_atoms)
+            atoms += ads_atoms
 
     return atoms
 
@@ -1695,9 +1696,9 @@ def random_pattern_generator(atoms, adsorbate, surface=None,
         positions = [s['adsorbate_position'] for s in all_sites]
         for pos in positions:
             ads.translate(pos - ads[0].position)
-            atoms.extend(ads)
+            atoms += ads
         if ads_indices:
-            atoms.extend(ads_atoms)
+            atoms += ads_atoms
 
     nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
     nl.update(atoms)            
