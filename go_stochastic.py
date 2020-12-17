@@ -1,9 +1,9 @@
 from asac.adsorption_sites import *
 from asac.adsorbate_coverage import *
+from asac.utilities import get_mic
 from ase.io import read, write, Trajectory
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS, FIRE
-from ase.geometry import find_mic
 from ase.calculators.lammpslib import LAMMPSlib
 from ase.formula import Formula
 from ase.data import atomic_numbers, atomic_masses_legacy
@@ -216,7 +216,7 @@ def main():
             nbst = hsl[random.choice(binbids)]
             pos = nst['position'] 
             nbpos = nbst['position'] 
-            rotation = find_mic(np.array([nbpos-pos]), atoms.cell)[0][0]
+            rotation = get_mic(nbpos, pos, atoms.cell)
             add_adsorbate_to_site(atoms, adsorbate, nst, rotation=rotation)        
  
         else:
