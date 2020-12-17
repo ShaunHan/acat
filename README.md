@@ -129,4 +129,5 @@ The code can generate coverage patterns for various surfaces and nanoparticles. 
 
 ## Notes
 1. The code distinguishes between nanoparticle and surface structures by periodic boundary condition (PBC), so before using the functions **please set all directions as non-periodic for a nanoparticle and at least one direction periodic for a surface structure**.
-2. Please provide surface structures that have at least 4 surface atoms. In this code, the indices that constitute a surface site must be all unique, so a hollow site requires at least 4 surface atoms. The ```monometallic_add_adsorbate``` function still works for surfaces with less than 4 surface atoms, but other functions do not work. Nanoparticles have no such issues.
+## Known issues
+1. There is a bug that causes AdsorptionSites.get_neighbor_site_list() to not return the correct neighbor site indices with ASE version <= 3.18. This is most likely due to shuffling of indices in some ASE functions, which is solved after the release of ASE 3.19.0. 
