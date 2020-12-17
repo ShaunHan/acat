@@ -1065,6 +1065,7 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
         height = heights_dict[site]
     composition_effect = False if composition is None else True
     subsurf_effect = False if subsurf_element is None else True
+
     if composition:
         if '-' in composition:
             scomp = composition
@@ -1088,8 +1089,10 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
     if site_list:
         all_sites = site_list.copy()
     else:
-        all_sites = enumerate_adsorption_sites(atoms, surface,
-                    geometry, composition_effect, subsurf_effect)
+        all_sites = enumerate_adsorption_sites(atoms, surface, 
+                                               geometry, True, 
+                                               composition_effect, 
+                                               subsurf_effect)
 
     if indices:
         if not isinstance(indices, Iterable):
