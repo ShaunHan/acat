@@ -1,8 +1,8 @@
 from asac.adsorbate_coverage import *
 from asac.adsorption_sites import *
+from asac.utilities import get_mic
 from ase.io import read, write, Trajectory
 from ase.optimize import BFGS, FIRE
-from ase.geometry import find_mic
 import numpy as np
 import random
 import pickle
@@ -61,7 +61,7 @@ for uni in unis:
         nbsite = site_list[random.choice(nbstids)]
         pos = site['position'] 
         nbpos = nbsite['position'] 
-        rotation = find_mic(np.array([nbpos-pos]), atoms.cell)[0][0]
+        rotation = get_mic(nbpos, pos, atoms.cell)
         add_adsorbate_to_site(atoms, adsorbate, site, rotation=rotation) 
         atoms.calc = calc
 #        opt = FIRE(atoms, logfile=None)
