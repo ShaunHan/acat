@@ -113,8 +113,11 @@ def fingerprint(atoms, adsorption_sites):
     dstrbs = np.zeros(len(atoms))                                              
     for st in fsl:
         Eads = Eads_dict[st['label']]
-        indices = st['indices'][:3] if st['site'] == 'subsurf' else st['indices']
+        indices = st['indices']
         for i in indices:
+            if st['site'] == 'subsurf':
+                if i not in surf_ids:
+                    continue
             dstrbs[i] += Eads / len(indices)
     surf_dstrbs = dstrbs[surf_ids]
 
