@@ -5,9 +5,9 @@ from ase.build import molecule
 from ase.data import covalent_radii, atomic_numbers
 from ase.geometry import find_mic
 from ase.formula import Formula
-from asap3 import FullNeighborList
 from ase.visualize import view
 from ase import Atom, Atoms
+from asap3 import FullNeighborList
 from collections import defaultdict 
 from collections import Iterable, Counter
 from operator import itemgetter
@@ -966,9 +966,9 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
-                          rotation=None):            
+                          orientation=None):            
 
-    '''rotation: vector that the adsorbate is rotated into'''
+    '''oriention: vector that the adsorbate is algined to'''
 
     
     if height is None:
@@ -1005,11 +1005,28 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
             symin[idx] = None
         ads = ads[newids]
 
-    if rotation is not None:
-        ads.rotate(np.average(ads.positions[1:],0) - 
-                              ads[0].position, rotation)
-    ads.translate(pos - ads[0].position)
+    if orientation is not None:
+        ori = next((a.index+1 for a in ads[1:] if a != 'H'), ads[1])
+        v1 = get_rejection_between(ads[ori].position - ads[0].position, normal)
+        v2 = get_rejection_between(orientation, normal)
+        radian = get_angle_between(v1, v2)
 
+        # Flip the sign of the angle if the result is not the closest
+        rm_p = get_rotation_matrix(axis=normal, angle=radian)
+        rm_n = get_rotation_matrix(axis=normal, angle=-radian)        
+        npos_p, npos_n = rm_p @ ads[ori].position, rm_n @ ads[ori].position
+        nbpos_p = npos_p + pos - ads[0].position
+        nbpos_n = npos_n + pos - ads[0].position
+        d_p = np.linalg.norm(nbpos_p - pos - orientation)
+        d_n = np.linalg.norm(nbpos_n - pos - orientation)
+        if d_p <= d_n:
+            for a in ads:
+                a.position = rm_p @ a.position
+        else:
+            for a in ads:
+                a.position = rm_n @ a.position
+
+    ads.translate(pos - ads[0].position)
     atoms += ads
 
 
@@ -1098,19 +1115,19 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
         if not isinstance(indices, Iterable):
             indices = [indices]
         indices = tuple(sorted(indices))
-        si = next((s for s in all_sites if 
+        st = next((s for s in all_sites if 
                    s['indices'] == indices), None)
     else:
-        si = next((s for s in all_sites if 
+        st = next((s for s in all_sites if 
                    s['site'] == site and
                    s['composition'] == scomp and 
                    s['subsurf_element'] 
                    == subsurf_element), None)
 
-    if not si:
+    if not st:
         print('No such site can be found')            
     else:
-        add_adsorbate_to_site(atoms, adsorbate, si, height)
+        add_adsorbate_to_site(atoms, adsorbate, st, height)
 
 
 def group_sites_by_surface(atoms, sites):                            
