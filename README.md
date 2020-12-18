@@ -128,5 +128,5 @@ The code can generate coverage patterns for various surfaces and nanoparticles. 
 ![](images/all_coverage_patterns.png)
 
 ## Known issues
-1. Some functions distinguishes between nanoparticle and surface structures based on periodic boundary condition (PBC)> It is recommended to **set all directions as non-periodic for nanoparticles and at least one direction periodic for surface slabs** before using the code.
+1. Some functions distinguishes between nanoparticle and surface slabs based on periodic boundary condition (PBC)> It is recommended to **set all directions as non-periodic for nanoparticles and at least one direction periodic for surface slabs** before using the code.
 2. There is a bug that causes AdsorptionSites.get_neighbor_site_list() to not return the correct neighbor site indices with ASE version <= 3.18. This is most likely due to shuffling of indices in some ASE functions, which is solved after the release of ASE 3.19.0. 
