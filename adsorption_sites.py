@@ -1,13 +1,14 @@
 from .utilities import * 
-from asap3.analysis.rdf import RadialDistributionFunction
-from asap3 import FullNeighborList
-from asap3.analysis import FullCNA, PTM
-from asap3 import EMT as asapEMT
 from ase.data import reference_states, atomic_numbers, covalent_radii
 from ase.optimize import BFGS, FIRE
 from ase.io import read, write
 from ase import Atom, Atoms
-from collections import Counter, defaultdict
+from asap3.analysis.rdf import RadialDistributionFunction
+from asap3 import FullNeighborList
+from asap3.analysis import FullCNA, PTM
+from asap3 import EMT as asapEMT
+from collections import defaultdict
+from collections import Iterable, Counter
 from itertools import combinations, groupby
 import numpy as np
 import networkx as nx
@@ -385,7 +386,7 @@ class NanoparticleAdsorptionSites(object):
                     si = site['indices']
                     site.update({'site': 'subsurf',      
                                  'position': subpos,
-                                 'indices': si+tuple(subsi)})      
+                                 'indices': tuple(sorted(si+tuple(subsi)))})      
                     if self.composition_effect:
                         metals = self.metals   
                         ma, mb = metals[0], metals[1]
@@ -410,7 +411,7 @@ class NanoparticleAdsorptionSites(object):
                                 composition = '-'.join([comp, mb + 2*ma])
                         elif nma == 3:
                             composition = '-'.join([comp, 3*ma])
-                    site.update({'composition': composition})
+                        site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si) 
 
@@ -418,6 +419,14 @@ class NanoparticleAdsorptionSites(object):
         return {'site': None, 'surface': None, 'position': None, 
                 'normal': None, 'indices': None, 'composition': None,
                 'subsurf_index': None, 'subsurf_element': None}
+
+    def get_site(self, indices):
+        if not isinstance(indices, Iterable):
+            indices = [indices]
+        indices = tuple(sorted(indices))
+        st = next((s for s in self.site_list if 
+                   s['indices'] == indices), None)
+        return st 
 
     def get_all_sites_of_type(self, type):            
         return [i for i in self.site_list
@@ -766,7 +775,7 @@ class SlabAdsorptionSites(object):
                         idd = sorted(extraids[1:], key=lambda x:    
                               get_mic(self.atoms[x].position,
                               self.atoms[extraids[0]].position,
-                              self.cell, get_squared_distance=True))
+                              self.cell, return_squared_distance=True))
                         opp, close = idd[-1], idd[0]
                         if self.atoms[opp].symbol == \
                         self.atoms[extraids[0]].symbol:
@@ -1234,13 +1243,13 @@ class SlabAdsorptionSites(object):
                     subpos = st['position'] - st['normal'] * dh                                
                     def get_squared_distance(x):
                         return get_mic(self.atoms[x].position, subpos, 
-                                       self.cell, get_squared_distance=True)
+                                       self.cell, return_squared_distance=True)
                     subsi = sorted(sorted(self.subsurf_ids, 
                                           key=get_squared_distance)[:3])     
                     si = site['indices']
                     site.update({'site': 'subsurf',      
                                  'position': subpos,
-                                 'indices': si+tuple(subsi)})      
+                                 'indices': tuple(sorted(si+tuple(subsi)))})
                     if self.surface == 'fcc211':
                         site.update({'geometry': '111'})           
                     if self.composition_effect:
@@ -1276,6 +1285,14 @@ class SlabAdsorptionSites(object):
                 'position': None, 'normal': None, 'indices': None,
                 'composition': None, 'subsurf_index': None,
                 'subsurf_element': None}
+
+    def get_site(self, indices):
+        if not isinstance(indices, Iterable):
+            indices = [indices]
+        indices = tuple(sorted(indices))
+        st = next((s for s in self.site_list if 
+                   s['indices'] == indices), None)
+        return st
 
     def get_all_sites_of_type(self, type):            
         return [i for i in self.site_list
@@ -1485,6 +1502,31 @@ class SlabAdsorptionSites(object):
             st['position'] += np.average(shifted_positions[si], 0) 
 
 
+def get_adsorption_site(atoms, indices, surface=None, return_index=False):
+    if not isinstance(indices, Iterable):                      
+        indices = [indices]                                        
+    indices = tuple(sorted(indices))
+
+    if True not in atoms.pbc:
+        sas = NanoparticleAdsorptionSites(atoms, 
+                                          allow_subsurf_sites=True,
+                                          composition_effect=False,
+                                          subsurf_effect=False)
+                                                             
+    else:
+        sas = SlabAdsorptionSites(atoms, surface, 
+                                  allow_subsurf_sites=True, 
+                                  composition_effect=False, 
+                                  subsurf_effect=False)             
+    site_list = sas.site_list                              
+    sti, site = next(((i, s) for i, s in enumerate(site_list) if                        
+                      s['indices'] == indices), None)                     
+    if return_index:
+        return sti, site
+                    
+    return site    
+
+
 def enumerate_adsorption_sites(atoms, 
                                surface=None, 
                                geometry=None, 
@@ -1506,7 +1548,7 @@ def enumerate_adsorption_sites(atoms,
         sas = SlabAdsorptionSites(atoms, surface,
                                   allow_subsurf_sites, 
                                   composition_effect, 
-                                  subsurf_effect)
+                                  subsurf_effect)            
         all_sites = sas.site_list
         if geometry:
             all_sites = [s for s in all_sites if 
