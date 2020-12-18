@@ -103,8 +103,8 @@ for image in starting_images:
                     nbst = hsl[ni]
                     pos = nst['position'] 
                     nbpos = nbst['position'] 
-                    rotation = get_mic(nbpos, pos, atoms.cell)
-                    add_adsorbate_to_site(atoms, adsorbate, nst, rotation=rotation)        
+                    orientation = get_mic(nbpos, pos, atoms.cell)
+                    add_adsorbate_to_site(atoms, adsorbate, nst, orientation=orientation)        
  
                 else:
                     add_adsorbate_to_site(atoms, adsorbate, nst)        
