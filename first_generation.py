@@ -61,8 +61,8 @@ for uni in unis:
         nbsite = site_list[random.choice(nbstids)]
         pos = site['position'] 
         nbpos = nbsite['position'] 
-        rotation = get_mic(nbpos, pos, atoms.cell)
-        add_adsorbate_to_site(atoms, adsorbate, site, rotation=rotation) 
+        orientation = get_mic(nbpos, pos, atoms.cell)
+        add_adsorbate_to_site(atoms, adsorbate, site, orientation=orientation) 
         atoms.calc = calc
 #        opt = FIRE(atoms, logfile=None)
 #        opt.run(fmax=0.1)
