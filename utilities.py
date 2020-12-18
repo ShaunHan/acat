@@ -237,7 +237,6 @@ def get_rejection_between(v1, v2):
     Calculate the vector rejection of vector 'v1' 
     perpendicular to vector 'v2'.
     """
-
     return v1 - v2 * (v1 @ v2) / (v2 @ v2)
 
 
