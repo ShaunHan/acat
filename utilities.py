@@ -35,11 +35,12 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     atoms = atoms.copy()
     natoms = len(atoms)
     cell = atoms.cell
+    positions = atoms.positions
+
     nums = set(atoms.numbers)
     pairs = product(nums, nums)
     res = np.asarray(list(permutations(np.asarray(range(natoms)),2)))
     indices1, indices2 = res[:,0], res[:,1]
-    positions = atoms.positions
     p1, p2 = positions[indices1], positions[indices2]
 
     if mic:
@@ -89,6 +90,7 @@ def get_connectivity_matrix(neighborlist):
         conn_mat.append(conn_x)
 
     return np.asarray(conn_mat)
+
 
 def expand_cell(atoms, cutoff=None, padding=None):
     """Return Cartesian coordinates atoms within a supercell
@@ -157,7 +159,7 @@ def expand_cell(atoms, cutoff=None, padding=None):
 
 
 def get_mic(p1, p2, cell, pbc=[1,1,0], max_cell_multiples=1e5, 
-            get_squared_distance=False): 
+            return_squared_distance=False): 
     """
     Get all vectors from p1 to p2 that are less than the cutoff in length
     Also able to calculate the distance using the minimum image convention
@@ -212,11 +214,41 @@ def get_mic(p1, p2, cell, pbc=[1,1,0], max_cell_multiples=1e5,
                 if len_sq < min_dr_sq:
                     min_dr = out_vec
                     min_dr_sq = len_sq
-    if not get_squared_distance:
+    if not return_squared_distance:
         return min_dr
 
     else:
         return np.sum(min_dr**2)
+
+
+def get_angle_between(v1, v2):
+    """ 
+    Returns the angle in radians between vectors 
+    'v1' and 'v2'.
+    """
+    v1_u = v1 / np.linalg.norm(v1)
+    v2_u = v2 / np.linalg.norm(v2)
+
+    return np.arccos(np.clip(v1_u @ v2_u, -1., 1.))
+
+
+def get_rejection_between(v1, v2):
+    """
+    Calculate the vector rejection of vector 'v1' 
+    perpendicular to vector 'v2'.
+    """
+
+    return v1 - v2 * (v1 @ v2) / (v2 @ v2)
+
+
+def get_rotation_matrix(axis, angle):
+    """
+    Return the rotation matrix associated with 
+    counterclockwise rotation about the given 
+    axis by angle in radians.
+    """
+    return scipy.linalg.expm(np.cross(np.eye(3), 
+           axis / np.linalg.norm(axis) * angle))
 
 
 def draw_graph(G, savefig=None):               
