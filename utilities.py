@@ -34,12 +34,15 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
 
     atoms = atoms.copy()
     natoms = len(atoms)
+    if natoms == 1:
+        return {0: []}
     cell = atoms.cell
     positions = atoms.positions
-
+    
     nums = set(atoms.numbers)
     pairs = product(nums, nums)
     res = np.asarray(list(permutations(np.asarray(range(natoms)),2)))
+    
     indices1, indices2 = res[:,0], res[:,1]
     p1, p2 = positions[indices1], positions[indices2]
 
