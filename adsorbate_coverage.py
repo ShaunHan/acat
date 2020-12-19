@@ -120,7 +120,7 @@ def adsorbate_molecule(adsorbate):
 class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""       
 
-    def __init__(self, atoms, adsorption_sites, dmax=2.5):
+    def __init__(self, atoms, adsorption_sites=None, dmax=2.5):
  
         self.atoms = atoms.copy()
         self.ads_ids = [a.index for a in atoms if 
@@ -135,19 +135,26 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         self.ads_connectivity_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
 
-        self.nas = adsorption_sites
-        self.slab = self.nas.atoms
-        self.allow_subsurf_sites = self.nas.allow_subsurf_sites
-        self.composition_effect = self.nas.composition_effect
-        if self.nas.subsurf_effect:
+        if adsorption_sites:
+            nas = adsorption_sites
+        else:
+            nas = NanoparticleAdsorptionSites(atoms, 
+                                              allow_subsurf_sites=True,
+                                              composition_effect=True,
+                                              subsurf_effect=False)    
+        self.nas = nas
+        self.slab = nas.atoms
+        self.allow_subsurf_sites = nas.allow_subsurf_sites
+        self.composition_effect = nas.composition_effect
+        if nas.subsurf_effect:
             raise NotImplementedError
 
-        self.metals = self.nas.metals
-        self.surf_ids = self.nas.surf_ids
-        self.hetero_site_list = self.nas.site_list.copy()
+        self.metals = nas.metals
+        self.surf_ids = nas.surf_ids
+        self.hetero_site_list = nas.site_list.copy()
         self.clean_list()
-        self.unique_sites = self.nas.get_unique_sites(unique_composition=
-                                                  self.composition_effect) 
+        self.unique_sites = nas.get_unique_sites(unique_composition=
+                                                 self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.composition_effect else \
                           self.get_monometallic_label_dict()
@@ -419,7 +426,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""        
 
-    def __init__(self, atoms, adsorption_sites, surface=None, dmax=2.5):
+    def __init__(self, atoms, adsorption_sites=None, surface=None, dmax=2.5):
  
         self.atoms = atoms.copy()
         self.ads_ids = [a.index for a in atoms if 
@@ -433,23 +440,29 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.make_ads_neighbor_list()
         self.ads_connectivity_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
-
-        self.sas = adsorption_sites 
-        self.slab = self.sas.atoms
-        self.surface = self.sas.surface
-        self.allow_subsurf_sites = self.sas.allow_subsurf_sites
-        self.composition_effect = self.sas.composition_effect
-        if self.sas.subsurf_effect:
+        if adsorption_sites:
+            sas = adsorption_sites
+        else:
+            sas = SlabAdsorptionSites(atoms, surface, 
+                                      allow_subsurf_sites=True,
+                                      composition_effect=True,
+                                      subsurf_effect=False)    
+        self.sas = sas
+        self.slab = sas.atoms
+        self.surface = sas.surface
+        self.allow_subsurf_sites = sas.allow_subsurf_sites
+        self.composition_effect = sas.composition_effect
+        if sas.subsurf_effect:
             raise NotImplementedError
 
-        self.metals = self.sas.metals
-        self.surf_ids = self.sas.surf_ids
-        self.subsurf_ids = self.sas.subsurf_ids
-        self.connectivity_matrix = self.sas.connectivity_matrix
-        self.hetero_site_list = self.sas.site_list.copy()
+        self.metals = sas.metals
+        self.surf_ids = sas.surf_ids
+        self.subsurf_ids = sas.subsurf_ids
+        self.connectivity_matrix = sas.connectivity_matrix
+        self.hetero_site_list = sas.site_list.copy()
         self.clean_list()
-        self.unique_sites = self.sas.get_unique_sites(unique_composition=
-                                                  self.composition_effect) 
+        self.unique_sites = sas.get_unique_sites(unique_composition=
+                                                 self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.composition_effect else \
                           self.get_monometallic_label_dict()
