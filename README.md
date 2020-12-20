@@ -7,6 +7,7 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 ## Dependencies
 * python3
 * numpy
+* scipy
 * networkx
 * ase
 * asap3
@@ -23,7 +24,7 @@ Then edit ```~/.bashrc``` to add
 Remember to ```source ~/.bashrc```
 ## Usage
 ### Add adsorbates
-The code can automatically identify the shape and surfaces of nanoparticles, or the type of surface slabs.
+The code can automatically identify the shape and surfaces of nanoparticles.
 
 ![](images/color_facets.png)
 
