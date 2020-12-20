@@ -981,7 +981,6 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
                           orientation=None):            
-
     '''oriention: vector that the adsorbate is algined to'''
     
     if height is None:
