@@ -3,7 +3,7 @@ from .utilities import *
 from ase.io import read, write
 from ase.build import molecule
 from ase.data import covalent_radii, atomic_numbers
-from ase.geometry import find_mic
+from ase.geometry import find_mic, get_duplicate_atoms
 from ase.formula import Formula
 from ase.visualize import view
 from ase import Atom, Atoms
@@ -238,7 +238,8 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                     continue
 
             adspos = self.atoms[adsid].position                                 
-            bls = np.linalg.norm(np.asarray([s['position'] - adspos for s in hsl]))
+            bls = np.linalg.norm(np.asarray([s['position'] - 
+                                 adspos for s in hsl]), axis=1)
             stid, bl = min(enumerate(bls), key=itemgetter(1))
             st = hsl[stid]
             if bl > self.dmax:
@@ -690,7 +691,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|111': 4,
                     'subsurf|111': 5}
     
-        elif self.surface == 'fcc100':
+        elif self.surface in ['fcc100','bcc100']:
             return {'ontop|100': 1,
                     'bridge|100': 2,
                     '4fold|100': 3}
@@ -772,7 +773,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 36,
                     'subsurf|111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 37}
  
-        elif self.surface == 'fcc100':
+        elif self.surface in ['fcc100','bcc100']:
             return {'ontop|100|{}'.format(ma): 1, 
                     'ontop|100|{}'.format(mb): 2,
                     'bridge|100|{}{}'.format(ma,ma): 3, 
@@ -788,7 +789,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         elif self.surface == 'fcc110':
             return {'ontop|step|{}'.format(ma): 1,
                     'ontop|step|{}'.format(mb): 2,
-                   # neighbor elements count clockwise from shorter bond ma
+                    # neighbor elements count clockwise from shorter bond ma
                     'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,ma,ma,ma): 3,
                     'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,ma,ma,mb): 4,
                     'ontop|terrace|{}-{}{}{}{}'.format(ma,ma,ma,mb,mb): 5,
@@ -982,7 +983,6 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
                           orientation=None):            
 
     '''oriention: vector that the adsorbate is algined to'''
-
     
     if height is None:
         height = heights_dict[site['site']]
@@ -1008,7 +1008,8 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     if adsorbate not in adsorbate_list:
         # Always sort the indices the same order as the input symbol.
         # This is a naive sorting which might cause H in wrong order.
-        # Please sort your own adsorbate atoms by reindexing like above.
+        # Please sort your own adsorbate atoms by reindexing as has
+        # been done in adsorbate_molecule function.
         symout = list(Formula(adsorbate))
         symin = list(ads.symbols)
         newids = []
@@ -1145,16 +1146,19 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
         add_adsorbate_to_site(atoms, adsorbate, st, height)
 
 
-def group_sites_by_surface(atoms, sites):                            
+def group_sites_by_surface(atoms, sites, site_list=None):                            
     """A function that uses networkx to group one type of sites 
     by geometrical facets of the nanoparticle"""
 
     # Find all indices of vertex and edge sites
-    ve_indices = [s['indices'] for s in sites if s['site'] == 'ontop'
-                  and s['surface'] in ['vertex', 'edge']]
-
+    if not site_list:
+        nas = NanoparticleAdsorptionSites(atoms)
+        site_list = nas.site_list
+    ve_indices = [s['indices'] for s in site_list if 
+                  s['site'] == 'ontop' and 
+                  s['surface'] in ['vertex', 'edge']]
     unique_ve_indices = set(list(sum(ve_indices, ())))
-    
+     
     G=nx.Graph()
     for site in sites:
         indices = site['indices']
@@ -1175,6 +1179,7 @@ def group_sites_by_surface(atoms, sites):
         for group in groups:
             if site['reduced_indices'] in group:
                 grouped_sites[groups.index(group)] += [site]
+
     return grouped_sites
 
 
@@ -1227,16 +1232,13 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
         ads_atoms = atoms[ads_indices]
         atoms = atoms[[a.index for a in atoms if 
                        a.symbol not in adsorbate_elements]]
-    ads = molecule(adsorbate)[::-1]
-    if str(ads.symbols) != 'CO':
-        ads.set_chemical_symbols(
-        ads.get_chemical_symbols()[::-1])
+    ads = adsorbate_molecule(adsorbate)
 
-    if True not in atoms.pbc:
+    if True not in atoms.pbc:                            
         if surface is None:
             surface = ['fcc100', 'fcc111']        
-        nas = NanoparticleAdsorptionSites(atoms)
-        site_list = nas.site_list
+        sas = NanoparticleAdsorptionSites(atoms)
+        site_list = sas.site_list
     else:
         sas = SlabAdsorptionSites(atoms, surface=surface)
         if surface is None:
@@ -1259,10 +1261,11 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
             fcc_sites = [s for s in site_list  
                          if s['site'] == 'fcc']
             if True not in atoms.pbc:                                
-                grouped_sites = group_sites_by_surface(atoms, 
-                                                       fcc_sites)
+                grouped_sites = group_sites_by_surface(
+                                atoms, fcc_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fcc_sites}
+
             for sites in grouped_sites.values():
                 if sites:
                     sites_to_delete = [sites[0]]
@@ -1293,7 +1296,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
             hcp_sites = [s for s in site_list if s['site'] == 'hcp']
             all_sites = fcc_sites + hcp_sites
             if True not in atoms.pbc:    
-                grouped_sites = group_sites_by_surface(atoms, all_sites)
+                grouped_sites = group_sites_by_surface(
+                                atoms, all_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': all_sites}
             for sites in grouped_sites.values():
@@ -1331,8 +1335,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
             fcc_sites = [s for s in site_list 
                          if s['site'] == 'fcc']                                                                 
             if True not in atoms.pbc:                                
-                grouped_sites = group_sites_by_surface(atoms, 
-                                                       fcc_sites)
+                grouped_sites = group_sites_by_surface(
+                                atoms, fcc_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fcc_sites}
 
@@ -1366,7 +1370,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
         elif coverage == 3/4:
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             if True not in atoms.pbc:                                           
-                grouped_sites = group_sites_by_surface(atoms, fold4_sites)
+                grouped_sites = group_sites_by_surface(
+                                atoms, fold4_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fold4_sites}
             for sites in grouped_sites.values():
@@ -1398,7 +1403,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             original_sites = copy.deepcopy(fold4_sites)
             if True not in atoms.pbc:
-                grouped_sites = group_sites_by_surface(atoms, fold4_sites)
+                grouped_sites = group_sites_by_surface(
+                                atoms, fold4_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fold4_sites}
             for sites in grouped_sites.values():
@@ -1420,7 +1426,8 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
             #p(2x2) pattern
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             if True not in atoms.pbc:                                           
-                grouped_sites = group_sites_by_surface(atoms, fold4_sites)
+                grouped_sites = group_sites_by_surface(
+                                atoms, fold4_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fold4_sites}
             for sites in grouped_sites.values():
@@ -1586,36 +1593,39 @@ def symmetric_pattern_generator(atoms, adsorbate, surface=None,
         add_adsorbate_to_site(atoms, adsorbate, site, height)
 
     if min_adsorbate_distance > 0.:
-        remove_adsorbates_too_close(atoms, min_adsorbate_distance)
+        if True not in atoms.pbc:
+            sac = NanoparticleAdsorbateCoverage(atoms, sas)
+        else:
+            sac = SlabAdsorbateCoverage(atoms, sas)        
+        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
 
     return atoms
 
 
-def remove_adsorbates_too_close(atoms, min_adsorbate_distance=0.6):
- 
-    rmin = min_adsorbate_distance/2.9
-    nl = FullNeighborList(rCut=rmin, atoms=atoms)   
-    nl.update(atoms)            
-    atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-    ads_symbols = molecule(adsorbate).get_chemical_symbols()
-    n_ads_atoms = len(ads_symbols)
-    overlap_atoms_indices = []
-    for idx in atom_indices:   
-        neighbor_indices, _ = nl.get_neighbors(idx)
-        overlap = 0
-        for i in neighbor_indices:                                                    
-            if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):  
-                overlap += 1                                                          
-        if overlap > 0:                                                               
-            overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))              
-    del atoms[overlap_atoms_indices]                                      
+def remove_adsorbates_too_close(atoms, adsorbate_coverage,
+                                min_adsorbate_distance=0.5):
+
+    dups = get_duplicate_atoms(atoms, cutoff=min_adsorbate_distance)
+    if dups.size == 0:
+        return
+
+    del_ids = set(dups[:,0])
+    rm_ids = []
+    hsl = adsorbate_coverage.hetero_site_list
+    for st in hsl:
+        if st['occupied'] == 1:
+            ads_ids = st['adsorbate_indices']
+            if del_ids.intersection(set(ads_ids)):
+                rm_ids += list(ads_ids)
+    rm_ids = list(set(rm_ids))
+
+    del atoms[rm_ids]
 
 
 def full_coverage_pattern_generator(atoms, adsorbate, site, height=None, 
                                     min_adsorbate_distance=0.6):
     '''A function to generate different 1ML coverage patterns'''
 
-    rmin = min_adsorbate_distance/2.9
     ads_indices = [a.index for a in atoms if a.symbol in adsorbate_elements]
     ads_atoms = None
     if ads_indices:
@@ -1651,7 +1661,7 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None,
         if adsorbate == 'CO':
             for site in final_sites:
                 add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
-            nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)     
+            nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)     
             nl.update(atoms)            
             atom_indices = [a.index for a in atoms if a.symbol == 'O']            
             n_ads_atoms = 2
@@ -1669,7 +1679,7 @@ def full_coverage_pattern_generator(atoms, adsorbate, site, height=None,
         else:
             for site in final_sites:
                 add_adsorbate(atoms, molecule(adsorbate), site)
-            nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+            nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)   
             nl.update(atoms)            
             atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
             ads_symbols = molecule(adsorbate).get_chemical_symbols()
@@ -1710,8 +1720,7 @@ def random_pattern_generator(atoms, adsorbate, surface=None,
        min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
 
        heights: A dictionary that contains the adsorbate height for each site type.'''
-
-    rmin = min_adsorbate_distance/2.9
+ 
     ads_indices = [a.index for a in atoms if a.symbol in adsorbate_elements]
     ads_atoms = None
     if ads_indices:
@@ -1735,7 +1744,7 @@ def random_pattern_generator(atoms, adsorbate, surface=None,
         if ads_indices:
             atoms += ads_atoms
 
-    nl = NeighborList([rmin for a in atoms], self_interaction=False, bothways=True)   
+    nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)   
     nl.update(atoms)            
     atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
     random.shuffle(atom_indices)
