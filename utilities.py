@@ -31,7 +31,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     span: boolean
         Whether to include all neighbors spanned within the shell
     """
-
+   
     atoms = atoms.copy()
     natoms = len(atoms)
     if natoms == 1:
@@ -49,9 +49,9 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     if mic:
         _, distances = find_mic(p2 - p1, cell, pbc=True)
     else:
-        distances = np.linalg.norm(p2 - p1)
+        distances = np.linalg.norm(p2 - p1, axis=1)
     ds = np.insert(distances, np.arange(0, distances.size, natoms), 0.)
-
+    #print(res)
     if not radius:
         cr_dict = {(i, j): (covalent_radii[i]+covalent_radii[j]) for i, j in pairs}
     
@@ -126,18 +126,18 @@ def expand_cell(atoms, cutoff=None, padding=None):
     pos = atoms.positions
 
     if padding is None and cutoff is None:
-        diags = np.sqrt((np.dot([[1, 1, 1],
-                                [-1, 1, 1],
-                                [1, -1, 1],
-                                [-1, -1, 1]],
-                                cell)**2).sum(1))
+        diags = np.sqrt((([[1, 1, 1],
+                           [-1, 1, 1],
+                           [1, -1, 1],
+                           [-1, -1, 1]]
+                           @ cell)**2).sum(1))
 
         if pos.shape[0] == 1:
             cutoff = max(diags) / 2.
         else:
             dpos = (pos - pos[:, None]).reshape(-1, 3)
-            Dr = np.dot(dpos, np.linalg.inv(cell))
-            D = np.dot(Dr - np.round(Dr) * pbc, cell)
+            Dr = dpos @ np.linalg.inv(cell)
+            D = (Dr - np.round(Dr) * pbc) @ cell
             D_len = np.sqrt((D**2).sum(1))
 
             cutoff = min(max(D_len), max(diags) / 2.)
@@ -150,7 +150,7 @@ def expand_cell(atoms, cutoff=None, padding=None):
     offsets = np.mgrid[-padding[0]:padding[0] + 1,
                        -padding[1]:padding[1] + 1,
                        -padding[2]:padding[2] + 1].T
-    tvecs = np.dot(offsets, cell)
+    tvecs = offsets @ cell
     coords = pos[None, None, None, :, :] + tvecs[:, :, :, None, :]
 
     ncell = np.prod(offsets.shape[:-1])
