@@ -6,7 +6,7 @@ from itertools import product
 import numpy as np
 import pickle
 
-Eads_dict = {'1H': -1.1,'1C': -1.2,'1O': -1.3,'1CH': -1.0,'1CH2': -1.4,'1CH3': -1.2,'1OH': -0.9,'1CO': -1.4,'1COH': -0.7,
+Gads_dict = {'1H': -1.1,'1C': -1.2,'1O': -1.3,'1CH': -1.0,'1CH2': -1.4,'1CH3': -1.2,'1OH': -0.9,'1CO': -1.4,'1COH': -0.7,
              '12H': -1.1,'12C': -1.2,'12O': -1.3,'12CH': -1.0,'12CH2': -1.4,'12CH3': -1.2,'12OH': -0.9,'12CO': -1.4,'12COH': -0.7,
              '23H': -1.1,'23C': -1.2,'23O': -1.3,'23CH': -1.0,'23CH2': -1.4,'23CH3': -1.2,'23OH': -0.9,'23CO': -1.4,'23COH': -0.7,}
 
@@ -112,16 +112,16 @@ def fingerprint(atoms, adsorption_sites):
     # Distribute adsorption energies on each surface atom
     dstrbs = np.zeros(len(atoms))                                              
     for st in fsl:
-        Eads = Eads_dict[st['label']]
+        Gads = Gads_dict[st['label']]
         indices = st['indices']
         for i in indices:
-            if st['site'] == 'subsurf':
+            if st['geometry'] == 'subsurf':
                 if i not in surf_ids:
                     continue
-            dstrbs[i] += Eads / len(indices)
+            dstrbs[i] += Gads / len(indices)
     surf_dstrbs = dstrbs[surf_ids]
 
-    # Sum Eads distributions of all surface atoms
+    # Sum Gads distributions of all surface atoms
     iso_dict = defaultdict(int)
     for i, e in enumerate(surf_distrbs):
         comp = str(surf_symbols[i])
@@ -171,9 +171,9 @@ def collate_data(structures,
     for atoms in structures:
         sas = adsorption_sites
         finger = fingerprint(atoms, sas) 
-        Eads = atoms.info['data']['Eads_dft']
+        Gads = atoms.info['data']['Gads_dft']
         xs.append(finger)
-        ys.append(Eads)
+        ys.append(Gads)
     if save_pkl_data:
         with open(save_pkl_data, 'wb') as output:
             pickle.dump((xs, ys), output) 
@@ -201,13 +201,13 @@ def main():
         x_norm = normalize(x, centering=True, 
                            scaling_params=params)
         mu, std = gpr.predict(x_norm)
-        Eupper = mu + 2 * std
-        if Eupper < Ecut:
+        Gupper = mu + 2 * std
+        if Gupper < Gcut:
             # Metropolis MC step
-            Eprev = atoms.info['data']['Eads_dft']
-            p_normal = np.minimum(1, (np.exp(-(Eupper - Eprev) / (kB * T))))
+            Gprev = atoms.info['data']['Gads_dft']
+            p_normal = np.minimum(1, (np.exp(-(Gupper - Gprev) / (kB * T))))
             if np.random.rand() < p_normal:
-                atoms.info['data']['Eads_krr'] = (mu, std)                     
+                atoms.info['data']['Gads_krr'] = (mu, std)                     
                 low_energy_structures.append(atoms)
     write('NiPt3_311_3_reax.traj', low_energy_structures)                
 
