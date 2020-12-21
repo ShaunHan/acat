@@ -56,7 +56,7 @@ def get_arguments(arg_list=None):
     )
     parser.add_argument(
         "-fix_surfcomp",
-        asacion="store_true",
+        action="store_true",
         help="Fix the elemental composition of surface atoms",
     )
     parser.add_argument(
@@ -68,7 +68,7 @@ def get_arguments(arg_list=None):
     )
     parser.add_argument(
         "-assign_weights",
-        asacion="store_true",
+        action="store_true",
         help="Assign weights (probabilities) of adding each species",
     )
     parser.add_argument(
@@ -202,7 +202,7 @@ def main():
         nsi = None
         while subsurf_site: 
             nsi = random.choice(nsids)
-            subsurf_site = (len(adsorbate) > 1 and hsl[nsi]['site'] == 'subsurf')
+            subsurf_site = (len(adsorbate) > 1 and hsl[nsi]['geometry'] == 'subsurf')
         nst = hsl[nsi]
  
         binbs = bidentate_nblist[nsi]    
