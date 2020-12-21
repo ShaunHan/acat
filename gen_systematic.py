@@ -93,7 +93,7 @@ for image in starting_images:
                 nis = [0]
             for ni in nis:
                 # Prohibit adsorbates with more than 1 atom from entering subsurf sites
-                if len(adsorbate) > 1 and nst['site'] == 'subsurf':
+                if len(adsorbate) > 1 and nst['geometry'] == 'subsurf':
                     continue
 
                 atoms = image.copy()
