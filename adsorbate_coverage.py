@@ -20,11 +20,14 @@ import re
 
 # Set global variables
 adsorbate_elements = 'SCHON'
-heights_dict = {'ontop': 2.0, 
-                'bridge': 2.0, 
-                'fcc': 2.0, 
-                'hcp': 2.0, 
-                '4fold': 2.0,
+heights_dict = {'ontop': 2., 
+                'bridge': 2., 
+                'shortbridge': 2.,
+                'longbridge': 2.,
+                'fcc': 2., 
+                'hcp': 2.,
+                '3fold': 2., 
+                '4fold': 2.,
                 '6fold': 0.}
 
 # Make your own adsorbate list. Make sure you always sort the 
@@ -747,14 +750,27 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '3fold|h': 7}
 
         elif self.surface == 'hcp10m10':
-            return {'ontop|t': 1,
-                    'bridge|t': 2,
-                    '4fold|t': 3}
+            return {'ontop|step': 1,
+                    'ontop|terrace': 2,
+                    'bridge|step': 3,
+                    'bridge|terrace': 4,
+                    'bridge|t': 5,
+                    '4fold|t': 6}
+
+        elif self.surface == 'hcp10m11':
+            return {'ontop|step': 1,
+                    'ontop|terrace': 2,
+                    'ontop|subsurf': 3,
+                    'bridge|step': 4,
+                    'bridge|terrace': 5,
+                    'bridge|h': 6,
+                    'bridge|subsurf': 7,
+                    '3fold|h': 8}
     
     def get_bimetallic_label_dict(self): 
         ma, mb = self.metals[0], self.metals[1]
  
-        if self.surface == 'fcc111':
+        if self.surface in ['fcc111','hcp0001']:
             return {'ontop|h|{}'.format(ma): 1, 
                     'ontop|h|{}'.format(mb): 2,
                     'bridge|h|{}{}'.format(ma,ma): 3, 
@@ -945,7 +961,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         elif self.surface == 'fcc311':
             return {'ontop|step|{}'.format(ma): 1,
                     'ontop|step|{}'.format(mb): 2,
-                    'ontop|terrace|{}'.format(ma): 3 ,
+                    'ontop|terrace|{}'.format(ma): 3,
                     'ontop|terrace|{}'.format(mb): 4,
                     'bridge|step|{}{}'.format(ma,ma): 5,
                     'bridge|step|{}{}'.format(ma,mb): 6,
@@ -997,6 +1013,104 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 52,
                     '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 53,
                     '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 54}
+
+        elif self.surface == 'bcc110':
+            return {'ontop|h|{}'.format(ma): 1, 
+                    'ontop|h|{}'.format(mb): 2,
+                    'shortbridge|h|{}{}'.format(ma,ma): 3, 
+                    'shortbridge|h|{}{}'.format(ma,mb): 4,
+                    'shortbridge|h|{}{}'.format(mb,mb): 5, 
+                    'longbridge|h|{}{}'.format(ma,ma): 6, 
+                    'longbridge|h|{}{}'.format(ma,mb): 7,
+                    'longbridge|h|{}{}'.format(mb,mb): 8, 
+                    '3fold|h|{}{}{}'.format(ma,ma,ma): 9,
+                    '3fold|h|{}{}{}'.format(ma,ma,mb): 10, 
+                    '3fold|h|{}{}{}'.format(ma,mb,mb): 11,
+                    '3fold|h|{}{}{}'.format(mb,mb,mb): 12}
+
+        elif self.surface == 'bcc111':                         
+            return {'ontop|step|{}'.format(ma): 1,
+                    'ontop|step|{}'.format(mb): 2,
+                    'ontop|terrace|{}'.format(ma): 3,
+                    'ontop|terrace|{}'.format(mb): 4,
+                    'ontop|lowerstep|{}'.format(mb): 5,
+                    'ontop|lowerstep|{}'.format(mb): 6,
+                    'shortbridge|upperh|{}{}'.format(ma,ma): 7, 
+                    'shortbridge|upperh|{}{}'.format(ma,mb): 8,
+                    'shortbridge|upperh|{}{}'.format(mb,mb): 9,
+                    'shortbridge|lowerh|{}{}'.format(ma,ma): 10,
+                    'shortbridge|lowerh|{}{}'.format(ma,mb): 11,
+                    'shortbridge|lowerh|{}{}'.format(mb,mb): 12,
+                    'longbridge|h|{}{}'.format(ma,ma): 13,
+                    'longbridge|h|{}{}'.format(ma,mb): 14,
+                    'longbridge|h|{}{}'.format(mb,mb): 15,
+                    '3fold|h|{}{}{}'.format(ma,ma,ma): 16,
+                    '3fold|h|{}{}{}'.format(ma,ma,mb): 17, 
+                    '3fold|h|{}{}{}'.format(ma,mb,mb): 18,
+                    '3fold|h|{}{}{}'.format(mb,mb,mb): 19}
+
+        elif self.surface == 'hcp10m10':
+            return {'ontop|step|{}'.format(ma): 1,
+                    'ontop|step|{}'.format(mb): 2,
+                    'ontop|terrace|{}'.format(ma): 3,
+                    'ontop|terrace|{}'.format(mb): 4,
+                    'bridge|step|{}{}'.format(ma,ma): 5,
+                    'bridge|step|{}{}'.format(ma,mb): 6,
+                    'bridge|step|{}{}'.format(mb,mb): 7,
+                    'bridge|terrace|{}{}'.format(ma,ma): 8,
+                    'bridge|terrace|{}{}'.format(ma,mb): 9,
+                    'bridge|terrace|{}{}'.format(mb,mb): 10,
+                    'bridge|t|{}{}'.format(ma,ma): 11,
+                    'bridge|t|{}{}'.format(ma,mb): 12,
+                    'bridge|t|{}{}'.format(mb,mb): 13,
+                    '4fold|t|{}{}{}{}'.format(ma,ma,ma,ma): 14,
+                    '4fold|t|{}{}{}{}'.format(ma,ma,ma,mb): 15, 
+                    '4fold|t|{}{}{}{}'.format(ma,ma,mb,mb): 16,
+                    '4fold|t|{}{}{}{}'.format(ma,mb,ma,mb): 17, 
+                    '4fold|t|{}{}{}{}'.format(ma,mb,mb,mb): 18,
+                    '4fold|t|{}{}{}{}'.format(mb,mb,mb,mb): 19}
+ 
+        elif self.surface == 'hcp10m11':
+            return {'ontop|step|{}'.format(ma): 1, 
+                    'ontop|step|{}'.format(mb): 2,
+                    'ontop|terrace|{}'.format(ma): 3, 
+                    'ontop|terrace|{}'.format(mb): 4,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,ma,ma,ma): 5,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,ma,ma,mb): 6,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,ma,mb,mb): 7,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,mb,ma,mb): 8,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,mb,mb,ma): 9,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,mb,mb,mb): 10,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,mb,mb,mb,mb): 11,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,ma,ma,ma): 12,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,ma,ma,mb): 13,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,ma,mb,mb): 14,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,mb,ma,mb): 15,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,mb,mb,ma): 16,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,mb,mb,mb): 17,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,mb,mb,mb,mb): 18,
+                    'bridge|step|{}{}'.format(ma,ma): 19, 
+                    'bridge|step|{}{}'.format(ma,mb): 20,
+                    'bridge|step|{}{}'.format(mb,mb): 21, 
+                    'bridge|terrace|{}{}'.format(ma,ma): 22, 
+                    'bridge|terrace|{}{}'.format(ma,mb): 23,
+                    'bridge|terrace|{}{}'.format(mb,mb): 24, 
+                    'bridge|h|{}{}'.format(ma,ma): 25, 
+                    'bridge|h|{}{}'.format(ma,mb): 26,
+                    'bridge|h|{}{}'.format(mb,mb): 27, 
+                    'bridge|subsurf|{}{}-{}{}'.format(ma,ma,ma,ma): 28,
+                    'bridge|subsurf|{}{}-{}{}'.format(ma,ma,ma,mb): 29,
+                    'bridge|subsurf|{}{}-{}{}'.format(ma,ma,mb,mb): 30,
+                    'bridge|subsurf|{}{}-{}{}'.format(ma,mb,ma,ma): 31,
+                    'bridge|subsurf|{}{}-{}{}'.format(ma,mb,ma,mb): 32,
+                    'bridge|subsurf|{}{}-{}{}'.format(ma,mb,mb,mb): 33,
+                    'bridge|subsurf|{}{}-{}{}'.format(mb,mb,ma,ma): 34,
+                    'bridge|subsurf|{}{}-{}{}'.format(mb,mb,ma,mb): 35,
+                    'bridge|subsurf|{}{}-{}{}'.format(mb,mb,mb,mb): 36, 
+                    '3fold|h|{}{}{}'.format(ma,ma,ma): 37,
+                    '3fold|h|{}{}{}'.format(ma,ma,mb): 38, 
+                    '3fold|h|{}{}{}'.format(ma,mb,mb): 39,
+                    '3fold|h|{}{}{}'.format(mb,mb,mb): 40}
 
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
