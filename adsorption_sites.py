@@ -163,7 +163,7 @@ heights_dict = {'ontop': 2.0,
                 'fcc': 2.0, 
                 'hcp': 2.0, 
                 '4fold': 2.0,
-                'subsurf': 0.}
+                '6fold': 0.}
 
 warnings.filterwarnings("ignore")
 
@@ -390,7 +390,7 @@ class NanoparticleAdsorptionSites(object):
                         return np.sum((self.atoms[x].position - subpos)**2)
                     subsi = sorted(sorted(subsurf_ids, key=get_squared_distance)[:3])     
                     si = site['indices']
-                    site.update({'site': 'subsurf',      
+                    site.update({'site': '6fold',      
                                  'position': subpos,
                                  'indices': tuple(sorted(si+tuple(subsi)))})      
                     if self.composition_effect:
@@ -668,7 +668,7 @@ class NanoparticleAdsorptionSites(object):
 class SlabAdsorptionSites(object):
 
     def __init__(self, atoms, surface, allow_subsurf_sites=False,
-                 composition_effect=False, subsurf_effect=False):
+                 composition_effect=False, subsurf_effect=False, dx=.5):
 
         assert True in atoms.pbc    
         atoms = atoms.copy() 
@@ -679,12 +679,11 @@ class SlabAdsorptionSites(object):
         self.surface = surface
         ref_atoms = self.atoms.copy() 
         for a in ref_atoms:
-            a.symbol = 'Au'
-       
+            a.symbol = 'Au'       
         ref_atoms.set_constraint()
         ref_atoms.calc = asapEMT()
         opt = FIRE(ref_atoms, logfile=None)
-        opt.run(fmax=0.1)
+        opt.run(fmax=0.05)
         ref_atoms.calc = None
 
         self.ref_atoms = ref_atoms
@@ -697,25 +696,26 @@ class SlabAdsorptionSites(object):
         self.allow_subsurf_sites = allow_subsurf_sites
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
+        self.dx = dx
         self.tol = 1e-5
-        self.r = 2.675
 
-        self.make_neighbor_list(dx=.3) 
+        self.make_neighbor_list(dx=self.dx) 
         self.connectivity_matrix = self.get_connectivity()         
         self.surf_ids, self.subsurf_ids = self.get_termination()        
+
         #TODO: an efficient and consistent way to identify surfaces.
-#        if surface is None: 
-#            self.fullCNA, self.surfCNA = self.get_CNA(rCut=self.r+.3)
-#            self.surface = self.identify_surface()
-#            print('The surface is identified as {}. '.format(self.surface),
-#                  'Please specify the surface if it is incorrect')
-#        else:
-#            self.surface = surface
+       # if surface is None: 
+       #     self.fullCNA, self.surfCNA = self.get_CNA(rCut=3.)
+       #     self.surface = self.identify_surface()
+       #     print('The surface is identified as {}. '.format(self.surface),
+       #           'Please specify the surface if it is incorrect')
+       # else:
+       #     self.surface = surface
 
         self.site_list = []
         self.populate_site_list()
         
-    def populate_site_list(self, allow_obtuse=True, cutoff = 5.0):        
+    def populate_site_list(self, allow_obtuse=True, cutoff=5.):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
            given an input slab based on Delaunay triangulation of 
            surface atoms of a super-cell and collect in a site list. 
@@ -732,15 +732,17 @@ class SlabAdsorptionSites(object):
         for s in top_indices:
             occurence = cm[s]
             sumo = np.sum(occurence, axis=0)
-            if self.surface in ['fcc100','fcc111','bcc100']:
-                geometry = self.surface[-3:]
+            if self.surface in ['fcc111','bcc110','hcp0001']:
+                geometry = 'h'
+            elif self.surface in ['fcc100','bcc100','hcp10m10']:
+                geometry = 't'
             else:
                 if sumo in [7, 8]:
                     geometry = 'step'
                 elif sumo in [9, 11]:
                     geometry = 'terrace'
                 elif sumo == 10:
-                    if self.surface == 'fcc211':
+                    if self.surface in ['fcc211','bcc111']:
                         geometry = 'lowerstep'
                     elif self.surface in ['fcc110','fcc311']:
                         geometry = 'terrace'
@@ -762,9 +764,22 @@ class SlabAdsorptionSites(object):
             sl.append(site)
             usi.add(si)
 
-        if self.surface == 'fcc110' and self.composition_effect:
-            stepids = [s['indices'][0] for s in sl if 
-                       s['geometry'] == 'step']
+        stepids = set([s['indices'][0] for s in sl if s['geometry'] == 'step'])
+        terraceids = set([s['indices'][0] for s in sl if s['geometry'] == 'terrace']) 
+        if self.surface in ['fcc211','bcc111']:
+            lowerids = set([s['indices'][0] for s in sl if s['geometry'] == 'lowerstep'])
+        if self.surface == 'bcc111':
+            sorted_steps = sorted([i for i in stepids], key=lambda x: 
+                                   self.ref_atoms[x].position[2])
+            for j, stpi in enumerate(sorted_steps):
+                if j < len(sorted_steps) / 2:
+                    stepids.remove(stpi)
+                    terraceids.add(stpi) 
+
+            for st in sl:
+                if st['geometry'] == 'step' and st['indices'][0] in terraceids:
+                    st['geometry'] = 'terrace'
+        if self.surface == 'fcc110' and self.composition_effect:   
             for st in sl:
                 if 'extra' in st:
                     extra = st['extra']
@@ -873,10 +888,9 @@ class SlabAdsorptionSites(object):
                 fold3_position = np.average(ext_surf_coords[corners], axis=0)
                 fold3_points += corners.tolist()
                 fold3_positions.append(fold3_position)
-         
+        self.bridge_positions, self.fold3_positions, self.fold4_positions = bridge_positions, fold3_positions, fold4_positions
         # Complete information of each site
-        for n, poss in enumerate([bridge_positions, fold3_positions, 
-                                  fold4_positions]):
+        for n, poss in enumerate([bridge_positions,fold3_positions,fold4_positions]):
             if not poss:
                 continue
             fracs = np.stack(poss, axis=0) @ np.linalg.pinv(self.cell)
@@ -899,7 +913,7 @@ class SlabAdsorptionSites(object):
                             pbc=self.pbc)
             ntop2 = len(top2atoms)
             testatoms = top2atoms + dummies
-            nblist = neighbor_shell_list(testatoms, dx=.1, neighbor_number=1, 
+            nblist = neighbor_shell_list(testatoms, dx=self.dx, neighbor_number=1, 
                                          different_species=True, mic=True) 
             # Make bridge sites  
             if n == 0:
@@ -913,58 +927,100 @@ class SlabAdsorptionSites(object):
                         else:
                             'Cannot identify site {}'.format(bridgeids)
                         continue
-
                     si = tuple(sorted(bridgeids))
                     pos = refpos + np.average(self.delta_positions[bridgeids], 0) 
                     occurence = np.sum(cm[bridgeids], axis=0)
-                    sumo = np.sum(occurence)
-
+                    siset = set(si)
+                    nstep = len(stepids.intersection(siset))
+                    nterrace = len(terraceids.intersection(siset))
                     if self.surface == 'fcc110':
-                        if list(occurence).count(2) == 2:
+                        sitetype = 'bridge'
+                        if nstep == 2:
                             geometry = 'step'
-                        elif list(occurence).count(2) == 3:
-                            geometry = '111'
-                        elif list(occurence).count(2) == 4:                            
+                        elif nstep == 1 and nterrace == 1:
+                            geometry = 'h'
+                        elif nterrace == 2:                            
                             geometry = 'terrace'
                         else:
                             print('Cannot identify site {}'.format(si)) 
-                            continue         
-
-                    elif self.surface == 'fcc311': 
-                        if sumo == 14:
+                            continue 
+                    elif self.surface == 'fcc311':
+                        sitetype = 'bridge'
+                        if nstep == 2:
                             geometry = 'step'
-                        elif sumo == 17:
-                            if list(occurence).count(2) == 2:
-                                geometry = '100'
-                            elif list(occurence).count(2) == 3:
-                                geometry = '111'
-                        elif sumo == 20:
+                        elif nstep == 1 and nterrace == 1:
+                            cto2 = list(occurence).count(2)
+                            if cto2 == 2:
+                                geometry = 't'
+                            elif cto2 == 3:
+                                geometry = 'h'
+                            else:
+                                print('Cannot identify site {}'.format(si))
+                        elif nterrace == 2:
                             geometry = 'terrace'
                         else:
                             print('Cannot identify site {}'.format(si)) 
-                            continue         
- 
-                    elif self.surface == 'fcc211':                    
-                        if sumo == 14:
+                            continue          
+                    elif self.surface == 'fcc211':
+                        sitetype = 'bridge'
+                        nlower = len(lowerids.intersection(siset))
+                        if nstep == 2:
                             geometry = 'step'
-                        elif sumo in [15, 16]:
-                            geometry = 'upper111'
-                        elif sumo == 17:
-                            geometry = '100'
-                        # sumo == 18 is actually terrace bridge, 
+                        elif nstep == 1 and nterrace == 1:
+                            geometry = 'upperh'
+                        elif nstep == 1 and nlower == 1:
+                            geometry = 't'
+                        # nterrace == 2 is actually terrace bridge, 
                         # but equivalent to lower111 for fcc211
-                        elif sumo in [18, 19]:
-                            geometry = 'lower111'
-                        elif sumo == 20:
+                        elif nterrace == 2 or (nterrace == 1 and nlower == 1):
+                            geometry = 'lowerh'
+                        elif nlower == 2:
                             geometry = 'lowerstep'
                         else:
                             print('Cannot identify site {}'.format(si)) 
                             continue         
-                    elif self.surface in ['fcc100','fcc111','bcc100']:
-                        geometry = self.surface[-3:]
-                                    
+                    elif self.surface == 'bcc110':
+                        geometry = '110'
+                        cto2 = list(occurence[self.surf_ids]).count(2)
+                        if cto2 == 2:
+                            sitetype = 'longbridge'
+                        elif cto2 == 3:
+                            sitetype = 'shortbridge'
+                        else:
+                            print('Cannot identify site {}'.format(si))
+                            continue
+                    elif self.surface == 'bcc111':
+                        nlower = len(lowerids.intersection(siset))
+                        if nstep == 1 and nlower == 1:
+                            sitetype, geometry = 'longbridge', 'h'
+                        elif nstep == 1 and nterrace == 1:
+                            sitetype, geometry = 'shortbridge', 'upperh'
+                        elif nterrace == 1 and nlower == 1:
+                            sitetype, geometry = 'shortbridge', 'lowerh'
+                        else:
+                            print('Cannot identify site {}'.format(si))
+                            continue
+                    elif self.surface == 'hcp10m11':
+                        if nstep == 2:
+                            sitetype, geometry = 'bridge', 'step'
+                        elif nstep == 1 and nterrace == 1:
+                            #print(occurence[self.subsurf_ids])
+                            cto2 = list(occurence).count(2) 
+                            if cto2 == 2:
+                                sitetype, geometry = 'bridge', 'subsurf'
+                            elif sto2 == 3:
+                                sitetype, geometry = 'bridge', 'h'
+                        elif nterrace == 2:
+                            sitetype, geometry = 'bridge', 'terrace'
+                        else:
+                            print('Cannot identify site {}'.format(si))
+                            continue  
+                    elif self.surface in ['fcc111','hcp0001']:
+                        sitetype, geometry = 'bridge', 'h'
+                    elif self.surface in ['fcc100','bcc100','hcp10m10']:
+                        sitetype, geometry = 'bridge', 't'
                     site = self.new_site()                         
-                    site.update({'site': 'bridge',               
+                    site.update({'site': sitetype,               
                                  'surface': self.surface,
                                  'geometry': geometry,
                                  'position': pos,
@@ -988,7 +1044,8 @@ class SlabAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si)
 
-                if self.surface in ['fcc100','fcc211','fcc311','bcc100'] and fold4_poss:
+                if self.surface in ['fcc100','fcc211','fcc311',
+                                    'bcc100','hcp10m10'] and fold4_poss:
                     fold4atoms = Atoms('X{}'.format(len(fold4_poss)), 
                                        positions=np.asarray(fold4_poss),
                                        cell=self.cell, 
@@ -1006,12 +1063,15 @@ class SlabAdsorptionSites(object):
                     for i, refpos in enumerate(fold4_poss):
                         fold4_indices = newnblist[ntop+i]                     
                         fold4ids = [sorted_top[j] for j in fold4_indices]
-                        occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence >= 4)[0][0]
-                        allfold4ids = [k for k in fold4ids if cm[k,isub] == 1]                        
-                        srt = sorted(allfold4ids, key=lambda x: np.sum(cm[x]))
-                        res = [r for r in srt[2:] if np.sum(cm[r,srt[:2]]) < 2]
-                        newfold4ids = res + srt[:2]
+                        if self.surface == 'hcp10m10':
+                            newfold4ids = fold4ids
+                        else:
+                            occurence = np.sum(cm[fold4ids], axis=0)
+                            isub = np.where(occurence >= 4)[0][0]
+                            allfold4ids = [k for k in fold4ids if cm[k,isub] == 1]                        
+                            srt = sorted(allfold4ids, key=lambda x: np.sum(cm[x]))
+                            res = [r for r in srt[2:] if np.sum(cm[r,srt[:2]]) < 2]
+                            newfold4ids = res + srt[:2]
                         si = tuple(sorted(newfold4ids)) 
                         pos = refpos + np.average(
                               self.delta_positions[newfold4ids], 0)
@@ -1023,7 +1083,7 @@ class SlabAdsorptionSites(object):
                         site = self.new_site() 
                         site.update({'site': '4fold',               
                                      'surface': self.surface,
-                                     'geometry': '100',
+                                     'geometry': 't',
                                      'position': pos,
                                      'normal': normal,
                                      'indices': si})                     
@@ -1053,7 +1113,7 @@ class SlabAdsorptionSites(object):
                                 elif nma == 4:
                                     composition = 4*ma
                             site.update({'composition': composition})   
-                        if self.subsurf_effect:
+                        if self.subsurf_effect and self.surface != 'hcp10m10':
                             site.update({'subsurf_index': isub})
                             if self.composition_effect:
                                 site.update({'subsurf_element': 
@@ -1062,11 +1122,13 @@ class SlabAdsorptionSites(object):
                         usi.add(si)
              
             # Make 3-fold hollow sites (differentiate fcc / hcp)
-            if n == 1 and self.surface not in ['fcc100','bcc100']:
+            if n == 1 and self.surface not in ['fcc100','bcc100','hcp10m10']:
                 for i, refpos in enumerate(reduced_poss):
                     fold3_indices = nblist[ntop2+i]
                     fold3ids = [sorted_indices[j] for j in fold3_indices]
                     if len(fold3ids) != 3:
+                        if self.surface != 'hcp10m11':
+                            print('Cannot find correct indices of this 3-fold site')
                         continue
                     si = tuple(sorted(fold3ids))
                     pos = refpos + np.average(
@@ -1076,25 +1138,31 @@ class SlabAdsorptionSites(object):
                     for idx in si:
                         normals_for_site[idx].append(normal)
                     occurence = np.sum(cm[fold3ids], axis=0)
-                    sumo = np.sum(occurence)
                     if self.surface == 'fcc211':
-                        if sumo == 23:
-                            sitetype, geometry = 'hcp', 'upper111'        
-                        elif sumo in [24, 25]:
-                            sitetype, geometry = 'fcc', 'upper111'
-                        elif sumo in [27, 28]:
-                            sitetype, geometry = 'hcp', 'lower111'
-                        elif sumo == 29:
-                            sitetype, geometry = 'fcc', 'lower111'                    
+                        siset = set(si)
+                        if stepids.intersection(siset):
+                            geometry = 'upperh'
+                            if np.max(occurence) == 3:
+                                sitetype = 'hcp'
+                            else:
+                                sitetype = 'fcc'
+                        elif lowerids.intersection(siset):
+                            geometry = 'lowerh' 
+                            if np.max(occurence) == 3:
+                                sitetype = 'hcp'
+                            else:
+                                sitetype = 'fcc'
                         else:
                             print('Cannot identify site {}'.format(si))
-                            continue         
-                    else: 
+                            continue
+                    elif self.surface in ['bcc110','bcc111','hcp10m11']:
+                        sitetype, geometry = '3fold', 'h'
+                    elif self.surface in ['fcc111','fcc110','fcc311','hcp0001']:
+                        geometry = 'h'
                         if np.max(occurence) == 3:
-                            sitetype, geometry = 'hcp', '111'                  
+                            sitetype = 'hcp'
                         else:
-                            sitetype, geometry = 'fcc', '111' 
- 
+                            sitetype = 'fcc'
                     site = self.new_site()               
                     site.update({'site': sitetype,
                                  'surface': self.surface,
@@ -1129,7 +1197,8 @@ class SlabAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si)
  
-            if n == 2 and self.surface in ['fcc100','bcc100'] and list(reduced_poss):
+            if n == 2 and self.surface in ['fcc100','bcc100','hcp10m10'
+            ] and list(reduced_poss):
                 fold4atoms = Atoms('X{}'.format(len(reduced_poss)), 
                                    positions=np.asarray(reduced_poss),
                                    cell=self.cell, 
@@ -1146,9 +1215,12 @@ class SlabAdsorptionSites(object):
                 for i, refpos in enumerate(reduced_poss):
                     fold4_indices = newnblist[ntop+i]                     
                     fold4ids = [sorted_top[j] for j in fold4_indices]
-                    occurence = np.sum(cm[fold4ids], axis=0)
-                    isub = np.where(occurence == 4)[0][0]
-                    newfold4ids = [k for k in fold4ids if cm[k,isub] == 1]
+                    if self.surface == 'hcp10m10':
+                        newfold4ids = fold4ids
+                    else:
+                        occurence = np.sum(cm[fold4ids], axis=0)
+                        isub = np.where(occurence == 4)[0][0]
+                        newfold4ids = [k for k in fold4ids if cm[k,isub] == 1]
                     si = tuple(sorted(newfold4ids))
                     pos = refpos + np.average(
                           self.delta_positions[newfold4ids], 0)
@@ -1160,7 +1232,7 @@ class SlabAdsorptionSites(object):
                     site = self.new_site()
                     site.update({'site': '4fold',
                                  'surface': self.surface,
-                                 'geometry': '100',
+                                 'geometry': 't',
                                  'position': pos,
                                  'normal': normal,
                                  'indices': si})                    
@@ -1190,7 +1262,7 @@ class SlabAdsorptionSites(object):
                             elif nma == 4:
                                 composition = 4*ma
                         site.update({'composition': composition})   
-                    if self.subsurf_effect:
+                    if self.subsurf_effect and self.surface != 'hcp10m10':
                         site.update({'subsurf_index': isub})
                         if self.composition_effect:
                             site.update({'subsurf_element': 
@@ -1267,11 +1339,10 @@ class SlabAdsorptionSites(object):
                     subsi = sorted(sorted(self.subsurf_ids, 
                                           key=get_squared_distance)[:3])     
                     si = site['indices']
-                    site.update({'site': 'subsurf',      
+                    site.update({'site': '6fold',      
                                  'position': subpos,
+                                 'geometry': 'subsurf',
                                  'indices': tuple(sorted(si+tuple(subsi)))})
-                    if self.surface == 'fcc211':
-                        site.update({'geometry': '111'})           
                     if self.composition_effect:
                         metals = self.metals
                         comp = site['composition']
@@ -1332,10 +1403,8 @@ class SlabAdsorptionSites(object):
         surf = self.get_all_from_surface(surface)
         return [i for i in surf if i['site'] == site]
 
-    def make_neighbor_list(self, dx=0.3, neighbor_number=1):
+    def make_neighbor_list(self, dx=.5, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
-        if self.surface in ['fcc110','bcc100']:
-            dx = 0.5
         self.nblist = neighbor_shell_list(self.ref_atoms, dx, 
                                           neighbor_number, mic=True)
 
@@ -1354,11 +1423,11 @@ class SlabAdsorptionSites(object):
         xmul = math.ceil(15/xcell)
         ymul = math.ceil(15/ycell) 
         atoms = self.ref_atoms*(xmul,ymul,1)
-
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
         indices = self.indices 
-        if self.surface in ['fcc110']:
+
+        if self.surface in ['fcc110','bcc111']:
             rmsd = 0.1
         else: 
             rmsd = 0.25
