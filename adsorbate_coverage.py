@@ -28,6 +28,7 @@ heights_dict = {'ontop': 2.,
                 'hcp': 2.,
                 '3fold': 2., 
                 '4fold': 2.,
+                '5fold': 2.,
                 '6fold': 0.}
 
 # Make your own adsorbate list. Make sure you always sort the 
@@ -126,6 +127,8 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
     def __init__(self, atoms, adsorption_sites=None, dmax=2.5):
  
         self.atoms = atoms.copy()
+        self.positions = atoms.positions
+        self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
         assert len(self.ads_ids) > 0 
@@ -142,12 +145,12 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             nas = adsorption_sites
         else:
             nas = NanoparticleAdsorptionSites(atoms, 
-                                              allow_subsurf_sites=True,
+                                              allow_6fold=True,
                                               composition_effect=True,
                                               subsurf_effect=False)    
         self.nas = nas
         self.slab = nas.atoms
-        self.allow_subsurf_sites = nas.allow_subsurf_sites
+        self.allow_6fold = nas.allow_6fold
         self.composition_effect = nas.composition_effect
         if nas.subsurf_effect:
             raise NotImplementedError
@@ -213,7 +216,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 if i == j:
                     conn_x.append(0.)
                 elif overlap > 0:
-                    if self.allow_subsurf_sites: 
+                    if self.allow_6fold: 
                         if '6fold' in [sti['site'], stj['site']]: 
                             if overlap == 3:                            
                                 conn_x.append(1.)
@@ -236,11 +239,11 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         ndentate_dict = {}
  
         for adsid in self.ads_ids:
-            if self.atoms[adsid].symbol == 'H':
+            if self.symbols[adsid] == 'H':
                 if [adsid] not in ads_list:
                     continue
 
-            adspos = self.atoms[adsid].position                                 
+            adspos = self.positions[adsid]
             bls = np.linalg.norm(np.asarray([s['position'] - 
                                  adspos for s in hsl]), axis=1)
             stid, bl = min(enumerate(bls), key=itemgetter(1))
@@ -253,12 +256,12 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             if 'occupied' in st:
                 if bl >= st['bond_length']:
                     continue
-                elif self.atoms[adsid].symbol != 'H':
+                elif self.symbols[adsid] != 'H':
                     ndentate_dict[adsi] -= 1 
             st['bonded_index'] = adsid
             st['bond_length'] = bl
 
-            symbols = str(self.atoms[adsids].symbols)
+            symbols = str(self.symbols[adsids])
             adssym = next((k for k, v in adsorbate_formula_dict.items() 
                            if v == symbols), symbols)
             st['adsorbate'] = adssym
@@ -298,7 +301,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
                     bondid = st['bonded_index']
-                    bondsym = self.atoms[bondid].symbol     
+                    bondsym = self.symbols[bondid]
                     adssym = st['adsorbate']
                     if adssym in adsorbate_fragment_dict:
                         fsym = next((f for f in adsorbate_fragment_dict[adssym] 
@@ -400,30 +403,30 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 '4fold|fcc100|{}{}{}{}'.format(ma,mb,ma,mb): 29, 
                 '4fold|fcc100|{}{}{}{}'.format(ma,mb,mb,mb): 30,
                 '4fold|fcc100|{}{}{}{}'.format(mb,mb,mb,mb): 31,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 32,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 33,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 34,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 35,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 36,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 37,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 38,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 39,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 40,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 41,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 42,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 43,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 44,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 45,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 46,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 47,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 48,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 49,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 50,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 51,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 52,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 53,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 54,
-                '6fold|fcc111|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 55}
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 32,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 33,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 34,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 35,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 36,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 37,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 38,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 39,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 40,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 41,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 42,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 43,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 44,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 45,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 46,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 47,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 48,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 49,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 50,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 51,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 52,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 53,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 54,
+                '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 55}
 
  
 class SlabAdsorbateCoverage(SlabAdsorptionSites):
@@ -448,13 +451,13 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             sas = adsorption_sites
         else:
             sas = SlabAdsorptionSites(atoms, surface, 
-                                      allow_subsurf_sites=True,
+                                      allow_6fold=True,
                                       composition_effect=True,
                                       subsurf_effect=False)    
         self.sas = sas
         self.slab = sas.atoms
         self.surface = sas.surface
-        self.allow_subsurf_sites = sas.allow_subsurf_sites
+        self.allow_6fold = sas.allow_6fold
         self.composition_effect = sas.composition_effect
         if sas.subsurf_effect:
             raise NotImplementedError
@@ -522,7 +525,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 if i == j:
                     conn_x.append(0.)
                 elif overlap > 0:
-                    if self.allow_subsurf_sites:         
+                    if self.allow_6fold:         
                         if 'subsurf' in [sti['geometry'], stj['geometry']]: 
                             if overlap == 3:
                                 conn_x.append(1.)
@@ -544,11 +547,11 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         ads_list = self.ads_list
         ndentate_dict = {} 
         for adsid in self.ads_ids:
-            if self.atoms[adsid].symbol == 'H':
+            if self.symbols[adsid] == 'H':
                 if [adsid] not in ads_list:
                     continue
 
-            adspos = self.atoms[adsid].position                                 
+            adspos = self.positions[adsid]
             _, bls = find_mic(np.asarray([s['position'] - adspos for s in hsl]), 
                               cell=self.cell, pbc=True) 
             stid, bl = min(enumerate(bls), key=itemgetter(1))
@@ -561,12 +564,12 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             if 'occupied' in st:
                 if bl >= st['bond_length']:
                     continue
-                elif self.atoms[adsid].symbol != 'H':
+                elif self.symbols[adsid] != 'H':
                     ndentate_dict[adsi] -= 1 
             st['bonded_index'] = adsid
             st['bond_length'] = bl
 
-            symbols = str(self.atoms[adsids].symbols)
+            symbols = str(self.symbols[adsids])
             adssym = next((k for k, v in adsorbate_formula_dict.items() 
                            if v == symbols), symbols)
             st['adsorbate'] = adssym
@@ -607,7 +610,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
                     bondid = st['bonded_index']
-                    bondsym = self.atoms[bondid].symbol     
+                    bondsym = self.symbols[bondid] 
                     adssym = st['adsorbate']
                     if adssym in adsorbate_fragment_dict:
                         fsym = next((f for f in adsorbate_fragment_dict[adssym] 
@@ -673,7 +676,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 for j, spec in enumerate(specs):
                     sbcm[i,j] += counts[spec]
         top_ids = self.surf_ids + self.subsurf_ids if \
-                  self.allow_subsurf_sites else self.surf_ids
+                  self.allow_6fold else self.surf_ids
         for si in top_ids:
             nbids = np.where(cm[si]==1)[0]
             nbs = [symbols[i] for i in nbids]
@@ -735,27 +738,27 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '6fold|subsurf': 10}
 
         elif self.surface == 'bcc110':
-            return {'ontop|h': 1,
-                    'longbridge|h': 2,
-                    'shortbridge|h': 3,
-                    '3fold|h': 4}
+            return {'ontop|o': 1,
+                    'longbridge|o': 2,
+                    'shortbridge|o': 3,
+                    '3fold|o': 4}
                   
         elif self.surface == 'bcc111':           
             return {'ontop|step': 1,                       
                     'ontop|terrace': 2,        
                     'ontop|lowerstep': 3,
-                    'shortbridge|upperh': 4,
-                    'shortbridge|lowerh': 5,
-                    'longbridge|h': 6,
-                    '3fold|h': 7}
+                    'shortbridge|uppero': 4,
+                    'shortbridge|lowero': 5,
+                    'longbridge|o': 6,
+                    '3fold|o': 7}
 
         elif self.surface == 'hcp10m10':
             return {'ontop|step': 1,
                     'ontop|terrace': 2,
-                    'bridge|step': 3,
-                    'bridge|terrace': 4,
-                    'bridge|t': 5,
-                    '4fold|t': 6}
+                    'ontop|subsurf': 3,
+                    'bridge|step': 4,
+                    'bridge|terrace': 5,
+                    'bridge|o': 6}
 
         elif self.surface == 'hcp10m11':
             return {'ontop|step': 1,
@@ -784,30 +787,30 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|h|{}{}{}'.format(ma,ma,mb): 11,
                     'hcp|h|{}{}{}'.format(ma,mb,mb): 12,
                     'hcp|h|{}{}{}'.format(mb,mb,mb): 13,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 14,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 15,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 16,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 17,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 18,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 19,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 20,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 21,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 22,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 23,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 24,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 25,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 26,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 27,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 28,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 29,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 30,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 31,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 32,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 33,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 34,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 35,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 36,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 37}
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 14,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 15,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 16,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 17,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 18,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 19,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 20,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 21,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 22,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 23,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 24,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 25,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 26,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 27,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 28,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 29,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 30,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 31,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 32,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 33,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 34,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 35,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 36,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 37}
  
         elif self.surface in ['fcc100','bcc100']:
             return {'ontop|t|{}'.format(ma): 1, 
@@ -863,30 +866,30 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'hcp|h|{}{}{}'.format(ma,ma,mb): 37,
                     'hcp|h|{}{}{}'.format(ma,mb,mb): 38,
                     'hcp|h|{}{}{}'.format(mb,mb,mb): 39,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 40,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 41,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 42,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 43,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 44,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 45,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 46,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 47,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 48,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 49,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 50,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 51,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 52,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 53,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 54,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 55,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 56,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 57,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 58,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 59,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 60,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 61,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 62,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 63}
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 40,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 41,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 42,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 43,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 44,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 45,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 46,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 47,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 48,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 49,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 50,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 51,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 52,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 53,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 54,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 55,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 56,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 57,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 58,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 59,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 60,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 61,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 62,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 63}
     
         elif self.surface == 'fcc211':
             return {'ontop|step|{}'.format(ma): 1,
@@ -933,30 +936,30 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '4fold|t|{}{}{}{}'.format(ma,mb,ma,mb): 41, 
                     '4fold|t|{}{}{}{}'.format(ma,mb,mb,mb): 42,
                     '4fold|t|{}{}{}{}'.format(mb,mb,mb,mb): 43,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 44,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 45,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 46,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 47,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 48,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 49,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 50,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 51,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 52,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 53,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 54,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 55,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 56,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 57,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 58,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 59,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 60,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 61,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 62,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 63,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 64,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 65,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 66,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 67}
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 44,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 45,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 46,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 47,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 48,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 49,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 50,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 51,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 52,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 53,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 54,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 55,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 56,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 57,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 58,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 59,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 60,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 61,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 62,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 63,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 64,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 65,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 66,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 67}
                      
         elif self.surface == 'fcc311':
             return {'ontop|step|{}'.format(ma): 1,
@@ -989,44 +992,44 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '4fold|t|{}{}{}{}'.format(ma,mb,ma,mb): 28, 
                     '4fold|t|{}{}{}{}'.format(ma,mb,mb,mb): 29,
                     '4fold|t|{}{}{}{}'.format(mb,mb,mb,mb): 30,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,ma): 31,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,ma,mb): 32,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,ma,ma): 33,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,ma,mb,mb): 34,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,ma): 35,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,ma,mb,mb,mb): 36,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,ma): 37,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,ma,mb): 38,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,ma,ma): 39,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,ma,mb,mb): 40,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,ma): 41,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,ma,mb,mb,mb,mb): 42,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,ma): 43,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,ma,mb): 44,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,ma,ma): 45,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,ma,mb,mb): 46,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,ma): 47,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(ma,mb,mb,mb,mb,mb): 48,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,ma): 49,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,ma,mb): 50,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,ma,ma): 51,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,ma,mb,mb): 52,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,ma): 53,
-                    '6fold|subsurf|{}{}{}-{}{}{}'.format(mb,mb,mb,mb,mb,mb): 54}
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 31,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 32,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 33,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 34,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 35,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 36,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 37,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 38,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 39,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 40,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 41,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 42,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 43,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 44,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 45,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 46,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 47,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 48,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 49,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 50,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 51,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 52,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 53,
+                    '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 54}
 
         elif self.surface == 'bcc110':
-            return {'ontop|h|{}'.format(ma): 1, 
-                    'ontop|h|{}'.format(mb): 2,
-                    'shortbridge|h|{}{}'.format(ma,ma): 3, 
-                    'shortbridge|h|{}{}'.format(ma,mb): 4,
-                    'shortbridge|h|{}{}'.format(mb,mb): 5, 
-                    'longbridge|h|{}{}'.format(ma,ma): 6, 
-                    'longbridge|h|{}{}'.format(ma,mb): 7,
-                    'longbridge|h|{}{}'.format(mb,mb): 8, 
-                    '3fold|h|{}{}{}'.format(ma,ma,ma): 9,
-                    '3fold|h|{}{}{}'.format(ma,ma,mb): 10, 
-                    '3fold|h|{}{}{}'.format(ma,mb,mb): 11,
-                    '3fold|h|{}{}{}'.format(mb,mb,mb): 12}
+            return {'ontop|o|{}'.format(ma): 1, 
+                    'ontop|o|{}'.format(mb): 2,
+                    'shortbridge|o|{}{}'.format(ma,ma): 3, 
+                    'shortbridge|o|{}{}'.format(ma,mb): 4,
+                    'shortbridge|o|{}{}'.format(mb,mb): 5, 
+                    'longbridge|o|{}{}'.format(ma,ma): 6, 
+                    'longbridge|o|{}{}'.format(ma,mb): 7,
+                    'longbridge|o|{}{}'.format(mb,mb): 8, 
+                    '3fold|o|{}{}{}'.format(ma,ma,ma): 9,
+                    '3fold|o|{}{}{}'.format(ma,ma,mb): 10, 
+                    '3fold|o|{}{}{}'.format(ma,mb,mb): 11,
+                    '3fold|o|{}{}{}'.format(mb,mb,mb): 12}
 
         elif self.surface == 'bcc111':                         
             return {'ontop|step|{}'.format(ma): 1,
@@ -1035,40 +1038,49 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     'ontop|terrace|{}'.format(mb): 4,
                     'ontop|lowerstep|{}'.format(mb): 5,
                     'ontop|lowerstep|{}'.format(mb): 6,
-                    'shortbridge|upperh|{}{}'.format(ma,ma): 7, 
-                    'shortbridge|upperh|{}{}'.format(ma,mb): 8,
-                    'shortbridge|upperh|{}{}'.format(mb,mb): 9,
-                    'shortbridge|lowerh|{}{}'.format(ma,ma): 10,
-                    'shortbridge|lowerh|{}{}'.format(ma,mb): 11,
-                    'shortbridge|lowerh|{}{}'.format(mb,mb): 12,
-                    'longbridge|h|{}{}'.format(ma,ma): 13,
-                    'longbridge|h|{}{}'.format(ma,mb): 14,
-                    'longbridge|h|{}{}'.format(mb,mb): 15,
-                    '3fold|h|{}{}{}'.format(ma,ma,ma): 16,
-                    '3fold|h|{}{}{}'.format(ma,ma,mb): 17, 
-                    '3fold|h|{}{}{}'.format(ma,mb,mb): 18,
-                    '3fold|h|{}{}{}'.format(mb,mb,mb): 19}
+                    'shortbridge|uppero|{}{}'.format(ma,ma): 7, 
+                    'shortbridge|uppero|{}{}'.format(ma,mb): 8,
+                    'shortbridge|uppero|{}{}'.format(mb,mb): 9,
+                    'shortbridge|lowero|{}{}'.format(ma,ma): 10,
+                    'shortbridge|lowero|{}{}'.format(ma,mb): 11,
+                    'shortbridge|lowero|{}{}'.format(mb,mb): 12,
+                    'longbridge|o|{}{}'.format(ma,ma): 13,
+                    'longbridge|o|{}{}'.format(ma,mb): 14,
+                    'longbridge|o|{}{}'.format(mb,mb): 15,
+                    '3fold|o|{}{}{}'.format(ma,ma,ma): 16,
+                    '3fold|o|{}{}{}'.format(ma,ma,mb): 17, 
+                    '3fold|o|{}{}{}'.format(ma,mb,mb): 18,
+                    '3fold|o|{}{}{}'.format(mb,mb,mb): 19}
 
         elif self.surface == 'hcp10m10':
             return {'ontop|step|{}'.format(ma): 1,
                     'ontop|step|{}'.format(mb): 2,
                     'ontop|terrace|{}'.format(ma): 3,
-                    'ontop|terrace|{}'.format(mb): 4,
-                    'bridge|step|{}{}'.format(ma,ma): 5,
-                    'bridge|step|{}{}'.format(ma,mb): 6,
-                    'bridge|step|{}{}'.format(mb,mb): 7,
-                    'bridge|terrace|{}{}'.format(ma,ma): 8,
-                    'bridge|terrace|{}{}'.format(ma,mb): 9,
-                    'bridge|terrace|{}{}'.format(mb,mb): 10,
-                    'bridge|t|{}{}'.format(ma,ma): 11,
-                    'bridge|t|{}{}'.format(ma,mb): 12,
-                    'bridge|t|{}{}'.format(mb,mb): 13,
-                    '4fold|t|{}{}{}{}'.format(ma,ma,ma,ma): 14,
-                    '4fold|t|{}{}{}{}'.format(ma,ma,ma,mb): 15, 
-                    '4fold|t|{}{}{}{}'.format(ma,ma,mb,mb): 16,
-                    '4fold|t|{}{}{}{}'.format(ma,mb,ma,mb): 17, 
-                    '4fold|t|{}{}{}{}'.format(ma,mb,mb,mb): 18,
-                    '4fold|t|{}{}{}{}'.format(mb,mb,mb,mb): 19}
+                    'ontop|terrace|{}'.format(mb): 4, 
+                    # neighbor elements count clockwise from shorter bond ma
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,ma,ma,ma): 5,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,ma,ma,mb): 6, 
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,ma,mb,mb): 7,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,mb,ma,mb): 8,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,mb,mb,mb): 9, 
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,ma,mb,mb,mb): 10,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(ma,mb,mb,mb,mb): 11,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,ma,ma,ma): 12,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,ma,ma,mb): 13,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,ma,mb,mb): 14,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,mb,ma,mb): 15,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,mb,mb,ma): 16,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,ma,mb,mb,mb): 17,
+                    'ontop|subsurf|{}-{}{}{}{}'.format(mb,mb,mb,mb,mb): 18,
+                    'bridge|step|{}{}'.format(ma,ma): 19,    
+                    'bridge|step|{}{}'.format(ma,mb): 20,
+                    'bridge|step|{}{}'.format(mb,mb): 21,
+                    'bridge|terrace|{}{}'.format(ma,ma): 22,
+                    'bridge|terrace|{}{}'.format(ma,mb): 23,
+                    'bridge|terrace|{}{}'.format(mb,mb): 24,
+                    'bridge|o|{}{}'.format(ma,ma): 25,
+                    'bridge|o|{}{}'.format(ma,mb): 26,
+                    'bridge|o|{}{}'.format(mb,mb): 27}
  
         elif self.surface == 'hcp10m11':
             return {'ontop|step|{}'.format(ma): 1, 
