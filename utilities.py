@@ -1,7 +1,7 @@
 from ase.data import covalent_radii
 from ase.geometry import find_mic
 from collections import defaultdict
-from itertools import product, permutations
+from itertools import product, permutations, combinations
 import networkx as nx
 import numpy as np
 import scipy
@@ -41,8 +41,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     
     nums = set(atoms.numbers)
     pairs = product(nums, nums)
-    res = np.asarray(list(permutations(np.asarray(range(natoms)),2)))
-    
+    res = np.asarray(list(permutations(np.asarray(range(natoms)),2)))    
     indices1, indices2 = res[:,0], res[:,1]
     p1, p2 = positions[indices1], positions[indices2]
 
@@ -51,7 +50,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     else:
         distances = np.linalg.norm(p2 - p1, axis=1)
     ds = np.insert(distances, np.arange(0, distances.size, natoms), 0.)
-    #print(res)
+
     if not radius:
         cr_dict = {(i, j): (covalent_radii[i]+covalent_radii[j]) for i, j in pairs}
     
