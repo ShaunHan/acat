@@ -166,6 +166,7 @@ heights_dict = {'ontop': 2.,
                 'hcp': 2., 
                 '3fold': 2.,
                 '4fold': 2.,
+                '5fold': 2.,
                 '6fold': 0.}
 
 warnings.filterwarnings("ignore")
@@ -173,7 +174,7 @@ warnings.filterwarnings("ignore")
 
 class NanoparticleAdsorptionSites(object):
 
-    def __init__(self, atoms, allow_subsurf_sites=False, 
+    def __init__(self, atoms, allow_6fold=False, 
                  composition_effect=False, subsurf_effect=False):
 
         assert True not in atoms.pbc
@@ -181,7 +182,10 @@ class NanoparticleAdsorptionSites(object):
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
-        self.allow_subsurf_sites = allow_subsurf_sites
+        self.positions = atoms.positions
+        self.symbols = atoms.symbols
+        self.numbers = atoms.numbers
+        self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
         self.cell = atoms.cell
@@ -219,7 +223,7 @@ class NanoparticleAdsorptionSites(object):
                     si = tuple(sorted([s, n]))  # site_indices
                     if n in ssall and si not in usi:
                         # bridge sites
-                        pos = np.average(self.atoms[[n, s]].positions, 0)
+                        pos = np.average(self.positions[[n, s]], 0)
                         site_surf = self.get_surface_designation([s, n])
                         site = self.new_site()
                         site.update({'site': 'bridge',
@@ -227,8 +231,8 @@ class NanoparticleAdsorptionSites(object):
                                      'position': pos,
                                      'indices': si})
                         if self.composition_effect:                         
-                            symbols = [(self.atoms[i].symbol, 
-                                        self.atoms[i].number) for i in si]
+                            symbols = [(self.symbols[i], self.numbers[i]) 
+                                       for i in si]
                             comp = sorted(symbols, key=lambda x: x[1])
                             composition = ''.join([c[0] for c in comp])
                             site.update({'composition': composition})
@@ -244,8 +248,7 @@ class NanoparticleAdsorptionSites(object):
                             normal = self.get_surface_normal([s, n, m])
                             for i in [s, n, m]:
                                 normals_for_site[i].append(normal)
-                            pos = np.average(self.atoms[[n, m,
-                                                         s]].positions, 0)
+                            pos = np.average(self.positions[[n, m, s]], 0)
                             new_pos = pos - normal * self.r * (2./3)**(.5)
                             if self.no_atom_too_close_to_pos(new_pos, 0.5):
                                 this_site = 'fcc'
@@ -265,7 +268,7 @@ class NanoparticleAdsorptionSites(object):
                                     composition = 3*metals[0]
                                 else:
                                     ma, mb = metals[0], metals[1]
-                                    symbols = [self.atoms[i].symbol for i in si]
+                                    symbols = [self.symbols[i] for i in si]
                                     nma = symbols.count(ma)
                                     if nma == 0:
                                         composition = 3*mb
@@ -287,7 +290,7 @@ class NanoparticleAdsorptionSites(object):
                                 site.update({'subsurf_index': isub})
                                 if self.composition_effect:
                                     site.update({'subsurf_element': 
-                                                 self.atoms[isub].symbol})
+                                                 self.symbols[isub]})
                             sl.append(site)
                             usi.add(si)
 
@@ -309,7 +312,7 @@ class NanoparticleAdsorptionSites(object):
                                             # Save the normals now and add them to the site later
                                             for i in [s, n, m, k]:
                                                 normals_for_site[i].append(normal)
-                                            ps = self.atoms[[n, m, s, k]].positions
+                                            ps = self.positions[[n, m, s, k]]
                                             pos = np.average(ps, 0)
  
                                             site = self.new_site()
@@ -324,7 +327,7 @@ class NanoparticleAdsorptionSites(object):
                                                     composition = 4*metals[0]
                                                 else:
                                                     ma, mb = metals[0], metals[1]
-                                                    symbols = [self.atoms[i].symbol for i in si]
+                                                    symbols = [self.symbols[i] for i in si]
                                                     nma = symbols.count(ma)
                                                     if nma == 0:
                                                         composition = 4*mb
@@ -332,10 +335,9 @@ class NanoparticleAdsorptionSites(object):
                                                         composition = ma + 3*mb
                                                     elif nma == 2:
                                                         opp = max(list(si[1:]), key=lambda x: 
-                                                              np.linalg.norm(self.atoms[x].position
-                                                              - self.atoms[si[0]].position)) 
-                                                        if self.atoms[opp].symbol == \
-                                                        self.atoms[si[0]].symbol:
+                                                              np.linalg.norm(self.positions[x]
+                                                              - self.positions[si[0]])) 
+                                                        if self.symbols[opp] == self.symbols[si[0]]:
                                                             composition = ma + mb + ma + mb 
                                                         else:
                                                             composition = 2*ma + 2*mb 
@@ -354,7 +356,7 @@ class NanoparticleAdsorptionSites(object):
                                                 site.update({'subsurf_index': isub})
                                                 if self.composition_effect:
                                                     site.update({'subsurf_element': 
-                                                                 self.atoms[isub].symbol})
+                                                                 self.symbols[isub]})
                                             sl.append(site)
                                             usi.add(si)
 
@@ -362,14 +364,15 @@ class NanoparticleAdsorptionSites(object):
                 site = self.new_site()
                 site.update({'site': 'ontop', 
                              'surface': surface,
-                             'position': self.atoms[s].position,
+                             'position': self.positions[s],
                              'indices': (s,)})
                 if self.composition_effect:
-                    site.update({'composition': self.atoms[s].symbol})
+                    site.update({'composition': self.symbols[s]})
                 sl.append(site)
                 usi.add((s))
 
-        if self.allow_subsurf_sites:
+        # Add 6-fold sites if allowed
+        if self.allow_6fold:
             dh = 5/6 * self.r
             subsurf_ids = self.get_subsurface()
         for t in sl:
@@ -385,12 +388,12 @@ class NanoparticleAdsorptionSites(object):
                 n = np.average(normals, 0)
                 t['normal'] = n / np.linalg.norm(n)
             # Add subsurf sites
-            if self.allow_subsurf_sites:
+            if self.allow_6fold:
                 if t['site'] == 'fcc':  
                     site = t.copy()
                     subpos = t['position'] - t['normal'] * dh                                   
                     def get_squared_distance(x):
-                        return np.sum((self.atoms[x].position - subpos)**2)
+                        return np.sum((self.positions[x] - subpos)**2)
                     subsi = sorted(sorted(subsurf_ids, key=get_squared_distance)[:3])     
                     si = site['indices']
                     site.update({'site': '6fold',      
@@ -400,29 +403,29 @@ class NanoparticleAdsorptionSites(object):
                         metals = self.metals
                         comp = site['composition']
                         if len(metals) == 1:
-                            composition = '-'.join([comp, 3*metals[0]])
+                            composition = ''.join([comp, 3*metals[0]])
                         else: 
                             ma, mb = metals[0], metals[1]
-                            subsyms = [self.atoms[subi].symbol for subi in subsi]
+                            subsyms = [self.symbols[subi] for subi in subsi]
                             nma = subsyms.count(ma)
                             if nma == 0:
-                                composition = '-'.join([comp, 3*mb])
+                                composition = ''.join([comp, 3*mb])
                             elif nma == 1:
                                 ia = subsi[subsyms.index(ma)]
-                                subpos = self.atoms[ia].position
-                                if self.atoms[max(si, key=get_squared_distance)].symbol == ma:
-                                    composition = '-'.join([comp, 2*mb + ma])
+                                subpos = self.positions[ia]
+                                if self.symbols[max(si, key=get_squared_distance)] == ma:
+                                    composition = ''.join([comp, 2*mb + ma])
                                 else:
-                                    composition = '-'.join([comp, ma + 2*mb])
+                                    composition = ''.join([comp, ma + 2*mb])
                             elif nma == 2:
                                 ib = subsi[subsyms.index(mb)]
-                                subpos = self.atoms[ib].position
-                                if self.atoms[max(si, key=get_squared_distance)].symbol == mb:
-                                    composition = '-'.join([comp, 2*ma + mb])
+                                subpos = self.positions[ib]
+                                if self.symbols[max(si, key=get_squared_distance)] == mb:
+                                    composition = ''.join([comp, 2*ma + mb])
                                 else:
-                                    composition = '-'.join([comp, mb + 2*ma])
+                                    composition = ''.join([comp, mb + 2*ma])
                             elif nma == 3:
-                                composition = '-'.join([comp, 3*ma])
+                                composition = ''.join([comp, 3*ma])
                         site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si) 
@@ -456,10 +459,10 @@ class NanoparticleAdsorptionSites(object):
         return [i for i in surf if i['site'] == site]
 
     def get_two_vectors(self, sites):
-        p1 = self.atoms[sites[1]].position
-        p2 = self.atoms[sites[2]].position
-        vec1 = p1 - self.atoms[sites[0]].position
-        vec2 = p2 - self.atoms[sites[0]].position
+        p1 = self.positions[sites[1]]
+        p2 = self.positions[sites[2]]
+        vec1 = p1 - self.positions[sites[0]]
+        vec2 = p2 - self.positions[sites[0]]
         return vec1, vec2
 
     def is_eq(self, v1, v2, eps=0.1):
@@ -472,7 +475,7 @@ class NanoparticleAdsorptionSites(object):
         vec1, vec2 = self.get_two_vectors(sites)
         n = np.cross(vec1, vec2)
         l = math.sqrt(n @ n.conj())
-        new_pos = self.atoms[sites[0]].position + self.r * n / l
+        new_pos = self.positions[sites[0]] + self.r * n / l
         # Add support for having adsorbates on the particles already
         # by putting in elements to check for in the function below
         j = 2 * int(self.no_atom_too_close_to_pos(new_pos, (5./6)*self.r)) - 1
@@ -664,20 +667,28 @@ class NanoparticleAdsorptionSites(object):
         sl = self.site_list
         for st in sl:
             si = list(st['indices'])
-            newpos = np.average(new_atoms[si].positions, 0) 
+            newpos = np.average(new_atoms.positions[si], 0) 
             st['position'] = newpos
 
 
 class SlabAdsorptionSites(object):
 
-    def __init__(self, atoms, surface, allow_subsurf_sites=False,
+    def __init__(self, atoms, surface, allow_6fold=False, 
                  composition_effect=False, subsurf_effect=False, dx=.5):
+        """
+        allow_6fold: allow 6-fold subsurf site
 
+        subsurf_effect: include the effect of subsurf elements 
+                        for hcp(h) and 4fold(t) sites
+        """
         assert True in atoms.pbc    
         atoms = atoms.copy() 
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
+        self.positions = atoms.positions 
+        self.symbols = atoms.symbols
+        self.numbers = atoms.numbers
         self.indices = [a.index for a in self.atoms] 
         self.surface = surface
         ref_atoms = self.atoms.copy() 
@@ -696,7 +707,7 @@ class SlabAdsorptionSites(object):
         self.pbc = atoms.pbc
         self.metals = sorted(list(set(atoms.symbols)), 
                              key=lambda x: atomic_numbers[x])
-        self.allow_subsurf_sites = allow_subsurf_sites
+        self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
         self.dx = dx
@@ -735,10 +746,12 @@ class SlabAdsorptionSites(object):
         for s in top_indices:
             occurence = cm[s]
             sumo = np.sum(occurence, axis=0)
-            if self.surface in ['fcc111','bcc110','hcp0001']:
+            if self.surface in ['fcc111','hcp0001']:
                 geometry = 'h'
             elif self.surface in ['fcc100','bcc100']:
                 geometry = 't'
+            elif self.surface in ['bcc110']:
+                geometry = 'o'
             else:
                 if sumo in [6, 7, 8]:
                     geometry = 'step'
@@ -754,14 +767,15 @@ class SlabAdsorptionSites(object):
                     continue
             si = (s,)
             site = self.new_site()
-            site.update({'site': 'ontop',
+            sitetype = '5fold' if self.surface == 'fcc110' else 'ontop'
+            site.update({'site': sitetype,
                          'surface': self.surface,
                          'geometry': geometry,
-                         'position': self.atoms[s].position,
-                         'normal': np.array([0,0,1]),
+                         'position': self.positions[s],
+                         'normal': np.asarray([0,0,1]),
                          'indices': si})
             if self.composition_effect:
-                site.update({'composition': self.atoms[s].symbol})
+                site.update({'composition': self.symbols[s]})
                 if self.surface == 'fcc110' and geometry == 'terrace':
                     site.update({'extra': np.where(occurence==1)[0]})
             sl.append(site)
@@ -773,7 +787,7 @@ class SlabAdsorptionSites(object):
             lowerids = set([s['indices'][0] for s in sl if s['geometry'] == 'lowerstep'])
         if self.surface == 'bcc111':
             sorted_steps = sorted([i for i in stepids], key=lambda x: 
-                                   self.ref_atoms[x].position[2])
+                                   self.ref_atoms.positions[x,2])
             for j, stpi in enumerate(sorted_steps):
                 if j < len(sorted_steps) / 2:
                     stepids.remove(stpi)
@@ -793,8 +807,8 @@ class SlabAdsorptionSites(object):
                     if len(metals) == 1:
                         composition = 4*metals[0]
                     else: 
-                        ma, mb = metals[0], metals[1]
-                        symbols = [self.atoms[i].symbol for i in extraids]
+                        ma, mb = metals[0], metals[1]                       
+                        symbols = [self.symbols[i] for i in extraids]
                         nma = symbols.count(ma)
                         if nma == 0:
                             composition = 4*mb
@@ -802,16 +816,13 @@ class SlabAdsorptionSites(object):
                             composition = ma + 3*mb
                         elif nma == 2:
                             idd = sorted(extraids[1:], key=lambda x:    
-                                  get_mic(self.atoms[x].position,
-                                  self.atoms[extraids[0]].position,
-                                  self.cell, return_squared_distance=True))
+                                  get_mic(self.positions[x], self.positions[extraids[0]],
+                                          self.cell, return_squared_distance=True))
                             opp, close = idd[-1], idd[0]
-                            if self.atoms[opp].symbol == \
-                            self.atoms[extraids[0]].symbol:
+                            if self.symbols[opp] == self.symbols[extraids[0]]:
                                 composition = ma + mb + ma + mb 
                             else:
-                                if self.atoms[close].symbol == \
-                                self.atoms[extraids[0]].symbol:
+                                if self.symbols[close] == self.symbols[extraids[0]]:
                                     composition = 2*ma + 2*mb 
                                 else:
                                     composition = ma + 2*mb + ma
@@ -937,14 +948,13 @@ class SlabAdsorptionSites(object):
                     siset = set(si)
                     nstep = len(stepids.intersection(siset))
                     nterrace = len(terraceids.intersection(siset))
-                    if self.surface == 'fcc110':
-                        sitetype = 'bridge'
+                    if self.surface == 'fcc110':                        
                         if nstep == 2:
-                            geometry = 'step'
+                            sitetype, geometry = 'bridge', 'step'
                         elif nstep == 1 and nterrace == 1:
-                            geometry = 'h'
+                            sitetype, geometry = 'bridge', 'h'
                         elif nterrace == 2:                            
-                            geometry = 'terrace'
+                            sitetype, geometry = '4fold', 'terrace'
                         else:
                             print('Cannot identify site {}'.format(si)) 
                             continue 
@@ -984,7 +994,7 @@ class SlabAdsorptionSites(object):
                             print('Cannot identify site {}'.format(si)) 
                             continue         
                     elif self.surface == 'bcc110':
-                        geometry = '110'
+                        geometry = 'o'
                         cto2 = list(occurence[self.surf_ids]).count(2)
                         if cto2 == 2:
                             sitetype = 'longbridge'
@@ -996,11 +1006,11 @@ class SlabAdsorptionSites(object):
                     elif self.surface == 'bcc111':
                         nlower = len(lowerids.intersection(siset))
                         if nstep == 1 and nlower == 1:
-                            sitetype, geometry = 'longbridge', 'h'
+                            sitetype, geometry = 'longbridge', 'o'
                         elif nstep == 1 and nterrace == 1:
-                            sitetype, geometry = 'shortbridge', 'upperh'
+                            sitetype, geometry = 'shortbridge', 'uppero'
                         elif nterrace == 1 and nlower == 1:
-                            sitetype, geometry = 'shortbridge', 'lowerh'
+                            sitetype, geometry = 'shortbridge', 'lowero'
                         else:
                             print('Cannot identify site {}'.format(si))
                             continue
@@ -1009,7 +1019,7 @@ class SlabAdsorptionSites(object):
                         if nstep == 2:
                             geometry = 'step'
                         elif nstep == 1 and nterrace == 1:
-                            geometry = 't'
+                            geometry = 'o'
                         elif nterrace == 2:
                             geometry = 'terrace'
                         else:
@@ -1021,10 +1031,10 @@ class SlabAdsorptionSites(object):
                         elif nstep == 1 and nterrace == 1:
                             cto2 = list(occurence).count(2) 
                             if cto2 == 2:
-                                sitetype, geometry = 'bridge', 'subsurf'
+                                sitetype, geometry = '4fold', 'subsurf'
                                 isubs = [self.subsurf_ids[i] for i in np.where(
                                          occurence[self.subsurf_ids] == 2)[0]]
-                                subpos = np.average(self.atoms[isubs].positions, 0)
+                                subpos = np.average(self.positions[isubs], 0)
                             elif cto2 == 3:
                                 sitetype, geometry = 'bridge', 'h'
                             else:
@@ -1041,38 +1051,37 @@ class SlabAdsorptionSites(object):
                         sitetype, geometry = 'bridge', 't'
                     
                     site = self.new_site()
-                    if self.surface == 'hcp10m11' and geometry == 'subsurf':
-                        site.update({'site': sitetype,
-                                     'surface': self.surface,
-                                     'geometry': geometry,
-                                     'position': subpos,
-                                     'normal': np.array([0,0,1]),
-                                     'indices': tuple(sorted(isubs))})
+                    if sitetype == '4fold':
+                        if self.surface == 'fcc110':
+                            extraids = [xi for xi in np.where(occurence==2)[0]
+                                            if xi in self.surf_ids]
+                            site.update({'site': sitetype,
+                                         'surface': self.surface,
+                                         'geometry': geometry,
+                                         'position': pos,
+                                         'normal': np.asarray([0,0,1]),
+                                         'indices': tuple(sorted(bridgeids+extraids))})
+                        elif self.surface == 'hcp10m11': 
+                            extraids = si
+                            site.update({'site': sitetype,
+                                         'surface': self.surface,
+                                         'geometry': geometry,
+                                         'position': subpos,
+                                         'normal': np.asarray([0,0,1]),
+                                         'indices': tuple(sorted(bridgeids+isubs))})
                     else:                         
                         site.update({'site': sitetype,               
                                      'surface': self.surface,
                                      'geometry': geometry,
                                      'position': pos,
-                                     'normal': np.array([0,0,1]),
+                                     'normal': np.asarray([0,0,1]),
                                      'indices': si})           
                     if self.composition_effect:                          
-                        symbols = [(self.atoms[j].symbol, 
-                                    self.atoms[j].number) for j in si]
+                        symbols = [(self.symbols[j], self.numbers[j]) for j in si]
                         comp = sorted(symbols, key=lambda x: x[1])
                         composition = ''.join([c[0] for c in comp])
-                        if self.surface == 'fcc110' and geometry == 'terrace':
-                            extraids = [xi for xi in np.where(occurence==2)[0]
-                                        if xi in self.surf_ids]
-                            extrasymbols = [(self.atoms[xj].symbol,
-                                             self.atoms[xj].number) 
-                                             for xj in extraids]
-                            extra = sorted(extrasymbols, key=lambda x: x[1])
-                            extracomp = ''.join([e[0] for e in extra])
-                            composition += '-{}'.format(extracomp)
-                        elif self.surface == 'hcp10m11' and geometry == 'subsurf':
-                            extraids = si
-                            extrasymbols = [(self.atoms[xj].symbol,
-                                             self.atoms[xj].number)
+                        if sitetype == '4fold':
+                            extrasymbols = [(self.symbols[xj], self.numbers[xj]) 
                                              for xj in extraids]
                             extra = sorted(extrasymbols, key=lambda x: x[1])
                             extracomp = ''.join([e[0] for e in extra])
@@ -1099,35 +1108,30 @@ class SlabAdsorptionSites(object):
                     for i, refpos in enumerate(fold4_poss):
                         fold4_indices = newnblist[ntop+i]                     
                         fold4ids = [sorted_top[j] for j in fold4_indices]
-                        if self.surface == 'hcp10m10':
-                            newfold4ids = fold4ids
-                        else:
-                            occurence = np.sum(cm[fold4ids], axis=0)
-                            isub = np.where(occurence >= 4)[0][0] 
-                            allfold4ids = [k for k in fold4ids if cm[k,isub] == 1]                        
-                            srt = sorted(allfold4ids, key=lambda x: np.sum(cm[x]))
-                            res = [r for r in srt[2:] if np.sum(cm[r,srt[:2]]) < 2]
-                            newfold4ids = res + srt[:2]
-                        si = tuple(sorted(newfold4ids)) 
+                        occurence = np.sum(cm[fold4ids], axis=0)
+                        isub = np.where(occurence >= 4)[0][0] 
+                        si = tuple(sorted(fold4ids)) 
                         pos = refpos + np.average(
-                              self.delta_positions[newfold4ids], 0)
+                              self.delta_positions[fold4ids], 0)
                         normal = self.get_surface_normal(
                                  [si[0], si[1], si[2]])
 
                         site = self.new_site() 
-                        if self.surface == 'hcp10m11':
+                        if self.surface in ['hcp10m10','hcp10m11']:
+                            sitetype = '5fold'
                             normals_for_site[isub] = normals_for_site.get(
                                                      isub, []) + [normal]
-                            site.update({'site': 'ontop',
+                            site.update({'site': sitetype,
                                          'surface': self.surface,
                                          'geometry': 'subsurf',
-                                         'position': self.atoms[isub].position,
+                                         'position': self.positions[isub],
                                          'normal': normal,
-                                         'indices': (isub,)})
+                                         'indices': tuple(sorted(fold4ids+[isub]))})
                         else:
+                            sitetype = '4fold'
                             for idx in si:
                                 normals_for_site[idx].append(normal)
-                            site.update({'site': '4fold',               
+                            site.update({'site': sitetype,               
                                          'surface': self.surface,
                                          'geometry': 't',
                                          'position': pos,
@@ -1139,34 +1143,46 @@ class SlabAdsorptionSites(object):
                                 composition = 4*metals[0]
                             else:
                                 ma, mb = metals[0], metals[1]
-                                symbols = [self.atoms[i].symbol for i in si]
+                                symbols = [self.symbols[i] for i in fold4ids]
                                 nma = symbols.count(ma)
                                 if nma == 0:
                                     composition = 4*mb
                                 elif nma == 1:
                                     composition = ma + 3*mb
                                 elif nma == 2:
-                                    opposite = np.where(
-                                               cm[si[1:],si[0]]==0)[0]
-                                    opp = si[1+opposite[0]]         
-                                    if self.atoms[opp].symbol == \
-                                    self.atoms[newfold4ids[0]].symbol:
-                                        composition = ma + mb + ma + mb 
+                                    if sitetype == '5fold':
+                                        idd = sorted(fold4ids[1:], key=lambda x:        
+                                              get_mic(self.positions[x], self.positions[fold4ids[0]],
+                                                      self.cell, return_squared_distance=True))
+                                        opp, close = idd[-1], idd[0]
+                                        if self.symbols[opp] == self.symbols[fold4ids[0]]:
+                                            composition = ma + mb + ma + mb 
+                                        else:
+                                            if self.symbols[close] == self.symbols[fold4ids[0]]:
+                                                composition = 2*ma + 2*mb 
+                                            else:
+                                                composition = ma + 2*mb + ma           
                                     else:
-                                        composition = 2*ma + 2*mb 
+                                        opposite = np.where(
+                                                   cm[si[1:],si[0]]==0)[0]
+                                        opp = si[1+opposite[0]]         
+                                        if self.symbols[opp] == self.symbols[fold4ids[0]]:
+                                            composition = ma + mb + ma + mb 
+                                        else:
+                                            composition = 2*ma + 2*mb 
                                 elif nma == 3:
                                     composition = 3*ma + mb
                                 elif nma == 4:
                                     composition = 4*ma
                             site.update({'composition': composition})
-                            if self.surface == 'hcp10m11':
+                            if sitetype == '5fold':                   
                                 site['composition'] = '{}-'.format(
-                                self.atoms[isub].symbol) + site['composition']
-                        if self.subsurf_effect and self.surface != 'hcp10m11':
+                                self.symbols[isub]) + site['composition']
+                        if self.subsurf_effect and siteype != '5fold':
                             site.update({'subsurf_index': isub})
                             if self.composition_effect:
                                 site.update({'subsurf_element': 
-                                             self.atoms[isub].symbol})
+                                             self.symbols[isub]})
                         sl.append(site)
                         usi.add(si)
              
@@ -1204,8 +1220,10 @@ class SlabAdsorptionSites(object):
                         else:
                             print('Cannot identify site {}'.format(si))
                             continue
-                    elif self.surface in ['bcc110','bcc111','hcp10m11']:
+                    elif self.surface in ['hcp10m11']:
                         sitetype, geometry = '3fold', 'h'
+                    elif self.surface in ['bcc110','bcc111']:
+                        sitetype, geometry = '3fold', 'o'
                     elif self.surface in ['fcc111','fcc110','fcc311','hcp0001']:
                         geometry = 'h'
                         if np.max(occurence) == 3:
@@ -1220,12 +1238,12 @@ class SlabAdsorptionSites(object):
                                  'normal': normal,
                                  'indices': si})
                     if self.composition_effect:                       
-                        metals = self.metals
+                        metals = self.metals                            
                         if len(metals) == 1:
                             composition = 3*metals[0]
                         else:
                             ma, mb = metals[0], metals[1]
-                            symbols = [self.atoms[i].symbol for i in si]
+                            symbols = [self.symbols[i] for i in si]
                             nma = symbols.count(ma)
                             if nma == 0:
                                 composition = 3*mb
@@ -1242,7 +1260,7 @@ class SlabAdsorptionSites(object):
                         site.update({'subsurf_index': isub})
                         if self.composition_effect:
                             site.update({'subsurf_element': 
-                                         self.atoms[isub].symbol})
+                                         self.symbols[isub]})
                     sl.append(site)
                     usi.add(si)
  
@@ -1261,61 +1279,83 @@ class SlabAdsorptionSites(object):
                                                 different_species=True, 
                                                 mic=True) 
 
-                for i, refpos in enumerate(reduced_poss):
+                for i, refpos in enumerate(reduced_poss): 
                     fold4_indices = newnblist[ntop+i]                     
                     fold4ids = [sorted_top[j] for j in fold4_indices]
-                    if self.surface == 'hcp10m10':
-                        newfold4ids = fold4ids
-                    else:
-                        occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence == 4)[0][0]
-                        newfold4ids = [k for k in fold4ids if cm[k,isub] == 1]
-                    si = tuple(sorted(newfold4ids))
+                    occurence = np.sum(cm[fold4ids], axis=0)
+                    isub = np.where(occurence == 4)[0][0]
+                    si = tuple(sorted(fold4ids))
                     pos = refpos + np.average(
-                          self.delta_positions[newfold4ids], 0)
+                          self.delta_positions[fold4ids], 0)
                     normal = self.get_surface_normal(
                              [si[0], si[1], si[2]])
                     for idx in si:
                         normals_for_site[idx].append(normal)
  
                     site = self.new_site()
-                    site.update({'site': '4fold',
-                                 'surface': self.surface,
-                                 'geometry': 't',
-                                 'position': pos,
-                                 'normal': normal,
-                                 'indices': si})                    
+                    if self.surface in ['hcp10m10']:
+                        sitetype = '5fold'
+                        normals_for_site[isub] = normals_for_site.get(
+                                                 isub, []) + [normal]
+                        site.update({'site': sitetype,
+                                     'surface': self.surface,
+                                     'geometry': 'subsurf',
+                                     'position': self.positions[isub],
+                                     'normal': normal,
+                                     'indices': tuple(sorted(fold4ids+[isub]))})
+                    else:
+                        sitetype = '4fold'
+                        site.update({'site': sitetype,
+                                     'surface': self.surface,
+                                     'geometry': 't',
+                                     'position': pos,
+                                     'normal': normal,
+                                     'indices': si})                    
                     if self.composition_effect:                       
                         metals = self.metals
                         if len(metals) == 1:
                             composition = 4*metals[0] 
                         else:
                             ma, mb = metals[0], metals[1]
-                            symbols = [self.atoms[i].symbol for i in si]
+                            symbols = [self.symbols[i] for i in si]
                             nma = symbols.count(ma)
                             if nma == 0:
                                 composition = 4*mb
                             elif nma == 1:
                                 composition = ma + 3*mb
                             elif nma == 2:
-                                opposite = np.where(
-                                           cm[si[1:],si[0]]==0)[0]
-                                opp = si[1+opposite[0]]         
-                                if self.atoms[opp].symbol == \
-                                self.atoms[newfold4ids[0]].symbol:
-                                    composition = ma + mb + ma + mb 
+                                if sitetype == '5fold':
+                                    idd = sorted(fold4ids[1:], key=lambda x:       
+                                          get_mic(self.positions[x], self.positions[fold4ids[0]],
+                                                  self.cell, return_squared_distance=True))
+                                    opp, close = idd[-1], idd[0]
+                                    if self.symbols[opp] == self.symbols[fold4ids[0]]:
+                                        composition = ma + mb + ma + mb 
+                                    else:
+                                        if self.symbols[close] == self.symbols[fold4ids[0]]:
+                                            composition = 2*ma + 2*mb 
+                                        else:
+                                            composition = ma + 2*mb + ma  
                                 else:
-                                    composition = 2*ma + 2*mb 
+                                    opposite = np.where(cm[si[1:],si[0]]==0)[0]
+                                    opp = si[1+opposite[0]]         
+                                    if self.symbols[opp] == self.symbols[fold4ids[0]]:
+                                        composition = ma + mb + ma + mb 
+                                    else:
+                                        composition = 2*ma + 2*mb 
                             elif nma == 3:
                                 composition = 3*ma + mb
                             elif nma == 4:
                                 composition = 4*ma
-                        site.update({'composition': composition})   
-                    if self.subsurf_effect and self.surface != 'hcp10m10':
+                        site.update({'composition': composition})
+                        if siteype == '5fold':
+                            site['composition'] = '{}-'.format(
+                            self.symbols[isub]) + site['composition'] 
+                    if self.subsurf_effect and sitetype != '5fold':
                         site.update({'subsurf_index': isub})
                         if self.composition_effect:
                             site.update({'subsurf_element': 
-                                         self.atoms[isub].symbol})
+                                         self.symbols[isub]})
                     sl.append(site)
                     usi.add(si)
 
@@ -1337,8 +1377,8 @@ class SlabAdsorptionSites(object):
                     t['normal'] = n / np.linalg.norm(n)
                 else:
                     if self.surface == 'hcp10m10':
-                        normals = [s['normal'] for s in sl if s['site'] 
-                                   == '4fold' and len(set(s['indices']
+                        normals = [s['normal'] for s in sl if s['geometry'] 
+                                   == 'subsurf' and len(set(s['indices']
                                    ).intersection(set(t['indices']))) == 2]
                     else:
                         normals = [s['normal'] for s in sl if 
@@ -1356,9 +1396,9 @@ class SlabAdsorptionSites(object):
                     prevpos = pos_list[previd]
                     prevst = st_list[previd]
                     if min([np.linalg.norm(prevpos - pos) for pos 
-                       in self.atoms[self.subsurf_ids].positions]) < \
-                       min([np.linalg.norm(t['position'] - pos) for pos
-                       in self.atoms[self.subsurf_ids].positions]):
+                    in self.positions[self.subsurf_ids]]) < \
+                    min([np.linalg.norm(t['position'] - pos) for pos
+                    in self.positions[self.subsurf_ids]]):
                         t['site'] = 'fcc'
                         if prevst == 'fcc':
                             sl[slid]['site'] = 'hcp'
@@ -1379,16 +1419,32 @@ class SlabAdsorptionSites(object):
                     pos_list.append(t['position'])
                     st_list.append(t['site'])
 
-        # Add subsurf sites
-        if self.allow_subsurf_sites:
+        # Add 6-fold sites if allowed
+        if self.allow_6fold:
             dh = 1/2*(meansurfz - np.average(
                       self.atoms.positions[self.subsurf_ids][:,2], 0))
-            for st in sl:                
-                if st['site'] == 'fcc':
+            for st in sl:
+                if self.surface == 'fcc110' and st['site'] == 'bridge' \
+                and st['geometry'] == 'step':
+                    site = st.copy()
+                    sid = list(st['indices'])
+                    occurence = cm[sid]
+                    surfsi = sid + list(np.where(np.sum(occurence, axis=0) == 2)[0])
+                    subsi = [self.subsurf_ids[i] for i in np.where(np.sum(
+                             occurence[:,self.subsurf_ids], axis=0) == 1)[0]]
+                    si = tuple(sorted(surfsi + subsi))
+                    normal = np.asarray([0,0,1])
+                    subpos = st['position'] - st['normal'] * dh
+                    site.update({'site': '6fold',
+                                 'position': subpos,
+                                 'geometry': 'subsurf',
+                                 'normal': normal,
+                                 'indices': si})
+                elif st['site'] == 'fcc':
                     site = st.copy()
                     subpos = st['position'] - st['normal'] * dh                                
                     def get_squared_distance(x):
-                        return get_mic(self.atoms[x].position, subpos, 
+                        return get_mic(self.positions[x], subpos, 
                                        self.cell, return_squared_distance=True)
                     subsi = sorted(sorted(self.subsurf_ids, 
                                           key=get_squared_distance)[:3])     
@@ -1397,34 +1453,55 @@ class SlabAdsorptionSites(object):
                                  'position': subpos,
                                  'geometry': 'subsurf',
                                  'indices': tuple(sorted(si+tuple(subsi)))})
-                    if self.composition_effect:
-                        metals = self.metals
-                        comp = site['composition']
+                else:
+                    continue
+                # Find the opposite element
+                if self.composition_effect:
+                    metals = self.metals
+                    if self.surface == 'fcc110':
+                        newsi = surfsi[:-1] 
+                        metals = self.metals                                                    
                         if len(metals) == 1:
-                            composition = '-'.join([comp, 3*metals[0]])
-                        else: 
+                            comp = 3*metals[0]
+                        else:
                             ma, mb = metals[0], metals[1]
-                            subsyms = [self.atoms[subi].symbol for subi in subsi]
-                            nma = subsyms.count(ma)
+                            symbols = [self.symbols[i] for i in newsi]
+                            nma = symbols.count(ma)
                             if nma == 0:
-                                composition = '-'.join([comp, 3*mb])
+                                comp = 3*mb
                             elif nma == 1:
-                                ia = subsi[subsyms.index(ma)]
-                                subpos = self.atoms[ia].position
-                                if self.atoms[max(si, key=get_squared_distance)].symbol == ma:
-                                    composition = '-'.join([comp, 2*mb + ma])
-                                else:
-                                    composition = '-'.join([comp, ma + 2*mb])
+                                comp = ma + 2*mb
                             elif nma == 2:
-                                ib = subsi[subsyms.index(mb)]
-                                subpos = self.atoms[ib].position
-                                if self.atoms[max(si, key=get_squared_distance)].symbol == mb:
-                                    composition = '-'.join([comp, 2*ma + mb])
-                                else:
-                                    composition = '-'.join([comp, mb + 2*ma])
+                                comp = 2*ma + mb
                             elif nma == 3:
-                                composition = '-'.join([comp, 3*ma])
-                        site.update({'composition': composition})
+                                comp = 3*ma
+                    else:
+                        comp = site['composition']
+                    if len(metals) == 1:
+                        composition = ''.join([comp, 3*metals[0]])
+                    else: 
+                        ma, mb = metals[0], metals[1]
+                        subsyms = [self.symbols[subi] for subi in subsi]
+                        nma = subsyms.count(ma)
+                        if nma == 0:
+                            composition = ''.join([comp, 3*mb])
+                        elif nma == 1:
+                            ia = subsi[subsyms.index(ma)]
+                            subpos = self.positions[ia]
+                            if self.symbols[max(si, key=get_squared_distance)] == ma:
+                                composition = ''.join([comp, 2*mb + ma])
+                            else:
+                                composition = ''.join([comp, ma + 2*mb])
+                        elif nma == 2:
+                            ib = subsi[subsyms.index(mb)]
+                            subpos = self.positions[ib]
+                            if self.symbols[max(si, key=get_squared_distance)] == mb:
+                                composition = ''.join([comp, 2*ma + mb])
+                            else:
+                                composition = ''.join([comp, mb + 2*ma])
+                        elif nma == 3:
+                            composition = ''.join([comp, 3*ma])
+                    site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si)
 
@@ -1511,10 +1588,10 @@ class SlabAdsorptionSites(object):
         return sorted(surf), sorted(subsurf)
 
     def get_two_vectors(self, sites):
-        p1 = self.atoms[sites[1]].position
-        p2 = self.atoms[sites[2]].position
-        vec1 = get_mic(p1, self.atoms[sites[0]].position, self.cell)
-        vec2 = get_mic(p2, self.atoms[sites[0]].position, self.cell)
+        p1 = self.positions[sites[1]]
+        p2 = self.positions[sites[2]]
+        vec1 = get_mic(p1, self.positions[sites[0]], self.cell)
+        vec2 = get_mic(p2, self.positions[sites[0]], self.cell)
         return vec1, vec2
 
     def get_surface_normal(self, sites):
@@ -1662,13 +1739,13 @@ def get_adsorption_site(atoms, indices, surface=None, return_index=False):
 
     if True not in atoms.pbc:
         sas = NanoparticleAdsorptionSites(atoms, 
-                                          allow_subsurf_sites=True,
+                                          allow_6fold=True,
                                           composition_effect=False,
                                           subsurf_effect=False)
                                                              
     else:
         sas = SlabAdsorptionSites(atoms, surface, 
-                                  allow_subsurf_sites=True, 
+                                  allow_6fold=True, 
                                   composition_effect=False, 
                                   subsurf_effect=False)             
     site_list = sas.site_list                              
@@ -1683,13 +1760,13 @@ def get_adsorption_site(atoms, indices, surface=None, return_index=False):
 def enumerate_adsorption_sites(atoms, 
                                surface=None, 
                                geometry=None, 
-                               allow_subsurf_sites=False,
+                               allow_6fold=False,
                                composition_effect=False, 
                                subsurf_effect=False):
 
     if True not in atoms.pbc:
         nas = NanoparticleAdsorptionSites(atoms, 
-                                          allow_subsurf_sites,
+                                          allow_6fold,
                                           composition_effect,
                                           subsurf_effect)
         all_sites = nas.site_list
@@ -1699,7 +1776,7 @@ def enumerate_adsorption_sites(atoms,
 
     else:
         sas = SlabAdsorptionSites(atoms, surface,
-                                  allow_subsurf_sites, 
+                                  allow_6fold, 
                                   composition_effect, 
                                   subsurf_effect)            
         all_sites = sas.site_list
