@@ -767,7 +767,8 @@ class SlabAdsorptionSites(object):
                     continue
             si = (s,)
             site = self.new_site()
-            sitetype = '5fold' if self.surface == 'fcc110' else 'ontop'
+            sitetype = '5fold' if self.surface == 'fcc110' and \
+                        geometry == 'terrace' else 'ontop'
             site.update({'site': sitetype,
                          'surface': self.surface,
                          'geometry': geometry,
@@ -831,6 +832,7 @@ class SlabAdsorptionSites(object):
                         elif nma == 4:
                             composition = 4*ma
                     st['composition'] += '-{}'.format(composition)
+                    st['indices'] = tuple(sorted(list(si) + extraids))
                     del st['extra']
 
         ext_index, ext_coords, _ = expand_cell(self.ref_atoms, cutoff)
@@ -1178,7 +1180,7 @@ class SlabAdsorptionSites(object):
                             if sitetype == '5fold':                   
                                 site['composition'] = '{}-'.format(
                                 self.symbols[isub]) + site['composition']
-                        if self.subsurf_effect and siteype != '5fold':
+                        if self.subsurf_effect and sitetype != '5fold':
                             site.update({'subsurf_index': isub})
                             if self.composition_effect:
                                 site.update({'subsurf_element': 
@@ -1348,7 +1350,7 @@ class SlabAdsorptionSites(object):
                             elif nma == 4:
                                 composition = 4*ma
                         site.update({'composition': composition})
-                        if siteype == '5fold':
+                        if sitetype == '5fold':
                             site['composition'] = '{}-'.format(
                             self.symbols[isub]) + site['composition'] 
                     if self.subsurf_effect and sitetype != '5fold':
