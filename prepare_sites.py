@@ -5,7 +5,7 @@ import pickle
 slab = read('Ni3Pt_111_slab.traj')
 
 sas = SlabAdsorptionSites(slab, surface='fcc111', 
-                          allow_subsurf_sites=True,
+                          allow_6fold=True,
                           composition_effect=True)
 
 for s in sas.site_list:
