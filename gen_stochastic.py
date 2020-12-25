@@ -175,7 +175,7 @@ def main():
         image = random.choice(starting_images)
         if not args.fix_surfcomp: 
             sas = SlabAdsorptionSites(image, args.surface,
-                                      allow_subsurf_sites=True,
+                                      allow_6fold=True,
                                       composition_effect=True)
         sac = SlabAdsorbateCoverage(image, sas)
         hsl = sac.hetero_site_list
