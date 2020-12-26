@@ -436,6 +436,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
     def __init__(self, atoms, adsorption_sites=None, surface=None, dmax=2.5):
  
         self.atoms = atoms.copy()
+        self.positions = atoms.positions
+        self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
         assert len(self.ads_ids) > 0 
@@ -1814,7 +1816,7 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
     subsurf_effect = False if subsurf_element is None else True
 
     if composition:
-        if '-' in composition:
+        if '-' in composition or site == '6fold':
             scomp = composition
         else:
             comp = re.findall('[A-Z][^A-Z]*', composition)
