@@ -1,6 +1,6 @@
 from .utilities import * 
 from ase.data import reference_states, atomic_numbers, covalent_radii
-from ase.optimize import BFGS, FIRE
+from ase.optimize import BFGS
 from ase.io import read, write
 from ase import Atom, Atoms
 from asap3.analysis.rdf import RadialDistributionFunction
@@ -703,7 +703,7 @@ class SlabAdsorptionSites(object):
             a.symbol = ref_symbol
         ref_atoms.set_constraint()
         ref_atoms.calc = asapEMT()
-        opt = FIRE(ref_atoms, logfile=None)
+        opt = BFGS(ref_atoms, logfile=None)
         opt.run(fmax=0.05)
         ref_atoms.calc = None
 
@@ -1398,13 +1398,19 @@ class SlabAdsorptionSites(object):
                         sitetype, geometry = '3fold', 'sc-tc-cc-o'
                     elif self.surface in ['bcc211','bcc310']:
                         sitetype, geometry = '3fold', 'sc-tc-o'
-                    elif self.surface in ['fcc111','fcc110','fcc311',
-                    'hcp0001','hcp10m10-h']:
+                    elif self.surface in ['fcc111','hcp0001']:
                         geometry = 'terrace'
                         if np.max(occurence) == 3:
                             sitetype = 'hcp'
                         else:
                             sitetype = 'fcc'
+                    elif self.surface in ['fcc110','fcc311','hcp10m10-h']:
+                        geometry = 'sc-tc-h'
+                        if np.max(occurence) == 3:
+                            sitetype = 'hcp'
+                        else:
+                            sitetype = 'fcc'
+
                     site = self.new_site()               
                     site.update({'site': sitetype,
                                  'surface': self.surface,
