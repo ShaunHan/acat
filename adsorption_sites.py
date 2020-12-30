@@ -1,4 +1,5 @@
 from .utilities import * 
+from .settings import adsorbate_elements, site_heights
 from ase.data import reference_states, atomic_numbers, covalent_radii
 from ase.optimize import BFGS
 from ase.io import read, write
@@ -8,7 +9,7 @@ from asap3 import FullNeighborList
 from asap3.analysis import FullCNA, PTM
 from asap3 import EMT as asapEMT
 from collections import defaultdict
-from collections import Iterable, Counter
+from collections import Counter
 from itertools import combinations, groupby
 import numpy as np
 import networkx as nx
@@ -19,165 +20,15 @@ import math
 import re
 
 
-icosa_dict = {
-    # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
-    # Edge sites on outermost shell -- Icosa
-    str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
-    'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2})],
-    # Vertice sites on outermost shell -- Icosa, Deca
-    str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
-    'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1})],
-}
+class ClusterAdsorptionSites(object):
 
-ticosa_dict = {
-    # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
-    # Edge sites on outermost shell -- Icosa
-    str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
-    'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2})],
-    # Vertice sites on outermost shell -- Icosa, Deca
-    str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
-    'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1}), 
-               str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1})],
-    # Vertice sites B on outermost shell -- Ticosa, Deca
-    str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1}): 'vertex',
-}
-
-cubocta_dict = {
-    # Edge sites on outermost shell -- Cubocta, Tocta
-    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
-    'edge': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2})],
-    # Square sites on outermost shell -- Cubocta, Deca, Tocta, (Surface)
-    str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
-    # Vertice sites on outermost shell -- Cubocta
-    str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
-    'vertex': [str({(2, 1, 1): 4, (4, 2, 1): 1})],
-    # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta, (Surface)
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
-}
-
-mdeca_dict = {
-    # Edge sites (111)-(111) on outermost shell -- Deca
-    str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
-    'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}), 
-             str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
-             str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1})],
-    # Edge sites (111)-(100) on outermost shell -- Deca
-    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
-    # Edge sites (111)-(111)notch on outermost shell -- Deca
-    str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
-    # Square sites on outermost shell -- Cubocta, Deca, Tocta
-    str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
-    # Vertice sites on outermost shell -- Icosa, Deca
-    str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
-    'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1}), 
-               str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}), 
-               str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1})],
-    # Vertice sites A on outermost shell -- Mdeca
-    str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
-    # Vertice sites B on outermost shell -- Mdeca
-    str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, (4, 2, 2): 1}): 'vertex',
-    # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3}), 
-               str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2})],
-    # Triangle (pentagon) notch sites on outermost shell -- Deca
-    str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc111',
-}
-
-octa_dict = {
-    # Edge sites (111)-(111) on outermost shell -- Octa, Tocta
-    str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
-    'edge': [str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1})],
-    # Vertice sites on outermost shell -- Octa
-    str({(2, 0, 0): 4}): 'vertex',
-    'vertex': [str({(2, 0, 0): 4})],
-    # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
-}
-
-tocta_dict = {
-    # Edge sites on outermost shell -- Cubocta, Tocta
-    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
-    'edge': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
-             str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1})],
-    # Edge sites (111)-(111) on outermost shell -- Octa
-    str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
-    # Square sites on outermost shell -- Cubocta, Deca, Tocta
-    str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
-    # Vertice sites on outermost shell -- Tocta
-    str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
-    'vertex': [str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1})],
-    # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
-}
-
-surf_dict = {
-    # Square sites
-    str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
-    'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
-    # Triangle sites
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
-    'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3}),
-    str({(2, 0, 0): 2, (3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}),
-    str({(2, 0, 0): 2, (3, 1, 1): 6})],
-    # Triangle sites
-    str({(2, 0, 0): 2, (3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'fcc111',
-    # Triangle sites
-    str({(2, 0, 0): 2, (3, 1, 1): 6}): 'fcc111',
-    # Triangle-Triangle sites
-    str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'fcc110',
-    'fcc110': [str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}), 
-               str({(3, 1, 1): 4, (4, 2, 1): 7})],
-    str({(3, 1, 1): 4, (4, 2, 1): 7}): 'fcc110',
-    # Triangle-Triangle-Square sites
-    str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc211',
-    'fcc211': [str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}),
-               str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}),
-               str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2}),
-               str({(3, 1, 1): 6, (4, 2, 1): 3})],
-    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'fcc211',
-    str({(2, 1, 1): 1, (3, 1, 1): 2, (3, 2, 2): 2, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc211',
-    str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc211',
-    # Triangle-Square sites
-    str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'fcc311',
-    'fcc311': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
-               str({(2, 1, 1): 1, (3, 1, 1): 4, (4, 2, 1): 5})],
-    str({(2, 1, 1): 1, (3, 1, 1): 4, (4, 2, 1): 5}): 'fcc311',
-}
-
-
-# Set global variables
-adsorbate_elements = 'SCHON'
-heights_dict = {'ontop': 2., 
-                'bridge': 2.,
-                'short-bridge': 2.,
-                'long-bridge': 2.,
-                'fcc': 2., 
-                'hcp': 2., 
-                '3fold': 2.,
-                '4fold': 2.,
-                '5fold': 2.,
-                '6fold': 0.}
-
-warnings.filterwarnings("ignore")
-
-
-class NanoparticleAdsorptionSites(object):
-
-    def __init__(self, atoms, allow_6fold=False, 
-                 composition_effect=False, subsurf_effect=False):
+    def __init__(self, atoms, 
+                 allow_6fold=False, 
+                 composition_effect=False, 
+                 subsurf_effect=False):
 
         assert True not in atoms.pbc
+        warnings.filterwarnings("ignore")
         atoms = atoms.copy()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
@@ -436,7 +287,7 @@ class NanoparticleAdsorptionSites(object):
                 'subsurf_index': None, 'subsurf_element': None}
 
     def get_site(self, indices):
-        if not isinstance(indices, Iterable):
+        if not is_list_or_tuple(indices):
             indices = [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in self.site_list if 
@@ -548,6 +399,83 @@ class NanoparticleAdsorptionSites(object):
         return get_connectivity_matrix(nbslist)                  
 
     def get_site_dict(self):
+        icosa_dict = {                                                                                     
+            # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
+            str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+            'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
+            # Edge sites on outermost shell -- Icosa
+            str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
+            'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2})],
+            # Vertice sites on outermost shell -- Icosa, Deca
+            str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
+            'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1})],
+        }
+        
+        cubocta_dict = {
+            # Edge sites on outermost shell -- Cubocta, Tocta
+            str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
+            'edge': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2})],
+            # Square sites on outermost shell -- Cubocta, Deca, Tocta
+            str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
+            'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
+            # Vertice sites on outermost shell -- Cubocta
+            str({(2, 1, 1): 4, (4, 2, 1): 1}): 'vertex',
+            'vertex': [str({(2, 1, 1): 4, (4, 2, 1): 1})],
+            # Triangle sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
+            str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+            'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
+        }
+        
+        mdeca_dict = {
+            # Edge sites (111)-(111) on outermost shell -- Deca
+            str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}): 'edge',
+            'edge': [str({(3, 1, 1): 4, (3, 2, 2): 2, (4, 2, 2): 2}), 
+                     str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
+                     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1})],
+            # Edge sites (111)-(100) on outermost shell -- Deca
+            str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
+            # Edge sites (111)-(111)notch on outermost shell -- Deca
+            str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
+            # Square sites on outermost shell -- Cubocta, Deca, Tocta
+            str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
+            'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
+            # Vertice sites on outermost shell -- Icosa, Deca
+            str({(3, 2, 2): 5, (5, 5, 5): 1}): 'vertex',
+            'vertex': [str({(3, 2, 2): 5, (5, 5, 5): 1}), 
+                       str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}), 
+                       str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, (3, 2, 2): 1, 
+                            (4, 2, 2): 1})],
+            # Vertice sites A on outermost shell -- Mdeca
+            str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
+            # Vertice sites B on outermost shell -- Mdeca
+            str({(2, 0, 0): 2, (3, 0, 0): 1, (3, 1, 1): 2, 
+                 (3, 2, 2): 1, (4, 2, 2): 1}): 'vertex',
+            # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Tocta
+            str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+            'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3}), 
+                       str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2})],
+            # Triangle (pentagon) notch sites on outermost shell -- Deca
+            str({(3, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 2, (4, 2, 2): 2}): 'fcc111',
+        }
+        
+        tocta_dict = {
+            # Edge sites on outermost shell -- Cubocta, Tocta
+            str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}): 'edge',
+            'edge': [str({(2, 1, 1): 3, (3, 1, 1): 2, (4, 2, 1): 2}), 
+                     str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1})],
+            # Edge sites (111)-(111) on outermost shell -- Octa
+            str({(2, 0, 0): 2, (3, 1, 1): 4, (4, 2, 1): 1}): 'edge',
+            # Square sites on outermost shell -- Cubocta, Deca, Tocta
+            str({(2, 1, 1): 4, (4, 2, 1): 4}): 'fcc100',
+            'fcc100': [str({(2, 1, 1): 4, (4, 2, 1): 4})],
+            # Vertice sites on outermost shell -- Tocta
+            str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1}): 'vertex',
+            'vertex': [str({(2, 0, 0): 1, (2, 1, 1): 2, (3, 1, 1): 2, (4, 2, 1): 1})],
+            # Triangle (pentagon) sites on outermost shell -- Icosa, Cubocta, Deca, Octa
+            str({(3, 1, 1): 6, (4, 2, 1): 3}): 'fcc111',
+            'fcc111': [str({(3, 1, 1): 6, (4, 2, 1): 3})],
+        }
+        
         fcna = self.get_fullCNA()
         icosa_weight = cubocta_weight = mdeca_weight = tocta_weight = 0
         for s in fcna:
@@ -651,7 +579,7 @@ class NanoparticleAdsorptionSites(object):
 
         sl = self.site_list
         adsposs = np.asarray([s['position'] + s['normal'] * \
-                             heights_dict[s['site']] for s in sl])
+                             site_heights[s['site']] for s in sl])
         statoms = Atoms('X{}'.format(len(sl)), 
                         positions=adsposs, 
                         cell=self.cell, 
@@ -671,10 +599,51 @@ class NanoparticleAdsorptionSites(object):
             st['position'] = newpos
 
 
+def group_sites_by_surface(atoms, sites, site_list=None):            
+    """A function that uses networkx to group one type of sites 
+    by geometrical facets of the nanoparticle"""
+                                                                     
+    # Find all indices of vertex and edge sites
+    if not site_list:
+        nas = ClusterAdsorptionSites(atoms)
+        site_list = nas.site_list
+    ve_indices = [s['indices'] for s in site_list if 
+                  s['site'] == 'ontop' and 
+                  s['surface'] in ['vertex', 'edge']]
+    unique_ve_indices = set(list(sum(ve_indices, ())))
+     
+    G=nx.Graph()
+    for site in sites:
+        indices = site['indices']
+        reduced_indices = tuple(i for i in indices if i 
+                                not in unique_ve_indices)
+        site['reduced_indices'] = reduced_indices
+        nx.add_path(G, reduced_indices)
+    components = list(nx.connected_components(G))
+    groups = []
+    for component in components:
+        group = []
+        for path in [s['reduced_indices'] for s in sites]:
+            if component.issuperset(path):
+                group.append(path)
+        groups.append(group)
+    grouped_sites = defaultdict(list)
+    for site in sites:
+        for group in groups:
+            if site['reduced_indices'] in group:
+                grouped_sites[groups.index(group)] += [site]
+                                                                     
+    return grouped_sites
+
+
 class SlabAdsorptionSites(object):
 
-    def __init__(self, atoms, surface, allow_6fold=False, 
-                 composition_effect=False, subsurf_effect=False, dx=.5):
+    def __init__(self, atoms, 
+                 surface, 
+                 allow_6fold=False, 
+                 composition_effect=False, 
+                 subsurf_effect=False, 
+                 dx=.5):
         """
         allow_6fold: allow 6-fold subsurf site
 
@@ -709,7 +678,6 @@ class SlabAdsorptionSites(object):
 
         self.ref_atoms = ref_atoms
         self.delta_positions = atoms.positions - ref_atoms.positions
-        self.site_dict = surf_dict 
         self.cell = atoms.cell
         self.pbc = atoms.pbc
         self.metals = sorted(list(set(atoms.symbols)), 
@@ -723,15 +691,6 @@ class SlabAdsorptionSites(object):
         self.make_neighbor_list(dx=self.dx) 
         self.connectivity_matrix = self.get_connectivity()         
         self.surf_ids, self.subsurf_ids = self.get_termination()        
-
-        #TODO: an efficient and consistent way to identify surfaces.
-       # if surface is None: 
-       #     self.fullCNA, self.surfCNA = self.get_CNA(rCut=3.)
-       #     self.surface = self.identify_surface()
-       #     print('The surface is identified as {}. '.format(self.surface),
-       #           'Please specify the surface if it is incorrect')
-       # else:
-       #     self.surface = surface
 
         self.site_list = []
         self.populate_site_list()
@@ -930,7 +889,6 @@ class SlabAdsorptionSites(object):
                 fold3_position = np.average(ext_surf_coords[corners], axis=0)
                 fold3_points += corners.tolist()
                 fold3_positions.append(fold3_position)
-        self.bridge_positions, self.fold3_positions, self.fold4_positions = bridge_positions, fold3_positions, fold4_positions
 
         fold4_surfaces = ['fcc100','fcc211','fcc311','fcc322','bcc100',
                           'bcc210','bcc310','hcp10m10-t','hcp10m11','hcp10m12']
@@ -1725,7 +1683,7 @@ class SlabAdsorptionSites(object):
                 'subsurf_element': None}
 
     def get_site(self, indices):
-        if not isinstance(indices, Iterable):
+        if not is_list_or_tuple(indices):
             indices = [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in self.site_list if 
@@ -1818,73 +1776,6 @@ class SlabAdsorptionSites(object):
             n *= -1
         return n
 
-    def get_CNA(self, rCut=None):                  
-        atoms = self.ref_atoms.copy()
-        _, extcoords, _ = expand_cell(atoms, cutoff=5.0)
-        fracs = extcoords @ np.linalg.pinv(self.cell)
-        xfracs, yfracs = fracs[:,0], fracs[:,1]
-        nums = list(set(atoms.numbers))
-        crmax = max([covalent_radii[i] for i in nums])
-        dx = 3 * crmax / np.linalg.norm(self.cell[0])            
-        dy = 3 * crmax / np.linalg.norm(self.cell[1])             
-                                                   
-        # Extend the surface to get the correct surface CNA
-        outer = np.where((xfracs > 0-dx) & (xfracs < 1+dx) & \
-                         (yfracs > 0-dy) & (yfracs < 1+dy))[0]
-        inner = np.where((xfracs > 0-self.tol) & (xfracs < 1-self.tol) & \
-                         (yfracs > 0-self.tol) & (yfracs < 1-self.tol))[0]
-        ringcoords = [cord for i, cord in enumerate(extcoords) if 
-                              (i in outer) & (i not in inner)]
-        ringatoms = Atoms(numbers = len(ringcoords)*[nums[0]],
-                          positions = np.asarray(ringcoords),
-                          cell = self.cell, pbc = self.pbc)
-        fullatoms = atoms + ringatoms
-        fullatoms.center(vacuum=5.)            
-        fullCNA = FullCNA(fullatoms, rCut=rCut).get_normal_cna() 
-        surfCNA = [fullCNA[i] for i in self.surf_ids]
-
-        return fullCNA, surfCNA
-   
-    def identify_surface(self):
-        # Identify surfaces based on CNA. Turns out to be very 
-        # inconsistent for surfaces slabs.                 
-        sd = self.site_dict
-        scna = self.surfCNA
-        fcc100_weight = fcc111_weight = fcc110_weight = \
-        fcc211_weight = fcc311_weight = 0
-        for s in scna:
-            if str(s) in sd['fcc100']:
-                fcc100_weight += 1
-            if str(s) in sd['fcc111']:
-                fcc111_weight += 1
-            if str(s) in sd['fcc110']:
-                fcc110_weight += 1
-            if str(s) in sd['fcc211']:
-                fcc211_weight += 1
-            if str(s) in sd['fcc311']:
-                fcc311_weight += 1
-            if str(s) not in sd['fcc100'] + sd['fcc111'] + sd['fcc110'] \
-                           + sd['fcc211'] + sd['fcc311']:
-                fcc110_weight += 1
-                fcc211_weight += 1
- 
-        full_weights = [fcc100_weight, fcc111_weight, fcc110_weight,
-                        fcc211_weight, fcc311_weight]
-         
-        if full_weights.count(max(full_weights)) > 1:
-            raise ValueError('Cannot identify the surface. \
-                              Please specify the surface')
-        elif fcc100_weight == max(full_weights):
-            return 'fcc100'
-        elif fcc111_weight == max(full_weights): 
-            return 'fcc111'
-        elif fcc110_weight == max(full_weights):
-            return 'fcc110'
-        elif fcc211_weight == max(full_weights):
-            return 'fcc211'
-        elif fcc311_weight == max(full_weights):
-            return 'fcc311'
-
     def get_unique_sites(self, unique_composition=False,                
                          unique_subsurf=False):
         sl = self.site_list
@@ -1926,7 +1817,7 @@ class SlabAdsorptionSites(object):
         refposs = np.asarray([s['position'] - np.average(
                              self.delta_positions[list(
                              s['indices'])], 0) + s['normal'] * \
-                             heights_dict[s['site']] for s in sl])
+                             site_heights[s['site']] for s in sl])
         statoms = Atoms('X{}'.format(len(sl)), 
                         positions=refposs, 
                         cell=self.cell, 
@@ -1948,18 +1839,20 @@ class SlabAdsorptionSites(object):
             st['position'] += np.average(shifted_positions[si], 0) 
 
 
-def get_adsorption_site(atoms, indices, surface=None, return_index=False):
-    if not isinstance(indices, Iterable):                      
+def get_adsorption_site(atoms, indices, 
+                        surface=None, 
+                        return_index=False):
+
+    if not is_list_or_tuple(indices):                      
         indices = [indices]                                        
     indices = tuple(sorted(indices))
 
     if True not in atoms.pbc:
-        sas = NanoparticleAdsorptionSites(atoms, 
-                                          allow_6fold=True,
-                                          composition_effect=False,
-                                          subsurf_effect=False)
-                                                             
+        sas = ClusterAdsorptionSites(atoms, allow_6fold=True,
+                                     composition_effect=False,
+                                     subsurf_effect=False)                                                             
     else:
+        assert surface is not None
         sas = SlabAdsorptionSites(atoms, surface, 
                                   allow_6fold=True, 
                                   composition_effect=False, 
@@ -1973,15 +1866,14 @@ def get_adsorption_site(atoms, indices, surface=None, return_index=False):
     return site    
 
 
-def enumerate_adsorption_sites(atoms, 
-                               surface=None, 
+def enumerate_adsorption_sites(atoms, surface=None, 
                                geometry=None, 
                                allow_6fold=False,
                                composition_effect=False, 
                                subsurf_effect=False):
 
     if True not in atoms.pbc:
-        nas = NanoparticleAdsorptionSites(atoms, 
+        nas = ClusterAdsorptionSites(atoms, 
                                           allow_6fold,
                                           composition_effect,
                                           subsurf_effect)
