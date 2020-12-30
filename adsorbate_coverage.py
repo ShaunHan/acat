@@ -1,5 +1,6 @@
 from .adsorption_sites import * 
-from .utilities import * 
+from .utilities import *
+from .settings import *
 from ase.io import read, write
 from ase.build import molecule
 from ase.data import covalent_radii, atomic_numbers
@@ -7,9 +8,8 @@ from ase.geometry import find_mic, get_duplicate_atoms
 from ase.formula import Formula
 from ase.visualize import view
 from ase import Atom, Atoms
-from asap3 import FullNeighborList
 from collections import defaultdict 
-from collections import Iterable, Counter
+from collections import Counter
 from operator import itemgetter
 import networkx as nx
 import numpy as np
@@ -18,120 +18,19 @@ import copy
 import re
 
 
-# Set global variables
-adsorbate_elements = 'SCHON'
-heights_dict = {'ontop': 2., 
-                'bridge': 2., 
-                'short-bridge': 2.,
-                'long-bridge': 2.,
-                'fcc': 2., 
-                'hcp': 2.,
-                '3fold': 2., 
-                '4fold': 2.,
-                '5fold': 2.,
-                '6fold': 0.}
-
-# Make your own adsorbate list. Make sure you always sort the 
-# indices of the atoms in the same order as the symbol. 
-# First element always starts from bonded index or the 
-# bonded element with smaller atomic number if multi-dentate.
-                  # Monodentate (vertical)
-adsorbate_list = ['H','C','O','CH','OH','CO','CH2','OH2','COH','CH3','OCH','OCH2','OCH3', 
-                  # Multidentate (lateral)
-                  'CHO','CHOH','CH2O','CH3O','CH2OH','CH3OH','CHOOH','COOH','CHOO','CO2'] 
-adsorbate_formula_dict = {k: ''.join(list(Formula(k))) for k in adsorbate_list}
-
-# Make your own bidentate fragment dict
-adsorbate_fragment_dict = {'CO': ['C','O'],     # Possible
-                           'OC': ['O','C'],     # to 
-                           'COH': ['C','OH'],   # bidentate
-                           'OCH': ['O','CH'],   # on
-                           'OCH2': ['O','CH2'], # rugged 
-                           'OCH3': ['O','CH3'], # surfaces
-                           'CHO': ['CH','O'],
-                           'CHOH': ['CH','OH'],
-                           'CH2O': ['CH2','O'],
-                           'CH3O': ['CH3','O'],
-                           'CH2OH': ['CH2','OH'],
-                           'CH3OH': ['CH3','OH'],
-                           'CHOOH': ['CH','O','OH'],
-                           'COOH': ['C','O','OH'],
-                           'CHOO': ['CH','O','O'],
-                           'CO2': ['C','O','O']}
-
-# Make your own adsorbate molecules
-def adsorbate_molecule(adsorbate):
-    # The ase.build.molecule module has many issues.       
-    # Adjust positions, angles and indexing for your needs.
-    if adsorbate  == 'CO':
-        ads = molecule(adsorbate)[::-1]
-    elif adsorbate == 'OH2':
-        ads = molecule('H2O')
-        ads.rotate(180, 'y')
-    elif adsorbate == 'CH2':
-        ads = molecule('NH2')
-        ads[0].symbol = 'C'
-        ads.rotate(180, 'y')
-    elif adsorbate == 'COH':
-        ads = molecule('H2COH')
-        del ads[-2:]
-        ads.rotate(90, 'y')
-    elif adsorbate == 'CHO':
-        ads = molecule('HCO')[[0,2,1]] 
-    elif adsorbate == 'OCH2':
-        ads = molecule('H2CO')
-        ads.rotate(180, 'y')
-    elif adsorbate == 'OCH3':
-        ads = molecule('CH3O')[[1,0,2,3,4]]
-        ads.rotate(90, '-x')
-    elif adsorbate == 'CH2O':
-        ads = molecule('H2CO')[[1,2,3,0]]
-        ads.rotate(90, 'y')
-    elif adsorbate == 'CH3O':
-        ads = molecule('CH3O')[[0,2,3,4,1]]
-        ads.rotate(30, 'y')
-    elif adsorbate == 'CHOH':
-        ads = molecule('H2COH')
-        del ads[-1]
-        ads = ads[[0,3,1,2]]
-    elif adsorbate == 'CH2OH':
-        ads = molecule('H2COH')[[0,3,4,1,2]]
-    elif adsorbate == 'CH3OH':
-        ads = molecule('CH3OH')[[0,2,4,5,1,3]]
-        ads.rotate(-30, 'y')
-    elif adsorbate == 'CHOOH':
-        ads = molecule('HCOOH')[[1,4,2,0,3]]
-    elif adsorbate == 'COOH':
-        ads = molecule('HCOOH')
-        del ads[-1]
-        ads = ads[[1,2,0,3]]
-        ads.rotate(90, '-x')
-        ads.rotate(15, '-y')
-    elif adsorbate == 'CHOO':
-        ads = molecule('HCOOH')
-        del ads[-2]
-        ads = ads[[1,3,2,0]]
-        ads.rotate(90, 'x')
-        ads.rotate(15, 'y')
-    elif adsorbate == 'CO2':
-        ads = molecule(adsorbate)
-        ads.rotate(-90, 'y')
-    else:
-        ads = molecule(adsorbate)
-    return ads
-
-
-class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
+class ClusterAdsorbateCoverage(ClusterAdsorptionSites):
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""       
 
-    def __init__(self, atoms, adsorption_sites=None, dmax=2.5):
+    def __init__(self, atoms, 
+                 adsorption_sites=None, 
+                 dmax=2.5):
  
         self.atoms = atoms.copy()
         self.positions = atoms.positions
         self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
-        assert len(self.ads_ids) > 0 
+        assert self.ads_ids 
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
@@ -144,10 +43,9 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         if adsorption_sites:
             nas = adsorption_sites
         else:
-            nas = NanoparticleAdsorptionSites(atoms, 
-                                              allow_6fold=True,
-                                              composition_effect=True,
-                                              subsurf_effect=False)    
+            nas = ClusterAdsorptionSites(atoms, allow_6fold=True,
+                                         composition_effect=True,
+                                         subsurf_effect=False)    
         self.nas = nas
         self.slab = nas.atoms
         self.allow_6fold = nas.allow_6fold
@@ -166,13 +64,21 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                           self.get_monometallic_label_dict()
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.site_connectivity_matrix = self.get_site_connectivity()
         self.label_occupied_sites()
         self.labels = self.get_labels()
 
     def identify_adsorbates(self):
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
+
+        # Cut off all intermolecular H-H bonds except intramolecular               
+        # H-H bonds in e.g. H2
+        hids = [a.index for a in self.ads_atoms if a.symbol == 'H']
+        for hi in hids:
+            conns = np.where(adscm[hi] == 1)[0]
+            hconns = [i for i in conns if self.ads_atoms.symbols[i] == 'H']
+            if hconns and len(conns) > 1:
+                adscm[hi,hconns] = 0
       
         if adscm.size != 0:
             np.fill_diagonal(adscm, 1)
@@ -262,7 +168,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
             st['bond_length'] = bl
 
             symbols = str(self.symbols[adsids])
-            adssym = next((k for k, v in adsorbate_formula_dict.items() 
+            adssym = next((k for k, v in adsorbate_formulas.items() 
                            if v == symbols), symbols)
             st['adsorbate'] = adssym
             st['fragment'] = adssym
@@ -303,8 +209,8 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                     bondid = st['bonded_index']
                     bondsym = self.symbols[bondid]
                     adssym = st['adsorbate']
-                    if adssym in adsorbate_fragment_dict:
-                        fsym = next((f for f in adsorbate_fragment_dict[adssym] 
+                    if adssym in adsorbate_fragments:
+                        fsym = next((f for f in adsorbate_fragments[adssym] 
                                      if f[0] == bondsym), None)
                         st['fragment'] = fsym
                         flen = len(list(Formula(fsym)))
@@ -325,7 +231,7 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
                 st['label'] = label
                 ll[j] = label
 
-    def make_ads_neighbor_list(self, dx=.3, neighbor_number=1):
+    def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=False)
@@ -335,9 +241,41 @@ class NanoparticleAdsorbateCoverage(NanoparticleAdsorptionSites):
         labs = [lab for lab in ll if lab != '0']
         return sorted(labs)
 
+    def get_graph(self):                                         
+        hsl = self.hetero_site_list
+        hcm = self.connectivity_matrix.copy()
+        surfhcm = hcm[self.surf_ids]
+        symbols = self.symbols[self.surf_ids]
+        nrows, ncols = surfhcm.shape[0], surfhcm.shape[1]        
+        newrows, frag_list = [], []
+        for st in hsl:
+            if st['occupied'] == 1:
+                si = st['indices']
+                newrow = np.zeros(ncols)
+                newrow[list(si)] = 1
+                newrows.append(newrow)
+                frag_list.append(st['fragment'])
+        if newrows:
+            surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+
+        G = nx.Graph()               
+        # Add nodes from label list
+        G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                           for i in range(nrows)] + 
+                         [(j + nrows, {'symbol': frag_list[j]})
+                           for j in range(len(frag_list))])
+        # Add edges from surface connectivity matrix
+        shcm = surfhcm[:,self.surf_ids]
+        shcm *= np.tri(*shcm.shape, k=-1)
+        rows, cols = np.where(shcm == 1)
+        edges = zip(rows.tolist(), cols.tolist())
+        G.add_edges_from(edges)
+
+        return G
+
     def get_site_graph(self):                                         
         ll = self.label_list
-        scm = self.site_connectivity_matrix
+        scm = self.get_site_connectivity()
 
         G = nx.Graph()                                                  
         # Add nodes from label list
@@ -433,14 +371,17 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
 
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""        
 
-    def __init__(self, atoms, adsorption_sites=None, surface=None, dmax=2.5):
+    def __init__(self, atoms, 
+                 adsorption_sites=None, 
+                 surface=None, 
+                 dmax=2.5):
  
         self.atoms = atoms.copy()
         self.positions = atoms.positions
         self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
-        assert len(self.ads_ids) > 0 
+        assert self.ads_ids
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
@@ -477,14 +418,22 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                           self.get_monometallic_label_dict()
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.site_connectivity_matrix = self.get_site_connectivity()
         self.label_occupied_sites()
         self.labels = self.get_labels()
 
     def identify_adsorbates(self):
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
-      
+
+        # Cut off all intermolecular H-H bonds except intramolecular        
+        # H-H bonds in e.g. H2
+        hids = [a.index for a in self.ads_atoms if a.symbol == 'H']
+        for hi in hids:
+            conns = np.where(adscm[hi] == 1)[0]
+            hconns = [i for i in conns if self.ads_atoms.symbols[i] == 'H']
+            if hconns and len(conns) > 1:
+                adscm[hi,hconns] = 0
+
         if adscm.size != 0:
             np.fill_diagonal(adscm, 1)
             rows, cols = np.where(adscm == 1)
@@ -572,7 +521,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
             st['bond_length'] = bl
 
             symbols = str(self.symbols[adsids])
-            adssym = next((k for k, v in adsorbate_formula_dict.items() 
+            adssym = next((k for k, v in adsorbate_formulas.items() 
                            if v == symbols), symbols)
             st['adsorbate'] = adssym
             st['fragment'] = adssym
@@ -614,8 +563,8 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     bondid = st['bonded_index']
                     bondsym = self.symbols[bondid] 
                     adssym = st['adsorbate']
-                    if adssym in adsorbate_fragment_dict:
-                        fsym = next((f for f in adsorbate_fragment_dict[adssym] 
+                    if adssym in adsorbate_fragments:
+                        fsym = next((f for f in adsorbate_fragments[adssym] 
                                      if f[0] == bondsym), None)
                         st['fragment'] = fsym
                         flen = len(list(Formula(fsym)))
@@ -636,7 +585,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                 st['label'] = label
                 ll[j] = label
 
-    def make_ads_neighbor_list(self, dx=.3, neighbor_number=1):
+    def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=True)
@@ -646,9 +595,41 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         labs = [lab for lab in ll if lab != '0']
         return sorted(labs)
 
+    def get_graph(self):                                         
+        hsl = self.hetero_site_list
+        hcm = self.connectivity_matrix.copy()
+        surfhcm = hcm[self.surf_ids]
+        symbols = self.symbols[self.surf_ids]
+        nrows, ncols = surfhcm.shape[0], surfhcm.shape[1]        
+        newrows, frag_list = [], []
+        for st in hsl:
+            if st['occupied'] == 1:
+                si = st['indices']
+                newrow = np.zeros(ncols)
+                newrow[list(si)] = 1
+                newrows.append(newrow)
+                frag_list.append(st['fragment'])
+        if newrows:
+            surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+
+        G = nx.Graph()               
+        # Add nodes from label list
+        G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                           for i in range(nrows)] + 
+                         [(j + nrows, {'symbol': frag_list[j]})
+                           for j in range(len(frag_list))])
+        # Add edges from surface connectivity matrix
+        shcm = surfhcm[:,self.surf_ids]
+        shcm *= np.tri(*shcm.shape, k=-1)
+        rows, cols = np.where(shcm == 1)
+        edges = zip(rows.tolist(), cols.tolist())
+        G.add_edges_from(edges)
+
+        return G
+
     def get_site_graph(self):                                         
         ll = self.label_list
-        scm = self.site_connectivity_matrix
+        scm = self.get_site_connectivity()
 
         G = nx.Graph()                                                  
         # Add nodes from label list
@@ -1695,786 +1676,3 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                     '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 69,
                     '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 70}
 
-
-def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
-                          orientation=None):            
-    '''orientation: vector that the adsorbate is algined to'''
-    
-    if height is None:
-        height = heights_dict[site['site']]
-
-    # Make the correct position
-    normal = site['normal']
-    pos = site['position'] + normal * height
-
-    # Convert the adsorbate to an Atoms object
-    if isinstance(adsorbate, Atoms):
-        ads = adsorbate
-    elif isinstance(adsorbate, Atom):
-        ads = Atoms([adsorbate])
-
-    # Or assume it is a string representing a molecule
-    else:
-        ads = adsorbate_molecule(adsorbate) 
-        if len(ads) == 2 or adsorbate == 'COH':
-            ads.rotate(ads[1].position - ads[0].position, normal)
-            #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
-            #ads.rotate(-45, pvec, center=ads[0].position)
-
-    if adsorbate not in adsorbate_list:
-        # Always sort the indices the same order as the input symbol.
-        # This is a naive sorting which might cause H in wrong order.
-        # Please sort your own adsorbate atoms by reindexing as has
-        # been done in adsorbate_molecule function.
-        symout = list(Formula(adsorbate))
-        symin = list(ads.symbols)
-        newids = []
-        for elt in symout:
-            idx = symin.index(elt)
-            newids.append(idx)
-            symin[idx] = None
-        ads = ads[newids]
-
-    bondpos = ads[0].position
-    if orientation is not None:
-        oripos = next((a.position for a in ads[1:] if 
-                       a.symbol != 'H'), ads[1].position)
-        v1 = get_rejection_between(oripos - bondpos, normal)
-        v2 = get_rejection_between(orientation, normal)
-        radian = get_angle_between(v1, v2)
-
-        # Flip the sign of the angle if the result is not the closest
-        rm_p = get_rotation_matrix(axis=normal, angle=radian)
-        rm_n = get_rotation_matrix(axis=normal, angle=-radian)        
-        npos_p, npos_n = rm_p @ oripos, rm_n @ oripos
-        nbpos_p = npos_p + pos - bondpos
-        nbpos_n = npos_n + pos - bondpos
-        d_p = np.linalg.norm(nbpos_p - pos - orientation)
-        d_n = np.linalg.norm(nbpos_n - pos - orientation)
-        if d_p <= d_n:
-            for a in ads:
-                a.position = rm_p @ a.position
-        else:
-            for a in ads:
-                a.position = rm_n @ a.position
-
-    ads.translate(pos - bondpos)
-    atoms += ads
-
-
-def remove_adosorbate_from_site(atoms, site, remove_fragment=False):
-
-    if not remove_fragment:
-        si = list(site['adsorbate_indices'])
-    else:
-        si = list(site['fragment_indices'])
-    del atoms[si]
-
-
-def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None, 
-                  indices=None, height=None, composition=None, 
-                  subsurf_element=None, site_list=None):
-    """
-    A function for adding adsorbate to a specific adsorption site on a 
-    monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
-    truncated-octahedron shapes, or a 100/111 surface slab.
-
-    Parameters
-    ----------
-    atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
-        
-    adsorbate: The adsorbate. Must be one of the following three types:
-        A string containing the chemical symbol for a single atom.
-        An atom object.
-        An atoms object (for a molecular adsorbate).
-
-    site: Support 5 typical adsorption sites: 
-        1-fold site 'ontop', 
-        2-fold site 'bridge', 
-        3-fold hollow sites 'fcc' and 'hcp', 
-        4-fold hollow site '4fold'.
-
-    surface: Support 4 typical surfaces (positions) for fcc crystal where the 
-    adsorbate is attached: 
-        'vertex', 
-        'edge', 
-        'fcc100', 
-        'fcc111'.
-
-    height: The height from the adsorbate to the surface.
-        Default is {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 
-        '4fold': 1.7} for nanoparticles and 2.0 for all sites on surface slabs.
-
-    Example
-    ------- 
-    add_adsorbate(atoms,adsorbate='CO',site='4fold',surface='fcc100')
-    """
-
-    if height is None:
-        height = heights_dict[site]
-    composition_effect = False if composition is None else True
-    subsurf_effect = False if subsurf_element is None else True
-
-    if composition:
-        if '-' in composition or site == '6fold':
-            scomp = composition
-        else:
-            comp = re.findall('[A-Z][^A-Z]*', composition)
-            if len(comp) != 4:
-                scomp = ''.join(sorted(comp, key=lambda x: 
-                                       Atom(x).number))
-            else:
-                if comp[0] != comp[2]:
-                    scomp = ''.join(sorted(comp, key=lambda x: 
-                                           Atom(x).number))
-                else:
-                    if Atom(comp[0]).number > Atom(comp[1]).number:
-                        scomp = comp[1]+comp[0]+comp[3]+comp[2]
-                    else:
-                        scomp = ''.join(comp)
-    else:
-        scomp = None
-
-    if site_list:
-        all_sites = site_list.copy()
-    else:
-        all_sites = enumerate_adsorption_sites(atoms, surface, 
-                                               geometry, True, 
-                                               composition_effect, 
-                                               subsurf_effect)
-
-    if indices:
-        if not isinstance(indices, Iterable):
-            indices = [indices]
-        indices = tuple(sorted(indices))
-        st = next((s for s in all_sites if 
-                   s['indices'] == indices), None)
-    else:
-        st = next((s for s in all_sites if 
-                   s['site'] == site and
-                   s['composition'] == scomp and 
-                   s['subsurf_element'] 
-                   == subsurf_element), None)
-
-    if not st:
-        print('No such site can be found')            
-    else:
-        add_adsorbate_to_site(atoms, adsorbate, st, height)
-
-
-def group_sites_by_surface(atoms, sites, site_list=None):                            
-    """A function that uses networkx to group one type of sites 
-    by geometrical facets of the nanoparticle"""
-
-    # Find all indices of vertex and edge sites
-    if not site_list:
-        nas = NanoparticleAdsorptionSites(atoms)
-        site_list = nas.site_list
-    ve_indices = [s['indices'] for s in site_list if 
-                  s['site'] == 'ontop' and 
-                  s['surface'] in ['vertex', 'edge']]
-    unique_ve_indices = set(list(sum(ve_indices, ())))
-     
-    G=nx.Graph()
-    for site in sites:
-        indices = site['indices']
-        reduced_indices = tuple(i for i in indices if i 
-                                not in unique_ve_indices)
-        site['reduced_indices'] = reduced_indices
-        nx.add_path(G, reduced_indices)
-    components = list(nx.connected_components(G))
-    groups = []
-    for component in components:
-        group = []
-        for path in [s['reduced_indices'] for s in sites]:
-            if component.issuperset(path):
-                group.append(path)
-        groups.append(group)
-    grouped_sites = defaultdict(list)
-    for site in sites:
-        for group in groups:
-            if site['reduced_indices'] in group:
-                grouped_sites[groups.index(group)] += [site]
-
-    return grouped_sites
-
-
-def symmetric_pattern_generator(atoms, adsorbate, surface=None, 
-                                coverage=1., height=None, 
-                                min_adsorbate_distance=0.):
-    """A function for generating certain well-defined symmetric adsorbate 
-       coverage patterns.
-
-       Parameters
-       ----------
-       atoms: The nanoparticle or surface slab onto which the adsorbate 
-              should be added.
-           
-       adsorbate: The adsorbate. Must be one of the following three types:
-           A string containing the chemical symbol for a single atom.
-           An atom object.
-           An atoms object (for a molecular adsorbate).                                                                                                         
-       surface: Support 2 typical surfaces for fcc crystal where the 
-           adsorbate is attached:  
-           'fcc100', 
-           'fcc111'.
-           Can either specify a string or a list of strings
-
-       coverage: The coverage (ML) of the adsorbate.
-           Note that for small nanoparticles, the function might give results 
-           that do not correspond to the coverage. This is normal since the 
-           surface area can be too small to encompass the coverage pattern 
-           properly. We expect this function to work especially well on large 
-           nanoparticles and low-index extended surfaces.                                                                                              
-
-       height: The height from the adsorbate to the surface.
-           Default is {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 
-           '4fold': 1.7} for nanoparticles and 2.0 for all sites on surface 
-           slabs.
-
-       min_adsorbate_distance: The minimum distance between two adsorbate 
-           atoms. Default value 0.2 is good for adsorbate coverage patterns. 
-           Play around to find the best value.
-       
-       Example
-       ------- 
-       pattern_generator(atoms, adsorbate='CO', surface='fcc111', coverage=3/4)
-    """
-
-    ads_indices = [a.index for a in atoms if 
-                   a.symbol in adsorbate_elements]
-    ads_atoms = None
-    if ads_indices:
-        ads_atoms = atoms[ads_indices]
-        atoms = atoms[[a.index for a in atoms if 
-                       a.symbol not in adsorbate_elements]]
-    ads = adsorbate_molecule(adsorbate)
-
-    if True not in atoms.pbc:                            
-        if surface is None:
-            surface = ['fcc100', 'fcc111']        
-        sas = NanoparticleAdsorptionSites(atoms)
-        site_list = sas.site_list
-    else:
-        sas = SlabAdsorptionSites(atoms, surface=surface)
-        if surface is None:
-            surface = sas.surface
-        site_list = sas.site_list
-    if not isinstance(surface, list):
-        surface = [surface] 
-
-    final_sites = []
-    if 'fcc111' in surface: 
-        if coverage == 1:
-            fcc_sites = [s for s in site_list 
-                         if s['site'] == 'fcc']
-            if fcc_sites:
-                final_sites += fcc_sites
-
-        elif coverage == 3/4:
-            # Kagome pattern
-            fcc_sites = [s for s in site_list  
-                         if s['site'] == 'fcc']
-            if True not in atoms.pbc:                                
-                grouped_sites = group_sites_by_surface(
-                                atoms, fcc_sites, site_list)
-            else:
-                grouped_sites = {'pbc_sites': fcc_sites}
-
-            for sites in grouped_sites.values():
-                if sites:
-                    sites_to_delete = [sites[0]]
-                    for sitei in sites_to_delete:
-                        common_site_indices = []
-                        non_common_sites = []
-                        for sitej in sites:
-                            if sitej['indices'] == sitei['indices']:
-                                pass
-                            elif set(sitej['indices']) & set(sitei['indices']):
-                                common_site_indices += list(sitej['indices'])
-                            else:
-                                non_common_sites.append(sitej)
-                        for sitej in non_common_sites:
-                            overlap = sum([common_site_indices.count(i) 
-                                          for i in sitej['indices']])
-                            if overlap == 1 and sitej['indices'] \
-                            not in [s['indices'] for s in sites_to_delete]:
-                                sites_to_delete.append(sitej)                
-                    for s in sites:
-                        if s['indices'] not in [st['indices'] 
-                        for st in sites_to_delete]:
-                            final_sites.append(s)
-
-        elif coverage == 2/4:
-            # Honeycomb pattern
-            fcc_sites = [s for s in site_list if s['site'] == 'fcc']
-            hcp_sites = [s for s in site_list if s['site'] == 'hcp']
-            all_sites = fcc_sites + hcp_sites
-            if True not in atoms.pbc:    
-                grouped_sites = group_sites_by_surface(
-                                atoms, all_sites, site_list)
-            else:
-                grouped_sites = {'pbc_sites': all_sites}
-            for sites in grouped_sites.values():
-                if sites:                    
-                    sites_to_remain = [sites[0]]
-                    for sitei in sites_to_remain:
-                        for sitej in sites:
-                            if sitej['indices'] == sitei['indices']:
-                                pass
-                            elif len(set(sitej['indices']) & \
-                            set(sitei['indices'])) == 1 \
-                            and sitej['site'] != sitei['site'] \
-                            and sitej['indices'] not in [s['indices'] 
-                            for s in sites_to_remain]:
-                                sites_to_remain.append(sitej)
-                    final_sites += sites_to_remain                                         
-
-            if True not in atoms.pbc:                                                                       
-                bad_sites = []
-                for sti in final_sites:
-                    if sti['site'] == 'hcp':
-                        count = 0
-                        for stj in final_sites:
-                            if stj['site'] == 'fcc':
-                                if len(set(stj['indices']) & \
-                                set(sti['indices'])) == 2:
-                                    count += 1
-                        if count != 0:
-                            bad_sites.append(sti)
-                final_sites = [s for s in final_sites if s['indices'] \
-                               not in [st['indices'] for st in bad_sites]]
-
-        elif coverage == 1/4:
-            # Kagome pattern
-            fcc_sites = [s for s in site_list 
-                         if s['site'] == 'fcc']                                                                 
-            if True not in atoms.pbc:                                
-                grouped_sites = group_sites_by_surface(
-                                atoms, fcc_sites, site_list)
-            else:
-                grouped_sites = {'pbc_sites': fcc_sites}
-
-            for sites in grouped_sites.values():
-                if sites:
-                    sites_to_remain = [sites[0]]
-                    for sitei in sites_to_remain:
-                        common_site_indices = []
-                        non_common_sites = []
-                        for sitej in sites:
-                            if sitej['indices'] == sitei['indices']:
-                                pass
-                            elif set(sitej['indices']) & set(sitei['indices']):
-                                common_site_indices += list(sitej['indices'])
-                            else:
-                                non_common_sites.append(sitej)
-                        for sitej in non_common_sites:
-                            overlap = sum([common_site_indices.count(i) 
-                                          for i in sitej['indices']])
-                            if overlap == 1 and sitej['indices'] \
-                            not in [s['indices'] for s in sites_to_remain]:
-                                sites_to_remain.append(sitej)               
-                    final_sites += sites_to_remain
-
-    if 'fcc100' in surface:
-        if coverage == 1:
-            fold4_sites = [s for s in site_list if s['site'] == '4fold']
-            if fold4_sites:
-                final_sites += fold4_sites
-
-        elif coverage == 3/4:
-            fold4_sites = [s for s in site_list if s['site'] == '4fold']
-            if True not in atoms.pbc:                                           
-                grouped_sites = group_sites_by_surface(
-                                atoms, fold4_sites, site_list)
-            else:
-                grouped_sites = {'pbc_sites': fold4_sites}
-            for sites in grouped_sites.values():
-                if sites:
-                    sites_to_delete = [sites[0]]
-                    for sitei in sites_to_delete:
-                        common_site_indices = []
-                        non_common_sites = []
-                        for sitej in sites:
-                            if sitej['indices'] == sitei['indices']:
-                                pass
-                            elif set(sitej['indices']) & set(sitei['indices']):
-                                common_site_indices += list(sitej['indices'])
-                            else:
-                                non_common_sites.append(sitej)                        
-                        for sitej in non_common_sites:                        
-                            overlap = sum([common_site_indices.count(i) 
-                                          for i in sitej['indices']])                        
-                            if overlap in [1, 4] and sitej['indices'] not in \
-                            [s['indices'] for s in sites_to_delete]:  
-                                sites_to_delete.append(sitej)
-                    for s in sites:
-                        if s['indices'] not in [st['indices'] 
-                                   for st in sites_to_delete]:
-                            final_sites.append(s)
-
-        elif coverage == 2/4:
-            #c(2x2) pattern
-            fold4_sites = [s for s in site_list if s['site'] == '4fold']
-            original_sites = copy.deepcopy(fold4_sites)
-            if True not in atoms.pbc:
-                grouped_sites = group_sites_by_surface(
-                                atoms, fold4_sites, site_list)
-            else:
-                grouped_sites = {'pbc_sites': fold4_sites}
-            for sites in grouped_sites.values():
-                if sites:
-                    sites_to_remain = [sites[0]]
-                    for sitei in sites_to_remain:
-                        for sitej in sites:
-                            if (len(set(sitej['indices']) & \
-                            set(sitei['indices'])) == 1) and \
-                            (sitej['indices'] not in [s['indices'] 
-                            for s in sites_to_remain]):
-                                sites_to_remain.append(sitej)
-                    for s in original_sites:
-                        if s['indices'] in [st['indices'] 
-                        for st in sites_to_remain]:
-                            final_sites.append(s)
-
-        elif coverage == 1/4:
-            #p(2x2) pattern
-            fold4_sites = [s for s in site_list if s['site'] == '4fold']
-            if True not in atoms.pbc:                                           
-                grouped_sites = group_sites_by_surface(
-                                atoms, fold4_sites, site_list)
-            else:
-                grouped_sites = {'pbc_sites': fold4_sites}
-            for sites in grouped_sites.values():
-                if sites:
-                    sites_to_remain = [sites[0]]
-                    for sitei in sites_to_remain:
-                        common_site_indices = []
-                        non_common_sites = []
-                        for idx, sitej in enumerate(sites):
-                            if sitej['indices'] == sitei['indices']:
-                                pass
-                            elif set(sitej['indices']) & set(sitei['indices']):
-                                common_site_indices += list(sitej['indices'])
-                            else:
-                                non_common_sites.append(sitej)
-                        for sitej in non_common_sites:
-                            overlap = sum([common_site_indices.count(i) 
-                                          for i in sitej['indices']])
-                            if overlap in [1, 4] and sitej['indices'] not in \
-                            [s['indices'] for s in sites_to_remain]:  
-                                sites_to_remain.append(sitej)
-                    final_sites += sites_to_remain
-
-    # Add edge coverage for nanoparticles
-    if True not in atoms.pbc:
-        if coverage == 1:
-            edge_sites = [s for s in site_list if 
-                          s['site'] == 'bridge' and 
-                          s['surface'] == 'edge']
-            vertex_indices = [s['indices'][0] for 
-                              s in site_list if 
-                              s['site'] == 'ontop' and 
-                              s['surface'] == 'vertex']
-            ve_common_indices = set()
-            for esite in edge_sites:
-                if set(esite['indices']) & set(vertex_indices):
-                    for i in esite['indices']:
-                        if i not in vertex_indices:
-                            ve_common_indices.add(i)
-            for esite in edge_sites:
-                if not set(esite['indices']).issubset(
-                ve_common_indices):
-                    final_sites.append(esite)
-
-        if coverage == 3/4:
-            occupied_sites = final_sites.copy()
-            hcp_sites = [s for s in site_list if 
-                         s['site'] == 'hcp' and
-                         s['surface'] == 'fcc111']
-            edge_sites = [s for s in site_list if 
-                          s['site'] == 'bridge' and
-                          s['surface'] == 'edge']
-            vertex_indices = [s['indices'][0] for 
-                              s in site_list if
-                              s['site'] == 'ontop' and 
-                              s['surface'] == 'vertex']
-            ve_common_indices = set()
-            for esite in edge_sites:
-                if set(esite['indices']) & set(vertex_indices):
-                    for i in esite['indices']:
-                        if i not in vertex_indices:
-                            ve_common_indices.add(i)                
-            for esite in edge_sites:
-                if not set(esite['indices']).issubset(
-                ve_common_indices):
-                    intermediate_indices = []
-                    for hsite in hcp_sites:
-                        if len(set(esite['indices']) & \
-                               set(hsite['indices'])) == 2:
-                            intermediate_indices.append(min(
-                            set(esite['indices']) ^ \
-                            set(hsite['indices'])))
-                    too_close = 0
-                    for s in occupied_sites:
-                        if len(set(esite['indices']) & \
-                        set(s['indices'])) == 2:
-                            too_close += 1
-                    share = [0]
-                    for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if \
-                                          interi in s['indices']]))
-                    if max(share) <= 2 and too_close == 0:
-                        final_sites.append(esite)
-
-        if coverage == 2/4:            
-            occupied_sites = final_sites.copy()
-            edge_sites = [s for s in site_list if 
-                          s['site'] == 'bridge' and
-                          s['surface'] == 'edge']
-            vertex_indices = [s['indices'][0] for 
-                              s in site_list if
-                              s['site'] == 'ontop' and 
-                              s['surface'] == 'vertex']
-            ve_common_indices = set()
-            for esite in edge_sites:
-                if set(esite['indices']) & set(vertex_indices):
-                    for i in esite['indices']:
-                        if i not in vertex_indices:
-                            ve_common_indices.add(i)                
-            for esite in edge_sites:
-                if not set(esite['indices']).issubset(
-                ve_common_indices):
-                    intermediate_indices = []
-                    for hsite in hcp_sites:
-                        if len(set(esite['indices']) & \
-                               set(hsite['indices'])) == 2:
-                            intermediate_indices.append(min(
-                            set(esite['indices']) ^ \
-                            set(hsite['indices'])))
-                    share = [0]
-                    for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if \
-                                          interi in s['indices']]))
-                    too_close = 0
-                    for s in occupied_sites:
-                        if len(set(esite['indices']) & \
-                        set(s['indices'])) == 2:
-                            too_close += 1
-                    if max(share) <= 1 and too_close == 0:
-                        final_sites.append(esite)
-
-        if coverage == 1/4:
-            occupied_sites = final_sites.copy()
-            hcp_sites = [s for s in site_list if 
-                         s['site'] == 'hcp' and
-                         s['surface'] == 'fcc111']
-            edge_sites = [s for s in site_list if 
-                          s['site'] == 'bridge' and
-                          s['surface'] == 'edge']
-            vertex_indices = [s['indices'][0] for 
-                              s in site_list if
-                              s['site'] == 'ontop' and 
-                              s['surface'] == 'vertex'] 
-            ve_common_indices = set()
-            for esite in edge_sites:
-                if set(esite['indices']) & set(vertex_indices):
-                    for i in esite['indices']:
-                        if i not in vertex_indices:
-                            ve_common_indices.add(i)                
-            for esite in edge_sites:
-                if not set(esite['indices']).issubset(
-                ve_common_indices):
-                    intermediate_indices = []
-                    for hsite in hcp_sites:
-                        if len(set(esite['indices']) & \
-                        set(hsite['indices'])) == 2:
-                            intermediate_indices.append(min(
-                             set(esite['indices']) ^ \
-                             set(hsite['indices'])))
-                    share = [0]
-                    for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if \
-                                          interi in s['indices']]))
-                    too_close = 0
-                    for s in occupied_sites:
-                        if len(set(esite['indices']) & \
-                        set(s['indices'])) > 0:
-                            too_close += 1
-                    if max(share) == 0 and too_close == 0:
-                        final_sites.append(esite)
-
-    for site in final_sites:
-        add_adsorbate_to_site(atoms, adsorbate, site, height)
-
-    if min_adsorbate_distance > 0.:
-        if True not in atoms.pbc:
-            sac = NanoparticleAdsorbateCoverage(atoms, sas)
-        else:
-            sac = SlabAdsorbateCoverage(atoms, sas)        
-        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
-
-    return atoms
-
-
-def remove_adsorbates_too_close(atoms, adsorbate_coverage,
-                                min_adsorbate_distance=0.5):
-
-    dups = get_duplicate_atoms(atoms, cutoff=min_adsorbate_distance)
-    if dups.size == 0:
-        return
-
-    del_ids = set(dups[:,0])
-    rm_ids = []
-    hsl = adsorbate_coverage.hetero_site_list
-    for st in hsl:
-        if st['occupied'] == 1:
-            ads_ids = st['adsorbate_indices']
-            if del_ids.intersection(set(ads_ids)):
-                rm_ids += list(ads_ids)
-    rm_ids = list(set(rm_ids))
-
-    del atoms[rm_ids]
-
-
-def full_coverage_pattern_generator(atoms, adsorbate, site, height=None, 
-                                    min_adsorbate_distance=0.6):
-    '''A function to generate different 1ML coverage patterns'''
-
-    ads_indices = [a.index for a in atoms if a.symbol in adsorbate_elements]
-    ads_atoms = None
-    if ads_indices:
-        ads_atoms = atoms[ads_indices]
-        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbate_elements]]
-    ads = molecule(adsorbate)[::-1]
-    if str(ads.symbols) != 'CO':
-        ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
-    final_sites = []
-    positions = []
-    if site == 'fcc':
-        return symmetric_pattern_generator(atoms, adsorbate, coverage=1, height=height, 
-                                           min_adsorbate_distance=min_adsorbate_distance)
-    elif site == 'ontop':
-        sites = get_monometallic_sites(atoms, site='ontop', surface='fcc100') +\
-                get_monometallic_sites(atoms, site='ontop', surface='fcc111') +\
-                get_monometallic_sites(atoms, site='ontop', surface='edge') +\
-                get_monometallic_sites(atoms, site='ontop', surface='vertex')
-        if sites:
-            final_sites += sites
-            positions += [s['adsorbate_position'] for s in sites]
-    elif site in ['hcp', '4fold']:
-        if True not in atoms.pbc:
-            sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height) +\
-                    get_monometallic_sites(atoms, site='4fold', surface='fcc100', height=height)
-        else:
-            sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height)
-        if sites:
-            final_sites += sites
-            positions += [s['adsorbate_position'] for s in sites]
-
-    if True not in atoms.pbc:
-        if adsorbate == 'CO':
-            for site in final_sites:
-                add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
-            nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)     
-            nl.update(atoms)            
-            atom_indices = [a.index for a in atoms if a.symbol == 'O']            
-            n_ads_atoms = 2
-            overlap_atoms_indices = []
-            for idx in atom_indices:   
-                neighbor_indices, _ = nl.get_neighbors(idx)
-                overlap = 0
-                for i in neighbor_indices:
-                    if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):
-                        overlap += 1
-                if overlap > 0:
-                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
-            del atoms[overlap_atoms_indices]
-
-        else:
-            for site in final_sites:
-                add_adsorbate(atoms, molecule(adsorbate), site)
-            nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)   
-            nl.update(atoms)            
-            atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-            ads_symbols = molecule(adsorbate).get_chemical_symbols()
-            n_ads_atoms = len(ads_symbols)
-            overlap_atoms_indices = []
-            for idx in atom_indices:   
-                neighbor_indices, _ = nl.get_neighbors(idx)
-                overlap = 0
-                for i in neighbor_indices:                                                                
-                    if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):                       
-                        overlap += 1                                                                      
-                if overlap > 0:                                                                           
-                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
-            del atoms[overlap_atoms_indices]                                                                    
-
-    else:
-        for pos in positions:
-            ads.translate(pos - ads[0].position)
-            atoms += ads
-        if ads_indices:
-            atoms += ads_atoms
-
-    return atoms
-
-
-def random_pattern_generator(atoms, adsorbate, surface=None, 
-                             min_adsorbate_distance=2., 
-                             heights=heights_dict):
-    '''A function for generating random coverage patterns with constraint.
-       Parameters
-       ----------
-       atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
-           
-       adsorbate: The adsorbate. Must be one of the following three types:
-           A string containing the chemical symbol for a single atom.
-           An atom object.
-           An atoms object (for a molecular adsorbate).                                                                                                       
-       min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
-
-       heights: A dictionary that contains the adsorbate height for each site type.'''
- 
-    ads_indices = [a.index for a in atoms if a.symbol in adsorbate_elements]
-    ads_atoms = None
-    if ads_indices:
-        ads_atoms = atoms[ads_indices]
-        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbate_elements]]
-    all_sites = enumerate_monometallic_sites(atoms, surface=surface, 
-                                             heights=heights, subsurf_effect=False)
-    random.shuffle(all_sites)    
- 
-    if True not in atoms.pbc:
-        for site in all_sites:
-            add_adsorbate(atoms, molecule(adsorbate), site)
-    else:
-        ads = molecule(adsorbate)[::-1]
-        if str(ads.symbols) != 'CO':
-            ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
-        positions = [s['adsorbate_position'] for s in all_sites]
-        for pos in positions:
-            ads.translate(pos - ads[0].position)
-            atoms += ads
-        if ads_indices:
-            atoms += ads_atoms
-
-    nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)   
-    nl.update(atoms)            
-    atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-    random.shuffle(atom_indices)
-    ads_symbols = molecule(adsorbate).get_chemical_symbols()
-    n_ads_atoms = len(ads_symbols)
-    overlap_atoms_indices = []
-    
-    for idx in atom_indices:   
-        neighbor_indices, _ = nl.get_neighbors(idx)
-        overlap = 0
-        for i in neighbor_indices:                                                                
-            if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):                     
-                overlap += 1                                                                      
-        if overlap > 0:                                                                           
-            overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
-    del atoms[overlap_atoms_indices]
-
-    return atoms
