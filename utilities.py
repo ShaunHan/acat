@@ -1,11 +1,19 @@
-from ase.data import covalent_radii
+from ase.data import covalent_radii, atomic_numbers, atomic_masses
 from ase.geometry import find_mic
-from collections import defaultdict
+from ase.geometry.geometry import _row_col_from_pdist
+from ase.formula import Formula
+from collections import abc, defaultdict
 from itertools import product, permutations, combinations
 import networkx as nx
 import numpy as np
+import random
 import scipy
 import math
+
+
+def is_list_or_tuple(obj):
+    return (isinstance(obj, abc.Sequence)
+            and not isinstance(obj, str))
 
 
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
@@ -223,6 +231,56 @@ def get_mic(p1, p2, cell, pbc=[1,1,0], max_cell_multiples=1e5,
         return np.sum(min_dr**2)
 
 
+def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):
+    """Get list of close atoms and delete them if requested.
+
+    Identify all atoms which lie within the cutoff radius of each other.
+    Delete one set of them if delete == True.
+    """
+
+    res = np.asarray(list(combinations(np.asarray(range(len(atoms))),2)))
+    indices1, indices2 = res[:,0], res[:,1]
+    p1, p2 = atoms.positions[indices1], atoms.positions[indices2]                      
+    if mic:
+        _, dists = find_mic(p2 - p1, atoms.cell, pbc=True)
+    else:
+        dists = np.linalg.norm(p2 - p1, axis=1) 
+
+    dup = np.nonzero(dists < cutoff)
+    rem = np.array(_row_col_from_pdist(len(atoms), dup[0]))
+    if delete:
+        if rem.size != 0:
+            del atoms[rem[:, 0]]
+    else:
+        return rem
+
+
+def atoms_too_close(atoms, cutoff=0.5, mic=False):
+
+    res = np.asarray(list(combinations(np.asarray(range(len(atoms))),2)))
+    indices1, indices2 = res[:,0], res[:,1]
+    p1, p2 = atoms.positions[indices1], atoms.positions[indices2]
+    if mic:
+        _, dists = find_mic(p2 - p1, atoms.cell, pbc=True)
+    else:
+        dists = np.linalg.norm(p2 - p1, axis=1)
+
+    return any(dists < cutoff)
+
+
+def added_atoms_too_close(atoms, n_added, cutoff=1.5, mic=False): 
+   
+    newp, oldp = atoms.positions[-n_added:], atoms.positions[:-n_added]
+    newps = np.repeat(newp, len(oldp), axis=0)
+    oldps = np.tile(oldp, (n_added,1))
+    if mic:
+        _, dists = find_mic(newps - oldps, atoms.cell, pbc=True)
+    else:
+        dists = np.linalg.norm(newps - oldps, axis=1)
+
+    return any(dists < cutoff)
+
+
 def get_angle_between(v1, v2):
     """ 
     Returns the angle in radians between vectors 
@@ -252,10 +310,27 @@ def get_rotation_matrix(axis, angle):
            axis / np.linalg.norm(axis) * angle))
 
 
-def draw_graph(G, savefig=None):               
+def get_total_masses(symbol):
+
+    return np.sum([atomic_masses[atomic_numbers[s]] 
+                   for s in list(Formula(symbol))])
+
+
+def draw_graph(G, savefig='graph.png'):               
     import matplotlib.pyplot as plt
-    labels = nx.get_node_attributes(G, 'label')
-    nx.draw(G, labels=labels, font_size=8)
-    if savefig:
-        plt.savefig(savefig)
-    plt.show() 
+    labels = nx.get_node_attributes(G, 'symbol')
+
+    # Get unique groups
+    groups = set(labels.values())
+    mapping = {x: "C{}".format(i) for i, x in enumerate(groups)}
+    nodes = G.nodes()
+    colors = [mapping[G.nodes[n]['symbol']] for n in nodes]
+
+    # Drawing nodes, edges and labels separately
+    pos = nx.spring_layout(G)
+    nx.draw_networkx_edges(G, pos, alpha=0.5)
+    nx.draw_networkx_nodes(G, pos, nodelist=nodes, node_color=colors, 
+                           with_labels=False, node_size=500)
+    nx.draw_networkx_labels(G, pos, labels, font_size=10,font_color='w')
+    plt.axis('off')
+    plt.savefig(savefig)
