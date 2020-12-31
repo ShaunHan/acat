@@ -67,7 +67,7 @@ class StochasticPatternGenerator(object):
             self.logfile = open(logfile, 'a')      
  
         if self.adsorption_sites is not None:
-            if self.multidentate_adsorbates is not None:
+            if self.multidentate_adsorbates:
                 self.bidentate_nblist = \
                 self.adsorption_sites.get_neighbor_site_list(neighbor_number=1)
             self.site_nblist = \
@@ -199,13 +199,12 @@ class StochasticPatternGenerator(object):
         ads_remain = [a for a in self.atoms if a.symbol in adsorbate_elements]
         if not ads_remain:
             if self.logfile is not None:
-                self.logfile.write('There is only one adsorbate left. ' 
-                                   + 'Removal failed!\n')
+                self.logfile.write('Last adsorbate has been removed ' + 
+                                   'from image {}\n'.format(self.n_image))
                 self.logfile.flush()
             return
-
         nsac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-               else ClusterAdsorbateCoverage(self.atoms, sas)
+               else ClusterAdsorbateCoverage(self.atoms, sas)                      
         return nsac 
 
     def _move_adsorbate(self, adsorption_sites):           
@@ -311,18 +310,18 @@ class StochasticPatternGenerator(object):
         return nsac                                                                 
 
     def _replace_adsorbate(self, adsorption_sites):
-        sas = adsorption_sites
+        sas = adsorption_sites                                                           
         sac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
               else ClusterAdsorbateCoverage(self.atoms, sas)
         hsl = sac.hetero_site_list
-        occupied = [i for i in range(len(hsl)) if hsl[i]['occupied'] == 1]
-        if not occupied:
+        occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied'] == 1]
+        if not occupied_stids:
             if self.logfile is not None:
                 self.logfile.write('There is no occupied site. Replacement failed!\n')
                 self.logfile.flush()
             return
 
-        rpsti = random.choice(occupied)
+        rpsti = random.choice(occupied_stids)
         rpst = hsl[rpsti]
         remove_adsorbate_from_site(self.atoms, rpst)
 
@@ -354,7 +353,7 @@ class StochasticPatternGenerator(object):
         neighbor_site_indices = [v for v in nbstids if v not in selfids]
 
         if adsorbate in self.multidentate_adsorbates:
-            if self.adsorption_sites is not None:
+            if self.adsorption_sites is not None:                                      
                 bidentate_nblist = self.bidentate_nblist
             else:
                 bidentate_nblist = sas.get_neighbor_site_list(neighbor_number=1)
@@ -427,6 +426,7 @@ class StochasticPatternGenerator(object):
                 n_old += 1
 
             self.atoms = random.choice(self.images).copy()
+            self.n_image = n_new 
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
             elif True in self.atoms.pbc:
@@ -441,7 +441,7 @@ class StochasticPatternGenerator(object):
             ads = [a for a in self.atoms if a.symbol in adsorbate_elements]
             if not ads:
                 if 'add' not in actions:                                                             
-                    warnings.warn("There is no adsorbate in image {}. ".format(n)
+                    warnings.warn("There is no adsorbate in image {}. ".format(n_new)
                                   + "The only available action is 'add'")
                     continue 
                 else:
@@ -470,7 +470,6 @@ class StochasticPatternGenerator(object):
                 continue
             
             labs = nsac.labels
-          #  print('labs:', labs)
             if self.unique:
                 G = nsac.get_graph()
                 if labs in self.labels_list: 
@@ -543,7 +542,7 @@ class SystematicPatternGenerator(object):
             self.logfile = open(logfile, 'a')                 
  
         if self.adsorption_sites is not None:
-            if self.multidentate_adsorbates is not None:
+            if self.multidentate_adsorbates:
                 self.bidentate_nblist = \
                 self.adsorption_sites.get_neighbor_site_list(neighbor_number=1)
             self.site_nblist = \
@@ -557,7 +556,7 @@ class SystematicPatternGenerator(object):
     def _add_adsorbate(self, adsorption_sites):
         self.n_duplicate = 0
         sas = adsorption_sites
-        if self.adsorption_sites is not None:                           
+        if self.adsorption_sites is not None:                                         
             site_nblist = self.site_nblist
         else:
             site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
@@ -579,7 +578,7 @@ class SystematicPatternGenerator(object):
             nbstids = set(nbstids)
             neighbor_site_indices = [v for v in nbstids if v not in selfids]
 
-        if self.multidentate_adsorbates is not None:
+        if self.multidentate_adsorbates:
             if self.adsorption_sites is not None:
                 bidentate_nblist = self.bidentate_nblist
             else:
@@ -590,7 +589,7 @@ class SystematicPatternGenerator(object):
         newsites, binbids = [], []
         for i, s in enumerate(hsl):
             if i not in nbstids:
-                if self.multidentate_adsorbates is not None:
+                if self.multidentate_adsorbates:
                     binbs = bidentate_nblist[i]
                     binbis = [n for n in binbs if n not in nbstids]
                     if not binbis and s['site'] != '6fold':
@@ -598,9 +597,9 @@ class SystematicPatternGenerator(object):
                     binbids.append(binbis)
                 newsites.append(s)
 
-        for k, nst in enumerate(newsites): 
+        for k, nst in enumerate(newsites):
             for adsorbate in self.adsorbates:
-                if adsorbate in self.multidentate_adsorbates:
+                if adsorbate in self.multidentate_adsorbates:                                     
                     nis = binbids[k]
                 else:
                     nis = [0]
@@ -634,13 +633,13 @@ class SystematicPatternGenerator(object):
                     if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
                     and (i in neighbor_site_indices)):
                         continue
-                    ads_atoms = self.atoms[[a.index for a in self.atoms if                   
+                    ads_atoms = atoms[[a.index for a in atoms if                   
                                             a.symbol in adsorbate_elements]]
                     if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))),  
-                    cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
+                    cutoff=self.min_adsorbate_distance, mic=(True in atoms.pbc)):
                         continue
 
-                    labs = nsac.labels
+                    labs = nsac.labels                                                       
                     if self.unique:                                        
                         G = nsac.get_graph()
                         if labs in self.labels_list: 
@@ -668,6 +667,301 @@ class SystematicPatternGenerator(object):
                     self.trajectory.write(atoms)
                     self.n_write += 1
 
+    def _remove_adsorbate(self, adsorption_sites):
+        self.n_duplicate = 0                                                           
+        sas = adsorption_sites
+        sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
+              else ClusterAdsorbateCoverage(self.image, sas)
+        hsl = sac.hetero_site_list
+        occupied = [s for s in hsl if s['occupied'] == 1]
+        if not occupied:
+            if self.logfile is not None:
+                self.logfile.write('There is no occupied site. Removal failed!\n')
+                self.logfile.flush()
+            return
+
+        rm_ids = set()
+        for rmst in occupied:
+            ads_ids = set(rmst['adsorbate_indices'])
+            # Make sure the same adsorbate is not removed twice
+            if ads_ids.issubset(rm_ids):
+                continue
+            rm_ids.update(ads_ids)                
+            atoms = self.image.copy()
+            remove_adsorbate_from_site(atoms, rmst)
+
+            ads_remain = [a for a in atoms if a.symbol in adsorbate_elements]
+            if not ads_remain:
+                if self.logfile is not None:
+                    self.logfile.write('Last adsorbate has been removed ' + 
+                                       'from image {}\n'.format(self.n_image))
+                    self.logfile.flush()
+                self.trajectory.write(atoms)
+                return
+                                                                                       
+            nsac = SlabAdsorbateCoverage(atoms, sas) if True in atoms.pbc \
+                   else ClusterAdsorbateCoverage(atoms, sas)
+            labs = nsac.labels                                                       
+            if self.unique:                                        
+                G = nsac.get_graph()
+                if labs in self.labels_list: 
+                    if self.graph_list:
+                        # Skip duplicates based on isomorphism 
+                        potential_graphs = [g for i, g in enumerate(self.graph_list)
+                                            if self.labels_list[i] == labs]
+                        nm = iso.categorical_node_match('symbol', 'X')
+                        if any(H for H in potential_graphs if 
+                        nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                            self.n_duplicate += 1
+                            continue            
+                self.labels_list.append(labs)
+                self.graph_list.append(G)                                       
+
+            if self.logfile is not None:                                
+                self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
+                                   + 'generated: {}\n'.format(labs))
+                self.logfile.flush()
+            self.trajectory.write(atoms)
+            self.n_write += 1
+
+    def _move_adsorbate(self, adsorption_sites): 
+        self.n_duplicate = 0                                                           
+        sas = adsorption_sites                      
+        if self.adsorption_sites is not None:                            
+            site_nblist = self.site_nblist
+        else:
+            site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
+  
+        sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
+              else ClusterAdsorbateCoverage(self.image, sas)
+        hsl = sac.hetero_site_list
+        nbstids, selfids, occupied = [], [], []
+        for j, st in enumerate(hsl):
+            if st['occupied'] == 1:
+                nbstids += site_nblist[j]
+                selfids.append(j)
+                occupied.append(st)
+        if not occupied:                                                       
+            if self.logfile is not None:
+                self.logfile.write('There is no occupied site. Move failed!\n')
+                self.logfile.flush()
+            return
+        nbstids = set(nbstids)
+        neighbor_site_indices = [v for v in nbstids if v not in selfids]
+
+        rm_ids = set()
+        for st in occupied:
+            ads_ids = set(st['adsorbate_indices'])
+            # Make sure the same adsorbate is not removed twice
+            if ads_ids.issubset(rm_ids):
+                continue
+            rm_ids.update(ads_ids)                              
+            atoms = self.image.copy()
+            remove_adsorbate_from_site(atoms, st)
+            adsorbate = st['adsorbate']
+
+            if adsorbate in self.multidentate_adsorbates:
+                if self.adsorption_sites is not None:
+                    bidentate_nblist = self.bidentate_nblist
+                else:
+                    bidentate_nblist = sas.get_neighbor_site_list(neighbor_number=1)
+ 
+            # Only add one adsorabte to a site at least 2 shells away from
+            # currently occupied sites
+            newsites, binbids = [], []
+            for i, s in enumerate(hsl):
+                if i not in nbstids:
+                    if adsorbate in self.multidentate_adsorbates:
+                        binbs = bidentate_nblist[i]
+                        binbis = [n for n in binbs if n not in nbstids]
+                        if not binbis and s['site'] != '6fold':
+                            continue 
+                        binbids.append(binbis)
+                    newsites.append(s)
+ 
+            for k, nst in enumerate(newsites):
+                if adsorbate in self.multidentate_adsorbates:
+                    nis = binbids[k]
+                else:
+                    nis = [0]
+                for ni in nis:
+                    # Prohibit adsorbates with more than 1 atom from entering subsurf 
+                    if len(adsorbate) > 1 and nst['site'] == '6fold':
+                        continue
+
+                    final_atoms = atoms.copy()  
+                    if adsorbate in self.multidentate_adsorbates:                     
+                        # Rotate a multidentate adsorbate to all possible directions of
+                        # a neighbor site
+                        nbst = hsl[ni]
+                        pos = nst['position'] 
+                        nbpos = nbst['position'] 
+                        orientation = get_mic(nbpos, pos, final_atoms.cell)
+                        add_adsorbate_to_site(final_atoms, adsorbate, nst, 
+                                              height=self.heights[nst['site']],
+                                              orientation=orientation)        
+      
+                    else:
+                        add_adsorbate_to_site(final_atoms, adsorbate, nst,
+                                              height=self.heights[nst['site']])       
+      
+                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
+                           else ClusterAdsorbateCoverage(final_atoms, sas)
+                    nhsl = nsac.hetero_site_list
+      
+                    # Make sure there no new site too close to previous sites after 
+                    # adding the adsorbate. Useful when adding large molecules
+                    if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
+                    and (i in neighbor_site_indices)):
+                        continue
+                    ads_atoms = final_atoms[[a.index for a in final_atoms if                   
+                                            a.symbol in adsorbate_elements]]
+                    if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))),
+                    cutoff=self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
+                        continue                                                                                   
+
+                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
+                           else ClusterAdsorbateCoverage(final_atoms, sas)                      
+      
+                    labs = nsac.labels                                                       
+                    if self.unique:                                        
+                        G = nsac.get_graph()
+                        if labs in self.labels_list: 
+                            if self.graph_list:
+                                # Skip duplicates based on isomorphism 
+                                potential_graphs = [g for i, g in enumerate(self.graph_list)
+                                                    if self.labels_list[i] == labs]
+                                nm = iso.categorical_node_match('symbol', 'X')
+                                if any(H for H in potential_graphs if 
+                                nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                    self.n_duplicate += 1
+                                    continue            
+                        self.labels_list.append(labs)
+                        self.graph_list.append(G)                                       
+                                                                                             
+                    if self.logfile is not None:                                
+                        self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
+                                           + 'generated: {}\n'.format(labs))
+                        self.logfile.flush()
+                    self.trajectory.write(final_atoms)
+                    self.n_write += 1
+
+    def _replace_adsorbate(self, adsorption_sites):
+        sas = adsorption_sites                                                           
+        sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
+              else ClusterAdsorbateCoverage(self.image, sas)
+        hsl = sac.hetero_site_list
+        occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied'] == 1]
+        if not occupied_stids:
+            if self.logfile is not None:
+                self.logfile.write('There is no occupied site. Replacement failed!\n')
+                self.logfile.flush()
+            return
+                                
+        rm_ids = set()
+        for rpsti in occupied_stids:                                                         
+            rpst = hsl[rpsti]
+            ads_ids = set(rpst['adsorbate_indices'])
+            # Make sure the same adsorbate is not removed twice
+            if ads_ids.issubset(rm_ids):
+                continue
+            rm_ids.update(ads_ids)                             
+            atoms = self.image.copy()
+            remove_adsorbate_from_site(atoms, rpst)
+                                                                                             
+            # Select a different adsorbate with probablity 
+            old_adsorbate = rpst['adsorbate']
+            new_options = [a for a in self.adsorbates if a != old_adsorbate]
+                                                                                             
+            # Prohibit adsorbates with more than 1 atom from entering subsurf 6-fold sites
+            if self.allow_6fold and rpst['site'] == '6fold':
+                new_options = [o for o in new_options if len(o) == 1]
+                                                                                             
+            for adsorbate in new_options:
+                if self.adsorption_sites is not None:
+                    site_nblist = self.site_nblist
+                else:
+                    site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
+                                                                                                 
+                nbstids, selfids = [], []
+                for j, st in enumerate(hsl):
+                    if st['occupied'] == 1:
+                        nbstids += site_nblist[j]
+                        selfids.append(j)
+                nbstids = set(nbstids)
+                neighbor_site_indices = [v for v in nbstids if v not in selfids]
+                                                                                                 
+                if adsorbate in self.multidentate_adsorbates:                                     
+                    if self.adsorption_sites is not None:                                      
+                        bidentate_nblist = self.bidentate_nblist
+                    else:
+                        bidentate_nblist = sas.get_neighbor_site_list(neighbor_number=1)
+                    
+                    binbs = bidentate_nblist[rpsti]                    
+                    binbids = [n for n in binbs if n not in nbstids]
+                    if not binbids:
+                        continue
+                    nis = binbids[k]
+                else:
+                    nis = [0]
+                for ni in nis:                                                                                  
+                    final_atoms = atoms.copy()
+                    if adsorbate in self.multidentate_adsorbates:
+                        # Rotate a multidentate adsorbate to all possible directions of
+                        # a neighbor site
+                        nbst = hsl[ni]
+                        pos = rpst['position'] 
+                        nbpos = nbst['position'] 
+                        orientation = get_mic(nbpos, pos, final_atoms.cell)
+                        add_adsorbate_to_site(final_atoms, adsorbate, rpst, 
+                                              height=self.heights[rpst['site']],
+                                              orientation=orientation)        
+                                                                                                  
+                    else:
+                        add_adsorbate_to_site(final_atoms, adsorbate, rpst,
+                                              height=self.heights[rpst['site']])        
+                                                                                                  
+                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
+                           else ClusterAdsorbateCoverage(final_atoms, sas)
+                    nhsl = nsac.hetero_site_list
+                                                                                                  
+                    # Make sure there no new site too close to previous sites after 
+                    # adding the adsorbate. Useful when adding large molecules
+                    if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
+                    and (i in neighbor_site_indices)):
+                        continue
+                    ads_atoms = final_atoms[[a.index for a in final_atoms if                   
+                                            a.symbol in adsorbate_elements]]
+                    if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))),  
+                    cutoff=self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
+                        continue
+
+                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
+                           else ClusterAdsorbateCoverage(final_atoms, sas)                     
+      
+                    labs = nsac.labels                                                       
+                    if self.unique:                                        
+                        G = nsac.get_graph()
+                        if labs in self.labels_list: 
+                            if self.graph_list:
+                                # Skip duplicates based on isomorphism 
+                                potential_graphs = [g for i, g in enumerate(self.graph_list)
+                                                    if self.labels_list[i] == labs]
+                                nm = iso.categorical_node_match('symbol', 'X')
+                                if any(H for H in potential_graphs if 
+                                nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                    self.n_duplicate += 1
+                                    continue            
+                        self.labels_list.append(labs)
+                        self.graph_list.append(G)                                       
+                                                                                             
+                    if self.logfile is not None:                                
+                        self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
+                                           + 'generated: {}\n'.format(labs))
+                        self.logfile.flush()
+                    self.trajectory.write(final_atoms)
+                    self.n_write += 1
+
     def run(self, action='add'):
         self.n_write = 0
         self.n_duplicate = 0
@@ -679,6 +973,7 @@ class SystematicPatternGenerator(object):
                                    + 'for image {}\n'.format(n))
                 self.logfile.flush()
             self.image = image
+            self.n_image = n
 
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
