@@ -3,8 +3,10 @@ from ase.build import molecule
 from ase.formula import Formula
 
 
+# Adsorbate elements must be different from catalyst elements
 adsorbate_elements = 'SCHON'
 
+# Adsorbate height on different sites
 site_heights = {'ontop': 1.8, 
                 'bridge': 1.7, 
                 'short-bridge': 1.7,
