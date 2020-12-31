@@ -11,6 +11,7 @@ from ase import Atom, Atoms
 from collections import defaultdict 
 from collections import Counter
 from operator import itemgetter
+from copy import deepcopy
 import networkx as nx
 import numpy as np
 import random
@@ -18,13 +19,13 @@ import copy
 import re
 
 
-class ClusterAdsorbateCoverage(ClusterAdsorptionSites):
+class ClusterAdsorbateCoverage(object):
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""       
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
                  dmax=2.5):
- 
+
         self.atoms = atoms.copy()
         self.positions = atoms.positions
         self.symbols = atoms.symbols
@@ -55,8 +56,7 @@ class ClusterAdsorbateCoverage(ClusterAdsorptionSites):
 
         self.metals = nas.metals
         self.surf_ids = nas.surf_ids
-        self.hetero_site_list = nas.site_list.copy()
-        self.clean_list()
+        self.hetero_site_list = deepcopy(nas.site_list)
         self.unique_sites = nas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
@@ -96,16 +96,6 @@ class ClusterAdsorbateCoverage(ClusterAdsorptionSites):
         else:
             adsorbates = [self.ads_ids]
         self.ads_list = adsorbates
-
-    def clean_list(self):
-        sl = self.hetero_site_list
-        entries = ['occupied', 'adsorbate', 'adsorbate_indices', 
-                   'fragment', 'fragment_indices', 'bonded_index', 
-                   'bond_length', 'label', 'dentate']
-        for d in sl:
-            for k in entries:
-                if k in d:
-                    del d[k]
 
     def get_ads_connectivity(self):
         """Generate a connections matrix for adsorbate atoms."""
@@ -367,7 +357,7 @@ class ClusterAdsorbateCoverage(ClusterAdsorptionSites):
                 '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 55}
 
  
-class SlabAdsorbateCoverage(SlabAdsorptionSites):
+class SlabAdsorbateCoverage(object):
 
     """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""        
 
@@ -375,7 +365,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
                  adsorption_sites=None, 
                  surface=None, 
                  dmax=2.5):
- 
+
         self.atoms = atoms.copy()
         self.positions = atoms.positions
         self.symbols = atoms.symbols
@@ -409,8 +399,7 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         self.surf_ids = sas.surf_ids
         self.subsurf_ids = sas.subsurf_ids
         self.connectivity_matrix = sas.connectivity_matrix
-        self.hetero_site_list = sas.site_list.copy()
-        self.clean_list()
+        self.hetero_site_list = deepcopy(sas.site_list)
         self.unique_sites = sas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
@@ -450,16 +439,6 @@ class SlabAdsorbateCoverage(SlabAdsorptionSites):
         else:
             adsorbates = [self.ads_ids]
         self.ads_list = adsorbates
-
-    def clean_list(self):
-        sl = self.hetero_site_list
-        entries = ['occupied', 'adsorbate', 'adsorbate_indices', 
-                   'fragment', 'fragment_indices', 'bonded_index', 
-                   'bond_length', 'label', 'dentate']
-        for d in sl:
-            for k in entries:
-                if k in d:
-                    del d[k]
 
     def get_ads_connectivity(self):
         """Generate a connections matrix for adsorbate atoms."""
