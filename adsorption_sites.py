@@ -605,8 +605,8 @@ def group_sites_by_surface(atoms, sites, site_list=None):
                                                                      
     # Find all indices of vertex and edge sites
     if not site_list:
-        nas = ClusterAdsorptionSites(atoms)
-        site_list = nas.site_list
+        cas = ClusterAdsorptionSites(atoms)
+        site_list = cas.site_list
     ve_indices = [s['indices'] for s in site_list if 
                   s['site'] == 'ontop' and 
                   s['surface'] in ['vertex', 'edge']]
@@ -1873,11 +1873,11 @@ def enumerate_adsorption_sites(atoms, surface=None,
                                subsurf_effect=False):
 
     if True not in atoms.pbc:
-        nas = ClusterAdsorptionSites(atoms, 
+        cas = ClusterAdsorptionSites(atoms, 
                                           allow_6fold,
                                           composition_effect,
                                           subsurf_effect)
-        all_sites = nas.site_list
+        all_sites = cas.site_list
         if surface:
             all_sites = [s for s in all_sites if 
                          s['surface'] == surface] 
