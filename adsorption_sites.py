@@ -546,19 +546,19 @@ class ClusterAdsorptionSites(object):
         key_list = ['site', 'surface']
         if unique_composition:
             if not self.composition_effect:
-                raise ValueError('The site list does not include ',
-                                 'information of composition')
+                raise ValueError('The site list does not include '
+                                 + 'information of composition')
             key_list.append('composition')
             if unique_subsurf:
                 if not self.subsurf_effect:
-                    raise ValueError('The site list does not include ',
-                                     'information of subsurface')
+                    raise ValueError('The site list does not include '
+                                     + 'information of subsurface')
                 key_list.append('subsurf_element') 
         else:
             if unique_subsurf:
-                raise ValueError('To include the subsurface element, ',
-                                 'unique_composition also need to ',
-                                 'be set to True')    
+                raise ValueError('To include the subsurface element, '
+                                 + 'unique_composition also need to '
+                                 + 'be set to True')    
         sklist = sorted([[s[k] for k in key_list] for s in sl])
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
@@ -1782,19 +1782,19 @@ class SlabAdsorptionSites(object):
         key_list = ['site', 'geometry']
         if unique_composition:
             if not self.composition_effect:
-                raise ValueError('The site list does not include ',
-                                 'information of composition')
+                raise ValueError('The site list does not include '
+                                 + 'information of composition')
             key_list.append('composition')
             if unique_subsurf:
                 if not self.subsurf_effect:
-                    raise ValueError('The site list does not include ',
-                                     'information of subsurface')
+                    raise ValueError('The site list does not include '
+                                     + 'information of subsurface')
                 key_list.append('subsurf_element') 
         else:
             if unique_subsurf:
-                raise ValueError('To include the subsurface element ',
-                                 'unique_composition also need to ',
-                                 'be set to True') 
+                raise ValueError('To include the subsurface element '
+                                 + 'unique_composition also need to '
+                                 + 'be set to True') 
         sklist = sorted([[s[k] for k in key_list] for s in sl])
  
         return sorted(list(sklist for sklist, _ in groupby(sklist)))
