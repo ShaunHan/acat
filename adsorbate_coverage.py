@@ -42,22 +42,22 @@ class ClusterAdsorbateCoverage(object):
         self.identify_adsorbates()
 
         if adsorption_sites:
-            nas = adsorption_sites
+            cas = adsorption_sites
         else:
-            nas = ClusterAdsorptionSites(atoms, allow_6fold=True,
+            cas = ClusterAdsorptionSites(atoms, allow_6fold=True,
                                          composition_effect=True,
                                          subsurf_effect=False)    
-        self.nas = nas
-        self.slab = nas.atoms
-        self.allow_6fold = nas.allow_6fold
-        self.composition_effect = nas.composition_effect
-        if nas.subsurf_effect:
+        self.cas = cas
+        self.slab = cas.atoms
+        self.allow_6fold = cas.allow_6fold
+        self.composition_effect = cas.composition_effect
+        if cas.subsurf_effect:
             raise NotImplementedError
 
-        self.metals = nas.metals
-        self.surf_ids = nas.surf_ids
-        self.hetero_site_list = deepcopy(nas.site_list)
-        self.unique_sites = nas.get_unique_sites(unique_composition=
+        self.metals = cas.metals
+        self.surf_ids = cas.surf_ids
+        self.hetero_site_list = deepcopy(cas.site_list)
+        self.unique_sites = cas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
         self.label_dict = self.get_bimetallic_label_dict() \
                           if self.composition_effect else \
@@ -279,7 +279,7 @@ class ClusterAdsorbateCoverage(object):
         return G
 
     def get_subsurf_coverage(self):
-        nsubsurf = len(self.nas.get_subsurface())
+        nsubsurf = len(self.cas.get_subsurface())
         return self.n_subsurf_occupied / nsubsurf
 
     # Use this label dictionary when site compostion is 
