@@ -394,7 +394,7 @@ class ClusterAdsorptionSites(object):
         self.nblist = FullNeighborList(rCut=rMax, atoms=self.atoms)
 
     def get_connectivity(self):                                      
-        """Generate a connections matrix from neighbor_shell_list."""
+        """Generate a connection matrix from neighbor_shell_list."""
         nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
         return get_connectivity_matrix(nbslist)                  
 
@@ -1711,7 +1711,7 @@ class SlabAdsorptionSites(object):
                                           neighbor_number, mic=True)
 
     def get_connectivity(self):                                      
-        """Generate a connections matrix from neighbor_shell_list."""       
+        """Generate a connection matrix from neighbor_shell_list."""       
         return get_connectivity_matrix(self.nblist)                   
 
     def get_termination(self):
@@ -1874,9 +1874,9 @@ def enumerate_adsorption_sites(atoms, surface=None,
 
     if True not in atoms.pbc:
         cas = ClusterAdsorptionSites(atoms, 
-                                          allow_6fold,
-                                          composition_effect,
-                                          subsurf_effect)
+                                     allow_6fold,
+                                     composition_effect,
+                                     subsurf_effect)
         all_sites = cas.site_list
         if surface:
             all_sites = [s for s in all_sites if 
