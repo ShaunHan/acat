@@ -1873,8 +1873,7 @@ def enumerate_adsorption_sites(atoms, surface=None,
                                subsurf_effect=False):
 
     if True not in atoms.pbc:
-        cas = ClusterAdsorptionSites(atoms, 
-                                     allow_6fold,
+        cas = ClusterAdsorptionSites(atoms, allow_6fold,
                                      composition_effect,
                                      subsurf_effect)
         all_sites = cas.site_list
