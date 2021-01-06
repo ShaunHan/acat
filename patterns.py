@@ -26,7 +26,7 @@ class StochasticPatternGenerator(object):
                  allow_6fold=False,
                  composition_effect=True,
                  unique=True,
-                 species_site_selections=None,    
+                 species_forbidden_sites=None,    
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
@@ -34,11 +34,11 @@ class StochasticPatternGenerator(object):
         adsorbate_weights: dictionary 
         adsorption_sites: should only provide when the surface composition is fixed
         unique: whether discard duplicates based on isomorphism or not
-        species_site_selections: dictionary with species key and selective site (list) values 
+        species_forbidden_sites: dictionary with species key and forbidden site (list) values 
 
         if you want to do stochastic pattern generation but for all images systematically, do
         >>> for atoms in images:
-        >>>     SPG = StochasticPatternGenerator(..., append_trajectory=True)
+        >>>     SPG = StochasticPatternGenerator(atoms, ..., append_trajectory=True)
         >>>     SPG.run(ngen = 10)
         """
 
@@ -68,10 +68,10 @@ class StochasticPatternGenerator(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.unique = unique
-        self.species_site_selections = species_site_selections
-        if self.species_site_selections is not None:
-            self.species_site_selections = {k: v if is_list_or_tuple(v) else [v] for
-                                            k, v in self.species_site_selections.items()}
+        self.species_forbidden_sites = species_forbidden_sites
+        if self.species_forbidden_sites is not None:
+            self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
+                                            k, v in self.species_forbidden_sites.items()}
 
         self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
@@ -125,10 +125,10 @@ class StochasticPatternGenerator(object):
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
         nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
-        if self.species_site_selections is not None:
-            if adsorbate in self.species_site_selections:
-                nsids = [i for i in nsids if hsl[i]['site'] in 
-                         self.species_site_selections[adsorbate]] 
+        if self.species_forbidden_sites is not None:
+            if adsorbate in self.species_forbidden_sites:
+                nsids = [i for i in nsids if hsl[i]['site'] not in 
+                         self.species_forbidden_sites[adsorbate]] 
         if not nsids:                                                             
             if self.logfile is not None:                                          
                 self.logfile.write('Not enough space to add {} '.format(adsorbate)
@@ -256,10 +256,10 @@ class StochasticPatternGenerator(object):
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
         nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
-        if self.species_site_selections is not None:
-            if adsorbate in self.species_site_selections:
-                nsids = [i for i in nsids if hsl[i]['site'] in 
-                         self.species_site_selections[adsorbate]] 
+        if self.species_forbidden_sites is not None:
+            if adsorbate in self.species_forbidden_sites:
+                nsids = [i for i in nsids if hsl[i]['site'] not in 
+                         self.species_forbidden_sites[adsorbate]] 
         if not nsids:                                                             
             if self.logfile is not None:                                          
                 self.logfile.write('Not enough space to place {} '.format(adsorbate)
@@ -350,12 +350,12 @@ class StochasticPatternGenerator(object):
         # Select a different adsorbate with probablity 
         old_adsorbate = rpst['adsorbate']
         new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
-        if self.species_site_selections is not None:                      
-            if adsorbate in self.species_site_selections:
+        if self.species_forbidden_sites is not None:                      
+            if adsorbate in self.species_forbidden_sites:
                 _new_options = []
                 for o in new_options: 
-                    if o in self.species_site_selections:
-                        if rpst['site'] in self.species_site_selections[o]:
+                    if o in self.species_forbidden_sites:
+                        if rpst['site'] not in self.species_forbidden_sites[o]:
                             _new_options.append(o)
                 new_options = _new_options
 
@@ -459,6 +459,8 @@ class StochasticPatternGenerator(object):
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
             elif True in self.atoms.pbc:
+                if self.surface is None:
+                    raise ValueError('Please specify the surface type')
                 sas = SlabAdsorptionSites(self.atoms, self.surface,
                                           self.allow_6fold,
                                           self.composition_effect)
@@ -540,7 +542,7 @@ class SystematicPatternGenerator(object):
                  allow_6fold=False,
                  composition_effect=True,
                  unique=True,
-                 species_site_selections=None,
+                 species_forbidden_sites=None,
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
@@ -567,10 +569,10 @@ class SystematicPatternGenerator(object):
         self.surface = surface
         self.heights = heights        
         self.unique = unique
-        self.species_site_selections = species_site_selections
-        if self.species_site_selections is not None:
-            self.species_site_selections = {k: v if is_list_or_tuple(v) else [v] for
-                                            k, v in self.species_site_selections.items()}
+        self.species_forbidden_sites = species_forbidden_sites
+        if self.species_forbidden_sites is not None:
+            self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
+                                            k, v in self.species_forbidden_sites.items()}
 
         self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
@@ -637,9 +639,9 @@ class SystematicPatternGenerator(object):
 
         for k, nst in enumerate(newsites):
             for adsorbate in self.adsorbate_species:
-                if self.species_site_selections is not None:                          
-                    if adsorbate in self.species_site_selections:
-                        if nst['site'] not in self.species_site_selections[adsorbate]:
+                if self.species_forbidden_sites is not None:                          
+                    if adsorbate in self.species_forbidden_sites:
+                        if nst['site'] in self.species_forbidden_sites[adsorbate]:
                             continue
 
                 if adsorbate in self.multidentate_adsorbates:                                     
@@ -823,9 +825,9 @@ class SystematicPatternGenerator(object):
                     newsites.append(s)
  
             for k, nst in enumerate(newsites):
-                if self.species_site_selections is not None:                          
-                    if adsorbate in self.species_site_selections:
-                        if nst['site'] not in self.species_site_selections[adsorbate]:
+                if self.species_forbidden_sites is not None:                          
+                    if adsorbate in self.species_forbidden_sites:
+                        if nst['site'] in self.species_forbidden_sites[adsorbate]:
                             continue
 
                 if adsorbate in self.multidentate_adsorbates:
@@ -920,12 +922,12 @@ class SystematicPatternGenerator(object):
             # Select a different adsorbate with probablity 
             old_adsorbate = rpst['adsorbate']
             new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
-            if self.species_site_selections is not None:                      
-                if adsorbate in self.species_site_selections:
+            if self.species_forbidden_sites is not None:                      
+                if adsorbate in self.species_forbidden_sites:
                     _new_options = []
                     for o in new_options: 
-                        if o in self.species_site_selections:
-                            if rpst['site'] in self.species_site_selections[o]:
+                        if o in self.species_forbidden_sites:
+                            if rpst['site'] not in self.species_forbidden_sites[o]:
                                 _new_options.append(o)
                     new_options = _new_options
                                                                                              
@@ -1034,6 +1036,8 @@ class SystematicPatternGenerator(object):
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
             elif True in self.image.pbc:
+                if self.surface is None:
+                    raise ValueError('Please specify the surface type')
                 sas = SlabAdsorptionSites(self.image, self.surface,
                                           self.allow_6fold,
                                           self.composition_effect)
