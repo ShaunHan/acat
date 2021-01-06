@@ -82,8 +82,7 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
                                                subsurf_effect)
 
     if indices:
-        if not is_list_or_tuple(indices):
-            indices = [indices]
+        indices = indices if is_list_or_tuple(indices) else [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in all_sites if 
                    s['indices'] == indices), None)
