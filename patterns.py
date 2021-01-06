@@ -17,8 +17,7 @@ import copy
 class StochasticPatternGenerator(object):
 
     def __init__(self, images,                                                       
-                 monodentate_adsorbates=None,
-                 multidentate_adsorbates=None,
+                 adsorbate_species,
                  adsorbate_weights=None,
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
@@ -27,32 +26,34 @@ class StochasticPatternGenerator(object):
                  allow_6fold=False,
                  composition_effect=True,
                  unique=True,
+                 species_site_selections=None,    
                  trajectory='patterns.traj',
                  logfile='patterns.log'):
         """
-        adsorbate_weights: dictionary   
+        adsorbate_weights: dictionary 
         adsorption_sites: should only provide when the surface composition is fixed
+        unique: whether discard duplicates based on isomorphism or not
+        species_site_selections: dictionary with species key and selective site (list) values 
         """
 
-        if not is_list_or_tuple(images):
-            images = [images]
-        monodentate_adsorbates = [] if not monodentate_adsorbates \
-                                 else monodentate_adsorbates 
-        multidentate_adsorbates = [] if not multidentate_adsorbates \
-                                  else multidentate_adsorbates       
-        if not is_list_or_tuple(monodentate_adsorbates):   
-            monodentate_adsorbates = [monodentate_adsorbates]
-        if not is_list_or_tuple(monodentate_adsorbates):
-            multidentate_adsorbates = [multidentate_adsorbates] 
- 
-        self.images = images
-        self.monodentate_adsorbates = monodentate_adsorbates
-        self.multidentate_adsorbates = multidentate_adsorbates
-        self.adsorbates = monodentate_adsorbates + multidentate_adsorbates
+        self.images = images if is_list_or_tuple(images) else [images]                     
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(adsorbate_species) \
+                                 else [adsorbate_species]
+        self.monodentate_adsorbates = [s for s in adsorbate_species if s in 
+                                       monodentate_adsorbate_list]
+        self.multidentate_adsorbates = [s for s in adsorbate_species if s in
+                                        multidentate_adsorbate_list]
+        if len(self.adsorbate_species) != len(self.monodentate_adsorbates +
+        self.multidentate_adsorbates):
+            diff = list(set(self.adsorbate_species) - 
+                        set(self.monodentate_adsorbates +
+                            self.multidentate_adsorbates))
+            raise ValueError('Species {} is not defined '.format(diff) +
+                             'in adsorbate_list in settings.py')             
         self.adsorbate_weights = adsorbate_weights
         if self.adsorbate_weights is not None:
-            assert len(self.adsorbate_weights.keys()) == len(self.adsorbates)
-            self.all_weights = [self.adsorbate_weights[a] for a in self.adsorbates]
+            assert len(self.adsorbate_weights.keys()) == len(self.adsorbate_species)
+            self.all_weights = [self.adsorbate_weights[a] for a in self.adsorbate_species]
          
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
@@ -61,6 +62,11 @@ class StochasticPatternGenerator(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.unique = unique
+        self.species_site_selections = species_site_selections
+        if self.species_site_selections is not None:
+            self.species_site_selections = {k: v if is_list_or_tuple(v) else [v] for
+                                            k, v in self.species_site_selections.items()}
+
         if isinstance(trajectory, str):            
             self.trajectory = Trajectory(trajectory, mode='w')
         if isinstance(logfile, str):
@@ -103,14 +109,18 @@ class StochasticPatternGenerator(object):
                                                                                              
         # Select adsorbate with probablity 
         if not self.adsorbate_weights:
-            adsorbate = random.choice(self.adsorbates)
+            adsorbate = random.choice(self.adsorbate_species)
         else: 
-            adsorbate = random.choices(k=1, population=self.adsorbates,
+            adsorbate = random.choices(k=1, population=self.adsorbate_species,
                                        weights=self.all_weights)[0] 
                                                                                              
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
         nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
+        if self.species_site_selections is not None:
+            if adsorbate in self.species_site_selections:
+                nsids = [i for i in nsids if hsl[i]['site'] in 
+                         self.species_site_selections[adsorbate]] 
         if not nsids:                                                             
             if self.logfile is not None:                                          
                 self.logfile.write('Not enough space to add {} '.format(adsorbate)
@@ -238,6 +248,10 @@ class StochasticPatternGenerator(object):
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
         nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
+        if self.species_site_selections is not None:
+            if adsorbate in self.species_site_selections:
+                nsids = [i for i in nsids if hsl[i]['site'] in 
+                         self.species_site_selections[adsorbate]] 
         if not nsids:                                                             
             if self.logfile is not None:                                          
                 self.logfile.write('Not enough space to place {} '.format(adsorbate)
@@ -327,7 +341,15 @@ class StochasticPatternGenerator(object):
 
         # Select a different adsorbate with probablity 
         old_adsorbate = rpst['adsorbate']
-        new_options = [a for a in self.adsorbates if a != old_adsorbate]
+        new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
+        if self.species_site_selections is not None:                      
+            if adsorbate in self.species_site_selections:
+                _new_options = []
+                for o in new_options: 
+                    if o in self.species_site_selections:
+                        if rpst['site'] in self.species_site_selections[o]
+                            _new_options.append(o)
+                new_options = _new_options
 
         # Prohibit adsorbates with more than 1 atom from entering subsurf 6-fold sites
         if self.allow_6fold and rpst['site'] == '6fold':
@@ -337,7 +359,7 @@ class StochasticPatternGenerator(object):
             adsorbate = random.choice(new_options)
         else:
             new_weights = [self.adsorbate_weights[a] for a in new_options]
-            adsorbate = random.choices(k=1, population=self.adsorbates,
+            adsorbate = random.choices(k=1, population=self.adsorbate_species,
                                        weights=new_weights)[0] 
         if self.adsorption_sites is not None:
             site_nblist = self.site_nblist
@@ -409,8 +431,7 @@ class StochasticPatternGenerator(object):
             actions=['add','remove','replace'], 
             action_weights=None):
         
-        if not is_list_or_tuple(actions):
-            actions = [actions]
+        actions = actions if is_list_or_tuple(actions) else [actions]
         if action_weights is not None:
             all_action_weights = [action_weights[a] for a in actions]
         
@@ -503,8 +524,7 @@ class StochasticPatternGenerator(object):
 class SystematicPatternGenerator(object):
 
     def __init__(self, images,                                                     
-                 monodentate_adsorbates=None,
-                 multidentate_adsorbates=None,
+                 adsorbate_species,
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
                  surface=None,
@@ -512,30 +532,37 @@ class SystematicPatternGenerator(object):
                  allow_6fold=False,
                  composition_effect=True,
                  unique=True,
+                 species_site_selections=None,
                  trajectory='patterns.traj',
                  logfile='patterns.log'):
+
         """adsorbate_weights: dictionary"""
-        if not is_list_or_tuple(images):
-            images = [images]
-        monodentate_adsorbates = [] if not monodentate_adsorbates \
-                                 else monodentate_adsorbates 
-        multidentate_adsorbates = [] if not multidentate_adsorbates \
-                                  else multidentate_adsorbates       
-        if not is_list_or_tuple(monodentate_adsorbates):   
-            monodentate_adsorbates = [monodentate_adsorbates]
-        if not is_list_or_tuple(monodentate_adsorbates):
-            multidentate_adsorbates = [multidentate_adsorbates] 
- 
-        self.images = images
-        self.monodentate_adsorbates = monodentate_adsorbates
-        self.multidentate_adsorbates = multidentate_adsorbates
-        self.adsorbates = monodentate_adsorbates + multidentate_adsorbates
- 
+
+        self.images = images if is_list_or_tuple(images) else [images]                     
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(adsorbate_species) \
+                                 else [adsorbate_species]
+        self.monodentate_adsorbates = [s for s in adsorbate_species if s in 
+                                       monodentate_adsorbate_list]
+        self.multidentate_adsorbates = [s for s in adsorbate_species if s in
+                                        multidentate_adsorbate_list]
+        if len(self.adsorbate_species) != len(self.monodentate_adsorbates +
+        self.multidentate_adsorbates):
+            diff = list(set(self.adsorbate_species) - 
+                        set(self.monodentate_adsorbates +
+                            self.multidentate_adsorbates))
+            raise ValueError('Species {} is not defined '.format(diff) +
+                             'in adsorbate_list in settings.py')             
+
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.heights = heights        
         self.unique = unique
+        self.species_site_selections = species_site_selections
+        if self.species_site_selections is not None:
+            self.species_site_selections = {k: v if is_list_or_tuple(v) else [v] for
+                                            k, v in self.species_site_selections.items()}
+
         if isinstance(trajectory, str):            
             self.trajectory = Trajectory(trajectory, mode='w')
         if isinstance(logfile, str):
@@ -598,7 +625,12 @@ class SystematicPatternGenerator(object):
                 newsites.append(s)
 
         for k, nst in enumerate(newsites):
-            for adsorbate in self.adsorbates:
+            for adsorbate in self.adsorbate_species:
+                if self.species_site_selections is not None:                          
+                    if adsorbate in self.species_site_selections:
+                        if nst['site'] not in self.species_site_selections[adsorbate]:
+                            continue
+
                 if adsorbate in self.multidentate_adsorbates:                                     
                     nis = binbids[k]
                 else:
@@ -780,6 +812,11 @@ class SystematicPatternGenerator(object):
                     newsites.append(s)
  
             for k, nst in enumerate(newsites):
+                if self.species_site_selections is not None:                          
+                    if adsorbate in self.species_site_selections:
+                        if nst['site'] not in self.species_site_selections[adsorbate]:
+                            continue
+
                 if adsorbate in self.multidentate_adsorbates:
                     nis = binbids[k]
                 else:
@@ -871,7 +908,15 @@ class SystematicPatternGenerator(object):
                                                                                              
             # Select a different adsorbate with probablity 
             old_adsorbate = rpst['adsorbate']
-            new_options = [a for a in self.adsorbates if a != old_adsorbate]
+            new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
+            if self.species_site_selections is not None:                      
+                if adsorbate in self.species_site_selections:
+                    _new_options = []
+                    for o in new_options: 
+                        if o in self.species_site_selections:
+                            if rpst['site'] in self.species_site_selections[o]
+                                _new_options.append(o)
+                    new_options = _new_options
                                                                                              
             # Prohibit adsorbates with more than 1 atom from entering subsurf 6-fold sites
             if self.allow_6fold and rpst['site'] == '6fold':
