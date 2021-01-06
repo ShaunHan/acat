@@ -7,7 +7,7 @@ from ase.formula import Formula
 adsorbate_elements = 'SCHON'
 
 # Adsorbate height on different sites
-site_heights = {'ontop': 1.8, 
+site_heights = {'ontop': 1.7, 
                 'bridge': 1.7, 
                 'short-bridge': 1.7,
                 'long-bridge': 1.7,
@@ -16,16 +16,18 @@ site_heights = {'ontop': 1.8,
                 '3fold': 1.6, 
                 '4fold': 1.6,
                 '5fold': 1.6,
-                '6fold': 0.}
+                '6fold': 0.,}
 
 # Make your own adsorbate list. Make sure you always sort the 
 # indices of the atoms in the same order as the symbol. 
 # First element always starts from bonded index or the 
 # bonded element with smaller atomic number if multi-dentate.
-                  # Monodentate (vertical)
-adsorbate_list = ['H','C','O','CH','OH','CO','CH2','OH2','COH','CH3','OCH','OCH2','OCH3', 
-                  # Multidentate (lateral)
-                  'CHO','CHOH','CH2O','CH3O','CH2OH','CH3OH','CHOOH','COOH','CHOO','CO2'] 
+                             # Monodentate (vertical)
+monodentate_adsorbate_list = ['H','C','O','CH','OH','CO','CH2','OH2','COH','CH3','OCH','OCH2','OCH3',]
+                              # Multidentate (lateral)
+multidentate_adsorbate_list = ['CHO','CHOH','CH2O','CH3O','CH2OH','CH3OH','CHOOH','COOH','CHOO','CO2',]
+
+adsorbate_list = monodentate_adsorbate_list + multidentate_adsorbate_list
 adsorbate_formulas = {k: ''.join(list(Formula(k))) for k in adsorbate_list}
 
 # Make your own bidentate fragment dict
@@ -44,7 +46,7 @@ adsorbate_fragments = {'CO': ['C','O'],     # Possible
                        'CHOOH': ['CH','O','OH'],
                        'COOH': ['C','O','OH'],
                        'CHOO': ['CH','O','O'],
-                       'CO2': ['C','O','O']}
+                       'CO2': ['C','O','O'],}
 
 # Make your own adsorbate molecules
 def adsorbate_molecule(adsorbate):
@@ -110,4 +112,20 @@ def adsorbate_molecule(adsorbate):
             print('Molecule {} does not exist in the databse'.format(adsorbate))
             return 
     return ads
+
+# Dictionaries for constructing fingerprints of machine learning models
+# Norskov
+dband_centers = {'H': 0., 'C': 0., 'O': 0., 'Ni': -1.29, 'Pt': -2.25,}
+
+# Wiki
+electron_affinities = {'H': 0.754, 'C': 1.262, 'O': 1.461, 'Ni': 1.157, 'Pt': 2.125,}
+
+# http://srdata.nist.gov/cccbdb/
+ionization_energies = {'H': 13.60, 'C': 11.26, 'O': 13.62, 'Ni': 7.64, 'Pt': 8.96,}
+
+# https://www.tandfonline.com/doi/full/10.1080/00268976.2018.1535143
+dipole_polarizabilities = {'H': 4.5, 'C': 11.3, 'O': 5.3, 'Ni': 49.0, 'Pt': 48.0,}
+
+# https://www.lenntech.com/periodic-chart-elements/electronegativity.htm
+electronegativities = {'H': 2.2, 'C': 2.55, 'O': 3.44, 'Ni': 1.9, 'Pt': 2.2,}
 
