@@ -28,12 +28,18 @@ class StochasticPatternGenerator(object):
                  unique=True,
                  species_site_selections=None,    
                  trajectory='patterns.traj',
+                 append_trajectory=False,
                  logfile='patterns.log'):
         """
         adsorbate_weights: dictionary 
         adsorption_sites: should only provide when the surface composition is fixed
         unique: whether discard duplicates based on isomorphism or not
         species_site_selections: dictionary with species key and selective site (list) values 
+
+        if you want to do stochastic pattern generation but for all images systematically, do
+        >>> for atoms in images:
+        >>>     SPG = StochasticPatternGenerator(..., append_trajectory=True)
+        >>>     SPG.run(ngen = 10)
         """
 
         self.images = images if is_list_or_tuple(images) else [images]                     
@@ -67,8 +73,10 @@ class StochasticPatternGenerator(object):
             self.species_site_selections = {k: v if is_list_or_tuple(v) else [v] for
                                             k, v in self.species_site_selections.items()}
 
+        self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
-            self.trajectory = Trajectory(trajectory, mode='w')
+            self.trajectory = Trajectory(trajectory, mode='a') if self.append_trajectory \
+                              else Trajectory(trajectory, mode='w')                        
         if isinstance(logfile, str):
             self.logfile = open(logfile, 'a')      
  
@@ -347,7 +355,7 @@ class StochasticPatternGenerator(object):
                 _new_options = []
                 for o in new_options: 
                     if o in self.species_site_selections:
-                        if rpst['site'] in self.species_site_selections[o]
+                        if rpst['site'] in self.species_site_selections[o]:
                             _new_options.append(o)
                 new_options = _new_options
 
@@ -534,6 +542,7 @@ class SystematicPatternGenerator(object):
                  unique=True,
                  species_site_selections=None,
                  trajectory='patterns.traj',
+                 append_trajectory=False,
                  logfile='patterns.log'):
 
         """adsorbate_weights: dictionary"""
@@ -563,8 +572,10 @@ class SystematicPatternGenerator(object):
             self.species_site_selections = {k: v if is_list_or_tuple(v) else [v] for
                                             k, v in self.species_site_selections.items()}
 
+        self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
-            self.trajectory = Trajectory(trajectory, mode='w')
+            self.trajectory = Trajectory(trajectory, mode='a') if self.append_trajectory \
+                              else Trajectory(trajectory, mode='w')                       
         if isinstance(logfile, str):
             self.logfile = open(logfile, 'a')                 
  
@@ -914,7 +925,7 @@ class SystematicPatternGenerator(object):
                     _new_options = []
                     for o in new_options: 
                         if o in self.species_site_selections:
-                            if rpst['site'] in self.species_site_selections[o]
+                            if rpst['site'] in self.species_site_selections[o]:
                                 _new_options.append(o)
                     new_options = _new_options
                                                                                              
