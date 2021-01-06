@@ -30,6 +30,7 @@ class ClusterAdsorptionSites(object):
         assert True not in atoms.pbc
         warnings.filterwarnings("ignore")
         atoms = atoms.copy()
+        atoms.set_constraint()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
@@ -651,6 +652,7 @@ class SlabAdsorptionSites(object):
         """
         assert True in atoms.pbc    
         atoms = atoms.copy() 
+        atoms.set_constraint()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
@@ -661,15 +663,21 @@ class SlabAdsorptionSites(object):
         self.surface = surface
         ref_atoms = self.atoms.copy()
         
-        if self.surface in ['bcc210','bcc211']:
+        if self.surface in ['fcc111','fcc100','fcc110','fcc211','fcc221',
+        'fcc311','fcc322','fcc332','bcc210','bcc211','hcp0001']:
             ref_symbol = 'Pt'
         elif self.surface in ['hcp10m10-h','hcp10m12']:
-            ref_symbol = 'Cu' 
-        else:
+            ref_symbol = 'Cu'
+        elif self.surface in ['fcc331']:
+            ref_symbol = 'Ag'
+        elif self.surface in ['bcc100','bcc110','bcc111','bcc310',
+        'hcp10m10-t','hcp10m11']:
             ref_symbol = 'Au'
+        else:
+            raise ValueError('Surface {} is not supported'.format(self.surface))
+
         for a in ref_atoms:
             a.symbol = ref_symbol
-        ref_atoms.set_constraint()
         ref_atoms.calc = asapEMT()
         opt = BFGS(ref_atoms, logfile=None)
         opt.run(fmax=0.05)
@@ -687,7 +695,7 @@ class SlabAdsorptionSites(object):
         self.dx = dx
         self.tol = 1e-5
 
-        self.make_neighbor_list(dx=self.dx) 
+        self.make_neighbor_list(neighbor_number=1) 
         self.connectivity_matrix = self.get_connectivity()         
         self.surf_ids, self.subsurf_ids = self.get_termination()        
 
@@ -1658,6 +1666,9 @@ class SlabAdsorptionSites(object):
                         elif nma == 1:
                             ia = subsi[subsyms.index(ma)]
                             subpos = self.positions[ia]
+                            def get_squared_distance(x):
+                                return get_mic(self.positions[x], subpos, 
+                                               self.cell, return_squared_distance=True)
                             if self.symbols[max(si, key=get_squared_distance)] == ma:
                                 composition = ''.join([comp, 2*mb + ma])
                             else:
@@ -1665,6 +1676,9 @@ class SlabAdsorptionSites(object):
                         elif nma == 2:
                             ib = subsi[subsyms.index(mb)]
                             subpos = self.positions[ib]
+                            def get_squared_distance(x):
+                                return get_mic(self.positions[x], subpos, 
+                                               self.cell, return_squared_distance=True)
                             if self.symbols[max(si, key=get_squared_distance)] == mb:
                                 composition = ''.join([comp, 2*ma + mb])
                             else:
@@ -1703,9 +1717,9 @@ class SlabAdsorptionSites(object):
         surf = self.get_all_from_surface(surface)
         return [i for i in surf if i['site'] == site]
 
-    def make_neighbor_list(self, dx=.5, neighbor_number=1):
+    def make_neighbor_list(self, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
-        self.nblist = neighbor_shell_list(self.ref_atoms, dx, 
+        self.nblist = neighbor_shell_list(self.ref_atoms, self.dx, 
                                           neighbor_number, mic=True)
 
     def get_connectivity(self):                                      
