@@ -900,7 +900,7 @@ class SlabAdsorptionSites(object):
         fold4_surfaces = ['fcc100','fcc211','fcc311','fcc322','bcc100',
                           'bcc210','bcc310','hcp10m10-t','hcp10m11','hcp10m12']
         # Complete information of each site
-        for n, poss in enumerate([bridge_positions,fold3_positions,fold4_positions]):
+        for n, poss in enumerate([bridge_positions,fold4_positions,fold3_positions]):
             if not poss:
                 continue
             fracs = np.stack(poss, axis=0) @ np.linalg.pinv(self.cell)
@@ -1311,7 +1311,12 @@ class SlabAdsorptionSites(object):
                         usi.add(si)
              
             # Make 3-fold hollow sites (differentiate fcc / hcp)
-            if n == 1 and self.surface not in ['fcc100','bcc100','hcp10m10-t']:
+            if n == 2 and self.surface not in ['fcc100','bcc100','hcp10m10-t']:
+                coexist_3_4 = (self.surface in ['fcc211','fcc311','fcc322','fcc331',
+                                                'bcc210','bcc211','bcc310','hcp10m12'])
+                if coexist_3_4:
+                    fold4_sets = [set(s['indices']) for s in sl if s['site'] == '4fold']
+
                 for i, refpos in enumerate(reduced_poss):
                     fold3_indices = nblist[ntop2+i]
                     fold3ids = [top2_indices[j] for j in fold3_indices if j < ntop1]
@@ -1321,6 +1326,10 @@ class SlabAdsorptionSites(object):
                             print('Cannot find the correct atoms of this 3-fold site.',
                                   'Find {} instead'.format(si))
                         continue
+                    # Remove redundant 3-fold sites that belongs to 4-fold sites
+                    if coexist_3_4: 
+                        if any(set(fold3ids).issubset(j) for j in fold4_sets):
+                            continue
                     si = tuple(sorted(fold3ids))
                     pos = refpos + np.average(
                           self.delta_positions[fold3ids], 0)
@@ -1411,7 +1420,7 @@ class SlabAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si)
  
-            if n == 2 and self.surface in fold4_surfaces and list(reduced_poss):
+            if n == 1 and self.surface in fold4_surfaces and list(reduced_poss):
                 fold4atoms = Atoms('X{}'.format(len(reduced_poss)), 
                                    positions=np.asarray(reduced_poss),
                                    cell=self.cell, 
@@ -1555,8 +1564,8 @@ class SlabAdsorptionSites(object):
                     if nstids > 2:
                         t['site'] = '{}fold'.format(nstids)
                         t['indices'] = tuple(sorted(stids))
-
-            # Take care of duplicate 3-fold indices. When unit cell is 
+            
+            # Take care of duplicate fcc/hcp indices. When unit cell is 
             # small, different sites can have exactly same indices
             elif sitetype in ['fcc', 'hcp']:
                 if stids in index_list:
