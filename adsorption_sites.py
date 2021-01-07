@@ -1312,8 +1312,8 @@ class SlabAdsorptionSites(object):
              
             # Make 3-fold hollow sites (differentiate fcc / hcp)
             if n == 2 and self.surface not in ['fcc100','bcc100','hcp10m10-t']:
-                coexist_3_4 = (self.surface in ['fcc211','fcc311','fcc322','fcc331',
-                                                'bcc210','bcc211','bcc310','hcp10m12'])
+                coexist_3_4 = (self.surface in ['fcc211','fcc311','fcc322',
+                                                'bcc210','bcc310','hcp10m12'])
                 if coexist_3_4:
                     fold4_sets = [set(s['indices']) for s in sl if s['site'] == '4fold']
 
