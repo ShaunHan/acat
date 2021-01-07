@@ -54,7 +54,7 @@ class StochasticPatternGenerator(object):
             diff = list(set(self.adsorbate_species) - 
                         set(self.monodentate_adsorbates +
                             self.multidentate_adsorbates))
-            raise ValueError('Species {} is not defined '.format(diff) +
+            raise ValueError('Species {} are not defined '.format(diff) +
                              'in adsorbate_list in settings.py')             
         self.adsorbate_weights = adsorbate_weights
         if self.adsorbate_weights is not None:
@@ -174,7 +174,6 @@ class StochasticPatternGenerator(object):
         else:
             add_adsorbate_to_site(self.atoms, adsorbate, nst, 
                                   height=self.heights[nst['site']])                            
-
         nsac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
                else ClusterAdsorbateCoverage(self.atoms, sas)
         nhsl = nsac.hetero_site_list
