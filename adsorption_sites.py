@@ -662,7 +662,7 @@ class SlabAdsorptionSites(object):
         self.indices = [a.index for a in self.atoms] 
         self.surface = surface
         ref_atoms = self.atoms.copy()
-        
+
         if self.surface in ['fcc111','fcc100','fcc110','fcc211','fcc221',
         'fcc311','fcc322','fcc332','bcc210','bcc211','hcp0001']:
             ref_symbol = 'Pt'
@@ -682,7 +682,7 @@ class SlabAdsorptionSites(object):
         opt = BFGS(ref_atoms, logfile=None)
         opt.run(fmax=0.05)
         ref_atoms.calc = None
-
+ 
         self.ref_atoms = ref_atoms
         self.delta_positions = atoms.positions - ref_atoms.positions
         self.cell = atoms.cell
@@ -913,15 +913,15 @@ class SlabAdsorptionSites(object):
 
             # Sort the index list of surface and subsurface atoms 
             # so that we can retrive original indices later
-            sorted_indices = sorted(self.surf_ids + self.subsurf_ids)
-            top2atoms = self.ref_atoms[sorted_indices]
+            top2_indices = self.surf_ids + self.subsurf_ids
+            top2atoms = self.ref_atoms[top2_indices]
 
             # Make a new neighborlist including sites as dummy atoms
             dummies = Atoms('X{}'.format(reduced_poss.shape[0]), 
                             positions=reduced_poss, 
                             cell=self.cell, 
                             pbc=self.pbc)
-            ntop2 = len(top2atoms)
+            ntop1, ntop2 = len(self.surf_ids), len(top2atoms)
             testatoms = top2atoms + dummies
             nblist = neighbor_shell_list(testatoms, dx=self.dx, neighbor_number=1, 
                                          different_species=True, mic=True) 
@@ -930,7 +930,7 @@ class SlabAdsorptionSites(object):
                 fold4_poss = []
                 for i, refpos in enumerate(reduced_poss):
                     bridge_indices = nblist[ntop2+i]                     
-                    bridgeids = [sorted_indices[j] for j in bridge_indices]
+                    bridgeids = [top2_indices[j] for j in bridge_indices if j < ntop1]
                     if len(bridgeids) != 2: 
                         if self.surface in ['fcc100','fcc211','fcc311','fcc322',
                         'bcc100','bcc210','bcc310','hcp10m11','hcp10m12']:
@@ -1314,11 +1314,12 @@ class SlabAdsorptionSites(object):
             if n == 1 and self.surface not in ['fcc100','bcc100','hcp10m10-t']:
                 for i, refpos in enumerate(reduced_poss):
                     fold3_indices = nblist[ntop2+i]
-                    fold3ids = [sorted_indices[j] for j in fold3_indices]
+                    fold3ids = [top2_indices[j] for j in fold3_indices if j < ntop1]
                     if len(fold3ids) != 3:
                         if self.surface != 'hcp10m11':
                             si = tuple(sorted(fold3ids))
-                            print('Cannot find other atoms of 3-fold site {}'.format(si))
+                            print('Cannot find the correct atoms of this 3-fold site.',
+                                  'Find {} instead'.format(si))
                         continue
                     si = tuple(sorted(fold3ids))
                     pos = refpos + np.average(
