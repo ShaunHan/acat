@@ -542,11 +542,15 @@ class SystematicPatternGenerator(object):
                  composition_effect=True,
                  unique=True,
                  species_forbidden_sites=None,
+                 enumerate_orientations=True,
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
 
-        """adsorbate_weights: dictionary"""
+        """
+       adsorbate_weights: dictionary
+       enumerate_orientations: whether to enumerate all orientations of multidentate species
+       """
 
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(adsorbate_species) \
@@ -572,7 +576,7 @@ class SystematicPatternGenerator(object):
         if self.species_forbidden_sites is not None:
             self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
                                             k, v in self.species_forbidden_sites.items()}
-
+        self.enumerate_orientations = enumerate_orientations
         self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
             self.trajectory = Trajectory(trajectory, mode='a') if self.append_trajectory \
@@ -645,6 +649,8 @@ class SystematicPatternGenerator(object):
 
                 if adsorbate in self.multidentate_adsorbates:                                     
                     nis = binbids[k]
+                    if not self.enumerate_orientations:
+                        nis = [random.choice(nis)]
                 else:
                     nis = [0]
                 for ni in nis:
@@ -831,6 +837,8 @@ class SystematicPatternGenerator(object):
 
                 if adsorbate in self.multidentate_adsorbates:
                     nis = binbids[k]
+                    if not self.enumerate_orientations:
+                        nis = [random.choice(nis)]
                 else:
                     nis = [0]
                 for ni in nis:
@@ -959,6 +967,8 @@ class SystematicPatternGenerator(object):
                     if not binbids:
                         continue
                     nis = binbids[k]
+                    if not self.enumerate_orientations:
+                        nis = [random.choice(nis)]
                 else:
                     nis = [0]
                 for ni in nis:                                                                                  
