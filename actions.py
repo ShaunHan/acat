@@ -1,6 +1,6 @@
+from .settings import site_heights, adsorbate_list, adsorbate_molecule
 from .adsorption_sites import * 
 from .utilities import *
-from .settings import *
 from ase.data import covalent_radii, atomic_numbers
 from ase.formula import Formula
 from ase import Atom, Atoms
@@ -9,7 +9,7 @@ import numpy as np
 import re
 
 
-def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,                 
+def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,                 
                   indices=None, height=None, composition=None, 
                   subsurf_element=None, site_list=None):
     """
@@ -48,13 +48,13 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
     add_adsorbate(atoms,adsorbate='CO',site='4fold',surface='fcc100')
     """
 
-    if height is None:
-        height = site_heights[site]
+    
+    
     composition_effect = False if composition is None else True
     subsurf_effect = False if subsurf_element is None else True
 
     if composition:
-        if '-' in composition or site == '6fold':
+        if '-' in composition or len(list(Formula(composition))) == 6:
             scomp = composition
         else:
             comp = re.findall('[A-Z][^A-Z]*', composition)
@@ -81,7 +81,7 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
                                                composition_effect, 
                                                subsurf_effect)
 
-    if indices:
+    if indices is not None:
         indices = indices if is_list_or_tuple(indices) else [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in all_sites if 
@@ -96,6 +96,8 @@ def add_adsorbate(atoms, adsorbate, site, surface=None, geometry=None,
     if not st:
         print('No such site can be found')            
     else:
+        if height is None:
+            height = site_heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)
 
 
@@ -120,10 +122,10 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     else:
         ads = adsorbate_molecule(adsorbate)
         if not ads:
-            print('Molecule {} does not exist'.format(adsorbate),
-                  'in the database. Nothing is added.')
+            print('Nothing is added.')
             return 
-        if len(ads) == 2 or adsorbate == 'COH':
+        if (len(ads) == 2 and adsorbate not in ['H2','C2','N2','O2','S2',
+        'OS']) or adsorbate in ['COH','NOH']:
             ads.rotate(ads[1].position - ads[0].position, normal)
             #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
             #ads.rotate(-45, pvec, center=ads[0].position)
