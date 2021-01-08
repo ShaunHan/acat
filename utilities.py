@@ -16,6 +16,38 @@ def is_list_or_tuple(obj):
             and not isinstance(obj, str))
 
 
+def adsorbate_fragments(adsorbate):
+    """A function for generating a fragment list (list of strings) 
+    from a given adsorbate (string)
+    """
+    if adsorbate == 'H2':
+        return ['H', 'H']
+    sym_list = list(Formula(adsorbate))
+    nsyms = len(sym_list)
+    frag_list = []
+    for i, sym in enumerate(sym_list):
+        if sym != 'H':
+            j = i + 1
+            if j < nsyms:
+                hlen = 0
+                while sym_list[j]  == 'H':
+                    hlen += 1
+                    j += 1
+                    if j == nsyms:
+                        break
+                if hlen == 0:
+                    frag = sym
+                elif hlen == 1:
+                    frag = sym + 'H'
+                else:
+                    frag = sym + 'H' + str(hlen)
+                frag_list.append(frag)
+            else:
+                frag_list.append(sym)
+
+    return frag_list        
+
+
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
                         different_species=False, mic=False,
                         radius=None, span=False):
