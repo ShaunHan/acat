@@ -1,6 +1,6 @@
+from .settings import adsorbate_elements, adsorbate_formulas
 from .adsorption_sites import * 
 from .utilities import *
-from .settings import *
 from ase.io import read, write
 from ase.build import molecule
 from ase.data import covalent_radii, atomic_numbers
@@ -97,12 +97,17 @@ class ClusterAdsorbateCoverage(object):
             adsorbates = [self.ads_ids]
         self.ads_list = adsorbates
 
+    def get_hetero_connectivity(self):
+        """Generate a connection matrix of slab + adsorbates."""
+        nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
+        return get_connectivity_matrix(nbslist)                          
+
     def get_ads_connectivity(self):
-        """Generate a connections matrix for adsorbate atoms."""
+        """Generate a connection matrix for adsorbate atoms."""
         return get_connectivity_matrix(self.ads_nblist) 
 
     def get_site_connectivity(self):
-        """Generate a connections matrix for adsorption sites."""
+        """Generate a connection matrix for adsorption sites."""
         sl = self.hetero_site_list
         conn_mat = []
         for i, sti in enumerate(sl):
@@ -199,18 +204,14 @@ class ClusterAdsorbateCoverage(object):
                     bondid = st['bonded_index']
                     bondsym = self.symbols[bondid]
                     adssym = st['adsorbate']
-                    if adssym in adsorbate_fragments:
-                        fsym = next((f for f in adsorbate_fragments[adssym] 
-                                     if f[0] == bondsym), None)
-                        st['fragment'] = fsym
-                        flen = len(list(Formula(fsym)))
-                        adsids = st['adsorbate_indices']
-                        ibond = adsids.index(bondid)
-                        fsi = adsids[ibond:ibond+flen]
-                        st['fragment_indices'] = fsi
-                    else:
-                        st['fragment'] = adssym
-                        st['fragment_indices'] = st['adsorbate_indices']
+                    fsym = next((f for f in adsorbate_fragments(adssym) 
+                                 if f[0] == bondsym), None)
+                    st['fragment'] = fsym
+                    flen = len(list(Formula(fsym)))
+                    adsids = st['adsorbate_indices']
+                    ibond = adsids.index(bondid)
+                    fsi = adsids[ibond:ibond+flen]
+                    st['fragment_indices'] = fsi
                 else:
                     st['fragment_indices'] = st['adsorbate_indices'] 
                 signature = [st['site'], st['surface']]                     
@@ -440,12 +441,17 @@ class SlabAdsorbateCoverage(object):
             adsorbates = [self.ads_ids]
         self.ads_list = adsorbates
 
+    def get_hetero_connectivity(self):
+        """Generate a connection matrix of slab + adsorbates."""
+        nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
+        return get_connectivity_matrix(nbslist)                           
+
     def get_ads_connectivity(self):
-        """Generate a connections matrix for adsorbate atoms."""
+        """Generate a connection matrix for adsorbate atoms."""
         return get_connectivity_matrix(self.ads_nblist) 
 
     def get_site_connectivity(self):
-        """Generate a connections matrix for adsorption sites."""
+        """Generate a connection matrix for adsorption sites."""
         sl = self.hetero_site_list
         conn_mat = []
         for i, sti in enumerate(sl):
@@ -542,18 +548,14 @@ class SlabAdsorbateCoverage(object):
                     bondid = st['bonded_index']
                     bondsym = self.symbols[bondid] 
                     adssym = st['adsorbate']
-                    if adssym in adsorbate_fragments:
-                        fsym = next((f for f in adsorbate_fragments[adssym] 
-                                     if f[0] == bondsym), None)
-                        st['fragment'] = fsym
-                        flen = len(list(Formula(fsym)))
-                        adsids = st['adsorbate_indices']
-                        ibond = adsids.index(bondid)
-                        fsi = adsids[ibond:ibond+flen]
-                        st['fragment_indices'] = fsi
-                    else:
-                        st['fragment'] = adssym
-                        st['fragment_indices'] = st['adsorbate_indices']
+                    fsym = next((f for f in adsorbate_fragments(adssym) 
+                                 if f[0] == bondsym), None)
+                    st['fragment'] = fsym
+                    flen = len(list(Formula(fsym)))
+                    adsids = st['adsorbate_indices']
+                    ibond = adsids.index(bondid)
+                    fsi = adsids[ibond:ibond+flen]
+                    st['fragment_indices'] = fsi
                 else:
                     st['fragment_indices'] = st['adsorbate_indices'] 
                 signature = [st['site'], st['geometry']]                     
