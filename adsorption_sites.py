@@ -1,6 +1,7 @@
-from .utilities import * 
 from .settings import adsorbate_elements, site_heights
+from .utilities import * 
 from ase.data import reference_states, atomic_numbers, covalent_radii
+from ase.geometry import find_mic
 from ase.optimize import BFGS
 from ase.io import read, write
 from ase import Atom, Atoms
@@ -591,7 +592,7 @@ class ClusterAdsorptionSites(object):
         return neighbor_shell_list(statoms, 0.1, neighbor_number,
                                    mic=False, radius=cr, span=span)
 
-    def update_positions(self, new_atoms):
+    def update_positions(self, new_atoms):                 
         sl = self.site_list
         for st in sl:
             si = list(st['indices'])
@@ -663,7 +664,7 @@ class SlabAdsorptionSites(object):
         self.surface = surface
         ref_atoms = self.atoms.copy()
 
-        if self.surface in ['fcc111','fcc100','fcc110','fcc211','fcc221',
+        if self.surface in ['fcc111','fcc100','fcc110','fcc211','fcc221',         
         'fcc311','fcc322','fcc332','bcc210','bcc211','hcp0001']:
             ref_symbol = 'Pt'
         elif self.surface in ['hcp10m10-h','hcp10m12']:
@@ -829,7 +830,7 @@ class SlabAdsorptionSites(object):
 
         ext_index, ext_coords, _ = expand_cell(self.ref_atoms, cutoff)
         extended_top = np.where(np.in1d(ext_index, top_indices))[0]
-        meansurfz = np.average(self.atoms.positions[self.surf_ids][:,2], 0)
+        meansurfz = np.average(self.positions[self.surf_ids][:,2], 0)
         ext_all_coords = ext_coords[extended_top]
         surf_screen = np.where(abs(ext_all_coords[:,2] - meansurfz) < cutoff)
         ext_surf_coords = ext_all_coords[surf_screen]
@@ -1601,7 +1602,7 @@ class SlabAdsorptionSites(object):
         # Add 6-fold sites if allowed
         if self.allow_6fold:
             dh = 1/2*(meansurfz - np.average(
-                      self.atoms.positions[self.subsurf_ids][:,2], 0))
+                      self.positions[self.subsurf_ids][:,2], 0))
             for st in sl:
                 if self.surface in ['fcc110','hcp10m10-h'] and st['site'] == 'bridge' \
                 and st['geometry'] == 'step':
@@ -1855,10 +1856,11 @@ class SlabAdsorptionSites(object):
         sl = self.site_list
         new_slab = new_atoms[[a.index for a in new_atoms if 
                               a.symbol not in adsorbate_elements]]
-        shifted_positions = new_slab.positions - self.atoms.positions
+        dvecs, _ = find_mic(new_slab.positions - self.positions,
+                            self.cell, self.pbc)
         for st in sl:
             si = list(st['indices'])
-            st['position'] += np.average(shifted_positions[si], 0) 
+            st['position'] += np.average(dvecs[si], 0) 
 
 
 def get_adsorption_site(atoms, indices, 
