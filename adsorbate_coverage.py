@@ -577,3 +577,28 @@ class SlabAdsorbateCoverage(object):
             sbcm[si,ncols-1] = numbers[si] 
 
         return sbcm[top_ids]
+
+
+def enumerate_occupied_sites(atoms, adsorption_sites=None,
+                             surface=None, dmax=2.5):
+
+    if True not in atoms.pbc:
+        cac = ClusterAdsorbateCoverage(atoms, adsorption_sites,
+                                       surface, dmax)
+        all_sites = cac.hetero_site_list
+        if surface:
+            occupied_sites = [s for s in all_sites if 
+                              s['surface'] == surface and
+                              s['occupied'] == 1]
+        else:
+            occupied_sites = [s for s in all_sites if 
+                              s['occupied'] == 1] 
+
+    else:
+        sac = SlabAdsorbateCoverage(atoms, adsorption_sites,
+                                    surface, dmax)
+        all_sites = sac.hetero_site_list
+        occupied_sites = [s for s in all_sites if
+                          s['occupied'] == 1]
+
+    return occupied_sites
