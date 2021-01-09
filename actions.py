@@ -1,9 +1,12 @@
 from .settings import site_heights, adsorbate_list, adsorbate_molecule
 from .adsorption_sites import * 
+from .adsorbate_coverage import *
 from .utilities import *
+from .labels import *
 from ase.data import covalent_radii, atomic_numbers
 from ase.formula import Formula
 from ase import Atom, Atoms
+from itertools import takewhile
 from operator import itemgetter
 import numpy as np
 import re
@@ -74,18 +77,19 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
         scomp = None
 
     if site_list:
-        all_sites = site_list.copy()
+        all_sites = site_list
     else:
         all_sites = enumerate_adsorption_sites(atoms, surface, 
                                                geometry, True, 
                                                composition_effect, 
-                                               subsurf_effect)
+                                               subsurf_effect)    
 
     if indices is not None:
         indices = indices if is_list_or_tuple(indices) else [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in all_sites if 
                    s['indices'] == indices), None)
+    
     else:
         st = next((s for s in all_sites if 
                    s['site'] == site and
@@ -171,6 +175,53 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     atoms += ads
 
 
+def add_adsorbate_by_label(atoms, label, 
+                           surface=None,
+                           height=None, 
+                           composition_effect=False,
+                           site_list=None):
+
+    site_number = int(''.join(takewhile(str.isdigit, label))) 
+    adsorbate = label.replace(str(site_number), '')
+    
+    if composition_effect:
+        slab = atoms[[a.index for a in atoms if a.symbol
+                      not in adsorbate_elements]]
+        metals = sorted(list(set(slab.symbols)),
+                        key=lambda x: atomic_numbers[x])
+    else:
+        metals = None
+
+    if True in atoms.pbc:
+        signature = get_slab_signature_from_label(site_number, 
+                                                  surface,
+                                                  composition_effect,
+                                                  metals)
+    else:
+        signature = get_cluster_signature_from_label(site_number,
+                                                     surface,
+                                                     composition_effect,
+                                                     metals)
+    sigs = signature.split('|')
+    geometry, composition = None, None
+    if not composition_effect:
+        if True in atoms.pbc:
+            site, geometry = sigs[0], sigs[1]
+        else:
+            site, surface = sigs[0], sigs[1]
+    else:
+        if True in atoms.pbc:
+            site, geometry, composition = sigs[0], sigs[1], sigs[2]
+        else:
+            site, surface, composition = sigs[0], sigs[1], sigs[2]
+
+    add_adsorbate(atoms, adsorbate, 
+                  site, surface,
+                  geometry, height=height, 
+                  composition=composition, 
+                  site_list=site_list)
+
+
 def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
 
     if not remove_fragment:
@@ -199,4 +250,3 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage,
     rm_ids = list(set(rm_ids))
 
     del atoms[rm_ids]
-
