@@ -38,6 +38,7 @@ class ClusterAdsorptionSites(object):
         self.positions = atoms.positions
         self.symbols = atoms.symbols
         self.numbers = atoms.numbers
+        self.indices = [a.index for a in self.atoms] 
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
@@ -349,32 +350,35 @@ class ClusterAdsorptionSites(object):
         """
         Returns a dictionary with all the surface designations
         """
-        surface_sites = {'all': [],
-                         'fcc111': [],
-                         'fcc100': [],
-                         'edge': [],
-                         'vertex': [], }
+        surf_sites = {'all': [],
+                      'fcc111': [],
+                      'fcc100': [],
+                      'edge': [],
+                      'vertex': [],}
         fcna = self.get_fullCNA()
         site_dict = self.site_dict
-        ptmdata = PTM(self.atoms, rmsd_max=0.25)
-        surface_ids = list(np.where(ptmdata['structure'] == 0)[0])
+        surf_ids = []
+#        ptmdata = PTM(self.atoms, rmsd_max=0.25)
+#        surf_ids = list(np.where(ptmdata['structure'] == 0)[0])
 
-        for i in surface_ids:
+        for i in range(len(self.atoms)):
 #            if i in [284, 310]:
 #                print(fcna[i])
-            surface_sites['all'].append(i)
-            if str(fcna[i]) not in site_dict:
-                # The structure is distorted from the original, giving
-                # a larger cutoff should overcome this problem
-                r = self.r + 0.6
-                fcna = self.get_fullCNA(rCut=r)
-            if str(fcna[i]) not in site_dict:
-                # If this does not solve the problem we probably have a
-                # reconstruction of the surface and will leave this
-                # atom unused this time
-                continue
-            surface_sites[site_dict[str(fcna[i])]].append(i)
-        return surface_ids, surface_sites  
+            if sum(fcna[i].values()) < 12:
+                surf_sites['all'].append(i)
+                if str(fcna[i]) not in site_dict:
+                    # The structure is distorted from the original, giving
+                    # a larger cutoff should overcome this problem
+                    r = self.r + 0.6
+                    fcna = self.get_fullCNA(rCut=r)
+                if str(fcna[i]) not in site_dict:
+                    # If this does not solve the problem we probably have a
+                    # reconstruction of the surface and will leave this
+                    # atom unused this time
+                    continue
+                surf_ids.append(i)
+                surf_sites[site_dict[str(fcna[i])]].append(i)
+        return surf_ids, surf_sites  
 
     def get_subsurface(self):
         notsurf = [a.index for a in self.atoms if a.index not in self.surf_ids]
