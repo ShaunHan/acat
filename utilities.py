@@ -16,7 +16,7 @@ def is_list_or_tuple(obj):
             and not isinstance(obj, str))
 
 
-def adsorbate_fragments(adsorbate):
+def string_fragmentation(adsorbate):
     """A function for generating a fragment list (list of strings) 
     from a given adsorbate (string)
     """
@@ -67,7 +67,8 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     mic: boolean
         Whether to apply minimum image convention
     radius: float
-        The radius of each shell. If not specified, use covalent radii 
+        The radius of each shell. Works exactly as a conventional neighbor 
+        list when specified. If not specified, use covalent radii instead 
     span: boolean
         Whether to include all neighbors spanned within the shell
     """
@@ -126,9 +127,9 @@ def get_connectivity_matrix(neighborlist):
         conn_x = []
         for index2 in index:
             if index2 in neighborlist[index1]:
-                conn_x.append(1.)
+                conn_x.append(1)
             else:
-                conn_x.append(0.)
+                conn_x.append(0)
         conn_mat.append(conn_x)
 
     return np.asarray(conn_mat)
@@ -264,14 +265,13 @@ def get_mic(p1, p2, cell, pbc=[1,1,0], max_cell_multiples=1e5,
 
 
 def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):
-    """Get list of close atoms and delete them if requested.
+    """Get list of close atoms and delete one set of them if requested.
 
     Identify all atoms which lie within the cutoff radius of each other.
-    Delete one set of them if delete == True.
     """
 
     res = np.asarray(list(combinations(np.asarray(range(len(atoms))),2)))
-    indices1, indices2 = res[:,0], res[:,1]
+    indices1, indices2 = res[:, 0], res[:, 1]
     p1, p2 = atoms.positions[indices1], atoms.positions[indices2]                      
     if mic:
         _, dists = find_mic(p2 - p1, atoms.cell, pbc=True)
@@ -289,8 +289,8 @@ def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):
 
 def atoms_too_close(atoms, cutoff=0.5, mic=False):
 
-    res = np.asarray(list(combinations(np.asarray(range(len(atoms))),2)))
-    indices1, indices2 = res[:,0], res[:,1]
+    res = np.asarray(list(combinations(np.asarray(range(len(atoms))), 2)))
+    indices1, indices2 = res[:, 0], res[:, 1]
     p1, p2 = atoms.positions[indices1], atoms.positions[indices2]
     if mic:
         _, dists = find_mic(p2 - p1, atoms.cell, pbc=True)
@@ -304,7 +304,7 @@ def added_atoms_too_close(atoms, n_added, cutoff=1.5, mic=False):
    
     newp, oldp = atoms.positions[-n_added:], atoms.positions[:-n_added]
     newps = np.repeat(newp, len(oldp), axis=0)
-    oldps = np.tile(oldp, (n_added,1))
+    oldps = np.tile(oldp, (n_added, 1))
     if mic:
         _, dists = find_mic(newps - oldps, atoms.cell, pbc=True)
     else:
@@ -363,6 +363,6 @@ def draw_graph(G, savefig='graph.png'):
     nx.draw_networkx_edges(G, pos, alpha=0.5)
     nx.draw_networkx_nodes(G, pos, nodelist=nodes, node_color=colors, 
                            with_labels=False, node_size=500)
-    nx.draw_networkx_labels(G, pos, labels, font_size=10,font_color='w')
+    nx.draw_networkx_labels(G, pos, labels, font_size=10, font_color='w')
     plt.axis('off')
     plt.savefig(savefig)
