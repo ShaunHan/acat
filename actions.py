@@ -233,7 +233,9 @@ def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
 
 def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
                                 min_adsorbate_distance=0.5):
-    """Find adsorbates that are too close, remove one set of them"""
+    """Find adsorbates that are too close, remove one set of them.
+    The function is intended to remove atoms that are unphysically 
+    close. Please do not use a min_adsorbate_distace larger than 2."""
 
     if adsorbate_coverage:
         sac = adsorbate_coverage
@@ -249,22 +251,19 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
 
     hsl = sac.hetero_site_list
     # Make sure it's not the bond length within a fragment being too close
-    bond_rows = []
+    bond_rows, frag_id_list = [], []
     for st in hsl:
         if st['occupied'] == 1:
             frag_ids = list(st['fragment_indices'])
+            frag_id_list.append(frag_ids)
             w = np.where((dups[:] == frag_ids).all(1))[0]
             if w:
                 bond_rows.append(w[0])
-    dups = dups[[i for i in range(dups.shape[0]) if i not in bond_rows]]
-    del_ids = set(dups[:,0])
 
-    rm_ids = []
-    for st in hsl:
-        if st['occupied'] == 1:
-            frag_ids = list(st['fragment_indices'])            
-            if del_ids.intersection(set(frag_ids)):
-                rm_ids += frag_ids
+    dups = dups[[i for i in range(len(dups)) if i not in bond_rows]]
+    del_ids = set(dups[:,0])
+    rm_ids = [i for lst in frag_id_list for i in lst if 
+              del_ids.intersection(set(lst))]
     rm_ids = list(set(rm_ids))
 
     del atoms[rm_ids]
