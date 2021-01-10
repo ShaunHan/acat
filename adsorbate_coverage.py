@@ -205,7 +205,7 @@ class ClusterAdsorbateCoverage(object):
                     bondid = st['bonded_index']
                     bondsym = self.symbols[bondid]
                     adssym = st['adsorbate']
-                    fsym = next((f for f in adsorbate_fragments(adssym) 
+                    fsym = next((f for f in string_fragmentation(adssym) 
                                  if f[0] == bondsym), None)
                     st['fragment'] = fsym
                     flen = len(list(Formula(fsym)))
@@ -475,7 +475,7 @@ class SlabAdsorbateCoverage(object):
                     bondid = st['bonded_index']
                     bondsym = self.symbols[bondid] 
                     adssym = st['adsorbate']
-                    fsym = next((f for f in adsorbate_fragments(adssym) 
+                    fsym = next((f for f in string_fragmentation(adssym) 
                                  if f[0] == bondsym), None)
                     st['fragment'] = fsym
                     flen = len(list(Formula(fsym)))
