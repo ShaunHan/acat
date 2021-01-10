@@ -1123,15 +1123,6 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
        pattern_generator(atoms, adsorbate='CO', surface='fcc111', coverage=3/4)
     """
 
-    ads_indices = [a.index for a in atoms if 
-                   a.symbol in adsorbate_elements]
-    ads_atoms = None
-    if ads_indices:
-        ads_atoms = atoms[ads_indices]
-        atoms = atoms[[a.index for a in atoms if 
-                       a.symbol not in adsorbate_elements]]
-    ads = adsorbate_molecule(adsorbate)
-
     if True not in atoms.pbc:                            
         if surface is None:
             surface = ['fcc100', 'fcc111']        
@@ -1139,8 +1130,6 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
         site_list = sas.site_list
     else:
         sas = SlabAdsorptionSites(atoms, surface=surface)
-        if surface is None:
-            surface = sas.surface
         site_list = sas.site_list
     if not isinstance(surface, list):
         surface = [surface] 
@@ -1487,6 +1476,8 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                         final_sites.append(esite)
 
     for site in final_sites:
+        if height is None:
+            height = site_heights[site['site']]
         add_adsorbate_to_site(atoms, adsorbate, site, height)
 
     if min_adsorbate_distance > 0.:
@@ -1499,144 +1490,79 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
     return atoms
 
 
-def full_coverage_pattern(atoms, adsorbate, site, height=None, 
-                          min_adsorbate_distance=0.6):
-    '''A function to generate different 1ML coverage patterns'''
+def full_coverage_pattern(atoms, adsorbate, site, surface=None,
+                          height=None, min_adsorbate_distance=0.):
+    """A function to generate different 1ML coverage patterns"""
 
-    ads_indices = [a.index for a in atoms if a.symbol in adsorbate_elements]
-    ads_atoms = None
-    if ads_indices:
-        ads_atoms = atoms[ads_indices]
-        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbate_elements]]
-    ads = molecule(adsorbate)[::-1]
-    if str(ads.symbols) != 'CO':
-        ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
-    final_sites = []
-    positions = []
-    if site == 'fcc':
-        return symmetric_pattern_generator(atoms, adsorbate, coverage=1, height=height, 
-                                           min_adsorbate_distance=min_adsorbate_distance)
-    elif site == 'ontop':
-        sites = get_monometallic_sites(atoms, site='ontop', surface='fcc100') +\
-                get_monometallic_sites(atoms, site='ontop', surface='fcc111') +\
-                get_monometallic_sites(atoms, site='ontop', surface='edge') +\
-                get_monometallic_sites(atoms, site='ontop', surface='vertex')
-        if sites:
-            final_sites += sites
-            positions += [s['adsorbate_position'] for s in sites]
-    elif site in ['hcp', '4fold']:
+    if True not in atoms.pbc:                                 
+        if surface is None:
+            surface = ['fcc100', 'fcc111']        
+        sas = ClusterAdsorptionSites(atoms, allow_6fold=True)
+        site_list = sas.site_list
+    else:
+        sas = SlabAdsorptionSites(atoms, surface=surface,
+                                  allow_6fold=True)
+        site_list = sas.site_list
+    if not isinstance(surface, list):
+        surface = [surface] 
+
+    for st in site_list:
+        if st['site'] == site and st['surface'] in surface:
+            if height is None:
+                height = site_heights[st['site']]
+            add_adsorbate_to_site(atoms, adsorbate, st, height)
+
+    if min_adsorbate_distance > 0.:
         if True not in atoms.pbc:
-            sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height) +\
-                    get_monometallic_sites(atoms, site='4fold', surface='fcc100', height=height)
+            sac = ClusterAdsorbateCoverage(atoms, sas)
         else:
-            sites = get_monometallic_sites(atoms, site='hcp', surface='fcc111', height=height)
-        if sites:
-            final_sites += sites
-            positions += [s['adsorbate_position'] for s in sites]
-
-    if True not in atoms.pbc:
-        if adsorbate == 'CO':
-            for site in final_sites:
-                add_adsorbate(atoms, molecule(adsorbate)[::-1], site)
-            nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)     
-            nl.update(atoms)            
-            atom_indices = [a.index for a in atoms if a.symbol == 'O']            
-            n_ads_atoms = 2
-            overlap_atoms_indices = []
-            for idx in atom_indices:   
-                neighbor_indices, _ = nl.get_neighbors(idx)
-                overlap = 0
-                for i in neighbor_indices:
-                    if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):
-                        overlap += 1
-                if overlap > 0:
-                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))
-            del atoms[overlap_atoms_indices]
-
-        else:
-            for site in final_sites:
-                add_adsorbate(atoms, molecule(adsorbate), site)
-            nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)   
-            nl.update(atoms)            
-            atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-            ads_symbols = molecule(adsorbate).get_chemical_symbols()
-            n_ads_atoms = len(ads_symbols)
-            overlap_atoms_indices = []
-            for idx in atom_indices:   
-                neighbor_indices, _ = nl.get_neighbors(idx)
-                overlap = 0
-                for i in neighbor_indices:                                                                
-                    if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):                       
-                        overlap += 1                                                                      
-                if overlap > 0:                                                                           
-                    overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
-            del atoms[overlap_atoms_indices]                                                                    
-
-    else:
-        for pos in positions:
-            ads.translate(pos - ads[0].position)
-            atoms += ads
-        if ads_indices:
-            atoms += ads_atoms
+            sac = SlabAdsorbateCoverage(atoms, sas)        
+        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
 
     return atoms
 
-
+"""
 def random_coverage_pattern(atoms, adsorbate, surface=None, 
-                            min_adsorbate_distance=2., 
-                            heights=site_heights):
-    '''A function for generating random coverage patterns with constraint.
-       Parameters
-       ----------
-       atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
-           
-       adsorbate: The adsorbate. Must be one of the following three types:
-           A string containing the chemical symbol for a single atom.
-           An atom object.
-           An atoms object (for a molecular adsorbate).                                                                                                       
-       min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
+                            min_adsorbate_distance=1.5, 
+                            heights=site_heights,
+                            allow_6fold=False):
+    '''
+    A function for generating random coverage patterns with constraint.
+    Parameters
+    ----------
+    atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
+        
+    adsorbate: The adsorbate. Must be one of the following three types:
+        A string containing the chemical symbol for a single atom.
+        An atom object.
+        An atoms object (for a molecular adsorbate).                                                                                                       
+    min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
 
-       heights: A dictionary that contains the adsorbate height for each site type.'''
- 
-    ads_indices = [a.index for a in atoms if a.symbol in adsorbate_elements]
-    ads_atoms = None
-    if ads_indices:
-        ads_atoms = atoms[ads_indices]
-        atoms = atoms[[a.index for a in atoms if a.symbol not in adsorbate_elements]]
-    all_sites = enumerate_monometallic_sites(atoms, surface=surface, 
-                                             heights=heights, subsurf_effect=False)
-    random.shuffle(all_sites)    
- 
-    if True not in atoms.pbc:
-        for site in all_sites:
-            add_adsorbate(atoms, molecule(adsorbate), site)
+    heights: A dictionary that contains the adsorbate height for each site type.
+    '''
+
+    if True not in atoms.pbc:                                
+        if surface is None:
+            surface = ['fcc100', 'fcc111']        
+        sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
+        site_list = sas.site_list
     else:
-        ads = molecule(adsorbate)[::-1]
-        if str(ads.symbols) != 'CO':
-            ads.set_chemical_symbols(ads.get_chemical_symbols()[::-1])
-        positions = [s['adsorbate_position'] for s in all_sites]
-        for pos in positions:
-            ads.translate(pos - ads[0].position)
-            atoms += ads
-        if ads_indices:
-            atoms += ads_atoms
+        sas = SlabAdsorptionSites(atoms, surface=surface,
+                                  allow_6fold=allow_6fold)
+        site_list = sas.site_list
+    if not isinstance(surface, list):
+        surface = [surface]
 
-    nl = FullNeighborList(rCut=min_adsorbate_distance, atoms=atoms)   
-    nl.update(atoms)            
-    atom_indices = [a.index for a in atoms if a.symbol == adsorbate[-1]]
-    random.shuffle(atom_indices)
-    ads_symbols = molecule(adsorbate).get_chemical_symbols()
-    n_ads_atoms = len(ads_symbols)
-    overlap_atoms_indices = []
-    
-    for idx in atom_indices:   
-        neighbor_indices, _ = nl.get_neighbors(idx)
-        overlap = 0
-        for i in neighbor_indices:                                                                
-            if (atoms[i].symbol in adsorbate_elements) and (i not in overlap_atoms_indices):                     
-                overlap += 1                                                                      
-        if overlap > 0:                                                                           
-            overlap_atoms_indices += list(set([idx-n_ads_atoms+1, idx]))                                
-    del atoms[overlap_atoms_indices]
+    for st in site_list:
+        height = heights[st['site']]
+        add_adsorbate_to_site(atoms, adsorbate, st, height)
+
+    if min_adsorbate_distance > 0.:                                       
+        if True not in atoms.pbc:
+            sac = ClusterAdsorbateCoverage(atoms, sas)
+        else:
+            sac = SlabAdsorbateCoverage(atoms, sas)        
+        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
 
     return atoms
+"""
