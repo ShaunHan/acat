@@ -227,7 +227,7 @@ class ClusterAdsorptionSites(object):
 
         # Add 6-fold sites if allowed
         if self.allow_6fold:
-            dh = 5/6 * self.r
+            dh = 2. * self.r / 5.
             subsurf_ids = self.get_subsurface()
         for t in sl:
             # Add normals to ontop sites
