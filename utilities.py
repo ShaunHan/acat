@@ -48,6 +48,10 @@ def string_fragmentation(adsorbate):
     return frag_list        
 
 
+def get_indices_in_ref_list(lst, ref_lst):
+    return [(i, i+len(ref_lst)) for i in range(len(lst)-len(ref_lst)+1) 
+             if lst[i:i+len(ref_lst)] == ref_lst]
+
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
                         different_species=False, mic=False,
                         radius=None, span=False):
