@@ -1521,6 +1521,7 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
 
     return atoms
 
+
 """
 def random_coverage_pattern(atoms, adsorbate, surface=None, 
                             min_adsorbate_distance=1.5, 
@@ -1542,27 +1543,45 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
     '''
 
     if True not in atoms.pbc:                                
-        if surface is None:
-            surface = ['fcc100', 'fcc111']        
         sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
         site_list = sas.site_list
     else:
         sas = SlabAdsorptionSites(atoms, surface=surface,
                                   allow_6fold=allow_6fold)
         site_list = sas.site_list
-    if not isinstance(surface, list):
-        surface = [surface]
 
+    random.shuffle(site_list)
     for st in site_list:
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)
 
     if min_adsorbate_distance > 0.:                                       
+        ads_ids = [a.index for a in atoms if a.symbol in adsorbate_elements]
+        ads_atoms = atoms[ads_ids]
+        nblist = neighbor_shell_list(ads_atoms, dx=0, 
+                                     neighbor_number=1, 
+                                     mic=(True in atoms.pbc),
+                                     radius=min_adsorbate_distance)
         if True not in atoms.pbc:
             sac = ClusterAdsorbateCoverage(atoms, sas)
         else:
-            sac = SlabAdsorbateCoverage(atoms, sas)        
-        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
+            sac = SlabAdsorbateCoverage(atoms, sas)
+
+        adslen = len(list(Formula(adsorbate)))
+        hsl = sac.hetero_site_list
+        bonding_ids = [s['bonding_index'] for s in hsl if s['occupied'] == 1]
+        d = {k: v for v, k in enumerate(ads_ids)}
+
+        removed_ids = []
+        for idx in bonding_ids:
+            i = d[idx]
+            nb_ids = nblist[i]
+            if any(j for j in nb_ids if j not in removed_ids):
+                removed_adsi = list(range(i, i + adslen))                         
+                removed_ids += removed_adsi
+
+        removed_indices = [ads_ids[i] for i in removed_ids]                           
+        del atoms[removed_indices]
 
     return atoms
 """
