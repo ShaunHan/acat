@@ -160,7 +160,7 @@ class ClusterAdsorbateCoverage(object):
                     continue
                 elif self.symbols[adsid] != 'H':
                     ndentate_dict[adsi] -= 1 
-            st['bonded_index'] = adsid
+            st['bonding_index'] = adsid
             st['bond_length'] = bl
 
             symbols = str(self.symbols[adsids])
@@ -179,7 +179,7 @@ class ClusterAdsorbateCoverage(object):
         self.n_occupied, n_surf_occupied, self.n_subsurf_occupied = 0, 0, 0
         for st in hsl:
             if 'occupied' not in st:
-                st['bonded_index'] = st['bond_length'] = None
+                st['bonding_index'] = st['bond_length'] = None
                 st['adsorbate'] = st['fragment'] = None
                 st['adsorbate_indices'] = None
                 st['occupied'] = st['dentate'] = 0
@@ -202,7 +202,7 @@ class ClusterAdsorbateCoverage(object):
         for j, st in enumerate(hsl):
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
-                    bondid = st['bonded_index']
+                    bondid = st['bonding_index']
                     bondsym = self.symbols[bondid]
                     adssym = st['adsorbate']
                     fsym = next((f for f in string_fragmentation(adssym) 
@@ -235,7 +235,7 @@ class ClusterAdsorbateCoverage(object):
 
     def get_graph(self):                                         
         hsl = self.hetero_site_list
-        hcm = self.connectivity_matrix.copy()
+        hcm = self.cas.get_connectivity().copy()
         surfhcm = hcm[self.surf_ids]
         symbols = self.symbols[self.surf_ids]
         nrows, ncols = surfhcm.shape[0], surfhcm.shape[1]        
@@ -429,7 +429,7 @@ class SlabAdsorbateCoverage(object):
                     continue
                 elif self.symbols[adsid] != 'H':
                     ndentate_dict[adsi] -= 1 
-            st['bonded_index'] = adsid
+            st['bonding_index'] = adsid
             st['bond_length'] = bl
 
             symbols = str(self.symbols[adsids])
@@ -448,7 +448,7 @@ class SlabAdsorbateCoverage(object):
         self.n_occupied, n_surf_occupied, n_subsurf_occupied = 0, 0, 0
         for st in hsl:
             if 'occupied' not in st:
-                st['bonded_index'] = st['bond_length'] = None
+                st['bonding_index'] = st['bond_length'] = None
                 st['adsorbate'] = st['fragment'] = None
                 st['adsorbate_indices'] = None
                 st['occupied'] = st['dentate'] = 0
@@ -472,7 +472,7 @@ class SlabAdsorbateCoverage(object):
         for j, st in enumerate(hsl):
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
-                    bondid = st['bonded_index']
+                    bondid = st['bonding_index']
                     bondsym = self.symbols[bondid] 
                     adssym = st['adsorbate']
                     fsym = next((f for f in string_fragmentation(adssym) 
