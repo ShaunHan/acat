@@ -668,15 +668,15 @@ class SlabAdsorptionSites(object):
         self.surface = surface
         ref_atoms = self.atoms.copy()
 
-        if self.surface in ['fcc111','fcc100','fcc110','fcc211','fcc221',         
-        'fcc311','fcc322','fcc332','bcc210','bcc211','hcp0001']:
+        if self.surface in ['fcc100','fcc110','fcc211','fcc221','fcc322','fcc332',
+        'bcc210','bcc211']:
             ref_symbol = 'Pt'
-        elif self.surface in ['hcp10m10-h','hcp10m12']:
+        elif self.surface in ['fcc111','fcc311','hcp0001','hcp10m10-h','hcp10m12']:
             ref_symbol = 'Cu'
         elif self.surface in ['fcc331']:
             ref_symbol = 'Ag'
-        elif self.surface in ['bcc100','bcc110','bcc111','bcc310',
-        'hcp10m10-t','hcp10m11']:
+        elif self.surface in ['bcc100','bcc110','bcc111','bcc310','hcp10m10-t',
+        'hcp10m11']:
             ref_symbol = 'Au'
         else:
             raise ValueError('Surface {} is not supported'.format(self.surface))
@@ -1884,9 +1884,10 @@ def get_adsorption_site(atoms, indices,
                                   allow_6fold=True, 
                                   composition_effect=False, 
                                   subsurf_effect=False)             
-    site_list = sas.site_list                              
+    site_list = sas.site_list
     sti, site = next(((i, s) for i, s in enumerate(site_list) if                        
                       s['indices'] == indices), None)                     
+
     if return_index:
         return sti, site
                     
