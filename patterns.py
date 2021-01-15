@@ -18,7 +18,8 @@ class StochasticPatternGenerator(object):
 
     def __init__(self, images,                                                       
                  adsorbate_species,
-                 adsorbate_weights=None,
+                 image_weights=None,
+                 species_weights=None,
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
                  surface=None,
@@ -31,7 +32,8 @@ class StochasticPatternGenerator(object):
                  append_trajectory=False,
                  logfile='patterns.log'):
         """
-        adsorbate_weights: dictionary 
+        image_weights: list
+        species_weights: dictionary 
         adsorption_sites: should only provide when the surface composition is fixed
         unique: whether discard duplicates based on isomorphism or not
         species_forbidden_sites: dictionary with species key and forbidden site (list) values 
@@ -56,10 +58,15 @@ class StochasticPatternGenerator(object):
                             self.multidentate_adsorbates))
             raise ValueError('Species {} are not defined '.format(diff) +
                              'in adsorbate_list in settings.py')             
-        self.adsorbate_weights = adsorbate_weights
-        if self.adsorbate_weights is not None:
-            assert len(self.adsorbate_weights.keys()) == len(self.adsorbate_species)
-            self.all_weights = [self.adsorbate_weights[a] for a in self.adsorbate_species]
+
+        self.image_weights = image_weights
+        if self.image_weights is not None:
+            assert len(self.image_weights) == len(self.images)
+        self.species_weights = species_weights
+        if self.species_weights is not None:
+            assert len(self.species_weights.keys()) == len(self.adsorbate_species)
+            self.species_weight_list = [self.species_weights[a] for 
+                                        a in self.adsorbate_species]
          
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
@@ -116,11 +123,11 @@ class StochasticPatternGenerator(object):
             neighbor_site_indices = [v for v in nbstids if v not in selfids]            
                                                                                              
         # Select adsorbate with probablity 
-        if not self.adsorbate_weights:
+        if not self.species_weights:
             adsorbate = random.choice(self.adsorbate_species)
         else: 
             adsorbate = random.choices(k=1, population=self.adsorbate_species,
-                                       weights=self.all_weights)[0] 
+                                       weights=self.species_weight_list)[0]    
                                                                                              
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
@@ -362,10 +369,10 @@ class StochasticPatternGenerator(object):
         if self.allow_6fold and rpst['site'] == '6fold':
             new_options = [o for o in new_options if len(o) == 1]
 
-        if not self.adsorbate_weights:
+        if not self.species_weights:
             adsorbate = random.choice(new_options)
         else:
-            new_weights = [self.adsorbate_weights[a] for a in new_options]
+            new_weights = [self.species_weights[a] for a in new_options]
             adsorbate = random.choices(k=1, population=self.adsorbate_species,
                                        weights=new_weights)[0] 
         if self.adsorption_sites is not None:
@@ -452,8 +459,12 @@ class StochasticPatternGenerator(object):
                     self.logfile.write('Generating pattern {}\n'.format(n_new))
                     self.logfile.flush()
                 n_old += 1
-
-            self.atoms = random.choice(self.images).copy()
+            # Select image with probablity 
+            if not self.species_weights:
+                self.atoms = random.choice(self.images).copy()
+            else: 
+                self.atoms = random.choices(k=1, population=self.images, 
+                                            weights=self.image_weights)[0].copy()
             self.n_image = n_new 
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
@@ -548,7 +559,6 @@ class SystematicPatternGenerator(object):
                  logfile='patterns.log'):
 
         """
-       adsorbate_weights: dictionary
        enumerate_orientations: whether to enumerate all orientations of multidentate species
        """
 
