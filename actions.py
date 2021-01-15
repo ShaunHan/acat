@@ -152,25 +152,10 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     if orientation is not None:
         oripos = next((a.position for a in ads[1:] if 
                        a.symbol != 'H'), ads[1].position)
-        v1 = get_rejection_between(oripos - bondpos, normal)
-        v2 = get_rejection_between(orientation, normal)
-        radian = get_angle_between(v1, v2)
-
-        # Flip the sign of the angle if the result is not the closest
-        rm_p = get_rotation_matrix(axis=normal, angle=radian)
-        rm_n = get_rotation_matrix(axis=normal, angle=-radian)        
-        npos_p, npos_n = rm_p @ oripos, rm_n @ oripos
-        nbpos_p = npos_p + pos - bondpos
-        nbpos_n = npos_n + pos - bondpos
-        d_p = np.linalg.norm(nbpos_p - pos - orientation)
-        d_n = np.linalg.norm(nbpos_n - pos - orientation)
-        if d_p <= d_n:
-            for a in ads:
-                a.position = rm_p @ a.position
-        else:
-            for a in ads:
-                a.position = rm_n @ a.position
-
+        R = get_rotation_matrix(oripos - bondpos, orientation)
+        for a in ads:
+            a.position = R @ a.position
+        
     ads.translate(pos - bondpos)
     atoms += ads
 
