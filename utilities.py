@@ -336,6 +336,16 @@ def get_rejection_between(v1, v2):
     return v1 - v2 * (v1 @ v2) / (v2 @ v2)
 
 
+def get_rodrigues_rotation_matrix(axis, angle):
+    """
+    Return the rotation matrix associated with 
+    counterclockwise rotation about the given 
+    axis by angle in radians.
+    """
+    return scipy.linalg.expm(np.cross(np.eye(3), 
+           axis / np.linalg.norm(axis) * angle))
+
+
 def get_rotation_matrix(v1, v2):
    """
    Return the rotation matrix R that rotates unit vector v1 
@@ -349,7 +359,6 @@ def get_rotation_matrix(v1, v2):
    R = np.asarray([[bu[0] * au[0], bu[0] * au[1], bu[0] * au[2]], 
                    [bu[1] * au[0], bu[1] * au[1], bu[1] * au[2]], 
                    [bu[2] * au[0], bu[2] * au[1], bu[2] * au[2]]])
-
    return R
 
 
