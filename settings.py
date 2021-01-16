@@ -123,6 +123,9 @@ def adsorbate_molecule(adsorbate):
     elif adsorbate == 'O3':
         ads = molecule(adsorbate)[[1,0,2]]
         ads.rotate(180, 'y')
+    elif adsorbate == 'CH3':
+        ads = molecule('CH3O')[[0,2,3,4]]
+        ads.rotate(90, '-x')
     elif adsorbate == 'NH3':
         ads = molecule(adsorbate)
         ads.rotate(180, 'y')
@@ -167,7 +170,7 @@ def adsorbate_molecule(adsorbate):
         del ads[-2]
         ads = ads[[1,3,2,0]]
         ads.rotate(90, 'x')
-        ads.rotate(15, 'y')
+        ads.rotate(7.5, 'y')
     elif adsorbate == 'CH3COOH':
         ads = molecule('CH3COOH')[[4,5,6,7,0,1,2,3]]
         ads.rotate(180, 'x')
