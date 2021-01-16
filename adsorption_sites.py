@@ -656,6 +656,7 @@ class SlabAdsorptionSites(object):
                         for hcp(h) and 4fold(t) sites
         """
         assert True in atoms.pbc    
+        warnings.filterwarnings("ignore")
         atoms = atoms.copy() 
         atoms.set_constraint()
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
