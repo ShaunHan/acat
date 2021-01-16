@@ -131,7 +131,8 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
 
     bondpos = ads[0].position
     ads.translate(-bondpos)
-    ads.rotate(np.asarray([0., 0., 1.]) - bondpos, normal)
+    z = -1. if adsorbate in ['CH','NH','OH','SH'] else 1.
+    ads.rotate(np.asarray([0., 0., z]) - bondpos, normal)
     #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
     #ads.rotate(-45, pvec, center=ads[0].position)
 
