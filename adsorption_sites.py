@@ -952,7 +952,7 @@ class SlabAdsorptionSites(object):
                             fold4_poss.append(refpos)
                             continue
                         else:
-                            bridgeids = sorted(extraids, key=lambda x: get_mic(        
+                            bridgeids = sorted(bridgeids, key=lambda x: get_mic(        
                                                self.ref_atoms.positions[x], refpos, 
                                                self.cell, return_squared_distance=True))[:2]
                     si = tuple(sorted(bridgeids))
