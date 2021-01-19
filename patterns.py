@@ -1537,8 +1537,7 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
                             allow_6fold=False,
                             verbose=False):
     '''
-    A function for generating random coverage patterns with constraint by 
-    integer programming.
+    A function for generating random coverage patterns with minimum distance constraint
 
     Parameters
     ----------
@@ -1551,11 +1550,8 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
     min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
 
     heights: A dictionary that contains the adsorbate height for each site type.
-
-    verbose: Enable pywraplp output
     '''
  
-    from ortools.linear_solver import pywraplp
     if True not in atoms.pbc:                                
         sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
         site_list = sas.site_list
@@ -1564,27 +1560,10 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
                                   allow_6fold=allow_6fold)
         site_list = sas.site_list
 
-    points = np.asarray([s['position'] for s in site_list])
-    solver = pywraplp.Solver.CreateSolver('SCIP')
-    variables = [solver.BoolVar('x[{}]'.format(i)) for i in range(len(points))]
-    solver.Maximize(sum(variables))
-    for j, q in enumerate(points):
-        for i, p in enumerate(points[:j]):
-            if True not in atoms.pbc:
-                dist = np.linalg.norm(p - q)
-            else: 
-                dist = get_mic(p, q, atoms.cell)
-            if dist <= min_adsorbate_distance:
-                solver.Add(variables[i] + variables[j] <= 1)
-    if verbose:
-        solver.EnableOutput()
-    solver.Solve()
-    site_subset = [site_list[i] for i, variable in enumerate(variables) 
-                   if variable.SolutionValue()]
-
+    random.shuffle(site_list)
     natoms = len(atoms)
     nads = len(list(Formula(adsorbate)))
-    for st in site_subset:
+    for st in site_list:
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)       
         if min_adsorbate_distance > 0:
