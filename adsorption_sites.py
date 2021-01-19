@@ -1875,13 +1875,15 @@ class SlabAdsorptionSites(object):
         nbslist = neighbor_shell_list(statoms, 0.1, neighbor_number,
                                       mic=True, radius=cr, span=span)
         if neighbor_number == 1:
+            top_set = set(self.surf_ids)
             topi_dict = {}
             for i, st in enumerate(sl):
                 if st['site'] == 'ontop':
                     topi_dict[st['indices'][0]] = i
-                elif st['site'] in ['fcc','hcp','3fold']:
+                elif st['site'] in ['fcc','hcp']:
                     for j in st['indices']:
-                        nbslist[i].append(topi_dict[j])  
+                        if j in topi_dict:
+                            nbslist[i].append(topi_dict[j])  
         return nbslist
 
     def update_positions(self, new_atoms):
