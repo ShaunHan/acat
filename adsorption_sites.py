@@ -807,7 +807,7 @@ class SlabAdsorptionSites(object):
                         si = st['indices']
                         print('Cannot identify other 4 atoms of 5-fold site {}'.format(si))
                     elif len(extraids) > 4:
-                        extraids = sorted(extraids, key=lambda x: get_mic(        
+                        extraids = sorted(extraids, key=lambda x: get_mic(                
                                    self.ref_atoms.positions[x], refpos, self.cell,
                                    return_squared_distance=True))[:4] 
                     if self.composition_effect:
@@ -1051,15 +1051,7 @@ class SlabAdsorptionSites(object):
                             print('Cannot identify site {}'.format(si))
                             continue 
                     elif self.surface == 'bcc110':
-                        geometry = 'terrace'
-                        cto2 = list(occurence[self.surf_ids]).count(2)
-                        if cto2 == 2:
-                            sitetype = 'short-bridge'
-                        elif cto2 == 3:
-                            sitetype = 'long-bridge'
-                        else:
-                            print('Cannot identify site {}'.format(si))
-                            continue
+                        sitetype, geometry = 'short-bridge', 'terrace'
                     elif self.surface == 'bcc111':
                         ncorner = len(cornerids.intersection(siset))
                         if nstep == 1 and ncorner == 1:
@@ -1540,6 +1532,8 @@ class SlabAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si)
 
+        if self.surface == 'bcc110':
+            bcc110_long_bridges = []
         index_list, pos_list, st_list = [], [], []
         for t in sl:
             stids = t['indices']
@@ -1613,6 +1607,20 @@ class SlabAdsorptionSites(object):
                     index_list.append(t['indices'])
                     pos_list.append(t['position'])
                     st_list.append(t['site'])
+            # Take care of long-bridge sites on bcc110
+            elif self.surface == 'bcc110' and sitetype in '3fold':
+                si = t['indices']
+                pairs = [(si[0], si[1]), (si[0], si[2]), (si[1], si[2])]
+                longest = max(pairs, key=lambda x: get_mic(        
+                                         self.ref_atoms.positions[x[0]],
+                                         self.ref_atoms.positions[x[1]], 
+                                         self.cell, return_squared_distance=True))
+                bcc110_long_bridges.append(longest)
+        if self.surface == 'bcc110':
+            for st in sl:
+                if st['site'] == 'short-bridge':
+                    if st['indices'] in bcc110_long_bridges:
+                        st['site'] = 'long-bridge'
 
         # Add 6-fold sites if allowed
         if self.allow_6fold:
