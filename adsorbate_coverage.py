@@ -61,7 +61,8 @@ class ClusterAdsorbateCoverage(object):
         self.unique_sites = cas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
         self.label_dict = get_bimetallic_cluster_labels(self.metals) \
-                          if self.composition_effect else \
+                          if (self.composition_effect and 
+                          len(self.metals) == 2) else \
                           get_monometallic_cluster_labels()
 
         self.label_list = ['0'] * len(self.hetero_site_list)
@@ -331,7 +332,8 @@ class SlabAdsorbateCoverage(object):
         self.unique_sites = sas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
         self.label_dict = get_bimetallic_slab_labels(self.surface, 
-                          self.metals) if self.composition_effect else \
+                          self.metals) if (self.composition_effect
+                          and len(self.metals) == 2) else \
                           get_monometallic_slab_labels(self.surface)
 
         self.label_list = ['0'] * len(self.hetero_site_list)
