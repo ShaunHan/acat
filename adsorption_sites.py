@@ -839,7 +839,7 @@ class SlabAdsorptionSites(object):
                             elif nma == 4:
                                 composition = 4*ma
                         st['composition'] += '-{}'.format(composition) 
-                    st['indices'] = list(si)+ extraids
+                    st['indices'] = tuple(sorted(list(si)+ extraids))
                     del st['extra']
 
         ext_index, ext_coords, _ = expand_cell(self.ref_atoms, cutoff)
