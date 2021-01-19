@@ -258,7 +258,7 @@ class ClusterAdsorbateCoverage(object):
                            for j in range(len(frag_list))])
         # Add edges from surface connectivity matrix
         shcm = surfhcm[:,self.surf_ids]
-        shcm *= np.tri(*shcm.shape, k=-1)
+        shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
@@ -528,7 +528,7 @@ class SlabAdsorbateCoverage(object):
                            for j in range(len(frag_list))])
         # Add edges from surface connectivity matrix
         shcm = surfhcm[:,self.surf_ids]
-        shcm *= np.tri(*shcm.shape, k=-1)
+        shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
