@@ -1534,8 +1534,7 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
 def random_coverage_pattern(atoms, adsorbate, surface=None, 
                             min_adsorbate_distance=1.5, 
                             heights=site_heights,
-                            allow_6fold=False,
-                            verbose=False):
+                            allow_6fold=False):
     '''
     A function for generating random coverage patterns with minimum distance constraint
 
