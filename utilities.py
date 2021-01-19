@@ -305,7 +305,10 @@ def atoms_too_close(atoms, cutoff=0.5, mic=False):
 
 
 def added_atoms_too_close(atoms, n_added, cutoff=1.5, mic=False): 
-   
+    """
+    atoms: the atoms after adding an adsorbate
+    """   
+
     newp, oldp = atoms.positions[-n_added:], atoms.positions[:-n_added]
     newps = np.repeat(newp, len(oldp), axis=0)
     oldps = np.tile(oldp, (n_added, 1))
