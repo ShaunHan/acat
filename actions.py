@@ -13,7 +13,7 @@ import re
 
 
 def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,                 
-                  indices=None, height=None, composition=None, 
+                  indices=None, height=None, composition=None, orientation=None, 
                   subsurf_element=None, site_list=None):
     """
     A function for adding adsorbate to a specific adsorption site on a 
@@ -102,7 +102,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
     else:
         if height is None:
             height = site_heights[st['site']]
-        add_adsorbate_to_site(atoms, adsorbate, st, height)
+        add_adsorbate_to_site(atoms, adsorbate, st, height, orientation)
 
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
@@ -179,7 +179,8 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
 
 def add_adsorbate_by_label(atoms, label, 
                            surface=None,
-                           height=None, 
+                           height=None,
+                           orientation=None, 
                            composition_effect=False,
                            site_list=None):
 
@@ -219,8 +220,9 @@ def add_adsorbate_by_label(atoms, label,
 
     add_adsorbate(atoms, adsorbate, 
                   site, surface,
-                  geometry, height=height, 
+                  geometry, height=height,
                   composition=composition, 
+                  orientation=orientation, 
                   site_list=site_list)
 
 
@@ -250,7 +252,7 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
                            mic=(True in atoms.pbc))
     if dups.size == 0:
         return
-
+    
     hsl = sac.hetero_site_list
     # Make sure it's not the bond length within a fragment being too close
     bond_rows, frag_id_list = [], []
@@ -258,7 +260,7 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
         if st['occupied'] == 1:
             frag_ids = list(st['fragment_indices'])
             frag_id_list.append(frag_ids)
-            w = np.where((dups[:] == frag_ids).all(1))[0]
+            w = np.where((dups == x).all() for x in frag_ids)[0]
             if w:
                 bond_rows.append(w[0])
 
