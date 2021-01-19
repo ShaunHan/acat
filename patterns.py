@@ -197,7 +197,7 @@ class StochasticPatternGenerator(object):
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
         if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))), 
-        cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
+        cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):        
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
                                    + 'to another adsorbate. Addition failed!\n')
@@ -1124,13 +1124,13 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
            '4fold': 1.7} for nanoparticles and 2.0 for all sites on surface 
            slabs.
 
-       min_adsorbate_distance: The minimum distance between two adsorbate 
-           atoms. Default value 0.2 is good for adsorbate coverage patterns. 
-           Play around to find the best value.
+       min_adsorbate_distance: The minimum distance between two adsorbate atoms.
        
        Example
        ------- 
-       pattern_generator(atoms, adsorbate='CO', surface='fcc111', coverage=3/4)
+       symmetric_coverage_pattern(atoms, adsorbate='CO', 
+                                  surface='fcc111', 
+                                  coverage=3/4)
     """
 
     if True not in atoms.pbc:                            
@@ -1485,17 +1485,17 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                     if max(share) == 0 and too_close == 0:
                         final_sites.append(esite)
 
+    natoms = len(atoms)
+    nads = len(list(Formula(adsorbate)))
     for site in final_sites:
         if height is None:
             height = site_heights[site['site']]
-        add_adsorbate_to_site(atoms, adsorbate, site, height)
 
-    if min_adsorbate_distance > 0.:
-        if True not in atoms.pbc:
-            sac = ClusterAdsorbateCoverage(atoms, sas)
-        else:
-            sac = SlabAdsorbateCoverage(atoms, sas)        
-        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
+        add_adsorbate_to_site(atoms, adsorbate, site, height)       
+        if min_adsorbate_distance > 0:
+            if added_atoms_too_close(atoms[natoms:], n_added=nads,
+            cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)): 
+                atoms = atoms[:-nads]
 
     return atoms
 
@@ -1516,29 +1516,30 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
     if not isinstance(surface, list):
         surface = [surface] 
 
+    natoms = len(atoms)
+    nads = len(list(Formula(adsorbate)))
     for st in site_list:
         if st['site'] == site and st['surface'] in surface:
             if height is None:
                 height = site_heights[st['site']]
-            add_adsorbate_to_site(atoms, adsorbate, st, height)
-
-    if min_adsorbate_distance > 0.:
-        if True not in atoms.pbc:
-            sac = ClusterAdsorbateCoverage(atoms, sas)
-        else:
-            sac = SlabAdsorbateCoverage(atoms, sas)        
-        remove_adsorbates_too_close(atoms, sac, min_adsorbate_distance)
+            add_adsorbate_to_site(atoms, adsorbate, st, height)       
+            if min_adsorbate_distance > 0:
+                if added_atoms_too_close(atoms[natoms:], n_added=nads,
+                cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)):
+                    atoms = atoms[:-nads]                               
 
     return atoms
 
 
-"""
 def random_coverage_pattern(atoms, adsorbate, surface=None, 
                             min_adsorbate_distance=1.5, 
                             heights=site_heights,
-                            allow_6fold=False):
+                            allow_6fold=False,
+                            verbose=False):
     '''
-    A function for generating random coverage patterns with constraint.
+    A function for generating random coverage patterns with constraint by 
+    integer programming.
+
     Parameters
     ----------
     atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
@@ -1550,8 +1551,11 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
     min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
 
     heights: A dictionary that contains the adsorbate height for each site type.
-    '''
 
+    verbose: Enable pywraplp output
+    '''
+ 
+    from ortools.linear_solver import pywraplp
     if True not in atoms.pbc:                                
         sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
         site_list = sas.site_list
@@ -1560,38 +1564,32 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
                                   allow_6fold=allow_6fold)
         site_list = sas.site_list
 
-    random.shuffle(site_list)
-    for st in site_list:
+    points = np.asarray([s['position'] for s in site_list])
+    solver = pywraplp.Solver.CreateSolver('SCIP')
+    variables = [solver.BoolVar('x[{}]'.format(i)) for i in range(len(points))]
+    solver.Maximize(sum(variables))
+    for j, q in enumerate(points):
+        for i, p in enumerate(points[:j]):
+            if True not in atoms.pbc:
+                dist = np.linalg.norm(p - q)
+            else: 
+                dist = get_mic(p, q, atoms.cell)
+            if dist <= min_adsorbate_distance:
+                solver.Add(variables[i] + variables[j] <= 1)
+    if verbose:
+        solver.EnableOutput()
+    solver.Solve()
+    site_subset = [site_list[i] for i, variable in enumerate(variables) 
+                   if variable.SolutionValue()]
+
+    natoms = len(atoms)
+    nads = len(list(Formula(adsorbate)))
+    for st in site_subset:
         height = heights[st['site']]
-        add_adsorbate_to_site(atoms, adsorbate, st, height)
-
-    if min_adsorbate_distance > 0.:                                       
-        ads_ids = [a.index for a in atoms if a.symbol in adsorbate_elements]
-        ads_atoms = atoms[ads_ids]
-        nblist = neighbor_shell_list(ads_atoms, dx=0, 
-                                     neighbor_number=1, 
-                                     mic=(True in atoms.pbc),
-                                     radius=min_adsorbate_distance)
-        if True not in atoms.pbc:
-            sac = ClusterAdsorbateCoverage(atoms, sas)
-        else:
-            sac = SlabAdsorbateCoverage(atoms, sas)
-
-        adslen = len(list(Formula(adsorbate)))
-        hsl = sac.hetero_site_list
-        bonding_ids = [s['bonding_index'] for s in hsl if s['occupied'] == 1]
-        d = {k: v for v, k in enumerate(ads_ids)}
-
-        removed_ids = []
-        for idx in bonding_ids:
-            i = d[idx]
-            nb_ids = nblist[i]
-            if any(j for j in nb_ids if j not in removed_ids):
-                removed_adsi = list(range(i, i + adslen))                         
-                removed_ids += removed_adsi
-
-        removed_indices = [ads_ids[i] for i in removed_ids]                           
-        del atoms[removed_indices]
+        add_adsorbate_to_site(atoms, adsorbate, st, height)       
+        if min_adsorbate_distance > 0:
+            if added_atoms_too_close(atoms[natoms:], n_added=nads,
+            cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)):
+                atoms = atoms[:-nads]                               
 
     return atoms
-"""
