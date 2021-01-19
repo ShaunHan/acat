@@ -950,10 +950,11 @@ class SlabAdsorptionSites(object):
                         if self.surface in ['fcc100','fcc211','fcc311','fcc322',
                         'bcc100','bcc210','bcc310','hcp10m11','hcp10m12']:
                             fold4_poss.append(refpos)
+                            continue
                         else:
-                            si = tuple(sorted(bridgeids))
-                            print('Cannot identify site {}'.format(si))
-                        continue                    
+                            bridgeids = sorted(extraids, key=lambda x: get_mic(        
+                                               self.ref_atoms.positions[x], refpos, 
+                                               self.cell, return_squared_distance=True))[:2]
                     si = tuple(sorted(bridgeids))
                     pos = refpos + np.average(self.delta_positions[bridgeids], 0) 
                     occurence = np.sum(cm[bridgeids], axis=0)
@@ -1053,9 +1054,9 @@ class SlabAdsorptionSites(object):
                         geometry = 'terrace'
                         cto2 = list(occurence[self.surf_ids]).count(2)
                         if cto2 == 2:
-                            sitetype = 'long-bridge'
-                        elif cto2 == 3:
                             sitetype = 'short-bridge'
+                        elif cto2 == 3:
+                            sitetype = 'long-bridge'
                         else:
                             print('Cannot identify site {}'.format(si))
                             continue
@@ -1185,7 +1186,7 @@ class SlabAdsorptionSites(object):
                         elif len(extraids) > 2:
                             extraids = sorted(extraids, key=lambda x: get_mic(        
                                        self.ref_atoms.positions[x], refpos, self.cell,
-                                       return_squared_distance=True))[:2]           
+                                       return_squared_distance=True))[:2]              
                         site.update({'site': sitetype,
                                      'surface': self.surface,
                                      'geometry': geometry,
