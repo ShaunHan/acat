@@ -593,8 +593,17 @@ class ClusterAdsorptionSites(object):
         if neighbor_number == 1:
             cr += 0.1
                                                                    
-        return neighbor_shell_list(statoms, 0.1, neighbor_number,
-                                   mic=False, radius=cr, span=span)
+        nbslist = neighbor_shell_list(statoms, 0.1, neighbor_number,
+                                      mic=False, radius=cr, span=span)
+        if neighbor_number == 1:
+            topi_dict = {}
+            for i, st in enumerate(sl):
+                if st['site'] == 'ontop':
+                    topi_dict[st['indices'][0]] = i
+                elif st['site'] in ['fcc','hcp']:
+                    for j in st['indices']:
+                        nbslist[i].append(topi_dict[j]) 
+        return nbslist
 
     def update_positions(self, new_atoms):                 
         sl = self.site_list
@@ -1854,8 +1863,17 @@ class SlabAdsorptionSites(object):
         if neighbor_number == 1:
             cr += 0.1
 
-        return neighbor_shell_list(statoms, 0.1, neighbor_number,
-                                   mic=True, radius=cr, span=span)
+        nbslist = neighbor_shell_list(statoms, 0.1, neighbor_number,
+                                      mic=True, radius=cr, span=span)
+        if neighbor_number == 1:
+            topi_dict = {}
+            for i, st in enumerate(sl):
+                if st['site'] == 'ontop':
+                    topi_dict[st['indices'][0]] = i
+                elif st['site'] in ['fcc','hcp','3fold']:
+                    for j in st['indices']:
+                        nbslist[i].append(topi_dict[j])  
+        return nbslist
 
     def update_positions(self, new_atoms):
         sl = self.site_list
