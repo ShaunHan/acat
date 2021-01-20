@@ -74,7 +74,7 @@ class ClusterAdsorbateCoverage(object):
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
 
-        # Cut off all intermolecular H-H bonds except intramolecular               
+        # Cut all intermolecular H-H bonds except intramolecular               
         # H-H bonds in e.g. H2
         hids = [a.index for a in self.ads_atoms if a.symbol == 'H']
         for hi in hids:
@@ -140,12 +140,15 @@ class ClusterAdsorbateCoverage(object):
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
-        ndentate_dict = {}
- 
+        ndentate_dict = {} 
+
         for adsid in self.ads_ids:
             if self.symbols[adsid] == 'H':
                 if [adsid] not in ads_list:
-                    continue
+                    rest = [s for x in ads_list for s in x 
+                            if (adsid in x and s != adsid)]
+                    if not (self.symbols[rest[0]] == 'H' and len(rest) == 1):
+                        continue
 
             adspos = self.positions[adsid]
             bls = np.linalg.norm(np.asarray([s['position'] - 
@@ -346,7 +349,7 @@ class SlabAdsorbateCoverage(object):
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
 
-        # Cut off all intermolecular H-H bonds except intramolecular        
+        # Cut all intermolecular H-H bonds except intramolecular        
         # H-H bonds in e.g. H2
         hids = [a.index for a in self.ads_atoms if a.symbol == 'H']
         for hi in hids:
@@ -413,10 +416,14 @@ class SlabAdsorbateCoverage(object):
         ll = self.label_list
         ads_list = self.ads_list
         ndentate_dict = {} 
+
         for adsid in self.ads_ids:
             if self.symbols[adsid] == 'H':
                 if [adsid] not in ads_list:
-                    continue
+                    rest = [s for x in ads_list for s in x 
+                            if (adsid in x and s != adsid)]
+                    if not (self.symbols[rest[0]] == 'H' and len(rest) == 1):
+                        continue
 
             adspos = self.positions[adsid]
             _, bls = find_mic(np.asarray([s['position'] - adspos for s in hsl]), 
