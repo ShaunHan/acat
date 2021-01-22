@@ -7,7 +7,7 @@ from ase.io import read, write
 from ase import Atom, Atoms
 from asap3.analysis.rdf import RadialDistributionFunction
 from asap3 import FullNeighborList
-from asap3.analysis import FullCNA, PTM
+from asap3.analysis import FullCNA 
 from asap3 import EMT as asapEMT
 from collections import defaultdict
 from collections import Counter
@@ -358,8 +358,6 @@ class ClusterAdsorptionSites(object):
         fcna = self.get_fullCNA()
         site_dict = self.site_dict
         surf_ids = []
-#        ptmdata = PTM(self.atoms, rmsd_max=0.25)
-#        surf_ids = list(np.where(ptmdata['structure'] == 0)[0])
 
         for i in range(len(self.atoms)):
 #            if i in [284, 310]:
@@ -382,8 +380,11 @@ class ClusterAdsorptionSites(object):
 
     def get_subsurface(self):
         notsurf = [a.index for a in self.atoms if a.index not in self.surf_ids]
-        ptmdata = PTM(self.atoms[notsurf], rmsd_max=0.25)
-        return list(np.where(ptmdata['structure'] == 0)[0])
+        subfcna = FullCNA(self.atoms[notsurf], 
+                          rCut=self.r + 0.6).get_normal_cna() 
+        
+        return [idx for i, idx in enumerate(notsurf) if 
+                sum(subfcna[i].values()) < 12]
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
@@ -678,15 +679,12 @@ class SlabAdsorptionSites(object):
         self.surface = surface
         ref_atoms = self.atoms.copy()
 
-        if self.surface in ['fcc100','fcc110','fcc211','fcc311','fcc221','fcc322',
-        'fcc332','bcc210','bcc211']:
+        if self.surface in ['fcc100','fcc110','fcc211','fcc311','fcc221','fcc331',
+        'fcc322','fcc332','bcc111','bcc210','bcc211']:
             ref_symbol = 'Pt'
         elif self.surface in ['fcc111','hcp0001','hcp10m10-h','hcp10m12']:
             ref_symbol = 'Cu'
-        elif self.surface in ['fcc331']:
-            ref_symbol = 'Ag'
-        elif self.surface in ['bcc100','bcc110','bcc111','bcc310','hcp10m10-t',
-        'hcp10m11']:
+        elif self.surface in ['bcc100','bcc110','bcc310','hcp10m10-t','hcp10m11']:
             ref_symbol = 'Au'
         else:
             raise ValueError('Surface {} is not supported'.format(self.surface))
@@ -707,7 +705,7 @@ class SlabAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
-        self.dx = dx
+        self.dx = dx 
         self.tol = 1e-5
 
         self.make_neighbor_list(neighbor_number=1) 
@@ -721,7 +719,6 @@ class SlabAdsorptionSites(object):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
            given an input slab based on Delaunay triangulation of 
            surface atoms of a super-cell and collect in a site list. 
-           (Adaption from Catkit)
         """
  
         top_indices = self.surf_ids
@@ -736,25 +733,23 @@ class SlabAdsorptionSites(object):
             if self.surface in ['fcc111','fcc100','bcc100','bcc110','hcp0001']:
                 geometry = 'terrace'
             else:
-                if sumo in [6, 7, 8]:
+                if sumo <= 8:
                     geometry = 'step'
                 elif sumo == 9:
                     geometry = 'terrace'
                 elif sumo == 10:
                     if self.surface in ['fcc211','fcc322','fcc221',
-                    'fcc331','fcc332','bcc111','bcc210','hcp10m12']:
+                    'fcc331','fcc332','bcc210','hcp10m12']:
                         geometry = 'corner'
-                    elif self.surface in ['fcc110','fcc311','bcc211',
+                    elif self.surface in ['fcc110','fcc311','bcc111','bcc211',
                     'hcp10m10-t','hcp10m10-h','bcc310']:
                         geometry = 'terrace'
-                elif sumo == 11:
-                    if self.surface in ['fcc221','fcc331','fcc332','hcp10m12']:
+                elif sumo >= 11:
+                    if self.surface in ['fcc221','fcc331','fcc332','bcc111','hcp10m12']:
                         geometry = 'corner'
                     elif self.surface in ['fcc110','bcc211','hcp10m10-h']:
                         geometry = 'terrace'
-                else:
-                    print('Cannot identify site {}'.format(s))
-                    continue
+
             si = (s,)
             site = self.new_site()
             site.update({'site': 'ontop',
@@ -782,21 +777,18 @@ class SlabAdsorptionSites(object):
                 cornerids.add(sid)
         geo_dict = {'step': stepids, 'terrace': terraceids, 'corner': cornerids}
 
-        if self.surface in ['bcc111','bcc210']:
-            sorted_steps = sorted([i for i in stepids], key=lambda x: 
-                                   self.ref_atoms.positions[x,2])
+        # Sort by z coordinates if different geometries have same sumo
+        if self.surface in ['bcc210']:
+            sorted_steps = sorted([i for i in stepids], key=lambda x:
+                                   self.positions[x,2])
             for j, stpi in enumerate(sorted_steps):
-                if self.surface == 'bcc111':
-                    if j < len(sorted_steps) / 2:
-                        stepids.remove(stpi)
-                        terraceids.add(stpi)
-                elif self.surface == 'bcc210':
-                    if j > len(sorted_steps) / 2:
-                        stepids.remove(stpi)
-                        terraceids.add(stpi)
+                if j < len(sorted_steps) / 2:
+                    stepids.remove(stpi)
+                    terraceids.add(stpi)
             for st in sl:
                 if st['geometry'] == 'step' and st['indices'][0] in terraceids:
                     st['geometry'] = 'terrace'
+
         if self.surface in ['fcc110','fcc331','bcc211','hcp10m10-h']:   
             for st in sl:
                 if 'extra' in st:
@@ -854,7 +846,8 @@ class SlabAdsorptionSites(object):
 
         bridge_positions, fold3_positions, fold4_positions = [], [], []
         bridge_points, fold3_points, fold4_points = [], [], []
-
+         
+        # Delaunay traiangulation (borrow from Catkit)
         for i, corners in enumerate(simplices):
             cir = scipy.linalg.circulant(corners)
             edges = cir[:,1:]
@@ -1752,7 +1745,7 @@ class SlabAdsorptionSites(object):
         return [i for i in surf if i['site'] == site]
 
     def make_neighbor_list(self, neighbor_number=1):
-        """Generate a periodic neighbor list (defaultdict).""" 
+        """Generate a periodic neighbor list (defaultdict)."""
         self.nblist = neighbor_shell_list(self.ref_atoms, self.dx, 
                                           neighbor_number, mic=True)
 
@@ -1763,26 +1756,23 @@ class SlabAdsorptionSites(object):
     def get_termination(self):
         """Return lists surf and subsurf containing atom indices belonging to
         those subsets of a surface atoms object.
-        This function relies on PTM and the connectivity of the atoms.
+        This function relies on coordination number and the connectivity of 
+        the atoms.
         """
-    
-        xcell = self.cell[0][0]
-        ycell = self.cell[1][1] 
-        xmul = math.ceil(15/xcell)
-        ymul = math.ceil(15/ycell) 
-        atoms = self.ref_atoms*(xmul,ymul,1)
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
         indices = self.indices 
 
-        if self.surface in ['fcc110','bcc111','hcp10m10-h']:
-            rmsd = 0.1
-        else: 
-            rmsd = 0.25
-        ptmdata = PTM(atoms, rmsd_max=rmsd)
-        allbigsurf = np.where(ptmdata['structure'] == 0)[0]
-        allsurf = [i for i in allbigsurf if i < len(indices)]
-        bulk = [i for i in indices if i not in allsurf]
+        coord = np.count_nonzero(cm[indices,:][:,indices], axis=1)
+        allsurf = []
+        bulk = []
+        max_coord = np.max(coord)
+        for i, c in enumerate(coord):
+            a_s = indices[i]
+            if c == max_coord:  
+                bulk.append(a_s)
+            else:
+                allsurf.append(a_s)
         surfcm = cm.copy()
         surfcm[bulk] = 0
         surfcm[:,bulk] = 0
