@@ -678,10 +678,10 @@ class SlabAdsorptionSites(object):
         self.surface = surface
         ref_atoms = self.atoms.copy()
 
-        if self.surface in ['fcc100','fcc110','fcc211','fcc221','fcc322','fcc332',
-        'bcc210','bcc211']:
+        if self.surface in ['fcc100','fcc110','fcc211','fcc311','fcc221','fcc322',
+        'fcc332','bcc210','bcc211']:
             ref_symbol = 'Pt'
-        elif self.surface in ['fcc111','fcc311','hcp0001','hcp10m10-h','hcp10m12']:
+        elif self.surface in ['fcc111','hcp0001','hcp10m10-h','hcp10m12']:
             ref_symbol = 'Cu'
         elif self.surface in ['fcc331']:
             ref_symbol = 'Ag'
