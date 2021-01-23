@@ -197,12 +197,15 @@ class ClusterAdsorbateCoverage(object):
         self.coverage = n_surf_occupied / len(self.surf_ids)
 
         # Identify bidentate fragments and assign labels 
+        self.multidentate_fragments = []
+        self.monodentate_adsorbates = []
+        multidentate_adsorbate_dict = {}
         for j, st in enumerate(hsl):
+            adssym = st['adsorbate']
             if st['occupied'] == 1:
                 if st['dentate'] > 1:
                     bondid = st['bonding_index']
                     bondsym = self.symbols[bondid]
-                    adssym = st['adsorbate']
                     fsym = next((f for f in string_fragmentation(adssym) 
                                  if f[0] == bondsym), None)
                     st['fragment'] = fsym
@@ -211,8 +214,11 @@ class ClusterAdsorbateCoverage(object):
                     ibond = adsids.index(bondid)
                     fsi = adsids[ibond:ibond+flen]
                     st['fragment_indices'] = fsi
+                    if adsids not in multidentate_adsorbate_dict:
+                        multidentate_adsorbate_dict[adsids] = adssym
                 else:
-                    st['fragment_indices'] = st['adsorbate_indices'] 
+                    st['fragment_indices'] = st['adsorbate_indices']
+                    self.monodentate_adsorbates.append(adssym)
                 signature = [st['site'], st['surface']]                     
                 if self.composition_effect:
                     signature.append(st['composition'])
@@ -220,15 +226,28 @@ class ClusterAdsorbateCoverage(object):
                 label = str(stlab) + st['fragment']
                 st['label'] = label
                 ll[j] = label
+                if st['dentate'] > 1:                    
+                    self.multidentate_fragments.append(label)
+
+        self.multidentate_adsorbates = list(multidentate_adsorbate_dict.values())
+        self.adsorbate_list = self.monodentate_adsorbates + \
+                              self.multidentate_adsorbates 
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=False)
 
-    def get_labels(self):
+    def get_labels(self, fragmentation=True):
         ll = self.label_list
         labs = [lab for lab in ll if lab != '0']
+        if not fragmentation:
+            mf = self.multidentate_fragments
+            ma = self.multidentate_adsorbates
+            c1, c2 = Counter(labs), Counter(mf)
+            diff = list((c1 - c2).elements())
+            labs = diff + ma                   
+
         return sorted(labs)
 
     def get_graph(self):                                         
@@ -473,12 +492,15 @@ class SlabAdsorbateCoverage(object):
         self.subsurf_coverage = n_subsurf_occupied / len(self.subsurf_ids)
 
         # Identify bidentate fragments and assign labels 
+        self.multidentate_fragments = []
+        self.monodentate_adsorbates = []
+        multidentate_adsorbate_dict = {}
         for j, st in enumerate(hsl):
             if st['occupied'] == 1:
+                adssym = st['adsorbate']
                 if st['dentate'] > 1:
                     bondid = st['bonding_index']
                     bondsym = self.symbols[bondid] 
-                    adssym = st['adsorbate']
                     fsym = next((f for f in string_fragmentation(adssym) 
                                  if f[0] == bondsym), None)
                     st['fragment'] = fsym
@@ -487,8 +509,11 @@ class SlabAdsorbateCoverage(object):
                     ibond = adsids.index(bondid)
                     fsi = adsids[ibond:ibond+flen]
                     st['fragment_indices'] = fsi
+                    if adsids not in multidentate_adsorbate_dict:
+                        multidentate_adsorbate_dict[adsids] = adssym
                 else:
                     st['fragment_indices'] = st['adsorbate_indices'] 
+                    self.monodentate_adsorbates.append(adssym)
                 signature = [st['site'], st['geometry']]                     
                 if self.composition_effect:
                     signature.append(st['composition'])
@@ -496,15 +521,28 @@ class SlabAdsorbateCoverage(object):
                 label = str(stlab) + st['fragment']
                 st['label'] = label
                 ll[j] = label
+                if st['dentate'] > 1:                    
+                    self.multidentate_fragments.append(label)
+
+        self.multidentate_adsorbates = list(multidentate_adsorbate_dict.values())
+        self.adsorbate_list = self.monodentate_adsorbates + \
+                              self.multidentate_adsorbates 
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=True)
 
-    def get_labels(self):
+    def get_labels(self, fragmentation=True):
         ll = self.label_list
         labs = [lab for lab in ll if lab != '0']
+        if not fragmentation:
+            mf = self.multidentate_fragments
+            ma = self.multidentate_adsorbates
+            c1, c2 = Counter(labs), Counter(mf)
+            diff = list((c1 - c2).elements())
+            labs = diff + ma                   
+
         return sorted(labs)
 
     def get_graph(self):                                         
