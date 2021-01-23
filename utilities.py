@@ -303,7 +303,6 @@ def atoms_too_close_after_addition(atoms, n_added, cutoff=1.5, mic=False):
     """
     atoms: the atoms after adding n_added new atom
     """   
-
     newp, oldp = atoms.positions[-n_added:], atoms.positions[:-n_added]
     newps = np.repeat(newp, len(oldp), axis=0)
     oldps = np.tile(oldp, (n_added, 1))
