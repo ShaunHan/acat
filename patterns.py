@@ -1,17 +1,18 @@
-from .adsorption_sites import * 
-from .adsorbate_coverage import *
-from .utilities import *
-from .settings import *
-from .actions import *
-from ase.io import read, write, Trajectory
+from .settings import adsorbate_elements, site_heights  
+from .settings import monodentate_adsorbate_list, multidentate_adsorbate_list
+from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
+from .adsorption_sites import group_sites_by_surface
+from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
+from .utilities import is_list_or_tuple, get_mic, atoms_too_close_after_addition 
+from .actions import add_adsorbate_to_site, remove_adsorbate_from_site 
 from ase.formula import Formula
-from asap3 import FullNeighborList
+from ase.io import Trajectory
+from copy import deepcopy
 import networkx.algorithms.isomorphism as iso
 import networkx as nx
 import numpy as np
 import warnings
 import random
-import copy
 
 
 class StochasticPatternGenerator(object):
@@ -196,7 +197,7 @@ class StochasticPatternGenerator(object):
             return
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
-        if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))), 
+        if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))), 
         cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):        
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
@@ -327,7 +328,7 @@ class StochasticPatternGenerator(object):
             return
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
-        if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))), 
+        if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))), 
         cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
             if self.logfile is not None:
                 self.logfile.write('The new position of {} is too '.format(adsorbate)
@@ -431,7 +432,7 @@ class StochasticPatternGenerator(object):
             return
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
-        if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))), 
+        if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))), 
         cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
@@ -695,7 +696,7 @@ class SystematicPatternGenerator(object):
                         continue
                     ads_atoms = atoms[[a.index for a in atoms if                   
                                             a.symbol in adsorbate_elements]]
-                    if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))),  
+                    if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))),  
                     cutoff=self.min_adsorbate_distance, mic=(True in atoms.pbc)):
                         continue
 
@@ -883,7 +884,7 @@ class SystematicPatternGenerator(object):
                         continue
                     ads_atoms = final_atoms[[a.index for a in final_atoms if                   
                                             a.symbol in adsorbate_elements]]
-                    if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))),
+                    if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))),
                     cutoff=self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
                         continue                                                                                   
 
@@ -1009,7 +1010,7 @@ class SystematicPatternGenerator(object):
                         continue
                     ads_atoms = final_atoms[[a.index for a in final_atoms if                   
                                             a.symbol in adsorbate_elements]]
-                    if added_atoms_too_close(ads_atoms, n_added=len(list(Formula(adsorbate))),  
+                    if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))),  
                     cutoff=self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
                         continue
 
@@ -1297,7 +1298,7 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
         elif coverage == 2/4:
             #c(2x2) pattern
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
-            original_sites = copy.deepcopy(fold4_sites)
+            original_sites = deepcopy(fold4_sites)
             if True not in atoms.pbc:
                 grouped_sites = group_sites_by_surface(
                                 atoms, fold4_sites, site_list)
@@ -1493,7 +1494,7 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
 
         add_adsorbate_to_site(atoms, adsorbate, site, height)       
         if min_adsorbate_distance > 0:
-            if added_atoms_too_close(atoms[natoms:], n_added=nads,
+            if atoms_too_close_after_addition(atoms[natoms:], n_added=nads,
             cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)): 
                 atoms = atoms[:-nads]
 
@@ -1524,7 +1525,7 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
                 height = site_heights[st['site']]
             add_adsorbate_to_site(atoms, adsorbate, st, height)       
             if min_adsorbate_distance > 0:
-                if added_atoms_too_close(atoms[natoms:], n_added=nads,
+                if atoms_too_close_after_addition(atoms[natoms:], n_added=nads,
                 cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)):
                     atoms = atoms[:-nads]                               
 
@@ -1566,7 +1567,7 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)       
         if min_adsorbate_distance > 0:
-            if added_atoms_too_close(atoms[natoms:], n_added=nads,
+            if atoms_too_close_after_addition(atoms[natoms:], n_added=nads,
             cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)):
                 atoms = atoms[:-nads]                               
 
