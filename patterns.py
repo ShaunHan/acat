@@ -197,8 +197,8 @@ class StochasticPatternGenerator(object):
             return
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
-        if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))), 
-        cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):        
+        if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))), 
+        self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):        
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
                                    + 'to another adsorbate. Addition failed!\n')
@@ -328,8 +328,8 @@ class StochasticPatternGenerator(object):
             return
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
-        if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))), 
-        cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
+        if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))), 
+        self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
             if self.logfile is not None:
                 self.logfile.write('The new position of {} is too '.format(adsorbate)
                                    + 'close to another adsorbate. Move failed!\n')
@@ -432,8 +432,8 @@ class StochasticPatternGenerator(object):
             return
         ads_atoms = self.atoms[[a.index for a in self.atoms if                   
                                 a.symbol in adsorbate_elements]]
-        if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))), 
-        cutoff=self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
+        if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))), 
+        self.min_adsorbate_distance, mic=(True in self.atoms.pbc)):
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
                                    + 'to another adsorbate. Replacement failed!\n')
@@ -696,8 +696,8 @@ class SystematicPatternGenerator(object):
                         continue
                     ads_atoms = atoms[[a.index for a in atoms if                   
                                             a.symbol in adsorbate_elements]]
-                    if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))),  
-                    cutoff=self.min_adsorbate_distance, mic=(True in atoms.pbc)):
+                    if atoms_too_close_after_addition(ads_atoms, len(list(Formula(
+                    adsorbate))), self.min_adsorbate_distance, mic=(True in atoms.pbc)):
                         continue
 
                     labs = nsac.labels                                                       
@@ -884,8 +884,8 @@ class SystematicPatternGenerator(object):
                         continue
                     ads_atoms = final_atoms[[a.index for a in final_atoms if                   
                                             a.symbol in adsorbate_elements]]
-                    if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))),
-                    cutoff=self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
+                    if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))),
+                    self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
                         continue                                                                                   
 
                     nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
@@ -1010,8 +1010,8 @@ class SystematicPatternGenerator(object):
                         continue
                     ads_atoms = final_atoms[[a.index for a in final_atoms if                   
                                             a.symbol in adsorbate_elements]]
-                    if atoms_too_close_after_addition(ads_atoms, n_added=len(list(Formula(adsorbate))),  
-                    cutoff=self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
+                    if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))),  
+                    self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
                         continue
 
                     nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
@@ -1494,8 +1494,8 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
 
         add_adsorbate_to_site(atoms, adsorbate, site, height)       
         if min_adsorbate_distance > 0:
-            if atoms_too_close_after_addition(atoms[natoms:], n_added=nads,
-            cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)): 
+            if atoms_too_close_after_addition(atoms[natoms:], nads,
+            min_adsorbate_distance, mic=(True in atoms.pbc)): 
                 atoms = atoms[:-nads]
 
     return atoms
@@ -1525,8 +1525,8 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
                 height = site_heights[st['site']]
             add_adsorbate_to_site(atoms, adsorbate, st, height)       
             if min_adsorbate_distance > 0:
-                if atoms_too_close_after_addition(atoms[natoms:], n_added=nads,
-                cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)):
+                if atoms_too_close_after_addition(atoms[natoms:], nads,
+                min_adsorbate_distance, mic=(True in atoms.pbc)):
                     atoms = atoms[:-nads]                               
 
     return atoms
@@ -1567,8 +1567,8 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)       
         if min_adsorbate_distance > 0:
-            if atoms_too_close_after_addition(atoms[natoms:], n_added=nads,
-            cutoff=min_adsorbate_distance, mic=(True in atoms.pbc)):
+            if atoms_too_close_after_addition(atoms[natoms:], nads,
+            min_adsorbate_distance, mic=(True in atoms.pbc)):
                 atoms = atoms[:-nads]                               
 
     return atoms
