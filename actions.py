@@ -1,13 +1,13 @@
 from .settings import site_heights, adsorbate_list, adsorbate_molecule
-from .adsorption_sites import * 
-from .adsorbate_coverage import *
-from .utilities import *
-from .labels import *
-from ase.data import covalent_radii, atomic_numbers
+from .adsorption_sites import enumerate_adsorption_sites 
+from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
+from .utilities import is_list_or_tuple, get_close_atoms, get_rodrigues_rotation_matrix   
+from .utilities import get_angle_between, get_rejection_between
+from .labels import get_cluster_signature_from_label, get_slab_signature_from_label
+from ase.data import atomic_numbers
 from ase.formula import Formula
-from ase import Atom, Atoms
+from ase import Atoms, Atom
 from itertools import takewhile
-from operator import itemgetter
 import numpy as np
 import re
 
@@ -63,13 +63,13 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
             comp = re.findall('[A-Z][^A-Z]*', composition)
             if len(comp) != 4:
                 scomp = ''.join(sorted(comp, key=lambda x: 
-                                       Atom(x).number))
+                                       atomic_numbers[x]))
             else:
                 if comp[0] != comp[2]:
                     scomp = ''.join(sorted(comp, key=lambda x: 
-                                           Atom(x).number))
+                                           atomic_numbers[x]))
                 else:
-                    if Atom(comp[0]).number > Atom(comp[1]).number:
+                    if atomic_numbers[comp[0]] > atomic_numbers[comp[1]]:
                         scomp = comp[1]+comp[0]+comp[3]+comp[2]
                     else:
                         scomp = ''.join(comp)
