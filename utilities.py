@@ -1,12 +1,11 @@
 from ase.data import covalent_radii, atomic_numbers, atomic_masses
-from ase.geometry import find_mic
 from ase.geometry.geometry import _row_col_from_pdist
+from ase.geometry import find_mic
 from ase.formula import Formula
-from collections import abc, defaultdict
 from itertools import product, permutations, combinations
+from collections import abc
 import networkx as nx
 import numpy as np
-import random
 import scipy
 import math
 
@@ -47,10 +46,6 @@ def string_fragmentation(adsorbate):
 
     return frag_list        
 
-
-def get_indices_in_ref_list(lst, ref_lst):
-    return [(i, i+len(ref_lst)) for i in range(len(lst)-len(ref_lst)+1) 
-             if lst[i:i+len(ref_lst)] == ref_lst]
 
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
                         different_species=False, mic=False,
@@ -304,9 +299,9 @@ def atoms_too_close(atoms, cutoff=0.5, mic=False):
     return any(dists < cutoff)
 
 
-def added_atoms_too_close(atoms, n_added, cutoff=1.5, mic=False): 
+def atoms_too_close_after_addition(atoms, n_added, cutoff=1.5, mic=False): 
     """
-    atoms: the atoms after adding an adsorbate
+    atoms: the atoms after adding n_added new atom
     """   
 
     newp, oldp = atoms.positions[-n_added:], atoms.positions[:-n_added]
