@@ -1,15 +1,15 @@
 """Adsorbate operators that adds an adsorbate to the surface
 of a particle or given structure, using a supplied list of sites."""
+from .settings import adsorbate_molecule
+from .adsorption_sites import ClusterAdsorptionSites
+from ase.ga.offspring_creator import OffspringCreator
+from ase.optimize import BFGS
+from ase import Atoms, Atom
+from asap3 import FullNeighborList
+from asap3 import EMT as asapEMT
+from itertools import chain
 import numpy as np
 import random
-from itertools import chain
-from ase import Atoms, Atom
-from ase.build import molecule
-from ase.ga.offspring_creator import OffspringCreator
-from ase.neighborlist import NeighborList, natural_cutoffs
-from ase.calculators.emt import EMT
-from ase.optimize import FIRE
-from .adsorption_sites import enumerate_monometallic_sites
 
 
 class AdsorbateOperator(OffspringCreator):
@@ -144,9 +144,10 @@ class AdsorbateOperator(OffspringCreator):
         ads_ind = [a.index for a in ac
                    if a.symbol in self.adsorbate_set]
         mbl = 1.5  # max_bond_length
-        nl = NeighborList([mbl / 2. for i in ac],
-                             skin=0.0, self_interaction=False)
-        nl.update(ac)
+       # nl = NeighborList([mbl / 2. for i in ac],
+       #                    skin=0.0, self_interaction=False)
+       # nl.update(ac)
+        nl = FullNeighborList(rCut=mbl / 2., atoms=ac)
 
         adsorbates = []
         while len(ads_ind) != 0:
@@ -181,7 +182,9 @@ class AdsorbateOperator(OffspringCreator):
         mi = molecule_indices
         nl = neighborlist
         mi.append(index)
-        neighbors, _ = nl.get_neighbors(index)
+       # neighbors, _ = nl.get_neighbors(index)
+        neighbors = nl[index]
+
         for n in neighbors:
             if int(n) not in mi:
                 if atoms[int(n)].symbol in self.adsorbate_set:
@@ -215,13 +218,7 @@ class AdsorbateOperator(OffspringCreator):
         elif isinstance(adsorbate, Atom):
             ads = Atoms([adsorbate])
         else:
-            # Hope it is a useful string or something like that
-#            if adsorbate == 'CO':
-#                # CO otherwise comes out as OC - very inconvenient
-#                ads = molecule(adsorbate, symbols=adsorbate)
-#            else:
-#                ads = molecule(adsorbate)
-            ads = molecule(adsorbate)
+            ads = adsorbate_molecule(adsorbate)
         ads.translate(-ads[0].position)
         return ads
 
@@ -239,6 +236,8 @@ class AddAdsorbate(AdsorbateOperator):
     """
     def __init__(self, adsorbate,
                  min_adsorbate_distance=2.,
+                 allow_6fold=False,
+                 composition_effect=True,
                  site_preference=None,
                  surface_preference=None,
                  tilt_angle=None,
@@ -248,7 +247,8 @@ class AddAdsorbate(AdsorbateOperator):
         self.descriptor = 'AddAdsorbate'
 
         self.min_adsorbate_distance = min_adsorbate_distance
-
+        self.allow_6fold = allow_6fold
+        self.composition_effect = composition_effect
         self.site_preference = site_preference
         self.surface_preference = surface_preference
         
@@ -266,7 +266,9 @@ class AddAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        ads_sites = enumerate_monometallic_sites(indi)
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                     self.composition_effect)
+        ads_sites = cas.site_list
         indi.info['data']['adsorption_sites'] = ads_sites
         indi.info['data']['operation'] = 'add'
         for _ in range(self.num_muts):
@@ -296,6 +298,8 @@ class RemoveAdsorbate(AdsorbateOperator):
     """This operator removes an adsorbate from the surface. It works
     exactly (but doing the opposite) as the AddAdsorbate operator."""
     def __init__(self, adsorbate,
+                 allow_6fold = False,
+                 composition_effect=True,
                  site_preference=None,
                  surface_preference=None,
                  num_muts=1):
@@ -303,6 +307,8 @@ class RemoveAdsorbate(AdsorbateOperator):
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
 
+        self.allow_6fold = allow_6fold
+        self.composition_effect = composition_effect        
         self.site_preference = site_preference
         self.surface_preference = surface_preference
 
@@ -317,7 +323,9 @@ class RemoveAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        ads_sites = enumerate_monometallic_sites(indi)
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                     self.composition_effect)
+        ads_sites = cas.site_list
         indi.info['data']['adsorption_sites'] = ads_sites
         indi.info['data']['operation'] = 'remove'
         for _ in range(self.num_muts):
@@ -347,6 +355,8 @@ class MoveAdsorbate(AdsorbateOperator):
     again at a different position, i.e. effectively moving the adsorbate."""
     def __init__(self, adsorbate,
                  min_adsorbate_distance=2.,
+                 allow_6fold = False,
+                 composition_effect=True,
                  site_preference_from=None,
                  surface_preference_from=None,
                  site_preference_to=None,
@@ -357,7 +367,8 @@ class MoveAdsorbate(AdsorbateOperator):
         self.descriptor = 'MoveAdsorbate'
 
         self.min_adsorbate_distance = min_adsorbate_distance
-
+        self.allow_6fold = allow_6fold               
+        self.composition_effect = composition_effect
         self.site_preference_from = site_preference_from
         self.surface_preference_from = surface_preference_from
         self.site_preference_to = site_preference_to
@@ -373,8 +384,10 @@ class MoveAdsorbate(AdsorbateOperator):
 
         for atom in f:
             indi.append(atom)
-         
-        ads_sites = enumerate_monometallic_sites(indi)
+
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                     self.composition_effect)
+        ads_sites = cas.site_list                             
         indi.info['data']['adsorption_sites'] = ads_sites
         indi.info['data']['operation'] = 'move'
         for _ in range(self.num_muts):
@@ -451,6 +464,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     """
     def __init__(self, adsorbate, blmin, keep_composition=True,
                  fix_coverage=False, min_adsorbate_distance=2.,
+                 allow_6fold=False, composition_effect=True,
                  rotate_vectors=None, rotate_angles=None):
 
         AdsorbateOperator.__init__(self, adsorbate)
@@ -458,6 +472,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         self.keep_composition = keep_composition
         self.fix_coverage = fix_coverage
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.allow_6fold = allow_6fold              
+        self.composition_effect = composition_effect
         self.rvecs = rotate_vectors
         self.rangs = rotate_angles
         self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
@@ -628,11 +644,14 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         for atom in chain(tmpf, tmpm):
             indi.append(atom)
                                                                               
-        indi.set_calculator(EMT())
-        opt = FIRE(indi, logfile=None) 
+        indi.calc = asapEMT()
+        opt = BFGS(indi, logfile=None) 
         opt.run(fmax=0.1)
+        indi.calc = None
 
-        ads_sites = enumerate_monometallic_sites(indi)
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold,  
+                                     self.composition_effect)
+        ads_sites = cas.site_list                            
         indi.info['data']['adsorption_sites'] = ads_sites
         indi.info['data']['operation'] = 'crossover'
         if self.fix_coverage:
