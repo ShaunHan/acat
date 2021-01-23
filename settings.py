@@ -1,6 +1,6 @@
+from ase.formula import Formula
 from ase.io import read, write
 from ase.build import molecule
-from ase.formula import Formula
 
 
 # Adsorbate elements must be different from catalyst elements
