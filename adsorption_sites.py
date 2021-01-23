@@ -1,24 +1,21 @@
 from .settings import adsorbate_elements, site_heights
-from .utilities import * 
-from ase.data import reference_states, atomic_numbers, covalent_radii
+from .utilities import is_list_or_tuple, expand_cell, get_mic  
+from .utilities import neighbor_shell_list, get_connectivity_matrix
+from ase.data import reference_states, atomic_numbers
 from ase.geometry import find_mic
 from ase.optimize import BFGS
-from ase.io import read, write
-from ase import Atom, Atoms
-from asap3.analysis.rdf import RadialDistributionFunction
+from ase import Atoms
+from asap3.analysis import rdf, FullCNA 
 from asap3 import FullNeighborList
-from asap3.analysis import FullCNA 
 from asap3 import EMT as asapEMT
+from itertools import combinations, groupby
 from collections import defaultdict
 from collections import Counter
-from itertools import combinations, groupby
-import numpy as np
 import networkx as nx
+import numpy as np
 import warnings
-import random
 import scipy
 import math
-import re
 
 
 class ClusterAdsorptionSites(object):
@@ -509,10 +506,10 @@ class ClusterAdsorptionSites(object):
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
                 atoms.cell[j][j] = 12 
-        rdf = RadialDistributionFunction(atoms, rMax, nBins).get_rdf()
+        _rdf = rdf.RadialDistributionFunction(atoms, rMax, nBins).get_rdf()
         x = (np.arange(nBins) + 0.5) * rMax / nBins
-        rdf *= x**2
-        diff_rdf = np.gradient(rdf)
+        _rdf *= x**2
+        diff_rdf = np.gradient(_rdf)
 
         i = 0
         while diff_rdf[i] >= 0:
