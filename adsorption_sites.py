@@ -8,9 +8,8 @@ from ase import Atoms
 from asap3.analysis import rdf, FullCNA 
 from asap3 import FullNeighborList
 from asap3 import EMT as asapEMT
+from collections import defaultdict, Counter
 from itertools import combinations, groupby
-from collections import defaultdict
-from collections import Counter
 import networkx as nx
 import numpy as np
 import warnings
