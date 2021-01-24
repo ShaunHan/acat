@@ -254,20 +254,26 @@ class ClusterAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self):                                         
+    def get_graph(self, fragmentation=True):                                         
         hsl = self.hetero_site_list
         hcm = self.cas.get_connectivity().copy()
         surfhcm = hcm[self.surf_ids]
         symbols = self.symbols[self.surf_ids]
-        nrows, ncols = surfhcm.shape[0], surfhcm.shape[1]        
+        nrows, ncols = surfhcm.shape       
         newrows, frag_list = [], []
         for st in hsl:
             if st['occupied'] == 1:
-                si = st['indices']
+                if not fragmentation and st['dentate'] > 1: 
+                    if st['bonding_index'] != st['adsorbate_indices'][0]:
+                        continue 
+                si = st['indices']                
                 newrow = np.zeros(ncols)
                 newrow[list(si)] = 1
                 newrows.append(newrow)
-                frag_list.append(st['fragment'])
+                if fragmentation:
+                    frag_list.append(st['fragment'])
+                else:
+                    frag_list.append(st['adsorbate'])
         if newrows:
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
 
@@ -553,20 +559,26 @@ class SlabAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self):                                         
+    def get_graph(self, fragmentation=True):                                         
         hsl = self.hetero_site_list
         hcm = self.connectivity_matrix.copy()
         surfhcm = hcm[self.surf_ids]
         symbols = self.symbols[self.surf_ids]
-        nrows, ncols = surfhcm.shape[0], surfhcm.shape[1]        
+        nrows, ncols = surfhcm.shape       
         newrows, frag_list = [], []
         for st in hsl:
             if st['occupied'] == 1:
+                if not fragmentation and st['dentate'] > 1: 
+                    if st['bonding_index'] != st['adsorbate_indices'][0]:
+                        continue
                 si = st['indices']
                 newrow = np.zeros(ncols)
                 newrow[list(si)] = 1
                 newrows.append(newrow)
-                frag_list.append(st['fragment'])
+                if fragmentation:                
+                    frag_list.append(st['fragment'])
+                else:
+                    frag_list.append(st['adsorbate'])
         if newrows:
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
 
