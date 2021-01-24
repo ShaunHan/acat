@@ -5,8 +5,8 @@ from .adsorption_sites import group_sites_by_surface
 from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from .utilities import is_list_or_tuple, get_mic, atoms_too_close_after_addition 
 from .actions import add_adsorbate_to_site, remove_adsorbate_from_site 
+from ase.io import write, Trajectory
 from ase.formula import Formula
-from ase.io import Trajectory
 from copy import deepcopy
 import networkx.algorithms.isomorphism as iso
 import networkx as nx
@@ -84,6 +84,7 @@ class StochasticPatternGenerator(object):
         self.fragmentation = fragmentation
         self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
+            self.traj_name = trajectory 
             self.trajectory = Trajectory(trajectory, mode='a') if self.append_trajectory \
                               else Trajectory(trajectory, mode='w')                        
         if isinstance(logfile, str):
@@ -538,7 +539,10 @@ class StochasticPatternGenerator(object):
                 self.graph_list.append(G)
             if self.logfile is not None:
                 self.logfile.write('Succeed! Pattern generated: {}\n\n'.format(labs))
-                self.logfile.flush()            
+                self.logfile.flush()
+            if 'data' not in self.atoms.info:
+                 self.atoms.info['data'] = {}
+            self.atoms.info['data']['labels'] = labs
             self.trajectory.write(self.atoms)
             n_new += 1
 
@@ -556,6 +560,7 @@ class SystematicPatternGenerator(object):
                  unique=True,
                  species_forbidden_sites=None,
                  enumerate_orientations=True,
+                 shuffle=False,
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
@@ -589,8 +594,10 @@ class SystematicPatternGenerator(object):
             self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
                                             k, v in self.species_forbidden_sites.items()}
         self.enumerate_orientations = enumerate_orientations
+        self.shuffle = shuffle
         self.append_trajectory = append_trajectory
-        if isinstance(trajectory, str):            
+        if isinstance(trajectory, str):
+            self.traj_name = trajectory            
             self.trajectory = Trajectory(trajectory, mode='a') if self.append_trajectory \
                               else Trajectory(trajectory, mode='w')                       
         if isinstance(logfile, str):
@@ -726,7 +733,12 @@ class SystematicPatternGenerator(object):
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
                                            + 'generated: {}\n'.format(labs))
                         self.logfile.flush()
+                    if 'data' not in atoms.info:
+                         atoms.info['data'] = {}
+                    atoms.info['data']['labels'] = labs
                     self.trajectory.write(atoms)
+                    if self.shuffle:
+                        self.final_images.append(atoms)
                     self.n_write += 1
 
     def _remove_adsorbate(self, adsorption_sites):
@@ -758,7 +770,12 @@ class SystematicPatternGenerator(object):
                     self.logfile.write('Last adsorbate has been removed ' + 
                                        'from image {}\n'.format(self.n_image))
                     self.logfile.flush()
+                if 'data' not in atoms.info:
+                     atoms.info['data'] = {}
+                atoms.info['data']['labels'] = []
                 self.trajectory.write(atoms)
+                if self.shuffle:
+                    self.final_images.append(atoms)
                 return
                                                                                        
             nsac = SlabAdsorbateCoverage(atoms, sas) if True in atoms.pbc \
@@ -783,7 +800,12 @@ class SystematicPatternGenerator(object):
                 self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
                                    + 'generated: {}\n'.format(labs))
                 self.logfile.flush()
+            if 'data' not in atoms.info:
+                 atoms.info['data'] = {}
+            atoms.info['data']['labels'] = labs
             self.trajectory.write(atoms)
+            if self.shuffle:
+                self.final_images.append(atoms)
             self.n_write += 1
 
     def _move_adsorbate(self, adsorption_sites): 
@@ -912,7 +934,12 @@ class SystematicPatternGenerator(object):
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
                                            + 'generated: {}\n'.format(labs))
                         self.logfile.flush()
+                    if 'data' not in final_atoms.info:
+                         final_atoms.info['data'] = {}
+                    final_atoms.info['data']['labels'] = labs
                     self.trajectory.write(final_atoms)
+                    if self.shuffle:
+                        self.final_images.append(final_atoms)
                     self.n_write += 1
 
     def _replace_adsorbate(self, adsorption_sites):
@@ -1038,14 +1065,20 @@ class SystematicPatternGenerator(object):
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
                                            + 'generated: {}\n'.format(labs))
                         self.logfile.flush()
+                    if 'data' not in final_atoms.info:
+                         final_atoms.info['data'] = {}
+                    final_atoms.info['data']['labels'] = labs
                     self.trajectory.write(final_atoms)
+                    if self.shuffle:
+                        self.final_images.append(final_atoms)
                     self.n_write += 1
 
     def run(self, action='add'):
         self.n_write = 0
         self.n_duplicate = 0
         self.labels_list = []
-        self.graph_list = []      
+        self.graph_list = []
+        self.final_images = []      
         for n, image in enumerate(self.images):
             if self.logfile is not None:                                   
                 self.logfile.write('Generating all possible patterns '
@@ -1091,6 +1124,10 @@ class SystematicPatternGenerator(object):
                                    '{} patterns were '.format(self.n_duplicate)
                                    + 'discarded by {}\n\n'.format(method))
                 self.logfile.flush()
+
+        if self.shuffle:
+            random.shuffle(self.final_images)
+            write(self.traj_name, self.final_images)
 
 
 def symmetric_coverage_pattern(atoms, adsorbate, surface=None, 
