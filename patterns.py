@@ -29,6 +29,7 @@ class StochasticPatternGenerator(object):
                  composition_effect=True,
                  unique=True,
                  species_forbidden_sites=None,    
+                 fragmentation=True,
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
@@ -80,7 +81,7 @@ class StochasticPatternGenerator(object):
         if self.species_forbidden_sites is not None:
             self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
                                             k, v in self.species_forbidden_sites.items()}
-
+        self.fragmentation = fragmentation
         self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
             self.trajectory = Trajectory(trajectory, mode='a') if self.append_trajectory \
@@ -510,10 +511,10 @@ class StochasticPatternGenerator(object):
                 nsac = self._replace_adsorbate(sas)
             if not nsac:
                 continue
-            
-            labs = nsac.labels
+
+            labs = nsac.get_labels(fragmentation=self.fragmentation)
             if self.unique:
-                G = nsac.get_graph()
+                G = nsac.get_graph(fragmentation=self.fragmentation)
                 if labs in self.labels_list: 
                     if self.graph_list:
                         # Skip duplicates based on isomorphism 
