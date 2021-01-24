@@ -7,15 +7,15 @@ from ase.build import molecule
 adsorbate_elements = 'SCHON'
 
 # Adsorbate height on different sites
-site_heights = {'ontop': 1.7, 
-                'bridge': 1.7, 
-                'short-bridge': 1.7,
-                'long-bridge': 1.7,
-                'fcc': 1.6, 
-                'hcp': 1.6,
-                '3fold': 1.6, 
-                '4fold': 1.6,
-                '5fold': 1.6,
+site_heights = {'ontop': 1.5, 
+                'bridge': 1.5, 
+                'short-bridge': 1.5,
+                'long-bridge': 1.5,
+                'fcc': 1.3, 
+                'hcp': 1.3,
+                '3fold': 1.3, 
+                '4fold': 1.3,
+                '5fold': 1.5,
                 '6fold': 0.,}
 
 # The default adsorbate list already contains most common adsorbate 
