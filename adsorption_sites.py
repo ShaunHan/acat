@@ -523,6 +523,9 @@ class ClusterAdsorptionSites(object):
             return sd[str(fcna[s])]
         elif len(sites) == 2:
             if str(fcna[sites[0]]) not in sd or str(fcna[sites[1]]) not in sd:
+                for s in [str(fcna[sites[0]]), str(fcna[sites[1]])]:
+                    if s not in sd:
+                        print('CNA {} is not supported.'.format(s))
                 return 'unknown'
             s0 = sd[str(fcna[sites[0]])]
             s1 = sd[str(fcna[sites[1]])]
