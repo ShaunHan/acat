@@ -597,9 +597,11 @@ class ClusterAdsorptionSites(object):
             for i, st in enumerate(sl):
                 if st['site'] == 'ontop':
                     topi_dict[st['indices'][0]] = i
-                elif st['site'] in ['fcc','hcp']:
+            for i, st in enumerate(sl):
+                if st['site'] in ['fcc','hcp']:
                     for j in st['indices']:
-                        nbslist[i].append(topi_dict[j]) 
+                        if j in topi_dict:
+                            nbslist[i].append(topi_dict[j]) 
         return nbslist
 
     def update_positions(self, new_atoms):                 
@@ -1223,7 +1225,7 @@ class SlabAdsorptionSites(object):
                                        self.ref_atoms.positions[x], refpos, self.cell,
                                        return_squared_distance=True))[:4]
                         occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence >= 4)[0][0] 
+                        isub = np.where(occurence >= 4)[0][0]
                         si = tuple(sorted(fold4ids)) 
                         pos = refpos + np.average(
                               self.delta_positions[fold4ids], 0)
@@ -1439,7 +1441,7 @@ class SlabAdsorptionSites(object):
                                    self.ref_atoms.positions[x], refpos, self.cell, 
                                    return_squared_distance=True))[:4]             
                     occurence = np.sum(cm[fold4ids], axis=0)
-                    isub = np.where(occurence == 4)[0][0]
+                    isub = np.where(occurence == 4)[0][0]   
                     si = tuple(sorted(fold4ids))
                     pos = refpos + np.average(
                           self.delta_positions[fold4ids], 0)
@@ -1447,7 +1449,7 @@ class SlabAdsorptionSites(object):
                              [si[0], si[1], si[2]])
                     for idx in si:
                         normals_for_site[idx].append(normal)
- 
+                    
                     site = self.new_site()
                     if self.surface in ['hcp10m10-t','hcp10m11']:
                         sitetype = '5fold'
