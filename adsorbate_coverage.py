@@ -594,7 +594,6 @@ class SlabAdsorbateCoverage(object):
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
-        ecopy = deepcopy(edges)
         G.add_edges_from(edges)
 
         return G
