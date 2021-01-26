@@ -588,11 +588,13 @@ class SlabAdsorbateCoverage(object):
                            for i in range(nrows)] + 
                          [(j + nrows, {'symbol': frag_list[j]})
                            for j in range(len(frag_list))])
+
         # Add edges from surface connectivity matrix
         shcm = surfhcm[:,self.surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
+        ecopy = deepcopy(edges)
         G.add_edges_from(edges)
 
         return G
