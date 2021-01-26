@@ -839,7 +839,7 @@ class SlabAdsorptionSites(object):
         extended_top = np.where(np.in1d(ext_index, top_indices))[0]
         meansurfz = np.average(self.positions[self.surf_ids][:,2], 0)
         ext_all_coords = ext_coords[extended_top]
-        surf_screen = np.where(abs(ext_all_coords[:,2] - meansurfz) < cutoff)
+        surf_screen = np.where(abs(ext_all_coords[:,2] - meansurfz) < 4.)
         ext_surf_coords = ext_all_coords[surf_screen]
         dt = scipy.spatial.Delaunay(ext_surf_coords[:,:2])
         neighbors = dt.neighbors
@@ -1223,12 +1223,17 @@ class SlabAdsorptionSites(object):
                     for i, refpos in enumerate(fold4_poss):
                         fold4_indices = newnblist[ntop+i]                     
                         fold4ids = [sorted_top[j] for j in fold4_indices]
-                        if len(fold4ids) > 4:
+                        if len(fold4ids) < 4:
+                            continue
+                        elif len(fold4ids) > 4:
                             fold4ids = sorted(fold4ids, key=lambda x: get_mic(        
                                        self.ref_atoms.positions[x], refpos, self.cell,
                                        return_squared_distance=True))[:4]
                         occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence >= 4)[0][0]
+                        isub = np.where(occurence >= 4)[0]
+                        if not isub:
+                            continue
+                        isub = isub[0]
                         si = tuple(sorted(fold4ids)) 
                         pos = refpos + np.average(
                               self.delta_positions[fold4ids], 0)
@@ -1439,12 +1444,17 @@ class SlabAdsorptionSites(object):
                 for i, refpos in enumerate(reduced_poss): 
                     fold4_indices = newnblist[ntop+i]            
                     fold4ids = [sorted_top[j] for j in fold4_indices]
-                    if len(fold4ids) > 4:
+                    if len(fold4ids) < 4:
+                        continue
+                    elif len(fold4ids) > 4:
                         fold4ids = sorted(fold4ids, key=lambda x: get_mic(        
                                    self.ref_atoms.positions[x], refpos, self.cell, 
                                    return_squared_distance=True))[:4]             
                     occurence = np.sum(cm[fold4ids], axis=0)
-                    isub = np.where(occurence == 4)[0][0]   
+                    isub = np.where(occurence == 4)[0]
+                    if not isub:
+                        continue
+                    isub = isub[0]
                     si = tuple(sorted(fold4ids))
                     pos = refpos + np.average(
                           self.delta_positions[fold4ids], 0)
