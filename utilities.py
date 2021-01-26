@@ -368,9 +368,9 @@ def get_total_masses(symbol):
 def draw_graph(G, savefig='graph.png'):               
     import matplotlib.pyplot as plt
     labels = nx.get_node_attributes(G, 'symbol')
-
+    
     # Get unique groups
-    groups = set(labels.values())
+    groups = sorted(set(labels.values()))
     mapping = {x: "C{}".format(i) for i, x in enumerate(groups)}
     nodes = G.nodes()
     colors = [mapping[G.nodes[n]['symbol']] for n in nodes]
@@ -378,8 +378,13 @@ def draw_graph(G, savefig='graph.png'):
     # Drawing nodes, edges and labels separately
     pos = nx.spring_layout(G)
     nx.draw_networkx_edges(G, pos, alpha=0.5)
-    nx.draw_networkx_nodes(G, pos, nodelist=nodes, node_color=colors, 
-                           with_labels=False, node_size=500)
-    nx.draw_networkx_labels(G, pos, labels, font_size=10, font_color='w')
+    nx.draw_networkx_nodes(G, pos, 
+                           nodelist=nodes, 
+                           node_color=colors, 
+                           node_size=500)
+    nx.draw_networkx_labels(G, pos, labels, 
+                            font_size=10, 
+                            font_color='w')
     plt.axis('off')
     plt.savefig(savefig)
+    plt.clf()
