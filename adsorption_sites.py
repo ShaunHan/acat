@@ -1419,7 +1419,10 @@ class SlabAdsorptionSites(object):
                         site.update({'composition': composition})   
 
                     if sitetype == 'hcp' and self.subsurf_effect:
-                        isub = np.where(occurence == 3)[0][0]
+                        isub = np.where(occurence == 3)[0]
+                        if not isub:
+                            continue
+                        isub = isub[0]
                         site.update({'subsurf_index': isub})
                         if self.composition_effect:
                             site.update({'subsurf_element': 
