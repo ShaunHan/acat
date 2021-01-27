@@ -22,12 +22,13 @@ class ClusterAdsorptionSites(object):
     def __init__(self, atoms, 
                  allow_6fold=False, 
                  composition_effect=False, 
-                 subsurf_effect=False):
+                 subsurf_effect=False,
+                 dx=.5):
 
         assert True not in atoms.pbc
         warnings.filterwarnings("ignore")
         atoms = atoms.copy()
-        atoms.set_constraint()
+        del atoms.constraints
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
@@ -38,11 +39,21 @@ class ClusterAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
+        self.dx = dx
+
+        ref_atoms = self.atoms.copy()
+        for a in ref_atoms:
+            a.symbol = 'Pt'
+        ref_atoms.calc = asapEMT()
+        opt = BFGS(ref_atoms, logfile=None)
+        opt.run(fmax=0.1)
+        ref_atoms.calc = None              
+        
+        self.ref_atoms = ref_atoms
         self.cell = atoms.cell
         self.pbc = atoms.pbc
         self.metals = sorted(list(set(atoms.symbols)), 
                              key=lambda x: atomic_numbers[x])
-
         self.fullCNA = {}
         self.make_fullCNA()
         self.set_first_neighbor_distance_from_rdf()
@@ -153,9 +164,9 @@ class ClusterAdsorptionSites(object):
                             for k in nebs2:
                                 si = tuple(sorted([s, n, m, k]))
                                 if k in ssall and si not in usi:
-                                    d1 = self.atoms.get_distance(n, k)
+                                    d1 = self.ref_atoms.get_distance(n, k)
                                     if self.is_eq(d1, self.r, 0.2):
-                                        d2 = self.atoms.get_distance(m, k)
+                                        d2 = self.ref_atoms.get_distance(m, k)
                                         if self.is_eq(d2, self.r, 0.2):
                                             # 4-fold hollow site found
                                             normal = self.get_surface_normal([s, n, m])
@@ -339,7 +350,7 @@ class ClusterAdsorptionSites(object):
         """Returns True if no atoms are closer than mindist to pos,
         otherwise False."""
         dists = [np.linalg.norm(atom.position - pos) > mindist
-                 for atom in self.atoms]
+                 for atom in self.ref_atoms]
         return all(dists)                                                       
 
     def get_surface_sites(self): 
@@ -363,7 +374,7 @@ class ClusterAdsorptionSites(object):
                 if str(fcna[i]) not in site_dict:
                     # The structure is distorted from the original, giving
                     # a larger cutoff should overcome this problem
-                    r = self.r + 0.6
+                    r = self.r + self.dx
                     fcna = self.get_fullCNA(rCut=r)
                 if str(fcna[i]) not in site_dict:
                     # If this does not solve the problem we probably have a
@@ -376,16 +387,14 @@ class ClusterAdsorptionSites(object):
 
     def get_subsurface(self):
         notsurf = [a.index for a in self.atoms if a.index not in self.surf_ids]
-        subfcna = FullCNA(self.atoms[notsurf], 
-                          rCut=self.r + 0.6).get_normal_cna() 
+        subfcna = FullCNA(self.ref_atoms[notsurf]).get_normal_cna() 
         
         return [idx for i, idx in enumerate(notsurf) if 
                 sum(subfcna[i].values()) < 12]
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
-            self.fullCNA[rCut] = FullCNA(self.atoms, 
-                                 rCut=rCut).get_normal_cna()
+            self.fullCNA[rCut] = FullCNA(self.ref_atoms, rCut=rCut).get_normal_cna()
 
     def get_fullCNA(self, rCut=None):
         if rCut not in self.fullCNA:
@@ -393,11 +402,11 @@ class ClusterAdsorptionSites(object):
         return self.fullCNA[rCut]
 
     def make_neighbor_list(self, rMax=10.):
-        self.nblist = FullNeighborList(rCut=rMax, atoms=self.atoms)
+        self.nblist = FullNeighborList(rCut=rMax, atoms=self.ref_atoms)
 
     def get_connectivity(self):                                      
         """Generate a connection matrix from neighbor_shell_list."""
-        nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
+        nbslist = neighbor_shell_list(self.ref_atoms, 0.3, neighbor_number=1)
         return get_connectivity_matrix(nbslist)                  
 
     def get_site_dict(self):
@@ -501,7 +510,7 @@ class ClusterAdsorptionSites(object):
             return mdeca_dict
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
-        atoms = self.atoms.copy()
+        atoms = self.ref_atoms.copy()
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
                 atoms.cell[j][j] = 12 
@@ -523,9 +532,10 @@ class ClusterAdsorptionSites(object):
             return sd[str(fcna[s])]
         elif len(sites) == 2:
             if str(fcna[sites[0]]) not in sd or str(fcna[sites[1]]) not in sd:
-                for s in [str(fcna[sites[0]]), str(fcna[sites[1]])]:
-                    if s not in sd:
-                        print('CNA {} is not supported.'.format(s))
+                for s in [sites[0], sites[1]]:
+                    scna = str(fcna[s])
+                    if scna not in sd:
+                        print('CNA {} is not supported.'.format(scna))
                 return 'unknown'
             s0 = sd[str(fcna[sites[0]])]
             s1 = sd[str(fcna[sites[1]])]
@@ -607,11 +617,11 @@ class ClusterAdsorptionSites(object):
                             nbslist[i].append(topi_dict[j]) 
         return nbslist
 
-    def update_positions(self, new_atoms):                 
+    def update_positions(self, atoms):                 
         sl = self.site_list
         for st in sl:
             si = list(st['indices'])
-            newpos = np.average(new_atoms.positions[si], 0) 
+            newpos = np.average(atoms.positions[si], 0) 
             st['position'] = newpos
 
 
@@ -669,7 +679,7 @@ class SlabAdsorptionSites(object):
         assert True in atoms.pbc    
         warnings.filterwarnings("ignore")
         atoms = atoms.copy() 
-        atoms.set_constraint()
+        del atoms.constraints
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
         self.atoms = atoms
@@ -678,8 +688,8 @@ class SlabAdsorptionSites(object):
         self.numbers = atoms.numbers
         self.indices = [a.index for a in self.atoms] 
         self.surface = surface
-        ref_atoms = self.atoms.copy()
 
+        ref_atoms = self.atoms.copy()
         if self.surface in ['fcc100','fcc110','fcc211','fcc311','fcc221','fcc331',
         'fcc322','fcc332','bcc111','bcc210','bcc211']:
             ref_symbol = 'Pt'
@@ -689,13 +699,12 @@ class SlabAdsorptionSites(object):
             ref_symbol = 'Au'
         else:
             raise ValueError('Surface {} is not supported'.format(self.surface))
-
         for a in ref_atoms:
             a.symbol = ref_symbol
         ref_atoms.calc = asapEMT()
         opt = BFGS(ref_atoms, logfile=None)
-        opt.run(fmax=0.05)
-        ref_atoms.calc = None
+        opt.run(fmax=0.1)
+        ref_atoms.calc = None                        
  
         self.ref_atoms = ref_atoms
         self.delta_positions = atoms.positions - ref_atoms.positions
@@ -1890,9 +1899,9 @@ class SlabAdsorptionSites(object):
                             nbslist[i].append(topi_dict[j])  
         return nbslist
 
-    def update_positions(self, new_atoms):
+    def update_positions(self, atoms):
         sl = self.site_list
-        new_slab = new_atoms[[a.index for a in new_atoms if 
+        new_slab = atoms[[a.index for a in atoms if 
                               a.symbol not in adsorbate_elements]]
         dvecs, _ = find_mic(new_slab.positions - self.positions,
                             self.cell, self.pbc)
