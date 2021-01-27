@@ -5,7 +5,7 @@ from .adsorption_sites import group_sites_by_surface
 from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from .utilities import is_list_or_tuple, get_mic, atoms_too_close_after_addition 
 from .actions import add_adsorbate_to_site, remove_adsorbate_from_site 
-from ase.io import write, Trajectory
+from ase.io import read, write, Trajectory
 from ase.formula import Formula
 from copy import deepcopy
 import networkx.algorithms.isomorphism as iso
@@ -39,6 +39,7 @@ class StochasticPatternGenerator(object):
         adsorption_sites: should only provide when the surface composition is fixed
         unique: whether discard duplicates based on isomorphism or not
         species_forbidden_sites: dictionary with species key and forbidden site (list) values 
+        append_trajecotry: if unique=True, also check for isomorphism for existing structures in the trajectory.
 
         if you want to do stochastic pattern generation but for all images systematically, do
         >>> for atoms in images:
@@ -453,6 +454,34 @@ class StochasticPatternGenerator(object):
             all_action_weights = [action_weights[a] for a in actions]
         
         self.labels_list, self.graph_list = [], []
+
+        if self.unique and self.append_trajectory:                                 
+            if self.logfile is not None:                             
+                self.logfile.write('Loading graphs for existing structures in ' +
+                                   '{}. This might take a while.\n'.format(self.traj_name))
+                self.logfile.flush()
+
+            prev_images = read(self.traj_name, index=':')
+            for patoms in prev_images:
+                if self.adsorption_sites is not None:
+                    psas = self.adsorption_sites
+                elif True in patoms.pbc:
+                    if self.surface is None:
+                        raise ValueError('Please specify the surface type')
+                    psas = SlabAdsorptionSites(patoms, self.surface,
+                                               self.allow_6fold,
+                                               self.composition_effect)
+                else:
+                    psas = ClusterAdsorptionSites(patoms, self.allow_6fold,
+                                                 self.composition_effect)      
+                psac = SlabAdsorbateCoverage(patoms, psas) if True in patoms.pbc \
+                       else ClusterAdsorbateCoverage(patoms, psas)
+
+                plabs = psac.get_labels(fragmentation=self.fragmentation)
+                pG = psac.get_graph(fragmentation=self.fragmentation)
+                self.labels_list.append(plabs)
+                self.graph_list.append(pG)
+
         n_new = 0
         n_old = 0
         # Start the iteration
@@ -523,7 +552,7 @@ class StochasticPatternGenerator(object):
                         potential_graphs = [g for i, g in enumerate(self.graph_list) 
                                             if self.labels_list[i] == labs]
                         if self.clean_slab and potential_graphs:
-                            if self.logfile is not None:
+                            if self.logfile is not None:                              
                                 self.logfile.write('Duplicate found by label match. '
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
@@ -706,9 +735,9 @@ class SystematicPatternGenerator(object):
                     adsorbate))), self.min_adsorbate_distance, mic=(True in atoms.pbc)):
                         continue
 
-                    labs = nsac.labels                                                       
+                    labs = nsac.get_labels(fragmentation=self.enumerate_orientations)
                     if self.unique:                                        
-                        G = nsac.get_graph()
+                        G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                         if labs in self.labels_list: 
                             if self.graph_list:
                                 # Skip duplicates based on isomorphism 
@@ -774,9 +803,9 @@ class SystematicPatternGenerator(object):
                                                                                        
             nsac = SlabAdsorbateCoverage(atoms, sas) if True in atoms.pbc \
                    else ClusterAdsorbateCoverage(atoms, sas)
-            labs = nsac.labels                                                       
+            labs = nsac.get_labels(fragmentation=self.enumerate_orientations)
             if self.unique:                                        
-                G = nsac.get_graph()
+                G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                 if labs in self.labels_list: 
                     if self.graph_list:
                         # Skip duplicates based on isomorphism 
@@ -906,9 +935,9 @@ class SystematicPatternGenerator(object):
                     nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
                            else ClusterAdsorbateCoverage(final_atoms, sas)                      
       
-                    labs = nsac.labels                                                       
+                    labs = nsac.get_labels(fragmentation=self.enumerate_orientations)
                     if self.unique:                                        
-                        G = nsac.get_graph()
+                        G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                         if labs in self.labels_list: 
                             if self.graph_list:
                                 # Skip duplicates based on isomorphism 
@@ -1035,9 +1064,9 @@ class SystematicPatternGenerator(object):
                     nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
                            else ClusterAdsorbateCoverage(final_atoms, sas)                     
       
-                    labs = nsac.labels                                                       
+                    labs = nsac.get_labels(fragmentation=self.enumerate_orientations)                                                   
                     if self.unique:                                        
-                        G = nsac.get_graph()
+                        G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                         if labs in self.labels_list: 
                             if self.graph_list:
                                 # Skip duplicates based on isomorphism 
@@ -1064,8 +1093,35 @@ class SystematicPatternGenerator(object):
     def run(self, action='add'):
         self.n_write = 0
         self.n_duplicate = 0
-        self.labels_list = []
-        self.graph_list = []
+        self.labels_list, self.graph_list = [], []
+
+        if self.unique and self.append_trajectory:                                 
+            if self.logfile is not None:                             
+                self.logfile.write('Loading graphs for existing structures in ' +
+                                   '{}. This might take a while.\n'.format(self.traj_name))
+                self.logfile.flush()
+                                                                                   
+            prev_images = read(self.traj_name, index=':')
+            for patoms in prev_images:
+                if self.adsorption_sites is not None:
+                    psas = self.adsorption_sites
+                elif True in patoms.pbc:
+                    if self.surface is None:
+                        raise ValueError('Please specify the surface type')
+                    psas = SlabAdsorptionSites(patoms, self.surface,
+                                               self.allow_6fold,
+                                               self.composition_effect)
+                else:
+                    psas = ClusterAdsorptionSites(patoms, self.allow_6fold,
+                                                 self.composition_effect)      
+                psac = SlabAdsorbateCoverage(patoms, psas) if True in patoms.pbc \
+                       else ClusterAdsorbateCoverage(patoms, psas)
+                                                                                   
+                plabs = psac.get_labels(fragmentation=self.enumerate_orientations)
+                pG = psac.get_graph(fragmentation=self.enumerate_orientations)
+                self.labels_list.append(plabs)
+                self.graph_list.append(pG)
+
         for n, image in enumerate(self.images):
             if self.logfile is not None:                                   
                 self.logfile.write('Generating all possible patterns '
