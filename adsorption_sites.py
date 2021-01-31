@@ -1,6 +1,8 @@
 from .settings import adsorbate_elements, site_heights
 from .utilities import is_list_or_tuple, expand_cell, get_mic  
 from .utilities import neighbor_shell_list, get_connectivity_matrix
+from .labels import get_monometallic_cluster_labels, get_bimetallic_cluster_labels
+from .labels import get_monometallic_slab_labels, get_bimetallic_slab_labels
 from ase.data import reference_states, atomic_numbers
 from ase.geometry import find_mic
 from ase.optimize import BFGS
@@ -23,6 +25,7 @@ class ClusterAdsorptionSites(object):
                  allow_6fold=False, 
                  composition_effect=False, 
                  subsurf_effect=False,
+                 label_sites=False,
                  dx=.5):
 
         assert True not in atoms.pbc
@@ -39,6 +42,7 @@ class ClusterAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
+        self.label_sites = label_sites
         self.dx = dx
 
         ref_atoms = self.atoms.copy()
@@ -54,6 +58,13 @@ class ClusterAdsorptionSites(object):
         self.pbc = atoms.pbc
         self.metals = sorted(list(set(atoms.symbols)), 
                              key=lambda x: atomic_numbers[x])
+        if self.composition_effect:
+            if len(self.metals) == 1:
+                self.metals *= 2
+            self.label_dict = get_bimetallic_cluster_labels(self.metals)
+        else: 
+            self.label_dict = get_monometallic_cluster_labels()
+
         self.fullCNA = {}
         self.make_fullCNA()
         self.set_first_neighbor_distance_from_rdf()
@@ -63,7 +74,9 @@ class ClusterAdsorptionSites(object):
 
         self.site_list = []
         self.populate_site_list()
-        
+        if self.label_sites:
+            self.get_labels()
+ 
     def populate_site_list(self):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
            given an input nanoparticle and collect in a site list. 
@@ -291,10 +304,20 @@ class ClusterAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si) 
 
+    def get_labels(self):
+        # Assign labels
+        for st in self.site_list:
+            if self.composition_effect:
+                signature = [st['site'], st['surface'], st['composition']]            
+            else:
+                signature = [st['site'], st['surface']]
+            stlab = self.label_dict['|'.join(signature)]
+            st['label'] = stlab                                                   
+
     def new_site(self):
         return {'site': None, 'surface': None, 'position': None, 
                 'normal': None, 'indices': None, 'composition': None,
-                'subsurf_index': None, 'subsurf_element': None}
+                'subsurf_index': None, 'subsurf_element': None, 'label': None}
 
     def get_site(self, indices):
         indices = indices if is_list_or_tuple(indices) else [indices]
@@ -532,10 +555,10 @@ class ClusterAdsorptionSites(object):
             return sd[str(fcna[s])]
         elif len(sites) == 2:
             if str(fcna[sites[0]]) not in sd or str(fcna[sites[1]]) not in sd:
-                for s in [sites[0], sites[1]]:
-                    scna = str(fcna[s])
-                    if scna not in sd:
-                        print('CNA {} is not supported.'.format(scna))
+               # for s in [sites[0], sites[1]]:
+               #     scna = str(fcna[s])
+               #     if scna not in sd:
+               #         print('CNA {} is not supported.'.format(scna))
                 return 'unknown'
             s0 = sd[str(fcna[sites[0]])]
             s1 = sd[str(fcna[sites[1]])]
@@ -617,12 +640,16 @@ class ClusterAdsorptionSites(object):
                             nbslist[i].append(topi_dict[j]) 
         return nbslist
 
-    def update_positions(self, atoms):                 
+    def update(self, atoms, update_composition=False):                 
         sl = self.site_list
         for st in sl:
             si = list(st['indices'])
             newpos = np.average(atoms.positions[si], 0) 
             st['position'] = newpos
+            if update_composition:
+                newcomp = ''.join(sorted(atoms.symbols[si], key=
+                                         lambda x: atomic_numbers[x]))
+                st['composition'] = newcomp                           
 
 
 def group_sites_by_surface(atoms, sites, site_list=None):            
@@ -669,6 +696,7 @@ class SlabAdsorptionSites(object):
                  allow_6fold=False, 
                  composition_effect=False, 
                  subsurf_effect=False, 
+                 label_sites=False,
                  dx=.5):
         """
         allow_6fold: allow 6-fold subsurf site
@@ -715,6 +743,14 @@ class SlabAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.subsurf_effect = subsurf_effect
+        self.label_sites = label_sites
+
+        if self.composition_effect:
+            if len(self.metals) == 1:
+                self.metals *= 2
+            self.label_dict = get_bimetallic_slab_labels(self.surface, self.metals)
+        else:
+            self.label_dict = get_monometallic_slab_labels(self.surface)    
         self.dx = dx 
         self.tol = 1e-5
 
@@ -724,6 +760,8 @@ class SlabAdsorptionSites(object):
 
         self.site_list = []
         self.populate_site_list()
+        if self.label_sites:
+            self.get_labels()
         
     def populate_site_list(self, allow_obtuse=True, cutoff=5.):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
@@ -805,10 +843,10 @@ class SlabAdsorptionSites(object):
                     extra = st['extra']
                     extraids = [e for e in extra if e in self.surf_ids
                                 and e not in geo_dict[st['geometry']]]
-                    if len(extraids) < 4:
-                        si = st['indices']
-                        print('Cannot identify other 4 atoms of 5-fold site {}'.format(si))
-                    elif len(extraids) > 4:
+                    #if len(extraids) < 4:
+                    #    si = st['indices']
+                    #    print('Cannot identify other 4 atoms of 5-fold site {}'.format(si))
+                    if len(extraids) > 4:
                         extraids = sorted(extraids, key=lambda x: get_mic(                
                                    self.ref_atoms.positions[x], refpos, self.cell,
                                    return_squared_distance=True))[:4] 
@@ -1176,9 +1214,9 @@ class SlabAdsorptionSites(object):
                         special = True
                         extraids = [xi for xi in np.where(occurence==2)[0]
                                     if xi in self.surf_ids]
-                        if len(extraids) < 2:
-                            print('Cannot identify other 2 atoms of 4-fold site {}'.format(si))
-                        elif len(extraids) > 2:
+                        #if len(extraids) < 2:
+                        #    print('Cannot identify other 2 atoms of 4-fold site {}'.format(si))
+                        if len(extraids) > 2:
                             extraids = sorted(extraids, key=lambda x: get_mic(        
                                        self.ref_atoms.positions[x], refpos, self.cell,
                                        return_squared_distance=True))[:2]              
@@ -1240,7 +1278,7 @@ class SlabAdsorptionSites(object):
                                        return_squared_distance=True))[:4]
                         occurence = np.sum(cm[fold4ids], axis=0)
                         isub = np.where(occurence >= 4)[0]
-                        if not isub:
+                        if isub.size == 0:
                             continue
                         isub = isub[0]
                         si = tuple(sorted(fold4ids)) 
@@ -1337,10 +1375,10 @@ class SlabAdsorptionSites(object):
                     fold3_indices = nblist[ntop2+i]
                     fold3ids = [top2_indices[j] for j in fold3_indices if j < ntop1]
                     if len(fold3ids) != 3:
-                        if self.surface != 'hcp10m11':
-                            si = tuple(sorted(fold3ids))
-                            print('Cannot find the correct atoms of this 3-fold site.',
-                                  'Find {} instead'.format(si))
+                        #if self.surface != 'hcp10m11':
+                        #    si = tuple(sorted(fold3ids))
+                        #    print('Cannot find the correct atoms of this 3-fold site.',
+                        #          'Find {} instead'.format(si))
                         continue
                     # Remove redundant 3-fold sites that belongs to 4-fold sites
                     if coexist_3_4: 
@@ -1429,7 +1467,7 @@ class SlabAdsorptionSites(object):
 
                     if sitetype == 'hcp' and self.subsurf_effect:
                         isub = np.where(occurence == 3)[0]
-                        if not isub:
+                        if isub.size == 0:
                             continue
                         isub = isub[0]
                         site.update({'subsurf_index': isub})
@@ -1464,7 +1502,7 @@ class SlabAdsorptionSites(object):
                                    return_squared_distance=True))[:4]             
                     occurence = np.sum(cm[fold4ids], axis=0)
                     isub = np.where(occurence == 4)[0]
-                    if not isub:
+                    if isub.size == 0:
                         continue
                     isub = isub[0]
                     si = tuple(sorted(fold4ids))
@@ -1739,11 +1777,21 @@ class SlabAdsorptionSites(object):
                 sl.append(site)
                 usi.add(si)
 
+    def get_labels(self):
+        # Assign labels
+        for st in self.site_list:
+            if self.composition_effect:
+                signature = [st['site'], st['geometry'], st['composition']]                      
+            else:
+                signature = [st['site'], st['geometry']]
+            stlab = self.label_dict['|'.join(signature)]
+            st['label'] = stlab                                                        
+
     def new_site(self):
         return {'site': None, 'surface': None, 'geometry': None, 
                 'position': None, 'normal': None, 'indices': None,
                 'composition': None, 'subsurf_index': None,
-                'subsurf_element': None}
+                'subsurf_element': None, 'label': None}
 
     def get_site(self, indices):
         indices = indices if is_list_or_tuple(indices) else [indices]
@@ -1899,15 +1947,19 @@ class SlabAdsorptionSites(object):
                             nbslist[i].append(topi_dict[j])  
         return nbslist
 
-    def update_positions(self, atoms):
+    def update(self, atoms, update_composition=False):
         sl = self.site_list
         new_slab = atoms[[a.index for a in atoms if 
-                              a.symbol not in adsorbate_elements]]
+                          a.symbol not in adsorbate_elements]]
         dvecs, _ = find_mic(new_slab.positions - self.positions,
                             self.cell, self.pbc)
         for st in sl:
             si = list(st['indices'])
             st['position'] += np.average(dvecs[si], 0) 
+            if update_composition:
+                newcomp = ''.join(sorted(atoms.symbols[si], key=
+                                         lambda x: atomic_numbers[x]))
+                st['composition'] = newcomp                           
 
 
 def get_adsorption_site(atoms, indices, 
