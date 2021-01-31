@@ -1,10 +1,10 @@
 """Adsorbate operators that adds an adsorbate to the surface
 of a particle or given structure, using a supplied list of sites."""
-from .settings import adsorbate_molecule
+from .settings import adsorbate_elements, adsorbate_molecule, site_heights
+from .utilities import is_list_or_tuple, atoms_too_close_after_addition
+from .actions import add_adsorbate_to_site, remove_adsorbate_from_site
 from .adsorption_sites import ClusterAdsorptionSites
 from .adsorbate_coverage import ClusterAdsorbateCoverage
-from .utilities import atoms_too_close_after_addition
-from .actions import add_adsorbate_to_site
 from ase.ga.offspring_creator import OffspringCreator
 from ase.optimize import BFGS
 from ase import Atoms, Atom
@@ -20,10 +20,12 @@ class AdsorbateOperator(OffspringCreator):
 
     Don't use this operator directly!"""
 
-    def __init__(self, adsorbate, num_muts=1):        
+    def __init__(self, adsorbate_species, num_muts=1):        
         OffspringCreator.__init__(self, num_muts=num_muts)
-        self.adsorbate = self.convert_adsorbate(adsorbate)
-        self.adsorbate_set = set(self.adsorbate.get_chemical_symbols())
+
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(
+                                 adsorbate_species) else [adsorbate_species]
+
         self.descriptor = 'AdsorbateOperator'
 
     @classmethod
@@ -40,8 +42,9 @@ class AdsorbateOperator(OffspringCreator):
     def get_new_individual(self, parents):
         raise NotImplementedError
 
-    def add_adsorbate(self, atoms, hetero_site_list, heights,
-                      min_adsorbate_distance=1.5, tilt_angle=0.):
+    def add_adsorbate(self, atoms, hetero_site_list, 
+                      heights, adsorbate_species=None, 
+                      min_adsorbate_distance=2., tilt_angle=0.):
         """Adds the adsorbate in self.adsorbate to the supplied atoms
         object at the first free site in the specified site_list. A site
         is free if no other adsorbates can be found in a sphere of radius
@@ -65,6 +68,9 @@ class AdsorbateOperator(OffspringCreator):
             Tilt the adsorbate with an angle (in degress) relative to
             the surface normal.
         """
+        if not adsorbate_species:
+            adsorbate_species=self.adsorbate_species
+
         i = 0
         too_close = True
         while too_close:
@@ -72,17 +78,25 @@ class AdsorbateOperator(OffspringCreator):
                 return False
 
             site = hetero_site_list[i]
-            if not site['occupied']:
+            if site['occupied']:
                 i += 1
                 continue
 
-            # Add adsorbate to the correct position
-            ads = self.adsorbate.copy()
-            height = heights[site['site']]
-            add_adsorbate_to_site(atoms, ads, site, height)
+            # Allow only single-atom species to enter subsurf 6fold sites
+            site_type = site['site']
+            if site_type == '6fold':
+                adsorbate_species = [s for s in adsorbate_species if len(s) == 1]
 
-            nads = len(ads) 
-            if atoms_too_close_after_addition(atoms, nads,
+            # Add a random adsorbate to the correct position
+            adsorbate = random.choice(adsorbate_species)
+            height = heights[site_type]
+            add_adsorbate_to_site(atoms, adsorbate, site, height, 
+                                  tilt_angle=tilt_angle)
+
+            nads = len(adsorbate)
+            ads_atoms = atoms[[a.index for a in atoms if 
+                               a.symbol in adsorbate_elements]]
+            if atoms_too_close_after_addition(ads_atoms, nads, 
             cutoff=min_adsorbate_distance):
                 atoms = atoms[:-nads]
                 i += 1
@@ -94,17 +108,15 @@ class AdsorbateOperator(OffspringCreator):
         # relax-paste function to be executed in the calculation script.
         # There it should also reset the parameter to [], to indicate
         # that the adsorbates have been relaxed.
-        ads_indices = sorted([len(atoms) - k - 1 for k in range(len(ads))])
+        ads_indices = sorted([len(atoms) - k - 1 for k in range(len(adsorbate))])
         
         if 'unrelaxed_adsorbates' not in atoms.info['data']:
             atoms.info['data']['unrelaxed_adsorbates'] = []
         atoms.info['data']['unrelaxed_adsorbates'].append(ads_indices)
         
-        # site['occupied'] = 1
+        return atoms
 
-        return True
-
-    def remove_adsorbate(self, atoms, hetero_site_list, for_move=False):
+    def remove_adsorbate(self, atoms, hetero_site_list, return_site_index=False):                          
         """Removes an adsorbate from the atoms object at the first occupied
         site in hetero_site_list. If no adsorbates can be found, one will be
         added instead.
@@ -118,42 +130,26 @@ class AdsorbateOperator(OffspringCreator):
                 continue
 
             if i >= len(hetero_site_list):
-                if for_move:
+                if return_site_index:
                     return False
-                print('removal not possible will add instead')
-                return self.add_adsorbate(atoms, hetero_site_list)
+                print('Removal not possible, will add instead')
+                return self.add_adsorbate(atoms, hetero_site_list, site_heights)
+
+            # Remove adsorbate from the correct position
+            remove_adsorbate_from_site(atoms, site)
+
+            if return_site_index:
+                return i
 
             occupied = False
-        # site_list[i]['occupied'] = 0
 
-        # Remove adsorbate from the correct position
-        height = site['height']
-        normal = np.asarray(site['normal'])
-        pos = np.asarray(site['adsorbate_position']) + normal * height
-
-        ads_ind = self.get_adsorbate_indices(atoms, pos)
-        ads_ind.sort(reverse=True)
-
-        len_ads = len(self.adsorbate)
-        if len(ads_ind) != len_ads:
-            print('removing other than {0}'.format(len_ads), ads_ind, pos)
-            print(atoms.info)
-            random.shuffle(site_list)
-            return self.remove_adsorbate(atoms, site_list, for_move=for_move)
-        # print('removing', ads_ind, [atoms[j].symbol for j in ads_ind], pos)
-        for k in ads_ind:
-            atoms.pop(k)
-
-        return True
+        return atoms
 
     def get_all_adsorbate_indices(self, atoms):
         ac = atoms.copy()
-        ads_ind = [a.index for a in ac
-                   if a.symbol in self.adsorbate_set]
+        ads_ind = [a.index for a in ac if 
+                   a.symbol in adsorbate_elements]
         mbl = 1.5  # max_bond_length
-       # nl = NeighborList([mbl / 2. for i in ac],
-       #                    skin=0.0, self_interaction=False)
-       # nl.update(ac)
         nl = FullNeighborList(rCut=mbl / 2., atoms=ac)
 
         adsorbates = []
@@ -170,7 +166,7 @@ class AdsorbateOperator(OffspringCreator):
         """Returns the indices of the adsorbate at the supplied position"""
         dmin = 1000.
         for a in atoms:
-            if a.symbol in self.adsorbate_set:
+            if a.symbol in adsorbate_elements:
                 d = np.linalg.norm(a.position - position)
                 if d < dmin:
                     dmin = d
@@ -194,40 +190,9 @@ class AdsorbateOperator(OffspringCreator):
 
         for n in neighbors:
             if int(n) not in mi:
-                if atoms[int(n)].symbol in self.adsorbate_set:
+                if atoms[int(n)].symbol in adsorbate_elements:
                     mi = self._get_indices_in_adsorbate(atoms, nl, n, mi)
         return mi
-
-    def is_site_occupied(self, atoms, site, min_adsorbate_distance):
-        """Returns True if the site on the atoms object is occupied by
-        creating a sphere of radius min_adsorbate_distance and checking
-        that no other adsorbate is inside the sphere."""
-        # if site['occupied']:
-        #     return True
-        ads = self.adsorbate_set
-        height = site['height']
-        normal = np.asarray(site['normal'])
-        pos = np.asarray(site['adsorbate_position']) + normal * height
-        dists = [np.linalg.norm(pos - a.position)
-                 for a in atoms if a.symbol in ads]
-        for d in dists:
-            if d < min_adsorbate_distance:
-                # print('under min d', d, pos)
-                # site['occupied'] = 1
-                return True
-        return False
-
-    @classmethod
-    def convert_adsorbate(cls, adsorbate):
-        """Converts the adsorbate to an Atoms object"""
-        if isinstance(adsorbate, Atoms):
-            ads = adsorbate
-        elif isinstance(adsorbate, Atom):
-            ads = Atoms([adsorbate])
-        else:
-            ads = adsorbate_molecule(adsorbate)
-        ads.translate(-ads[0].position)
-        return ads
 
 
 class AddAdsorbate(AdsorbateOperator):
@@ -241,7 +206,7 @@ class AddAdsorbate(AdsorbateOperator):
     Supplying a tilt angle will tilt the adsorbate with an angle relative
     to the standard perpendicular to the surface
     """
-    def __init__(self, adsorbate,
+    def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
                  allow_6fold=False,
@@ -249,11 +214,13 @@ class AddAdsorbate(AdsorbateOperator):
                  site_preference=None,
                  surface_preference=None,
                  tilt_angle=None,
-                 num_muts=1):
-        AdsorbateOperator.__init__(self, adsorbate,
+                 num_muts=1,
+                 dmax=2.5):
+        AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'AddAdsorbate'
 
+        self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
@@ -261,13 +228,14 @@ class AddAdsorbate(AdsorbateOperator):
         self.surface_preference = surface_preference
         
         self.tilt_angle = tilt_angle or 0.
-
         self.min_inputs = 1
+        self.dmax = dmax
 
     def get_new_individual(self, parents):
         """Returns the new individual as an atoms object"""
         f = parents[0]
 
+        print('Add')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -276,9 +244,9 @@ class AddAdsorbate(AdsorbateOperator):
 
         cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
                                      self.composition_effect)
-        ads_sites = cas.site_list
-        indi.info['data']['adsorption_sites'] = ads_sites
-        indi.info['data']['operation'] = 'add'
+        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        ads_sites = cac.hetero_site_list
+
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
 
@@ -292,11 +260,16 @@ class AddAdsorbate(AdsorbateOperator):
                     return x['site'] == self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
-            added = self.add_adsorbate(indi, ads_sites, heights,
+            nindi = self.add_adsorbate(indi, ads_sites, self.heights,
+                                       self.adsorbate_species,
                                        self.min_adsorbate_distance,
                                        tilt_angle=self.tilt_angle)
-            if not added:
-                break
+            if not nindi:
+                break            
+
+            if self.num_muts > 1:
+                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
+                ads_sites = ncac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -305,14 +278,14 @@ class AddAdsorbate(AdsorbateOperator):
 class RemoveAdsorbate(AdsorbateOperator):
     """This operator removes an adsorbate from the surface. It works
     exactly (but doing the opposite) as the AddAdsorbate operator."""
-    def __init__(self, adsorbate,
+    def __init__(self, adsorbate_species,
                  allow_6fold = False,
                  composition_effect=True,
                  site_preference=None,
                  surface_preference=None,
                  num_muts=1,
                  dmax=2.5):
-        AdsorbateOperator.__init__(self, adsorbate,
+        AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
 
@@ -327,6 +300,7 @@ class RemoveAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
+        print('Remove')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -335,10 +309,9 @@ class RemoveAdsorbate(AdsorbateOperator):
 
         cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
                                      self.composition_effect)
-        cac = ClusterAdsorbateCoverage(indi, cas, self.dmax)
+        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
         ads_sites = cac.hetero_site_list
-        indi.info['data']['adsorption_sites'] = ads_sites
-        indi.info['data']['operation'] = 'remove'
+
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
 
@@ -352,19 +325,24 @@ class RemoveAdsorbate(AdsorbateOperator):
                     return x['site'] == self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
-            removed = self.remove_adsorbate(indi, ads_sites)
+            nindi = self.remove_adsorbate(indi, ads_sites)
 
-            if not removed:
+            if not nindi:
                 break
+
+            if self.num_muts > 1:
+                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
+                ads_sites = ncac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
 
 
-class MoveAdsorbate(AdsorbateOperator):
+class MoveAdsorbate(AdsorbateOperator):                                           
     """This operator removes an adsorbate from the surface and adds it
-    again at a different position, i.e. effectively moving the adsorbate."""
-    def __init__(self, adsorbate,
+    again to a different site, i.e. effectively moving the adsorbate."""
+    def __init__(self, adsorbate_species,
+                 heights=site_heights,
                  min_adsorbate_distance=2.,
                  allow_6fold = False,
                  composition_effect=True,
@@ -372,11 +350,14 @@ class MoveAdsorbate(AdsorbateOperator):
                  surface_preference_from=None,
                  site_preference_to=None,
                  surface_preference_to=None,
-                 num_muts=1):
-        AdsorbateOperator.__init__(self, adsorbate,
+                 tilt_angle=None,
+                 num_muts=1,
+                 dmax=2.5):
+        AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'MoveAdsorbate'
 
+        self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
         self.allow_6fold = allow_6fold               
         self.composition_effect = composition_effect
@@ -385,11 +366,14 @@ class MoveAdsorbate(AdsorbateOperator):
         self.site_preference_to = site_preference_to
         self.surface_preference_to = surface_preference_to
 
+        self.tilt_angle = tilt_angle or 0.
         self.min_inputs = 1
+        self.dmax = dmax
 
     def get_new_individual(self, parents):
         f = parents[0]
 
+        print('Move')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -398,9 +382,9 @@ class MoveAdsorbate(AdsorbateOperator):
 
         cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
                                      self.composition_effect)
-        ads_sites = cas.site_list                             
-        indi.info['data']['adsorption_sites'] = ads_sites
-        indi.info['data']['operation'] = 'move'
+        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        ads_sites = cac.hetero_site_list
+
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
             if self.surface_preference_from is not None:
@@ -414,9 +398,13 @@ class MoveAdsorbate(AdsorbateOperator):
                 ads_sites.sort(key=func, reverse=True)
 
             removed = self.remove_adsorbate(indi, ads_sites,
-                                            for_move=True)
+                                            return_site_index=True)
+            if not removed:
+                break
 
+            removed_species = ads_sites[removed]['adsorbate']            
             random.shuffle(ads_sites)
+
             if self.surface_preference_to is not None:
                 def func(x):
                     return x['surface'] == self.surface_preference_to
@@ -427,11 +415,96 @@ class MoveAdsorbate(AdsorbateOperator):
                     return x['site'] == self.site_preference_to
                 ads_sites.sort(key=func, reverse=True)
 
-            added = self.add_adsorbate(indi, ads_sites,
-                                       self.min_adsorbate_distance)
-
-            if (not removed) or (not added):
+            nindi = self.add_adsorbate(indi, ads_sites, 
+                                       self.heights, removed_species,
+                                       self.min_adsorbate_distance,
+                                       tilt_angle=self.tilt_angle)
+            if not nindi:
                 break
+            
+            if self.num_muts > 1:
+                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
+                ads_sites = ncac.hetero_site_list                          
+
+        return (self.finalize_individual(indi),
+                self.descriptor + ': {0}'.format(f.info['confid']))
+
+
+class ReplaceAdsorbate(AdsorbateOperator):                                           
+    """This operator removes an adsorbate from the surface and adds another
+    species to the same site, i.e. effectively replacing the adsorbate."""
+    def __init__(self, adsorbate_species,
+                 heights=site_heights,
+                 min_adsorbate_distance=2.,
+                 allow_6fold = False,
+                 composition_effect=True,
+                 site_preference_from=None,
+                 surface_preference_from=None,
+                 tilt_angle=None,
+                 num_muts=1,
+                 dmax=2.5):
+        AdsorbateOperator.__init__(self, adsorbate_species,
+                                   num_muts=num_muts)
+        self.descriptor = 'ReplaceAdsorbate'
+
+        self.heights = heights
+        self.min_adsorbate_distance = min_adsorbate_distance
+        self.allow_6fold = allow_6fold               
+        self.composition_effect = composition_effect
+        self.site_preference_from = site_preference_from
+        self.surface_preference_from = surface_preference_from
+
+        self.tilt_angle = tilt_angle or 0.
+        self.min_inputs = 1
+        self.dmax = dmax
+
+    def get_new_individual(self, parents):
+        f = parents[0]
+
+        print('Replace')
+        indi = self.initialize_individual(f)
+        indi.info['data']['parents'] = [f.info['confid']]
+
+        for atom in f:
+            indi.append(atom)
+
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                     self.composition_effect)
+        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        ads_sites = cac.hetero_site_list
+
+        for _ in range(self.num_muts):
+            random.shuffle(ads_sites)
+            if self.surface_preference_from is not None:
+                def func(x):
+                    return x['surface'] == self.surface_preference_from
+                ads_sites.sort(key=func, reverse=True)
+
+            if self.site_preference_from is not None:
+                def func(x):
+                    return x['site'] == self.site_preference_from
+                ads_sites.sort(key=func, reverse=True)
+
+            removed = self.remove_adsorbate(indi, ads_sites,
+                                            return_site_index=True)
+            if not removed:
+                break
+
+            ads_sites[removed]['occupied'] = 0
+            removed_species = ads_sites[removed]['adsorbate']
+            other_species = [s for s in self.adsorbate_species if
+                             s != removed_species]
+
+            nindi = self.add_adsorbate(indi, [ads_sites[removed]], 
+                                     self.heights, other_species,
+                                     self.min_adsorbate_distance,
+                                     tilt_angle=self.tilt_angle)
+            if not nindi:
+                break
+            
+            if self.num_muts > 1:
+                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
+                ads_sites = ncac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -473,12 +546,17 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         being rotated around is set in rotate_vectors.
         Default None meaning no rotation is performed
     """
-    def __init__(self, adsorbate, blmin, keep_composition=True,
-                 fix_coverage=False, min_adsorbate_distance=2.,
-                 allow_6fold=False, composition_effect=True,
-                 rotate_vectors=None, rotate_angles=None):
+    def __init__(self, adsorbate_species, blmin, 
+                 keep_composition=True,
+                 fix_coverage=False, 
+                 min_adsorbate_distance=2.,
+                 allow_6fold=False, 
+                 composition_effect=True,
+                 rotate_vectors=None, 
+                 rotate_angles=None,
+                 dmax=2.5):
 
-        AdsorbateOperator.__init__(self, adsorbate)
+        AdsorbateOperator.__init__(self, adsorbate_species)
         self.blmin = blmin
         self.keep_composition = keep_composition
         self.fix_coverage = fix_coverage
@@ -490,10 +568,12 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
         
         self.min_inputs = 2
+        self.dmax = dmax
         
     def get_new_individual(self, parents):
         f, m = parents
-        
+
+        print('crossover')        
         if self.fix_coverage:
             # Count number of adsorbates
             adsorbates_in_parents = len(self.get_all_adsorbate_indices(f))
@@ -508,7 +588,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         
         if self.rvecs is not None:
             if not isinstance(self.rvecs, list):
-                print('rotation vectors are not a list, skipping rotation')
+                print('Rotation vectors are not a list, skipping rotation')
             else:
                 vec = random.choice(self.rvecs)
                 try:
@@ -654,17 +734,44 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         # Put the two parts together
         for atom in chain(tmpf, tmpm):
             indi.append(atom)
-                                                                              
-        indi.calc = asapEMT()
-        opt = BFGS(indi, logfile=None) 
-        opt.run(fmax=0.1)
-        indi.calc = None
 
-        cas = ClusterAdsorptionSites(indi, self.allow_6fold,  
+        pcas = ClusterAdsorptionSites(indi, self.allow_6fold, 
                                      self.composition_effect)
-        ads_sites = cas.site_list                            
-        indi.info['data']['adsorption_sites'] = ads_sites
-        indi.info['data']['operation'] = 'crossover'
+        pcac = ClusterAdsorbateCoverage(indi, pcas, dmax=self.dmax)
+        pads_sites = pcac.hetero_site_list       
+ 
+       # # Use EMT to pre-optimize the structure 
+       # indi = indi[[a.index for a in indi if
+       #              a.symbol not in adsorbate_elements]]
+       # indi.calc = EMT()
+       # opt = BFGS(indi, logfile=None) 
+       # opt.run(fmax=0.1)
+       # indi.calc = None
+
+        adsi_dict = {}      
+        for st in pads_sites:
+            if st['occupied']:
+                if st['dentate'] > 1:
+                    if st['adsorbate_indices'][0] != st['bonding_index']:
+                        continue
+                si = st['indices']
+                adsi_dict[si] = {}
+                adsi_dict[si]['height'] = st['bond_length']
+                adsi_dict[si]['adsorbate'] = st['adsorbate']
+                
+        indi = pcas.ref_atoms
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold,         
+                                     self.composition_effect)
+        for st in cas.site_list:
+            si = st['indices']
+            if si in adsi_dict:
+                adsorbate = adsi_dict[si]['adsorbate']
+                height = adsi_dict[si]['height']    
+                add_adsorbate_to_site(indi, adsorbate, st, height)
+
+        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        ads_sites = cac.hetero_site_list
+
         if self.fix_coverage:
             # Remove or add adsorbates as needed
             adsorbates_in_child = self.get_all_adsorbate_indices(indi)
@@ -672,7 +779,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             if diff < 0:
                 # Add adsorbates
                 for _ in range(abs(diff)):
-                    self.add_adsorbate(indi, ads_sites,
+                    self.add_adsorbate(indi, ads_sites, site_heights,
+                                       self.adsorbate_species,
                                        self.min_adsorbate_distance)
             elif diff > 0:
                 # Remove adsorbates
@@ -690,13 +798,13 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         without adsorbates"""
         ac = atoms.copy()
         del ac[[a.index for a in ac
-                if a.symbol in self.adsorbate_set]]
+                if a.symbol in adsorbate_elements]]
         return ac.numbers
         
     def get_atoms_without_adsorbates(self, atoms):
         ac = atoms.copy()
         del ac[[a.index for a in ac
-                if a.symbol in self.adsorbate_set]]
+                if a.symbol in adsorbate_elements]]
         return ac
         
     def get_vectors_below_min_dist(self, atoms):
