@@ -1,8 +1,6 @@
 from .settings import adsorbate_elements, adsorbate_formulas
 from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites 
 from .utilities import string_fragmentation, neighbor_shell_list, get_connectivity_matrix 
-from .labels import get_monometallic_cluster_labels, get_bimetallic_cluster_labels
-from .labels import get_monometallic_slab_labels, get_bimetallic_slab_labels
 from ase.data import atomic_numbers
 from ase.geometry import find_mic
 from ase.formula import Formula
@@ -18,6 +16,7 @@ class ClusterAdsorbateCoverage(object):
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
+                 label_occupied_sites=False,
                  dmax=2.5):
 
         self.atoms = atoms.copy()
@@ -29,6 +28,8 @@ class ClusterAdsorbateCoverage(object):
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
+
+        self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
 
         self.make_ads_neighbor_list()
@@ -52,16 +53,15 @@ class ClusterAdsorbateCoverage(object):
         if len(self.metals) == 1 and self.composition_effect:
             self.metals *= 2
         self.surf_ids = cas.surf_ids
+        self.label_dict = cas.label_dict 
         self.hetero_site_list = deepcopy(cas.site_list)
         self.unique_sites = cas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
-        self.label_dict = get_bimetallic_cluster_labels(self.metals) \
-                          if self.composition_effect else \
-                          get_monometallic_cluster_labels()
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.label_occupied_sites()
-        self.labels = self.get_labels()
+        self.populate_hetero_sites()
+
+        self.labels = self.get_occupied_labels()
 
     def identify_adsorbates(self):
         G = nx.Graph()
@@ -129,7 +129,7 @@ class ClusterAdsorbateCoverage(object):
 
         return np.asarray(conn_mat) 
 
-    def label_occupied_sites(self):
+    def populate_hetero_sites(self):
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
@@ -157,6 +157,7 @@ class ClusterAdsorbateCoverage(object):
                 if bl >= st['bond_length']:
                     continue
                 elif self.symbols[adsid] != 'H':
+                    print(st)
                     ndentate_dict[adsi] -= 1 
             st['bonding_index'] = adsid
             st['bond_length'] = bl
@@ -220,18 +221,23 @@ class ClusterAdsorbateCoverage(object):
                 else:
                     st['fragment_indices'] = st['adsorbate_indices']
                     self.monodentate_adsorbate_list.append(adssym)
-                signature = [st['site'], st['surface']]                     
-                if self.composition_effect:
-                    signature.append(st['composition'])
-                stlab = self.label_dict['|'.join(signature)]
-                label = str(stlab) + st['fragment']
-                st['label'] = label
-                ll[j] = label
-                if st['dentate'] > 1:                    
-                    self.multidentate_fragments.append(label)
-                    if bondid == adsids[0]:
-                        mdlabel = str(stlab) + adssym
-                        self.multidentate_labels.append(mdlabel)
+
+                if self.label_occupied_sites:
+                    if st['label'] is None:
+                        signature = [st['site'], st['surface']] 
+                        if self.composition_effect:
+                            signature.append(st['composition'])
+                        stlab = self.label_dict['|'.join(signature)]
+                    else:
+                        stlab = st['label']                         
+                    label = str(stlab) + st['fragment']
+                    st['label'] = label
+                    ll[j] = label
+                    if st['dentate'] > 1:                    
+                        self.multidentate_fragments.append(label)
+                        if bondid == adsids[0]:
+                            mdlabel = str(stlab) + adssym
+                            self.multidentate_labels.append(mdlabel)
 
         self.multidentate_adsorbate_list = list(multidentate_adsorbate_dict.values())
         self.adsorbate_list = self.monodentate_adsorbate_list + \
@@ -242,7 +248,10 @@ class ClusterAdsorbateCoverage(object):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=False)
 
-    def get_labels(self, fragmentation=True):
+    def get_occupied_labels(self, fragmentation=True):
+        if not self.label_occupied_sites:
+            return self.atoms[self.slab_ids].get_chemical_formula(mode='hill')
+
         ll = self.label_list
         labs = [lab for lab in ll if lab != '0']
         if not fragmentation:
@@ -278,7 +287,7 @@ class ClusterAdsorbateCoverage(object):
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
 
         G = nx.Graph()               
-        # Add nodes from label list
+        # Add nodes from fragment list
         G.add_nodes_from([(i, {'symbol': symbols[i]}) 
                            for i in range(nrows)] + 
                          [(j + nrows, {'symbol': frag_list[j]})
@@ -287,21 +296,6 @@ class ClusterAdsorbateCoverage(object):
         shcm = surfhcm[:,self.surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
-        edges = zip(rows.tolist(), cols.tolist())
-        G.add_edges_from(edges)
-
-        return G
-
-    def get_site_graph(self):                                         
-        ll = self.label_list
-        scm = self.get_site_connectivity()
-
-        G = nx.Graph()                                                  
-        # Add nodes from label list
-        G.add_nodes_from([(i, {'label': ll[i]}) for 
-                           i in range(scm.shape[0])])
-        # Add edges from surface connectivity matrix
-        rows, cols = np.where(scm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
 
@@ -319,6 +313,7 @@ class SlabAdsorbateCoverage(object):
     def __init__(self, atoms, 
                  adsorption_sites=None, 
                  surface=None, 
+                 label_occupied_sites=False,
                  dmax=2.5):
 
         self.atoms = atoms.copy()
@@ -330,6 +325,8 @@ class SlabAdsorbateCoverage(object):
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
+
+        self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
 
         self.make_ads_neighbor_list()
@@ -356,16 +353,15 @@ class SlabAdsorbateCoverage(object):
         self.surf_ids = sas.surf_ids
         self.subsurf_ids = sas.subsurf_ids
         self.connectivity_matrix = sas.connectivity_matrix
+        self.label_dict = sas.label_dict 
         self.hetero_site_list = deepcopy(sas.site_list)
         self.unique_sites = sas.get_unique_sites(unique_composition=
                                                  self.composition_effect) 
-        self.label_dict = get_bimetallic_slab_labels(self.surface, 
-                          self.metals) if self.composition_effect else \
-                          get_monometallic_slab_labels(self.surface)
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.label_occupied_sites()
-        self.labels = self.get_labels()
+        self.populate_hetero_sites()
+
+        self.labels = self.get_occupied_labels() 
 
     def identify_adsorbates(self):
         G = nx.Graph()
@@ -433,7 +429,7 @@ class SlabAdsorbateCoverage(object):
 
         return np.asarray(conn_mat) 
 
-    def label_occupied_sites(self):
+    def populate_hetero_sites(self):
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
@@ -507,7 +503,7 @@ class SlabAdsorbateCoverage(object):
         self.multidentate_labels = []
         multidentate_adsorbate_dict = {}
         for j, st in enumerate(hsl):
-            if st['occupied'] == 1:
+            if st['occupied']:
                 adssym = st['adsorbate']
                 if st['dentate'] > 1:
                     bondid = st['bonding_index']
@@ -525,18 +521,23 @@ class SlabAdsorbateCoverage(object):
                 else:
                     st['fragment_indices'] = st['adsorbate_indices'] 
                     self.monodentate_adsorbate_list.append(adssym)
-                signature = [st['site'], st['geometry']]                     
-                if self.composition_effect:
-                    signature.append(st['composition'])
-                stlab = self.label_dict['|'.join(signature)]
-                label = str(stlab) + st['fragment']
-                st['label'] = label
-                ll[j] = label
-                if st['dentate'] > 1:                    
-                    self.multidentate_fragments.append(label)
-                    if bondid == adsids[0]:
-                        mdlabel = str(stlab) + adssym
-                        self.multidentate_labels.append(mdlabel)
+
+                if self.label_occupied_sites:
+                    if st['label'] is None:
+                        signature = [st['site'], st['geometry']]                     
+                        if self.composition_effect:
+                            signature.append(st['composition'])
+                        stlab = self.label_dict['|'.join(signature)]
+                    else:
+                        stlab = st['label']
+                    label = str(stlab) + st['fragment']
+                    st['label'] = label
+                    ll[j] = label
+                    if st['dentate'] > 1:                    
+                        self.multidentate_fragments.append(label)
+                        if bondid == adsids[0]:
+                            mdlabel = str(stlab) + adssym
+                            self.multidentate_labels.append(mdlabel)
 
         self.multidentate_adsorbate_list = list(multidentate_adsorbate_dict.values())
         self.adsorbate_list = self.monodentate_adsorbate_list + \
@@ -547,7 +548,10 @@ class SlabAdsorbateCoverage(object):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=True)
 
-    def get_labels(self, fragmentation=True):
+    def get_occupied_labels(self, fragmentation=True):
+        if not self.label_occupied_sites:
+            return self.atoms[self.slab_ids].get_chemical_formula(mode='hill')
+
         ll = self.label_list
         labs = [lab for lab in ll if lab != '0']
         if not fragmentation:
@@ -567,7 +571,7 @@ class SlabAdsorbateCoverage(object):
         nrows, ncols = surfhcm.shape       
         newrows, frag_list = [], []
         for st in hsl:
-            if st['occupied'] == 1:
+            if st['occupied']:
                 if not fragmentation and st['dentate'] > 1: 
                     if st['bonding_index'] != st['adsorbate_indices'][0]:
                         continue
@@ -583,7 +587,7 @@ class SlabAdsorbateCoverage(object):
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
 
         G = nx.Graph()               
-        # Add nodes from label list
+        # Add nodes from fragment list
         G.add_nodes_from([(i, {'symbol': symbols[i]}) 
                            for i in range(nrows)] + 
                          [(j + nrows, {'symbol': frag_list[j]})
@@ -593,21 +597,6 @@ class SlabAdsorbateCoverage(object):
         shcm = surfhcm[:,self.surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
-        edges = zip(rows.tolist(), cols.tolist())
-        G.add_edges_from(edges)
-
-        return G
-
-    def get_site_graph(self):                                         
-        ll = self.label_list
-        scm = self.get_site_connectivity()
-
-        G = nx.Graph()                                                  
-        # Add nodes from label list
-        G.add_nodes_from([(i, {'label': ll[i]}) for 
-                           i in range(scm.shape[0])])
-        # Add edges from surface connectivity matrix
-        rows, cols = np.where(scm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
 
@@ -650,18 +639,15 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
                                        surface, dmax)
         all_sites = cac.hetero_site_list
         if surface:
-            occupied_sites = [s for s in all_sites if 
-                              s['surface'] == surface and
-                              s['occupied'] == 1]
+            occupied_sites = [s for s in all_sites if s['surface'] 
+                              == surface and s['occupied']]
         else:
-            occupied_sites = [s for s in all_sites if 
-                              s['occupied'] == 1] 
+            occupied_sites = [s for s in all_sites if s['occupied']]
 
     else:
         sac = SlabAdsorbateCoverage(atoms, adsorption_sites,
                                     surface, dmax)
         all_sites = sac.hetero_site_list
-        occupied_sites = [s for s in all_sites if
-                          s['occupied'] == 1]
+        occupied_sites = [s for s in all_sites if s['occupied']]
 
     return occupied_sites
