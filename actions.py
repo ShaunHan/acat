@@ -7,7 +7,6 @@ from .labels import get_cluster_signature_from_label, get_slab_signature_from_la
 from ase.data import atomic_numbers
 from ase.formula import Formula
 from ase import Atoms, Atom
-from itertools import takewhile
 import numpy as np
 import re
 
@@ -19,6 +18,8 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
     A function for adding adsorbate to a specific adsorption site on a 
     monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
     truncated-octahedron shapes, or a 100/111 surface slab.
+
+    Note that this function adds one adsorbate to a random site that can be already occupied.
 
     Parameters
     ----------
@@ -106,7 +107,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
 
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
-                          orientation=None):            
+                          orientation=None, tilt_angle=0.):            
     '''orientation: vector that the adsorbate is algined to'''
     
     if height is None:
@@ -133,8 +134,9 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     ads.translate(-bondpos)
     z = -1. if adsorbate in ['CH','NH','OH','SH'] else 1.
     ads.rotate(np.asarray([0., 0., z]) - bondpos, normal)
-    #pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
-    #ads.rotate(-45, pvec, center=ads[0].position)
+    if tilt_angle > 0.:
+        pvec = np.cross(np.random.rand(3) - ads[0].position, normal)
+        ads.rotate(tilt_angle, pvec, center=ads[0].position)
 
     if adsorbate not in adsorbate_list:
         # Always sort the indices the same order as the input symbol.
@@ -177,16 +179,12 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     atoms += ads
 
 
-def add_adsorbate_by_label(atoms, label, 
-                           surface=None,
-                           height=None,
+def add_adsorbate_to_label(atoms, adsorbate, label, 
+                           surface=None, height=None,
                            orientation=None, 
                            composition_effect=False,
                            site_list=None):
 
-    site_number = int(''.join(takewhile(str.isdigit, label))) 
-    adsorbate = label.replace(str(site_number), '')
-    
     if composition_effect:
         slab = atoms[[a.index for a in atoms if a.symbol
                       not in adsorbate_elements]]
@@ -196,13 +194,11 @@ def add_adsorbate_by_label(atoms, label,
         metals = None
 
     if True in atoms.pbc:
-        signature = get_slab_signature_from_label(site_number, 
-                                                  surface,
+        signature = get_slab_signature_from_label(label, surface,
                                                   composition_effect,
                                                   metals)
     else:
-        signature = get_cluster_signature_from_label(site_number,
-                                                     surface,
+        signature = get_cluster_signature_from_label(label,
                                                      composition_effect,
                                                      metals)
     sigs = signature.split('|')
@@ -218,9 +214,9 @@ def add_adsorbate_by_label(atoms, label,
         else:
             site, surface, composition = sigs[0], sigs[1], sigs[2]
 
-    add_adsorbate(atoms, adsorbate, 
-                  site, surface,
-                  geometry, height=height,
+    add_adsorbate(atoms, adsorbate, site, 
+                  surface, geometry, 
+                  height=height,
                   composition=composition, 
                   orientation=orientation, 
                   site_list=site_list)
@@ -236,18 +232,19 @@ def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
 
 
 def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
+                                surface=None, 
                                 min_adsorbate_distance=0.5):
     """Find adsorbates that are too close, remove one set of them.
     The function is intended to remove atoms that are unphysically 
     close. Please do not use a min_adsorbate_distace larger than 2."""
 
-    if adsorbate_coverage:
+    if adsorbate_coverage is not None:
         sac = adsorbate_coverage
     else:
         if True not in atoms.pbc:
             sac = ClusterAdsorbateCoverage(atoms)
         else:
-            sac = SlabAdsorbateCoverage(atoms)                  
+            sac = SlabAdsorbateCoverage(atoms, surface)                  
     dups = get_close_atoms(atoms, cutoff=min_adsorbate_distance,
                            mic=(True in atoms.pbc))
     if dups.size == 0:
@@ -257,7 +254,7 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
     # Make sure it's not the bond length within a fragment being too close
     bond_rows, frag_id_list = [], []
     for st in hsl:
-        if st['occupied'] == 1:
+        if st['occupied']:
             frag_ids = list(st['fragment_indices'])
             frag_id_list.append(frag_ids)
             w = np.where((dups == x).all() for x in frag_ids)[0]
