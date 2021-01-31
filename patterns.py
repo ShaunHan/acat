@@ -4,6 +4,7 @@ from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
 from .adsorption_sites import group_sites_by_surface
 from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from .utilities import is_list_or_tuple, get_mic, atoms_too_close_after_addition 
+from .labels import get_cluster_signature_from_label, get_slab_signature_from_label
 from .actions import add_adsorbate_to_site, remove_adsorbate_from_site 
 from ase.io import read, write, Trajectory
 from ase.formula import Formula
@@ -19,23 +20,25 @@ class StochasticPatternGenerator(object):
 
     def __init__(self, images,                                                       
                  adsorbate_species,
-                 image_weights=None,
-                 species_weights=None,
+                 image_probabilities=None,
+                 species_probabilities=None,
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
                  surface=None,
                  heights=site_heights,
                  allow_6fold=False,
                  composition_effect=True,
+                 dmax=2.5,
                  unique=True,
                  species_forbidden_sites=None,    
+                 species_forbidden_labels=None,
                  fragmentation=True,
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
         """
-        image_weights: list
-        species_weights: dictionary 
+        image_probabilities: list
+        species_probabilities: dictionary 
         adsorption_sites: should only provide when the surface composition is fixed
         unique: whether discard duplicates based on isomorphism or not
         species_forbidden_sites: dictionary with species key and forbidden site (list) values 
@@ -48,8 +51,8 @@ class StochasticPatternGenerator(object):
         """
 
         self.images = images if is_list_or_tuple(images) else [images]                     
-        self.adsorbate_species = adsorbate_species if is_list_or_tuple(adsorbate_species) \
-                                 else [adsorbate_species]
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(
+                                 adsorbate_species) else [adsorbate_species]
         self.monodentate_adsorbates = [s for s in adsorbate_species if s in 
                                        monodentate_adsorbate_list]
         self.multidentate_adsorbates = [s for s in adsorbate_species if s in
@@ -62,26 +65,30 @@ class StochasticPatternGenerator(object):
             raise ValueError('Species {} are not defined '.format(diff) +
                              'in adsorbate_list in settings.py')             
 
-        self.image_weights = image_weights
-        if self.image_weights is not None:
-            assert len(self.image_weights) == len(self.images)
-        self.species_weights = species_weights
-        if self.species_weights is not None:
-            assert len(self.species_weights.keys()) == len(self.adsorbate_species)
-            self.species_weight_list = [self.species_weights[a] for 
-                                        a in self.adsorbate_species]
+        self.image_probabilities = image_probabilities
+        if self.image_probabilities is not None:
+            assert len(self.image_probabilities) == len(self.images)
+        self.species_probabilities = species_probabilities
+        if self.species_probabilities is not None:
+            assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
+            self.species_probability_list = [self.species_probabilities[a] for 
+                                             a in self.adsorbate_species]               
          
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.heights = heights
-        self.allow_6fold = allow_6fold
-        self.composition_effect = composition_effect
+        self.dmax = dmax
         self.unique = unique
         self.species_forbidden_sites = species_forbidden_sites
+        self.species_forbidden_labels = species_forbidden_labels
+
+        if self.species_forbidden_labels is not None:
+            self.species_forbidden_labels = {k: v if is_list_or_tuple(v) else [v] for
+                                             k, v in self.species_forbidden_labels.items()}
         if self.species_forbidden_sites is not None:
             self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
-                                            k, v in self.species_forbidden_sites.items()}
+                                            k, v in self.species_forbidden_sites.items()}  
         self.fragmentation = fragmentation
         self.append_trajectory = append_trajectory
         if isinstance(trajectory, str):            
@@ -115,28 +122,59 @@ class StochasticPatternGenerator(object):
             nbstids = set()
             neighbor_site_indices = []
         else:
-            sac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-                  else ClusterAdsorbateCoverage(self.atoms, sas)
+            if True in self.atoms.pbc:
+                sac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                            label_occupied_sites=self.unique) 
+            else: 
+                sac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax, 
+                                               label_occupied_sites=self.unique)                                                
             hsl = sac.hetero_site_list
             nbstids, selfids = [], []
             for j, st in enumerate(hsl):
-                if st['occupied'] == 1:
+                if st['occupied']:
                     nbstids += site_nblist[j]
                     selfids.append(j)
             nbstids = set(nbstids)
             neighbor_site_indices = [v for v in nbstids if v not in selfids]            
                                                                                              
         # Select adsorbate with probablity 
-        if not self.species_weights:
+        if not self.species_probabilities:
             adsorbate = random.choice(self.adsorbate_species)
         else: 
             adsorbate = random.choices(k=1, population=self.adsorbate_species,
-                                       weights=self.species_weight_list)[0]    
+                                       probabilities=self.species_probability_list)[0]    
                                                                                              
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
         nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
-        if self.species_forbidden_sites is not None:
+
+        if self.species_forbidden_labels is not None:
+            if adsorbate in self.species_forbidden_labels:
+                labs = self.species_forbidden_labels[adsorbate]
+                if True in self.atoms.pbc:
+                    def get_signature(site):
+                        if sas.composition_effect:
+                            signature = [site['site'], site['geometry'], site['composition']]
+                        else:
+                            signature = [site['site'], site['geometry']]
+                        return sas.label_dict['|'.join(signature)]                        
+
+                    forb_signatures = [get_slab_signature_from_label(lab, sas.surface,
+                                       sas.composition_effect, sas.metals) for lab in labs]    
+                else:
+                    def get_signature(site):
+                        if sas.composition_effect:
+                            signature = [site['site'], site['surface'], site['composition']]
+                        else:
+                            signature = [site['site'], site['surface']]
+                        return sas.label_dict['|'.join(signature)]                   
+
+                    forb_signatures = [get_cluster_signature_from_label(lab, 
+                                       sas.composition_effect, sas.metals) for lab in labs] 
+                
+                nsids = [i for i in nsids if get_signature(hsl[i]) not in forb_signatures]    
+
+        elif self.species_forbidden_sites is not None:
             if adsorbate in self.species_forbidden_sites:
                 nsids = [i for i in nsids if hsl[i]['site'] not in 
                          self.species_forbidden_sites[adsorbate]] 
@@ -185,13 +223,18 @@ class StochasticPatternGenerator(object):
         else:
             add_adsorbate_to_site(self.atoms, adsorbate, nst, 
                                   height=self.heights[nst['site']])                            
-        nsac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-               else ClusterAdsorbateCoverage(self.atoms, sas)
+
+        if True in self.atoms.pbc:
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                         label_occupied_sites=self.unique) 
+        else:
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax, 
+                                            label_occupied_sites=self.unique)
         nhsl = nsac.hetero_site_list
                                                                            
         # Make sure there no new site too close to previous sites after 
         # the action. Useful when adding large molecules
-        if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
+        if any(s for i, s in enumerate(nhsl) if (s['occupied'])
         and (i in neighbor_site_indices)):
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
@@ -211,11 +254,15 @@ class StochasticPatternGenerator(object):
         return nsac                                                                
 
     def _remove_adsorbate(self, adsorption_sites):
-        sas = adsorption_sites                      
-        sac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-              else ClusterAdsorbateCoverage(self.atoms, sas)
+        sas = adsorption_sites 
+        if True in self.atoms.pbc:                    
+            sac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                        label_occupied_sites=self.unique) 
+        else: 
+            sac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                           label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
-        occupied = [s for s in hsl if s['occupied'] == 1]
+        occupied = [s for s in hsl if s['occupied']]
         if not occupied:
             if self.logfile is not None:
                 self.logfile.write('There is no occupied site. Removal failed!\n')
@@ -231,8 +278,12 @@ class StochasticPatternGenerator(object):
                                    'from image {}\n'.format(self.n_image))
                 self.logfile.flush()
             return
-        nsac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-               else ClusterAdsorbateCoverage(self.atoms, sas)                      
+
+        if True in self.atoms.pbc:
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                         label_occupied_sites=self.unique) 
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                            label_occupied_sites=self.unique)                      
         return nsac 
 
     def _move_adsorbate(self, adsorption_sites):           
@@ -241,11 +292,15 @@ class StochasticPatternGenerator(object):
             site_nblist = self.site_nblist
         else:
             site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
-                                                                        
-        sac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-              else ClusterAdsorbateCoverage(self.atoms, sas)
+
+        if True in self.atoms.pbc:                                                                         
+            sac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                        label_occupied_sites=self.unique) 
+        else: 
+            sac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                           label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
-        occupied = [s for s in hsl if s['occupied'] == 1]                         
+        occupied = [s for s in hsl if s['occupied']]                         
         if not occupied:
             if self.logfile is not None:
                 self.logfile.write('There is no occupied site. Move failed!\n')
@@ -257,7 +312,7 @@ class StochasticPatternGenerator(object):
 
         nbstids, selfids = [], []
         for j, st in enumerate(hsl):
-            if st['occupied'] == 1:
+            if st['occupied']:
                 nbstids += site_nblist[j]
                 selfids.append(j)
         nbstids = set(nbstids)
@@ -266,7 +321,34 @@ class StochasticPatternGenerator(object):
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
         nsids = [i for i, s in enumerate(hsl) if i not in nbstids]
-        if self.species_forbidden_sites is not None:
+
+        if self.species_forbidden_labels is not None:
+            if adsorbate in self.species_forbidden_labels:
+                labs = self.species_forbidden_labels[adsorbate]
+                if True in self.atoms.pbc:
+                    def get_signature(site):
+                        if sas.composition_effect:
+                            signature = [site['site'], site['geometry'], site['composition']]
+                        else:
+                            signature = [site['site'], site['geometry']]
+                        return sas.label_dict['|'.join(signature)]                        
+                                                                                             
+                    forb_signatures = [get_slab_signature_from_label(lab, sas.surface,
+                                       sas.composition_effect, sas.metals) for lab in labs]  
+                else:
+                    def get_signature(site):
+                        if sas.composition_effect:
+                            signature = [site['site'], site['surface'], site['composition']]
+                        else:
+                            signature = [site['site'], site['surface']]
+                        return sas.label_dict['|'.join(signature)]                   
+                                                                                             
+                    forb_signatures = [get_cluster_signature_from_label(lab, 
+                                       sas.composition_effect, sas.metals) for lab in labs]
+                
+                nsids = [i for i in nsids if get_signature(hsl[i]) not in forb_signatures]   
+
+        elif self.species_forbidden_sites is not None:
             if adsorbate in self.species_forbidden_sites:
                 nsids = [i for i in nsids if hsl[i]['site'] not in 
                          self.species_forbidden_sites[adsorbate]] 
@@ -316,14 +398,18 @@ class StochasticPatternGenerator(object):
             add_adsorbate_to_site(self.atoms, adsorbate, nst,
                                   height=self.heights[nst['site']])                          
 
-        nsac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-               else ClusterAdsorbateCoverage(self.atoms, sas)
+        if True in self.atoms.pbc:
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                         label_occupied_sites=self.unique) 
+        else: 
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                            label_occupied_sites=self.unique)
         nhsl = nsac.hetero_site_list
                                                                            
         # Make sure there no new site too close to previous sites after 
         # the action. Useful when adding large molecules
-        if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
-        and (i in neighbor_site_indices)):
+        if any(s for i, s in enumerate(nhsl) if s['occupied'] and (i in 
+        neighbor_site_indices)):
             if self.logfile is not None:
                 self.logfile.write('The new position of {} is too '.format(adsorbate)
                                    + 'close to another adsorbate. Move failed!\n')
@@ -342,11 +428,15 @@ class StochasticPatternGenerator(object):
         return nsac                                                                 
 
     def _replace_adsorbate(self, adsorption_sites):
-        sas = adsorption_sites                                                           
-        sac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-              else ClusterAdsorbateCoverage(self.atoms, sas)
+        sas = adsorption_sites                     
+        if True in self.atoms.pbc:                                      
+            sac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                        label_occupied_sites=self.unique) 
+        else: 
+            sac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                           label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
-        occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied'] == 1]
+        occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied']]
         if not occupied_stids:
             if self.logfile is not None:
                 self.logfile.write('There is no occupied site. Replacement failed!\n')
@@ -360,25 +450,46 @@ class StochasticPatternGenerator(object):
         # Select a different adsorbate with probablity 
         old_adsorbate = rpst['adsorbate']
         new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
-        if self.species_forbidden_sites is not None:                      
-            if adsorbate in self.species_forbidden_sites:
-                _new_options = []
-                for o in new_options: 
-                    if o in self.species_forbidden_sites:
-                        if rpst['site'] not in self.species_forbidden_sites[o]:
-                            _new_options.append(o)
-                new_options = _new_options
+
+        if self.species_forbidden_labels is not None:
+            _new_options = []
+            for o in new_options:
+                if o in self.species_forbidden_labels: 
+                    if True in self.atoms.pbc:
+                        if sas.composition_effect:
+                            signature = [rpst['site'], rpst['geometry'], rpst['composition']]
+                        else:
+                            signature = [rpst['site'], rpst['geometry']]
+                        lab = sas.label_dict['|'.join(signature)]                        
+                                                                                                 
+                    else:
+                        if sas.composition_effect:
+                            signature = [rpst['site'], rpst['surface'], rpst['composition']]
+                        else:
+                            signature = [rpst['site'], rpst['surface']]
+                        lab = sas.label_dict['|'.join(signature)]                                                                                            
+                    if lab not in self.species_forbidden_labels[o]:
+                        _new_options.append(o)
+            new_options = _new_options                                                       
+
+        elif self.species_forbidden_sites is not None:                      
+            _new_options = []
+            for o in new_options: 
+                if o in self.species_forbidden_sites:
+                    if rpst['site'] not in self.species_forbidden_sites[o]:
+                        _new_options.append(o)
+            new_options = _new_options
 
         # Prohibit adsorbates with more than 1 atom from entering subsurf 6-fold sites
         if self.allow_6fold and rpst['site'] == '6fold':
             new_options = [o for o in new_options if len(o) == 1]
 
-        if not self.species_weights:
+        if not self.species_probabilities:
             adsorbate = random.choice(new_options)
         else:
-            new_weights = [self.species_weights[a] for a in new_options]
+            new_probabilities = [self.species_probabilities[a] for a in new_options]
             adsorbate = random.choices(k=1, population=self.adsorbate_species,
-                                       weights=new_weights)[0] 
+                                       probabilities=new_probabilities)[0] 
         if self.adsorption_sites is not None:
             site_nblist = self.site_nblist
         else:
@@ -386,7 +497,7 @@ class StochasticPatternGenerator(object):
 
         nbstids, selfids = [], []
         for j, st in enumerate(hsl):
-            if st['occupied'] == 1:
+            if st['occupied']:
                 nbstids += site_nblist[j]
                 selfids.append(j)
         nbstids = set(nbstids)
@@ -419,15 +530,19 @@ class StochasticPatternGenerator(object):
         else:
             add_adsorbate_to_site(self.atoms, adsorbate, rpst,
                                   height=self.heights[rpst['site']])                 
-   
-        nsac = SlabAdsorbateCoverage(self.atoms, sas) if True in self.atoms.pbc \
-               else ClusterAdsorbateCoverage(self.atoms, sas)         
+ 
+        if True in self.atoms.pbc:   
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                         label_occupied_sites=self.unique) 
+        else: 
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
+                                            label_occupied_sites=self.unique)         
         nhsl = nsac.hetero_site_list                            
                                                                            
         # Make sure there no new site too close to previous sites after 
         # the action. Useful when adding large molecules
-        if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
-        and (i in neighbor_site_indices)):
+        if any(s for i, s in enumerate(nhsl) if s['occupied'] and (i in 
+        neighbor_site_indices)):
             if self.logfile is not None:
                 self.logfile.write('The added {} is too close '.format(adsorbate)
                                    + 'to another adsorbate. Replacement failed!\n')
@@ -447,11 +562,11 @@ class StochasticPatternGenerator(object):
  
     def run(self, n_gen, 
             actions=['add','remove','replace'], 
-            action_weights=None):
+            action_probabilities=None):
         
         actions = actions if is_list_or_tuple(actions) else [actions]
-        if action_weights is not None:
-            all_action_weights = [action_weights[a] for a in actions]
+        if action_probabilities is not None:
+            all_action_probabilities = [action_probabilities[a] for a in actions]
         
         self.labels_list, self.graph_list = [], []
 
@@ -473,11 +588,15 @@ class StochasticPatternGenerator(object):
                                                self.composition_effect)
                 else:
                     psas = ClusterAdsorptionSites(patoms, self.allow_6fold,
-                                                 self.composition_effect)      
-                psac = SlabAdsorbateCoverage(patoms, psas) if True in patoms.pbc \
-                       else ClusterAdsorbateCoverage(patoms, psas)
+                                                  self.composition_effect) 
+                if True in patoms.pbc:
+                    psac = SlabAdsorbateCoverage(patoms, psas, dmax=self.dmax,
+                                                 label_occupied_sites=self.unique)           
+                else:
+                    psac = ClusterAdsorbateCoverage(patoms, psas, dmax=self.dmax,
+                                                    label_occupied_sites=self.unique)        
 
-                plabs = psac.get_labels(fragmentation=self.fragmentation)
+                plabs = psac.get_occupied_labels(fragmentation=self.fragmentation)
                 pG = psac.get_graph(fragmentation=self.fragmentation)
                 self.labels_list.append(plabs)
                 self.graph_list.append(pG)
@@ -492,11 +611,11 @@ class StochasticPatternGenerator(object):
                     self.logfile.flush()
                 n_old += 1
             # Select image with probablity 
-            if not self.species_weights:
+            if not self.species_probabilities:
                 self.atoms = random.choice(self.images).copy()
             else: 
                 self.atoms = random.choices(k=1, population=self.images, 
-                                            weights=self.image_weights)[0].copy()
+                                            probabilities=self.image_probabilities)[0].copy()
             self.n_image = n_new 
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
@@ -511,8 +630,8 @@ class StochasticPatternGenerator(object):
                                              self.composition_effect)      
             # Choose an action 
             self.clean_slab = False
-            ads = [a for a in self.atoms if a.symbol in adsorbate_elements]
-            if not ads:
+            nslab = len(sas.indices) 
+            if nslab == len(self.atoms):
                 if 'add' not in actions:                                                             
                     warnings.warn("There is no adsorbate in image {}. ".format(n_new)
                                   + "The only available action is 'add'")
@@ -521,12 +640,12 @@ class StochasticPatternGenerator(object):
                     action = 'add'
                     self.clean_slab = True
             else:
-                if not action_weights:
+                if not action_probabilities:
                     action = random.choice(actions)
                 else:
-                    assert len(action_weights.keys()) == len(actions)
+                    assert len(action_probabilities.keys()) == len(actions)
                     action = random.choices(k=1, population=actions, 
-                                            weights=all_action_weights)[0] 
+                                            probabilities=all_action_probabilities)[0] 
             if self.logfile is not None:                                    
                 self.logfile.write('Action: {}\n'.format(action))
                 self.logfile.flush()
@@ -542,7 +661,7 @@ class StochasticPatternGenerator(object):
             if not nsac:
                 continue
 
-            labs = nsac.get_labels(fragmentation=self.fragmentation)
+            labs = nsac.get_occupied_labels(fragmentation=self.fragmentation)
             if self.unique:
                 G = nsac.get_graph(fragmentation=self.fragmentation)
                 if labs in self.labels_list: 
@@ -566,6 +685,7 @@ class StochasticPatternGenerator(object):
                             continue            
                 self.labels_list.append(labs)
                 self.graph_list.append(G)
+
             if self.logfile is not None:
                 self.logfile.write('Succeed! Pattern generated: {}\n\n'.format(labs))
                 self.logfile.flush()
@@ -586,8 +706,10 @@ class SystematicPatternGenerator(object):
                  heights=site_heights,
                  allow_6fold=False,
                  composition_effect=True,
+                 dmax=2.5,
                  unique=True,
                  species_forbidden_sites=None,
+                 species_forbidden_labels=None,
                  enumerate_orientations=True,
                  trajectory='patterns.traj',
                  append_trajectory=False,
@@ -598,8 +720,8 @@ class SystematicPatternGenerator(object):
        """
 
         self.images = images if is_list_or_tuple(images) else [images]                     
-        self.adsorbate_species = adsorbate_species if is_list_or_tuple(adsorbate_species) \
-                                 else [adsorbate_species]
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(
+                                 adsorbate_species) else [adsorbate_species]
         self.monodentate_adsorbates = [s for s in adsorbate_species if s in 
                                        monodentate_adsorbate_list]
         self.multidentate_adsorbates = [s for s in adsorbate_species if s in
@@ -616,8 +738,14 @@ class SystematicPatternGenerator(object):
         self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.heights = heights        
+        self.dmax = dmax
         self.unique = unique
         self.species_forbidden_sites = species_forbidden_sites
+        self.species_forbidden_labels = species_forbidden_labels
+                                                                                           
+        if self.species_forbidden_labels is not None:
+            self.species_forbidden_labels = {k: v if is_list_or_tuple(v) else [v] for
+                                             k, v in self.species_forbidden_labels.items()}
         if self.species_forbidden_sites is not None:
             self.species_forbidden_sites = {k: v if is_list_or_tuple(v) else [v] for
                                             k, v in self.species_forbidden_sites.items()}
@@ -655,13 +783,17 @@ class SystematicPatternGenerator(object):
             hsl = sas.site_list
             nbstids = set()    
             neighbor_site_indices = []        
-        else: 
-            sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
-                  else ClusterAdsorbateCoverage(self.image, sas)
+        else:
+            if True in self.image.pbc: 
+                sac = SlabAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                            label_occupied_sites=self.unique) 
+            else: 
+                sac = ClusterAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                               label_occupied_sites=self.unique)
             hsl = sac.hetero_site_list
             nbstids, selfids = [], []
             for j, st in enumerate(hsl):
-                if st['occupied'] == 1:
+                if st['occupied']:
                     nbstids += site_nblist[j]
                     selfids.append(j)
             nbstids = set(nbstids)
@@ -688,7 +820,24 @@ class SystematicPatternGenerator(object):
 
         for k, nst in enumerate(newsites):
             for adsorbate in self.adsorbate_species:
-                if self.species_forbidden_sites is not None:                          
+                if self.species_forbidden_labels is not None:
+                    if adsorbate in self.species_forbidden_labels: 
+                        if True in self.image.pbc:
+                            if sas.composition_effect:
+                                signature = [nst['site'], nst['geometry'], nst['composition']]
+                            else:
+                                signature = [nst['site'], nst['geometry']]
+                            lab = sas.label_dict['|'.join(signature)]                        
+                        else:
+                            if sas.composition_effect:
+                                signature = [nst['site'], nst['surface'], nst['composition']]
+                            else:
+                                signature = [nst['site'], nst['surface']]
+                            lab = sas.label_dict['|'.join(signature)]
+                        if lab in self.species_forbidden_labels[adsorbate]:
+                            continue                                                                             
+                                                                                                     
+                elif self.species_forbidden_sites is not None:                          
                     if adsorbate in self.species_forbidden_sites:
                         if nst['site'] in self.species_forbidden_sites[adsorbate]:
                             continue
@@ -719,23 +868,27 @@ class SystematicPatternGenerator(object):
                     else:
                         add_adsorbate_to_site(atoms, adsorbate, nst,
                                               height=self.heights[nst['site']])        
-  
-                    nsac = SlabAdsorbateCoverage(atoms, sas) if True in atoms.pbc \
-                           else ClusterAdsorbateCoverage(atoms, sas)
+ 
+                    if True in atoms.pbc:
+                        nsac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax,
+                                                     label_occupied_sites=self.unique) 
+                    else: 
+                        nsac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax,
+                                                        label_occupied_sites=self.unique)
                     nhsl = nsac.hetero_site_list
   
                     # Make sure there no new site too close to previous sites after 
                     # adding the adsorbate. Useful when adding large molecules
-                    if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
-                    and (i in neighbor_site_indices)):
+                    if any(s for i, s in enumerate(nhsl) if s['occupied'] and (i in 
+                    neighbor_site_indices)):
                         continue
                     ads_atoms = atoms[[a.index for a in atoms if                   
-                                            a.symbol in adsorbate_elements]]
+                                       a.symbol in adsorbate_elements]]
                     if atoms_too_close_after_addition(ads_atoms, len(list(Formula(
                     adsorbate))), self.min_adsorbate_distance, mic=(True in atoms.pbc)):
                         continue
 
-                    labs = nsac.get_labels(fragmentation=self.enumerate_orientations)
+                    labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
                     if self.unique:                                        
                         G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                         if labs in self.labels_list: 
@@ -755,7 +908,7 @@ class SystematicPatternGenerator(object):
                                     continue            
                         self.labels_list.append(labs)
                         self.graph_list.append(G)                                       
-                 
+
                     if self.logfile is not None:                                
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
                                            + 'generated: {}\n'.format(labs))
@@ -769,10 +922,14 @@ class SystematicPatternGenerator(object):
     def _remove_adsorbate(self, adsorption_sites):
         self.n_duplicate = 0                                                           
         sas = adsorption_sites
-        sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
-              else ClusterAdsorbateCoverage(self.image, sas)
+        if True in self.image.pbc:
+            sac = SlabAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                        label_occupied_sites=self.unique) 
+        else: 
+            sac = ClusterAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                           label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
-        occupied = [s for s in hsl if s['occupied'] == 1]
+        occupied = [s for s in hsl if s['occupied']]
         if not occupied:
             if self.logfile is not None:
                 self.logfile.write('There is no occupied site. Removal failed!\n')
@@ -800,10 +957,15 @@ class SystematicPatternGenerator(object):
                 atoms.info['data']['labels'] = []
                 self.trajectory.write(atoms)
                 return
-                                                                                       
-            nsac = SlabAdsorbateCoverage(atoms, sas) if True in atoms.pbc \
-                   else ClusterAdsorbateCoverage(atoms, sas)
-            labs = nsac.get_labels(fragmentation=self.enumerate_orientations)
+                                                      
+            if True in atoms.pbc:                                
+                nsac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax,
+                                             label_occupied_sites=self.unique) 
+            else: 
+                nsac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax,
+                                                label_occupied_sites=self.unique)
+
+            labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
             if self.unique:                                        
                 G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                 if labs in self.labels_list: 
@@ -836,13 +998,17 @@ class SystematicPatternGenerator(object):
             site_nblist = self.site_nblist
         else:
             site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
-  
-        sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
-              else ClusterAdsorbateCoverage(self.image, sas)
+
+        if True in self.image.pbc:  
+            sac = SlabAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                        label_occupied_sites=self.unique) 
+        else: 
+            sac = ClusterAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                           label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         nbstids, selfids, occupied = [], [], []
         for j, st in enumerate(hsl):
-            if st['occupied'] == 1:
+            if st['occupied']:
                 nbstids += site_nblist[j]
                 selfids.append(j)
                 occupied.append(st)
@@ -885,7 +1051,24 @@ class SystematicPatternGenerator(object):
                     newsites.append(s)
  
             for k, nst in enumerate(newsites):
-                if self.species_forbidden_sites is not None:                          
+                if self.species_forbidden_labels is not None:
+                    if adsorbate in self.species_forbidden_labels: 
+                        if True in atoms.pbc:
+                            if sas.composition_effect:
+                                signature = [nst['site'], nst['geometry'], nst['composition']]
+                            else:
+                                signature = [nst['site'], nst['geometry']]
+                            lab = sas.label_dict['|'.join(signature)]                        
+                        else:
+                            if sas.composition_effect:
+                                signature = [nst['site'], nst['surface'], nst['composition']]
+                            else:
+                                signature = [nst['site'], nst['surface']]
+                            lab = sas.label_dict['|'.join(signature)]
+                        if lab in self.species_forbidden_labels[adsorbate]:
+                            continue                                                          
+
+                elif self.species_forbidden_sites is not None:                          
                     if adsorbate in self.species_forbidden_sites:
                         if nst['site'] in self.species_forbidden_sites[adsorbate]:
                             continue
@@ -916,26 +1099,34 @@ class SystematicPatternGenerator(object):
                     else:
                         add_adsorbate_to_site(final_atoms, adsorbate, nst,
                                               height=self.heights[nst['site']])       
-      
-                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
-                           else ClusterAdsorbateCoverage(final_atoms, sas)
+
+                    if True in final_atoms.pbc:   
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                     label_occupied_sites=self.unique) 
+                    else: 
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                        label_occupied_sites=self.unique)
                     nhsl = nsac.hetero_site_list
       
                     # Make sure there no new site too close to previous sites after 
                     # adding the adsorbate. Useful when adding large molecules
-                    if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
-                    and (i in neighbor_site_indices)):
+                    if any(s for i, s in enumerate(nhsl) if s['occupied'] and (i in 
+                    neighbor_site_indices)):
                         continue
                     ads_atoms = final_atoms[[a.index for a in final_atoms if                   
-                                            a.symbol in adsorbate_elements]]
+                                             a.symbol in adsorbate_elements]]
                     if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))),
                     self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
                         continue                                                                                   
 
-                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
-                           else ClusterAdsorbateCoverage(final_atoms, sas)                      
+                    if True in final_atoms.pbc:
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                     label_occupied_sites=self.unique) 
+                    else: 
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                        label_occupied_sites=self.unique)                      
       
-                    labs = nsac.get_labels(fragmentation=self.enumerate_orientations)
+                    labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
                     if self.unique:                                        
                         G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                         if labs in self.labels_list: 
@@ -962,11 +1153,15 @@ class SystematicPatternGenerator(object):
                     self.n_write += 1
 
     def _replace_adsorbate(self, adsorption_sites):
-        sas = adsorption_sites                                                           
-        sac = SlabAdsorbateCoverage(self.image, sas) if True in self.image.pbc \
-              else ClusterAdsorbateCoverage(self.image, sas)
+        sas = adsorption_sites
+        if True in self.image.pbc:                                                           
+            sac = SlabAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                        label_occupied_sites=self.unique)
+        else: 
+            sac = ClusterAdsorbateCoverage(self.image, sas, dmax=self.dmax,
+                                           label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
-        occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied'] == 1]
+        occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied']]
         if not occupied_stids:
             if self.logfile is not None:
                 self.logfile.write('There is no occupied site. Replacement failed!\n')
@@ -987,14 +1182,35 @@ class SystematicPatternGenerator(object):
             # Select a different adsorbate with probablity 
             old_adsorbate = rpst['adsorbate']
             new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
-            if self.species_forbidden_sites is not None:                      
-                if adsorbate in self.species_forbidden_sites:
-                    _new_options = []
-                    for o in new_options: 
-                        if o in self.species_forbidden_sites:
-                            if rpst['site'] not in self.species_forbidden_sites[o]:
-                                _new_options.append(o)
-                    new_options = _new_options
+
+            if self.species_forbidden_labels is not None:
+                _new_options = []
+                for o in new_options:
+                    if o in self.species_forbidden_labels: 
+                        if True in atoms.pbc:
+                            if sas.composition_effect:
+                                signature = [rpst['site'], rpst['geometry'], rpst['composition']]
+                            else:
+                                signature = [rpst['site'], rpst['geometry']]
+                            lab = sas.label_dict['|'.join(signature)]                        
+                                                                                                 
+                        else:
+                            if sas.composition_effect:
+                                signature = [rpst['site'], rpst['surface'], rpst['composition']]
+                            else:
+                                signature = [rpst['site'], rpst['surface']]
+                            lab = sas.label_dict['|'.join(signature)]                            
+                        if lab not in self.species_forbidden_labels[o] :
+                            _new_options.append(o)
+                new_options = _new_options                                                       
+
+            elif self.species_forbidden_sites is not None:                      
+                _new_options = []
+                for o in new_options: 
+                    if o in self.species_forbidden_sites:
+                        if rpst['site'] not in self.species_forbidden_sites[o]:
+                            _new_options.append(o)
+                new_options = _new_options
                                                                                              
             # Prohibit adsorbates with more than 1 atom from entering subsurf 6-fold sites
             if self.allow_6fold and rpst['site'] == '6fold':
@@ -1008,7 +1224,7 @@ class SystematicPatternGenerator(object):
                                                                                                  
                 nbstids, selfids = [], []
                 for j, st in enumerate(hsl):
-                    if st['occupied'] == 1:
+                    if st['occupied']:
                         nbstids += site_nblist[j]
                         selfids.append(j)
                 nbstids = set(nbstids)
@@ -1045,26 +1261,34 @@ class SystematicPatternGenerator(object):
                     else:
                         add_adsorbate_to_site(final_atoms, adsorbate, rpst,
                                               height=self.heights[rpst['site']])        
-                                                                                                  
-                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
-                           else ClusterAdsorbateCoverage(final_atoms, sas)
+
+                    if True in final_atoms.pbc:                                                                              
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                     label_occupied_sites=self.unique)
+                    else: 
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                        label_occupied_sites=self.unique)
                     nhsl = nsac.hetero_site_list
                                                                                                   
                     # Make sure there no new site too close to previous sites after 
                     # adding the adsorbate. Useful when adding large molecules
-                    if any(s for i, s in enumerate(nhsl) if (s['occupied'] == 1)
-                    and (i in neighbor_site_indices)):
+                    if any(s for i, s in enumerate(nhsl) if s['occupied'] and (i in 
+                    neighbor_site_indices)):
                         continue
                     ads_atoms = final_atoms[[a.index for a in final_atoms if                   
-                                            a.symbol in adsorbate_elements]]
+                                             a.symbol in adsorbate_elements]]
                     if atoms_too_close_after_addition(ads_atoms, len(list(Formula(adsorbate))),  
                     self.min_adsorbate_distance, mic=(True in final_atoms.pbc)):
                         continue
 
-                    nsac = SlabAdsorbateCoverage(final_atoms, sas) if True in final_atoms.pbc \
-                           else ClusterAdsorbateCoverage(final_atoms, sas)                     
+                    if True in final_atoms.pbc:
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                     label_occupied_sites=self.unique) 
+                    else: 
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, dmax=self.dmax,
+                                                        label_occupied_sites=self.unique)                     
       
-                    labs = nsac.get_labels(fragmentation=self.enumerate_orientations)                                                   
+                    labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)                                                   
                     if self.unique:                                        
                         G = nsac.get_graph(fragmentation=self.enumerate_orientations)
                         if labs in self.labels_list: 
@@ -1113,11 +1337,15 @@ class SystematicPatternGenerator(object):
                                                self.composition_effect)
                 else:
                     psas = ClusterAdsorptionSites(patoms, self.allow_6fold,
-                                                 self.composition_effect)      
-                psac = SlabAdsorbateCoverage(patoms, psas) if True in patoms.pbc \
-                       else ClusterAdsorbateCoverage(patoms, psas)
+                                                  self.composition_effect)      
+                if True in patoms.pbc:
+                    psac = SlabAdsorbateCoverage(patoms, psas, dmax=self.dmax,
+                                                 label_occupied_sites=self.unique)      
+                else:
+                    psac = ClusterAdsorbateCoverage(patoms, psas, dmax=self.dmax,
+                                                    label_occupied_sites=self.unique)        
                                                                                    
-                plabs = psac.get_labels(fragmentation=self.enumerate_orientations)
+                plabs = psac.get_occupied_labels(fragmentation=self.enumerate_orientations)
                 pG = psac.get_graph(fragmentation=self.enumerate_orientations)
                 self.labels_list.append(plabs)
                 self.graph_list.append(pG)
@@ -1143,8 +1371,8 @@ class SystematicPatternGenerator(object):
                                              self.composition_effect)     
 
             self.clean_slab = False
-            ads = [a for a in self.image if a.symbol in adsorbate_elements] 
-            if not ads:
+            self.nslab = len(sas.indices)
+            if self.nslab == len(self.image):
                 if action != 'add':
                     warnings.warn("There is no adsorbate in image {}. ".format(n) 
                                   + "The only available action is 'add'")        
@@ -1609,7 +1837,8 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
     return atoms
 
 
-def random_coverage_pattern(atoms, adsorbate, surface=None, 
+def random_coverage_pattern(atoms, adsorbate_species, 
+                            surface=None, 
                             min_adsorbate_distance=1.5, 
                             heights=site_heights,
                             allow_6fold=False):
@@ -1628,6 +1857,11 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
 
     heights: A dictionary that contains the adsorbate height for each site type.
     '''
+    adsorbate_species = adsorbate_species if is_list_or_tuple(
+                        adsorbate_species) else [adsorbate_species]
+    if species_probabilities is not None:
+        assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
+        probability_list = [species_probabilities[a] for a in adsorbate_species]               
  
     if True not in atoms.pbc:                                
         sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
@@ -1639,8 +1873,16 @@ def random_coverage_pattern(atoms, adsorbate, surface=None,
 
     random.shuffle(site_list)
     natoms = len(atoms)
-    nads = len(list(Formula(adsorbate)))
+    nads_dict = {ads: len(list(Formula(ads))) for ads in adsorbate_species}
+
     for st in site_list:
+        # Select adsorbate with probablity 
+        if not species_probabilities:
+            adsorbate = random.choice(adsorbate_species)
+        else: 
+            adsorbate = random.choices(k=1, population=adsorbate_species,
+                                       probabilities=probability_list)[0] 
+        nads = nads_dict[adsorbate] 
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)       
         if min_adsorbate_distance > 0:
