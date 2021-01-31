@@ -135,7 +135,7 @@ class ClusterAdsorbateCoverage(object):
         ads_list = self.ads_list
         ndentate_dict = {} 
 
-        for adsid in self.ads_ids:
+        for adsid in self.ads_ids:            
             if self.symbols[adsid] == 'H':
                 if [adsid] not in ads_list:
                     rest = [s for x in ads_list for s in x 
@@ -153,12 +153,13 @@ class ClusterAdsorbateCoverage(object):
 
             adsids = next((l for l in ads_list if adsid in l), None)
             adsi = tuple(sorted(adsids))
+
             if 'occupied' in st:
                 if bl >= st['bond_length']:
                     continue
                 elif self.symbols[adsid] != 'H':
-                    print(st)
-                    ndentate_dict[adsi] -= 1 
+                    if adsi in ndentate_dict:
+                        ndentate_dict[adsi] -= 1 
             st['bonding_index'] = adsid
             st['bond_length'] = bl
 
@@ -457,7 +458,8 @@ class SlabAdsorbateCoverage(object):
                 if bl >= st['bond_length']:
                     continue
                 elif self.symbols[adsid] != 'H':
-                    ndentate_dict[adsi] -= 1 
+                    if adsi in ndentate_dict:
+                        ndentate_dict[adsi] -= 1 
             st['bonding_index'] = adsid
             st['bond_length'] = bl
 
