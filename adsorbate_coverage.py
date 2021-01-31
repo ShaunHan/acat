@@ -59,7 +59,7 @@ class ClusterAdsorbateCoverage(object):
                                                  self.composition_effect) 
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.populate_hetero_sites()
+        self.populate_occupied_sites()
 
         self.labels = self.get_occupied_labels()
 
@@ -129,7 +129,7 @@ class ClusterAdsorbateCoverage(object):
 
         return np.asarray(conn_mat) 
 
-    def populate_hetero_sites(self):
+    def populate_occupied_sites(self):
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
@@ -359,7 +359,7 @@ class SlabAdsorbateCoverage(object):
                                                  self.composition_effect) 
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.populate_hetero_sites()
+        self.populate_occupied_sites()
 
         self.labels = self.get_occupied_labels() 
 
@@ -429,7 +429,7 @@ class SlabAdsorbateCoverage(object):
 
         return np.asarray(conn_mat) 
 
-    def populate_hetero_sites(self):
+    def populate_occupied_sites(self):
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
