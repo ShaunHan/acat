@@ -251,7 +251,7 @@ class ClusterAdsorbateCoverage(object):
 
     def get_occupied_labels(self, fragmentation=True):
         if not self.label_occupied_sites:
-            return self.atoms[self.slab_ids].get_chemical_formula(mode='hill')
+            return self.atoms[self.ads_ids].get_chemical_formula(mode='hill')
 
         ll = self.label_list
         labs = [lab for lab in ll if lab != '0']
@@ -552,7 +552,7 @@ class SlabAdsorbateCoverage(object):
 
     def get_occupied_labels(self, fragmentation=True):
         if not self.label_occupied_sites:
-            return self.atoms[self.slab_ids].get_chemical_formula(mode='hill')
+            return self.atoms[self.ads_ids].get_chemical_formula(mode='hill')
 
         ll = self.label_list
         labs = [lab for lab in ll if lab != '0']
