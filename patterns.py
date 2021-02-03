@@ -150,29 +150,23 @@ class StochasticPatternGenerator(object):
 
         if self.species_forbidden_labels is not None:
             if adsorbate in self.species_forbidden_labels:
-                labs = self.species_forbidden_labels[adsorbate]
+                forb_labs = self.species_forbidden_labels[adsorbate]
                 if True in self.atoms.pbc:
-                    def get_signature(site):
+                    def get_label(site):
                         if sas.composition_effect:
                             signature = [site['site'], site['geometry'], site['composition']]
                         else:
                             signature = [site['site'], site['geometry']]
                         return sas.label_dict['|'.join(signature)]                        
-
-                    forb_signatures = [get_slab_signature_from_label(lab, sas.surface,
-                                       sas.composition_effect, sas.metals) for lab in labs]    
                 else:
-                    def get_signature(site):
+                    def get_label(site):
                         if sas.composition_effect:
                             signature = [site['site'], site['surface'], site['composition']]
                         else:
                             signature = [site['site'], site['surface']]
                         return sas.label_dict['|'.join(signature)]                   
 
-                    forb_signatures = [get_cluster_signature_from_label(lab, 
-                                       sas.composition_effect, sas.metals) for lab in labs] 
-                
-                nsids = [i for i in nsids if get_signature(hsl[i]) not in forb_signatures]    
+                nsids = [i for i in nsids if get_label(hsl[i]) not in forb_labs]    
 
         elif self.species_forbidden_sites is not None:
             if adsorbate in self.species_forbidden_sites:
@@ -324,29 +318,23 @@ class StochasticPatternGenerator(object):
 
         if self.species_forbidden_labels is not None:
             if adsorbate in self.species_forbidden_labels:
-                labs = self.species_forbidden_labels[adsorbate]
+                forb_labs = self.species_forbidden_labels[adsorbate]
                 if True in self.atoms.pbc:
-                    def get_signature(site):
+                    def get_label(site):
                         if sas.composition_effect:
                             signature = [site['site'], site['geometry'], site['composition']]
                         else:
                             signature = [site['site'], site['geometry']]
                         return sas.label_dict['|'.join(signature)]                        
-                                                                                             
-                    forb_signatures = [get_slab_signature_from_label(lab, sas.surface,
-                                       sas.composition_effect, sas.metals) for lab in labs]  
                 else:
-                    def get_signature(site):
+                    def get_label(site):
                         if sas.composition_effect:
                             signature = [site['site'], site['surface'], site['composition']]
                         else:
                             signature = [site['site'], site['surface']]
                         return sas.label_dict['|'.join(signature)]                   
                                                                                              
-                    forb_signatures = [get_cluster_signature_from_label(lab, 
-                                       sas.composition_effect, sas.metals) for lab in labs]
-                
-                nsids = [i for i in nsids if get_signature(hsl[i]) not in forb_signatures]   
+                nsids = [i for i in nsids if get_label(hsl[i]) not in forb_labs]   
 
         elif self.species_forbidden_sites is not None:
             if adsorbate in self.species_forbidden_sites:
