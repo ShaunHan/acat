@@ -884,10 +884,10 @@ class SlabAdsorptionSites(object):
 
         ext_index, ext_coords, _ = expand_cell(self.ref_atoms, cutoff)
         extended_top = np.where(np.in1d(ext_index, top_indices))[0]
+        ext_surf_coords = ext_coords[extended_top]
         meansurfz = np.average(self.positions[self.surf_ids][:,2], 0)
-        ext_all_coords = ext_coords[extended_top]
-        surf_screen = np.where(abs(ext_all_coords[:,2] - meansurfz) < 4.)
-        ext_surf_coords = ext_all_coords[surf_screen]
+#        surf_screen = np.where(abs(surf_coords[:,2] - meansurfz) < 5.)
+#        ext_surf_coords = ext_surf_coords[surf_screen]
         dt = scipy.spatial.Delaunay(ext_surf_coords[:,:2])
         neighbors = dt.neighbors
         simplices = dt.simplices
@@ -955,6 +955,8 @@ class SlabAdsorptionSites(object):
 
         fold4_surfaces = ['fcc100','fcc211','fcc311','fcc322','bcc100',
                           'bcc210','bcc310','hcp10m10-t','hcp10m11','hcp10m12']
+        self.bridge_positions = bridge_positions
+
         # Complete information of each site
         for n, poss in enumerate([bridge_positions,fold4_positions,fold3_positions]):
             if not poss:
