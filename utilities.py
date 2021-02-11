@@ -161,7 +161,7 @@ def expand_cell(atoms, cutoff=None, padding=None):
         Integer offsets of each unit cell.
     """
     cell = atoms.cell
-    pbc = atoms.pbc
+    pbc = [1, 1, 0]
     pos = atoms.positions
 
     if padding is None and cutoff is None:
