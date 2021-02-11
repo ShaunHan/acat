@@ -895,7 +895,7 @@ class SlabAdsorptionSites(object):
         bridge_positions, fold3_positions, fold4_positions = [], [], []
         bridge_points, fold3_points, fold4_points = [], [], []
          
-        # Delaunay traiangulation (borrow from Catkit)
+        # Delaunay triangulation (borrow from Catkit)
         for i, corners in enumerate(simplices):
             cir = scipy.linalg.circulant(corners)
             edges = cir[:,1:]
