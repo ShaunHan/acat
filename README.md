@@ -15,7 +15,7 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 ## Installation
 Clone this repository:
 
-```git clone https://gitlab.com/shuanghan/asac.git```
+```git clone https://gitlab.com/shuanghan/acat.git```
 
 Then edit ```~/.bashrc``` to add
 
