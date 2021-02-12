@@ -1,4 +1,4 @@
-from .settings import site_heights, adsorbate_list, adsorbate_molecule
+from .settings import adsorbate_elements, site_heights, adsorbate_list, adsorbate_molecule
 from .adsorption_sites import enumerate_adsorption_sites 
 from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from .utilities import is_list_or_tuple, get_close_atoms, get_rodrigues_rotation_matrix   
