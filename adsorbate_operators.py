@@ -3,8 +3,8 @@ of a particle or given structure, using a supplied list of sites."""
 from .settings import adsorbate_elements, adsorbate_molecule, site_heights
 from .utilities import is_list_or_tuple, atoms_too_close_after_addition
 from .actions import add_adsorbate_to_site, remove_adsorbate_from_site
-from .adsorption_sites import ClusterAdsorptionSites
-from .adsorbate_coverage import ClusterAdsorbateCoverage
+from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
+from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from ase.ga.offspring_creator import OffspringCreator
 from ase.optimize import BFGS
 from ase import Atoms, Atom
@@ -209,6 +209,7 @@ class AddAdsorbate(AdsorbateOperator):
     def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
+                 surface=None,
                  allow_6fold=False,
                  composition_effect=True,
                  site_preference=None,
@@ -222,6 +223,7 @@ class AddAdsorbate(AdsorbateOperator):
 
         self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.surface = surface
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.site_preference = site_preference
@@ -242,10 +244,16 @@ class AddAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                     self.composition_effect)
-        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
-        ads_sites = cac.hetero_site_list
+        if True in indi.pbc:
+            sas = SlabAdsorptionSites(indi, self.surface,
+                                      self.allow_6fold,
+                                      self.composition_effect)
+            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        else:
+            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                         self.composition_effect)
+            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
@@ -268,8 +276,11 @@ class AddAdsorbate(AdsorbateOperator):
                 break            
 
             if self.num_muts > 1:
-                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
-                ads_sites = ncac.hetero_site_list                          
+                if True in nindi.pbc:
+                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                else:
+                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                ads_sites = nsac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -279,7 +290,8 @@ class RemoveAdsorbate(AdsorbateOperator):
     """This operator removes an adsorbate from the surface. It works
     exactly (but doing the opposite) as the AddAdsorbate operator."""
     def __init__(self, adsorbate_species,
-                 allow_6fold = False,
+                 surface=None,
+                 allow_6fold=False,
                  composition_effect=True,
                  site_preference=None,
                  surface_preference=None,
@@ -289,6 +301,7 @@ class RemoveAdsorbate(AdsorbateOperator):
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
 
+        self.surface = surface
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect        
         self.site_preference = site_preference
@@ -307,10 +320,16 @@ class RemoveAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                     self.composition_effect)
-        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
-        ads_sites = cac.hetero_site_list
+        if True in indi.pbc:
+            sas = SlabAdsorptionSites(indi, self.surface,
+                                      self.allow_6fold,
+                                      self.composition_effect)
+            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        else:
+            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                         self.composition_effect)
+            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
@@ -331,8 +350,11 @@ class RemoveAdsorbate(AdsorbateOperator):
                 break
 
             if self.num_muts > 1:
-                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
-                ads_sites = ncac.hetero_site_list                          
+                if True in nindi.pbc:
+                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                else:
+                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                ads_sites = nsac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -344,7 +366,8 @@ class MoveAdsorbate(AdsorbateOperator):
     def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
-                 allow_6fold = False,
+                 surface=None,
+                 allow_6fold=False,
                  composition_effect=True,
                  site_preference_from=None,
                  surface_preference_from=None,
@@ -359,6 +382,7 @@ class MoveAdsorbate(AdsorbateOperator):
 
         self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.surface = surface
         self.allow_6fold = allow_6fold               
         self.composition_effect = composition_effect
         self.site_preference_from = site_preference_from
@@ -380,10 +404,16 @@ class MoveAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                     self.composition_effect)
-        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
-        ads_sites = cac.hetero_site_list
+        if True in indi.pbc:
+            sas = SlabAdsorptionSites(indi, self.surface,
+                                      self.allow_6fold,
+                                      self.composition_effect)
+            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        else:
+            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                         self.composition_effect)
+            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
@@ -423,8 +453,11 @@ class MoveAdsorbate(AdsorbateOperator):
                 break
             
             if self.num_muts > 1:
-                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
-                ads_sites = ncac.hetero_site_list                          
+                if True in nindi.pbc:
+                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                else:
+                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                ads_sites = nsac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -436,7 +469,8 @@ class ReplaceAdsorbate(AdsorbateOperator):
     def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
-                 allow_6fold = False,
+                 surface=None,
+                 allow_6fold=False,
                  composition_effect=True,
                  site_preference_from=None,
                  surface_preference_from=None,
@@ -449,6 +483,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
         self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.surface = surface
         self.allow_6fold = allow_6fold               
         self.composition_effect = composition_effect
         self.site_preference_from = site_preference_from
@@ -468,10 +503,16 @@ class ReplaceAdsorbate(AdsorbateOperator):
         for atom in f:
             indi.append(atom)
 
-        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                     self.composition_effect)
-        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
-        ads_sites = cac.hetero_site_list
+        if True in indi.pbc:
+            sas = SlabAdsorptionSites(indi, self.surface,
+                                      self.allow_6fold,
+                                      self.composition_effect)
+            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        else:
+            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                         self.composition_effect)
+            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
@@ -503,8 +544,11 @@ class ReplaceAdsorbate(AdsorbateOperator):
                 break
             
             if self.num_muts > 1:
-                ncac = ClusterAdsorbateCoverage(nindi, cas, dmax=self.dmax)
-                ads_sites = ncac.hetero_site_list                          
+                if True in nindi.pbc:
+                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                else:
+                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
+                ads_sites = nsac.hetero_site_list                          
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
