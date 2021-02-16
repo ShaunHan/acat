@@ -19,7 +19,7 @@ Clone this repository:
 
 Then edit ```~/.bashrc``` to add
 
-```export PYTHONPATH=/path-to-asac/:$PYTHONPATH```
+```export PYTHONPATH=/path-to-acat/:$PYTHONPATH```
 
 Remember to ```source ~/.bashrc```
 ## Usage
