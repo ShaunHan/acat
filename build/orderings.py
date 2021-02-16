@@ -1,7 +1,5 @@
 from ase.geometry import get_distances
 from ase.io import Trajectory, read, write
-from ase import Atoms
-from ase.ga.utilities import get_nnmat
 from itertools import product
 import numpy as np
 import random
