@@ -1,10 +1,10 @@
 """Adsorbate operators that adds an adsorbate to the surface
 of a particle or given structure, using a supplied list of sites."""
-from .settings import adsorbate_elements, adsorbate_molecule, site_heights
-from .utilities import is_list_or_tuple, atoms_too_close_after_addition
-from .actions import add_adsorbate_to_site, remove_adsorbate_from_site
-from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
-from .adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
+from ..settings import adsorbate_elements, adsorbate_molecule, site_heights
+from ..utilities import is_list_or_tuple, atoms_too_close_after_addition
+from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
+from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
+from ..build.actions import add_adsorbate_to_site, remove_adsorbate_from_site
 from ase.ga.offspring_creator import OffspringCreator
 from ase.optimize import BFGS
 from ase import Atoms, Atom
