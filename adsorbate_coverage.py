@@ -19,6 +19,10 @@ class ClusterAdsorbateCoverage(object):
                  label_occupied_sites=False,
                  dmax=2.5):
 
+        for dim in range(3):
+            if np.linalg.norm(atoms.cell[dim]) == 0:
+                atoms.cell[dim] = np.ptp(atoms.positions[:, dim], axis=0)
+
         self.atoms = atoms.copy()
         self.positions = atoms.positions
         self.symbols = atoms.symbols
@@ -40,14 +44,11 @@ class ClusterAdsorbateCoverage(object):
             cas = adsorption_sites
         else:
             cas = ClusterAdsorptionSites(atoms, allow_6fold=True,
-                                         composition_effect=True,
-                                         subsurf_effect=False)    
+                                         composition_effect=True)    
         self.cas = cas
         self.slab_ids = cas.indices
         self.allow_6fold = cas.allow_6fold
         self.composition_effect = cas.composition_effect
-        if cas.subsurf_effect:
-            raise NotImplementedError
 
         self.metals = cas.metals
         if len(self.metals) == 1 and self.composition_effect:
@@ -244,6 +245,12 @@ class ClusterAdsorbateCoverage(object):
         self.adsorbate_list = self.monodentate_adsorbate_list + \
                               self.multidentate_adsorbate_list 
 
+    def get_sites(self, occupied_only=False):
+        all_sites = self.hetero_site_list
+        if occupied_only:
+            all_sites = [s for s in all_sites if s['occupied'] == 1]
+        return all_sites
+
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
@@ -317,6 +324,9 @@ class SlabAdsorbateCoverage(object):
                  label_occupied_sites=False,
                  dmax=2.5):
 
+        if np.linalg.norm(atoms.cell[2]) == 0:
+            atoms.cell[2] = np.ptp(atoms.positions[:, 2], axis=0) + 5.
+
         self.atoms = atoms.copy()
         self.positions = atoms.positions
         self.symbols = atoms.symbols
@@ -338,15 +348,12 @@ class SlabAdsorbateCoverage(object):
         else:
             sas = SlabAdsorptionSites(atoms, surface, 
                                       allow_6fold=True,
-                                      composition_effect=True,
-                                      subsurf_effect=False)    
+                                      composition_effect=True)    
         self.sas = sas
         self.slab_ids = sas.indices
         self.surface = sas.surface
         self.allow_6fold = sas.allow_6fold
         self.composition_effect = sas.composition_effect
-        if sas.subsurf_effect:
-            raise NotImplementedError
 
         self.metals = sas.metals
         if len(self.metals) == 1 and self.composition_effect:
@@ -544,6 +551,12 @@ class SlabAdsorbateCoverage(object):
         self.multidentate_adsorbate_list = list(multidentate_adsorbate_dict.values())
         self.adsorbate_list = self.monodentate_adsorbate_list + \
                               self.multidentate_adsorbate_list 
+
+    def get_sites(self, occupied_only=False):
+        all_sites = self.hetero_site_list
+        if occupied_only:
+            all_sites = [s for s in all_sites if s['occupied'] == 1]
+        return all_sites
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         """Generate a periodic neighbor list (defaultdict).""" 
