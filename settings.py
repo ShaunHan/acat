@@ -7,7 +7,7 @@ from ase.build import molecule
 adsorbate_elements = 'SCHON'
 
 # Adsorbate height on different sites
-site_heights = {'ontop': 1.5, 
+site_heights = {'ontop': 1.8, 
                 'bridge': 1.5, 
                 'short-bridge': 1.5,
                 'long-bridge': 1.5,
