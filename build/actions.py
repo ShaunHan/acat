@@ -54,8 +54,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
 
     
     
-    composition_effect = False if composition is None else True
-    subsurf_effect = False if subsurf_element is None else True
+    composition_effect = any(v is not None for v in [composition, subsurf_element])
 
     if composition:
         if '-' in composition or len(list(Formula(composition))) == 6:
@@ -82,8 +81,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
     else:
         all_sites = enumerate_adsorption_sites(atoms, surface, 
                                                geometry, True, 
-                                               composition_effect, 
-                                               subsurf_effect)    
+                                               composition_effect)    
 
     if indices is not None:
         indices = indices if is_list_or_tuple(indices) else [indices]
