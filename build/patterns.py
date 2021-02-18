@@ -136,7 +136,7 @@ class StochasticPatternGenerator(object):
             nbstids = set(nbstids)
             neighbor_site_indices = [v for v in nbstids if v not in selfids]            
                                                                                              
-        # Select adsorbate with probablity 
+        # Select adsorbate with probability 
         if not self.species_probabilities:
             adsorbate = random.choice(self.adsorbate_species)
         else: 
@@ -434,7 +434,7 @@ class StochasticPatternGenerator(object):
         rpst = hsl[rpsti]
         remove_adsorbate_from_site(self.atoms, rpst)
 
-        # Select a different adsorbate with probablity 
+        # Select a different adsorbate with probability 
         old_adsorbate = rpst['adsorbate']
         new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
 
@@ -601,7 +601,7 @@ class StochasticPatternGenerator(object):
                     self.logfile.write('Generating pattern {}\n'.format(n_new))
                     self.logfile.flush()
                 n_old += 1
-            # Select image with probablity 
+            # Select image with probability 
             if not self.species_probabilities:
                 self.atoms = random.choice(self.images).copy()
             else: 
@@ -1181,7 +1181,7 @@ class SystematicPatternGenerator(object):
             atoms = self.image.copy()
             remove_adsorbate_from_site(atoms, rpst)
                                                                                              
-            # Select a different adsorbate with probablity 
+            # Select a different adsorbate with probability 
             old_adsorbate = rpst['adsorbate']
             new_options = [a for a in self.adsorbate_species if a != old_adsorbate]
 
