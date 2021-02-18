@@ -13,8 +13,13 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 * asap3
 
 ## Installation
+1. Clone the repository:
+```https://gitlab.com/shuanghan/acat.git```
+
+2. Install all dependencies
 ```pip install -r requirements.txt --user```
 
+3. Install acat package
 ```python setup.py install --user```
 
 ## Usage
