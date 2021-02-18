@@ -1,7 +1,7 @@
 from ..settings import adsorbate_elements, site_heights  
 from ..settings import monodentate_adsorbate_list, multidentate_adsorbate_list
 from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
-from ..adsorption_sites import group_sites_by_surface
+from ..adsorption_sites import group_sites_by_facet
 from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from ..utilities import is_list_or_tuple, get_mic, atoms_too_close_after_addition 
 from ..labels import get_cluster_signature_from_label, get_slab_signature_from_label
@@ -61,7 +61,7 @@ class StochasticPatternGenerator(object):
             diff = list(set(self.adsorbate_species) - 
                         set(self.monodentate_adsorbates +
                             self.multidentate_adsorbates))
-            raise ValueError('Species {} are not defined '.format(diff) +
+            raise ValueError('species {} are not defined '.format(diff) +
                              'in adsorbate_list in settings.py')             
 
         self.image_probabilities = image_probabilities
@@ -141,7 +141,7 @@ class StochasticPatternGenerator(object):
             adsorbate = random.choice(self.adsorbate_species)
         else: 
             adsorbate = random.choices(k=1, population=self.adsorbate_species,
-                                       probabilities=self.species_probability_list)[0]    
+                                       weights=self.species_probability_list)[0]    
                                                                                              
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
@@ -476,7 +476,7 @@ class StochasticPatternGenerator(object):
         else:
             new_probabilities = [self.species_probabilities[a] for a in new_options]
             adsorbate = random.choices(k=1, population=self.adsorbate_species,
-                                       probabilities=new_probabilities)[0] 
+                                       weights=new_probabilities)[0] 
         if self.adsorption_sites is not None:
             site_nblist = self.site_nblist
         else:
@@ -573,7 +573,7 @@ class StochasticPatternGenerator(object):
                     psas = self.adsorption_sites
                 elif True in patoms.pbc:
                     if self.surface is None:
-                        raise ValueError('Please specify the surface type')
+                        raise ValueError('please specify the surface type')
                     psas = SlabAdsorptionSites(patoms, self.surface,
                                                self.allow_6fold,
                                                self.composition_effect)
@@ -606,13 +606,13 @@ class StochasticPatternGenerator(object):
                 self.atoms = random.choice(self.images).copy()
             else: 
                 self.atoms = random.choices(k=1, population=self.images, 
-                                            probabilities=self.image_probabilities)[0].copy()
+                                            weights=self.image_probabilities)[0].copy()
             self.n_image = n_new 
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
             elif True in self.atoms.pbc:
                 if self.surface is None:
-                    raise ValueError('Please specify the surface type')
+                    raise ValueError('please specify the surface type')
                 sas = SlabAdsorptionSites(self.atoms, self.surface,
                                           self.allow_6fold,
                                           self.composition_effect)
@@ -636,7 +636,7 @@ class StochasticPatternGenerator(object):
                 else:
                     assert len(action_probabilities.keys()) == len(actions)
                     action = random.choices(k=1, population=actions, 
-                                            probabilities=all_action_probabilities)[0] 
+                                            weights=all_action_probabilities)[0] 
             if self.logfile is not None:                                    
                 self.logfile.write('Action: {}\n'.format(action))
                 self.logfile.flush()
@@ -706,8 +706,8 @@ class SystematicPatternGenerator(object):
                  logfile='patterns.log'):
 
         """
-       enumerate_orientations: whether to enumerate all orientations of multidentate species
-       """
+        enumerate_orientations: whether to enumerate all orientations of multidentate species
+        """
 
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
@@ -721,7 +721,7 @@ class SystematicPatternGenerator(object):
             diff = list(set(self.adsorbate_species) - 
                         set(self.monodentate_adsorbates +
                             self.multidentate_adsorbates))
-            raise ValueError('Species {} is not defined '.format(diff) +
+            raise ValueError('species {} is not defined '.format(diff) +
                              'in adsorbate_list in settings.py')             
 
         self.min_adsorbate_distance = min_adsorbate_distance
@@ -1342,7 +1342,7 @@ class SystematicPatternGenerator(object):
                     psas = self.adsorption_sites
                 elif True in patoms.pbc:
                     if self.surface is None:
-                        raise ValueError('Please specify the surface type')
+                        raise ValueError('please specify the surface type')
                     psas = SlabAdsorptionSites(patoms, self.surface,
                                                self.allow_6fold,
                                                self.composition_effect)
@@ -1374,7 +1374,7 @@ class SystematicPatternGenerator(object):
                 sas = self.adsorption_sites
             elif True in self.image.pbc:
                 if self.surface is None:
-                    raise ValueError('Please specify the surface type')
+                    raise ValueError('please specify the surface type')
                 sas = SlabAdsorptionSites(self.image, self.surface,
                                           self.allow_6fold,
                                           self.composition_effect)
@@ -1409,46 +1409,77 @@ class SystematicPatternGenerator(object):
                 self.logfile.flush()
 
 
-def symmetric_coverage_pattern(atoms, adsorbate, surface=None, 
-                               coverage=1., height=None, 
+def symmetric_coverage_pattern(atoms, adsorbate, coverage=1., 
+                               surface=None, height=None, 
                                min_adsorbate_distance=0.):
-    """A function for generating certain well-defined symmetric adsorbate 
-       coverage patterns.
+    """A function for generating representative symmetric adsorbate 
+    coverage patterns. The function is generalized for both periodic 
+    and non-periodic systems (distinguished by atoms.pbc).
 
-       Parameters
-       ----------
-       atoms: The nanoparticle or surface slab onto which the adsorbate 
-              should be added.
-           
-       adsorbate: The adsorbate. Must be one of the following three types:
-           A string containing the chemical symbol for a single atom.
-           An atom object.
-           An atoms object (for a molecular adsorbate).                                                                                                         
-       surface: Support 2 typical surfaces for fcc crystal where the 
-           adsorbate is attached:  
-           'fcc100', 
-           'fcc111'.
-           Can either specify a string or a list of strings
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The nanoparticle or surface slab onto which the adsorbates are
+        added. Accept any ase.Atoms object. No need to be built-in.
 
-       coverage: The coverage (ML) of the adsorbate.
-           Note that for small nanoparticles, the function might give results 
-           that do not correspond to the coverage. This is normal since the 
-           surface area can be too small to encompass the coverage pattern 
-           properly. We expect this function to work especially well on large 
-           nanoparticles and low-index extended surfaces.                                                                                              
+    adsorbate: str or ase.Atom object or ase.Atoms object
+        The adsorbate to be added onto the surface. For now only
+        support adding one type of adsorbate species.
 
-       height: The height from the adsorbate to the surface.
-           Default is {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 
-           '4fold': 1.7} for nanoparticles and 2.0 for all sites on surface 
-           slabs.
+    coverage: float, default 1. 
+        The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
+        Support 4 coverage patterns (0.25 for p(2x2) pattern; 
+        0.5 for c(2x2) pattern on fcc100 or honeycomb pattern on fcc111; 
+        0.75 for (2x2) pattern on fcc100 or Kagome pattern on fcc111; 
+        1 for p(1x1) pattern.
+        Note that for small nanoparticles, the function might give 
+        results that do not correspond to the coverage. This is normal 
+        since the surface area can be too small to encompass the 
+        coverage pattern properly. We expect this function to work 
+        well on large nanoparticles and surface slabs.                  
 
-       min_adsorbate_distance: The minimum distance between two adsorbate atoms.
-       
-       Example
-       ------- 
-       symmetric_coverage_pattern(atoms, adsorbate='CO', 
-                                  surface='fcc111', 
-                                  coverage=3/4)
+    surface : str, default None
+        The surface type (crystal structure + Miller indices).
+        For now only support 2 common surfaces: fcc100 and fcc111. 
+        If the structure is a periodic surface slab, this is required. 
+        If the structure is a nanoparticle, the function only add 
+        adsorbates to the sites on the specified surface. 
+
+    height: float, default None
+        The height of the adsorbate from the surface.
+        Use the default settings if not specified.
+
+    min_adsorbate_distance: float, default 0.
+        The minimum distance between two atoms that belongs to two 
+        adsorbates.
+    
+    Example
+    -------
+    To add a 0.5 ML CO coverage pattern on a cuboctahedron:
+
+        >>> from acat.build.patterns import symmetric_coverage_pattern
+        >>> from ase.cluster import Octahedron
+        >>> from ase.visualize import view
+        >>> atoms = Octahedron('Au', length=9, cutoff=4)
+        >>> atoms.center(vacuum=5.)
+        >>> pattern = symmetric_coverage_pattern(atoms, adsorbate='CO', 
+        ...                                      coverage=0.5)
+        >>> view(pattern)
+        [image]
+
+    To add a 0.75 ML CO coverage pattern on a fcc111 surface slab:
+
+        >>> from acat.build.patterns import symmetric_coverage_pattern
+        >>> from ase.build import fcc111
+        >>> from ase.visualize import view
+        >>> atoms = fcc111('Cu', (8, 8, 4), vacuum=5.)
+        >>> atoms.center()
+        >>> pattern = symmetric_coverage_pattern(atoms, adsorbate='CO',
+        ...                                      coverage=0.5, 
+        ...                                      surface='fcc111')
+        >>> view(pattern)
+        [image]
+
     """
 
     if True not in atoms.pbc:                            
@@ -1462,21 +1493,22 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
     if not isinstance(surface, list):
         surface = [surface] 
 
+    #TODO: implement Woods' notation
     final_sites = []
     if 'fcc111' in surface: 
+        # p(1x1) pattern
         if coverage == 1:
             fcc_sites = [s for s in site_list 
                          if s['site'] == 'fcc']
             if fcc_sites:
                 final_sites += fcc_sites
 
+        # Kagome pattern
         elif coverage == 3/4:
-            # Kagome pattern
             fcc_sites = [s for s in site_list  
                          if s['site'] == 'fcc']
             if True not in atoms.pbc:                                
-                grouped_sites = group_sites_by_surface(
-                                atoms, fcc_sites, site_list)
+                grouped_sites = group_sites_by_facet(atoms, fcc_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fcc_sites}
 
@@ -1504,14 +1536,13 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                         for st in sites_to_delete]:
                             final_sites.append(s)
 
+        # Honeycomb pattern
         elif coverage == 2/4:
-            # Honeycomb pattern
             fcc_sites = [s for s in site_list if s['site'] == 'fcc']
             hcp_sites = [s for s in site_list if s['site'] == 'hcp']
             all_sites = fcc_sites + hcp_sites
             if True not in atoms.pbc:    
-                grouped_sites = group_sites_by_surface(
-                                atoms, all_sites, site_list)
+                grouped_sites = group_sites_by_facet(atoms, all_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': all_sites}
             for sites in grouped_sites.values():
@@ -1544,13 +1575,12 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                 final_sites = [s for s in final_sites if s['indices'] \
                                not in [st['indices'] for st in bad_sites]]
 
+        # p(2x2) pattern
         elif coverage == 1/4:
-            # Kagome pattern
             fcc_sites = [s for s in site_list 
                          if s['site'] == 'fcc']                                                                 
             if True not in atoms.pbc:                                
-                grouped_sites = group_sites_by_surface(
-                                atoms, fcc_sites, site_list)
+                grouped_sites = group_sites_by_facet(atoms, fcc_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fcc_sites}
 
@@ -1576,16 +1606,17 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                     final_sites += sites_to_remain
 
     if 'fcc100' in surface:
+        # p(1x1) pattern
         if coverage == 1:
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             if fold4_sites:
                 final_sites += fold4_sites
 
+        # (2x2) pattern 
         elif coverage == 3/4:
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             if True not in atoms.pbc:                                           
-                grouped_sites = group_sites_by_surface(
-                                atoms, fold4_sites, site_list)
+                grouped_sites = group_sites_by_facet(atoms, fold4_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fold4_sites}
             for sites in grouped_sites.values():
@@ -1612,13 +1643,12 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                                    for st in sites_to_delete]:
                             final_sites.append(s)
 
+        # c(2x2) pattern
         elif coverage == 2/4:
-            #c(2x2) pattern
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             original_sites = deepcopy(fold4_sites)
             if True not in atoms.pbc:
-                grouped_sites = group_sites_by_surface(
-                                atoms, fold4_sites, site_list)
+                grouped_sites = group_sites_by_facet(atoms, fold4_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fold4_sites}
             for sites in grouped_sites.values():
@@ -1636,12 +1666,11 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
                         for st in sites_to_remain]:
                             final_sites.append(s)
 
+        # p(2x2) pattern
         elif coverage == 1/4:
-            #p(2x2) pattern
             fold4_sites = [s for s in site_list if s['site'] == '4fold']
             if True not in atoms.pbc:                                           
-                grouped_sites = group_sites_by_surface(
-                                atoms, fold4_sites, site_list)
+                grouped_sites = group_sites_by_facet(atoms, fold4_sites, site_list)
             else:
                 grouped_sites = {'pbc_sites': fold4_sites}
             for sites in grouped_sites.values():
@@ -1820,7 +1849,63 @@ def symmetric_coverage_pattern(atoms, adsorbate, surface=None,
 
 def full_coverage_pattern(atoms, adsorbate, site, surface=None,
                           height=None, min_adsorbate_distance=0.):
-    """A function to generate different 1ML coverage patterns"""
+    """A function for generating different p(1x1) adsorbate coverage 
+    patterns.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The nanoparticle or surface slab onto which the adsorbates are
+        added. Accept any ase.Atoms object. No need to be built-in.
+
+    adsorbate: str or ase.Atom object or ase.Atoms object
+        The adsorbate to be added onto the surface. For now only
+        support adding one type of adsorbate species.
+
+    site: str
+        The site type that the adsorbates should be added to.
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices). 
+        If the structure is a periodic surface slab, this is required. 
+        If the structure is a nanoparticle, the function only add 
+        adsorbates to the sites on the specified surface. 
+
+    height: float, default None
+        The height of the adsorbate from the surface.
+        Use the default settings if not specified.
+
+    min_adsorbate_distance: float, default 0.
+        The minimum distance between two atoms that belongs to two 
+        adsorbates.
+    
+    Example
+    -------
+    To add a 1 ML CO coverage pattern to the hcp sites on a icosahedron:
+
+        >>> from acat.build.patterns import full_coverage_pattern
+        >>> from ase.cluster import Icosahedron
+        >>> from ase.visualize import view
+        >>> atoms = Icosahedron('Au', noshells=5)
+        >>> atoms.center(vacuum=5.)
+        >>> pattern = full_coverage_pattern(atoms, adsorbate='CO', site='hcp')
+        >>> view(pattern)
+        [image]
+
+    To add a 1 ML CO coverage pattern to the 3fold sites on a bcc110 
+    surface slab:
+
+        >>> from acat.build.patterns import full_coverage_pattern
+        >>> from ase.build import bcc110
+        >>> from ase.visualize import view
+        >>> atoms = bcc110('Mo', (8, 8, 4), vacuum=5.)
+        >>> atoms.center()
+        >>> pattern = full_coverage_pattern(atoms, adsorbate='CO',
+        ...                                 surface='bcc110', site='3fold')
+        >>> view(pattern)
+        [image]
+
+    """
 
     if True not in atoms.pbc:                                 
         if surface is None:
@@ -1855,25 +1940,94 @@ def random_coverage_pattern(atoms, adsorbate_species,
                             min_adsorbate_distance=1.5, 
                             heights=site_heights,
                             allow_6fold=False):
-    '''
-    A function for generating random coverage patterns with minimum distance constraint
+    """A function for generating random coverage patterns with a 
+    minimum distance constraint.
 
     Parameters
     ----------
-    atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
-        
-    adsorbate: The adsorbate. Must be one of the following three types:
-        A string containing the chemical symbol for a single atom.
-        An atom object.
-        An atoms object (for a molecular adsorbate).                                                                                                       
-    min_adsorbate_distance: The minimum distance constraint between any two adsorbates.
+    atoms : ase.Atoms object
+        The nanoparticle or surface slab onto which the adsorbates are
+        added. Accept any ase.Atoms object. No need to be built-in.
 
-    heights: A dictionary that contains the adsorbate height for each site type.
-    '''
+    adsorbate_species: str or list of strs 
+        A list of adsorbate species to be randomly added onto the surface.
+
+    species_probabilities: dict, default None
+
+    coverage: float, default 1. 
+        The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
+        Support 4 coverage patterns (0.25 for p(2x2) pattern; 
+        0.5 for c(2x2) pattern on fcc100 or honeycomb pattern on fcc111; 
+        0.75 for (2x2) pattern on fcc100 or Kagome pattern on fcc111; 
+        1 for p(1x1) pattern.
+        Note that for small nanoparticles, the function might give 
+        results that do not correspond to the coverage. This is normal 
+        since the surface area can be too small to encompass the 
+        coverage pattern properly. We expect this function to work 
+        well on large nanoparticles and surface slabs.                  
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices).
+        For now only support 2 common surfaces: fcc100 and fcc111. 
+        If the structure is a periodic surface slab, this is required. 
+        If the structure is a nanoparticle, the function only add 
+        adsorbates to the sites on the specified surface. 
+
+    height: float, default None
+        The height of the adsorbate from the surface.
+        Use the default settings if not specified.
+
+    heights: dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
+    min_adsorbate_distance: float, default 1.5
+        The minimum distance constraint between two atoms that belongs 
+        to two adsorbates.
+
+    allow_6fold : bool, default False
+        Whether to allow the adsorption on 6-fold subsurf sites 
+        beneath fcc hollow sites.
+    
+    Example
+    -------
+    To add CO randomly onto a cuboctahedron with a minimum adsorbate 
+    distance of 5 Angstrom:
+
+        >>> from acat.build.patterns import random_coverage_pattern
+        >>> from ase.cluster import Octahedron
+        >>> from ase.visualize import view
+        >>> atoms = Octahedron('Au', length=9, cutoff=4)
+        >>> atoms.center(vacuum=5.)
+        >>> pattern = random_coverage_pattern(atoms, adsorbate_species='CO', 
+        ...                                   min_adsorbate_distance=5.)
+        >>> view(pattern)
+        [image]
+
+    To add C, N, O randomly onto a hcp0001 surface slab with probabilities 
+    of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
+    2 Angstrom:
+
+        >>> from acat.build.patterns import random_coverage_pattern
+        >>> from ase.build import hcp0001
+        >>> from ase.visualize import view
+        >>> atoms = hcp0001('Ru', (8, 8, 4), vacuum=5.)
+        >>> atoms.center()
+        >>> pattern = random_coverage_pattern(atoms, adsorbate_species=['C','N','O'],
+        ...                                   species_probabilities={'C': 0.25, 
+        ...                                                          'N': 0.25, 
+        ...                                                          'O': 0.5},
+        ...                                   surface='hcp0001',
+        ...                                   min_adsorbate_distance=2.)
+        >>> view(pattern)
+        [image]
+
+    """
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]
     if species_probabilities is not None:
-        assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
+        assert len(species_probabilities.keys()) == len(adsorbate_species)
         probability_list = [species_probabilities[a] for a in adsorbate_species]               
     
     _heights = site_heights
@@ -1899,7 +2053,7 @@ def random_coverage_pattern(atoms, adsorbate_species,
             adsorbate = random.choice(adsorbate_species)
         else: 
             adsorbate = random.choices(k=1, population=adsorbate_species,
-                                       probabilities=probability_list)[0] 
+                                       weights=probability_list)[0] 
         nads = nads_dict[adsorbate] 
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)       
