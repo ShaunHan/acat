@@ -12,8 +12,7 @@ import numpy as np
 
 
 class ClusterAdsorbateCoverage(object):
-    """
-    Child class of ClusterAdsorptionSites for identifying adsorbate 
+    """Child class of ClusterAdsorptionSites for identifying adsorbate 
     coverage on a nanoparticle. Support common nanoparticle shapes 
     including: Mackay icosahedron, (truncated) octahedron and (Marks) 
     decahedron.
@@ -374,8 +373,7 @@ class ClusterAdsorbateCoverage(object):
 
 
 class SlabAdsorbateCoverage(object):
-    """
-    Child class of SlabAdsorptionSites for identifying adsorbate 
+    """Child class of SlabAdsorptionSites for identifying adsorbate 
     coverage on a surface slab. Support 20 common surfaces: fcc100, 
     fcc111, fcc110, fcc211, fcc221, fcc311, fcc322, fcc331, fcc332, 
     bcc100, bcc111, bcc110, bcc210, bcc211, bcc310, hcp0001, 
@@ -794,7 +792,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     Example
     -------
     This is an example of enumerating all occupied sites on a truncated 
-    octahedron nanoparticle:
+    octahedral nanoparticle:
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
         >>> from acat.adsorbate_coverage import enumerate_occupied_sites
