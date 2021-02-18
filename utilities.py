@@ -34,8 +34,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     span: boolean
         Whether to include all neighbors spanned within the shell
     """
-   
-    atoms = atoms.copy()
+
     natoms = len(atoms)
     if natoms == 1:
         return {0: []}
