@@ -15,11 +15,11 @@ Clone the repository:
 
 ```git clone https://gitlab.com/shuanghan/acat.git```
 
-Install all dependencies:
+Go to the installed path and install all dependencies:
 
 ```pip install -r requirements.txt --user```
 
-Install the package:
+Install the main package:
 
 ```python setup.py install --user```
 
