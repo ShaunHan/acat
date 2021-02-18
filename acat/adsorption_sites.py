@@ -921,18 +921,18 @@ class SlabAdsorptionSites(object):
         self.surface = surface
 
         ref_atoms = self.atoms.copy()
-        a, b = np.linalg.norm(atoms.cell[0]), np.linalg.norm(atoms.cell[1]) 
+        area = np.linalg.norm(np.cross(atoms.cell[0], atoms.cell[1]))
         if self.surface in ['fcc100','fcc110','fcc211','fcc311','fcc221','fcc331',
         'fcc322','fcc332','bcc111','bcc210','bcc211']:
-            if a * b < 90.:
-                ref_symbol = 'Cu'
+            if area < 50.:
+                ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
             else:
                 ref_symbol = 'Pt' if proxy_metal is None else proxy_metal
         elif self.surface in ['fcc111','hcp0001','hcp10m10-h','hcp10m12']:
             ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
         elif self.surface in ['bcc100','bcc110','bcc310','hcp10m10-t','hcp10m11']:
-            if a * b < 90.:
-                ref_symbol = 'Cu'
+            if area < 50.:
+                ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
             else:
                 ref_symbol = 'Au' if proxy_metal is None else proxy_metal
         else:
