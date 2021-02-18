@@ -15,7 +15,7 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 ## Installation
 1. Clone the repository:
 
-```https://gitlab.com/shuanghan/acat.git```
+```git clone https://gitlab.com/shuanghan/acat.git```
 
 2. Install all dependencies:
 
