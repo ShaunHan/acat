@@ -7,18 +7,37 @@ import math
 
 
 class SymmetricOrderingGenerator(object):
-    """
-    As for now, only support clusters.
-    Please align the z direction to the symmetry axis of the cluster.
+    """`SymmetricOrderingGenerator` is a class for generating 
+    symmetric chemical orderings for a bimetallic catalyst.
+    As for now, only support clusters. Please align the z direction 
+    to the symmetry axis of the cluster.
  
     Parameters
     ----------
-    cutoff: Minimum distance (A) that the code can recognize between 
-         two neighbor layers. If the structure is irregular, use
-         a higher cutoff.
+    atoms : ase.Atoms object
+        The nanoparticle to use as a template to generate symmetric
+        chemical orderings. Accept any ase.Atoms object. No need to be 
+        built-in.
 
-    composition: e.g. {'Ni': 0.75, 'Pt': 0.25}
-        All compositions if not specified
+    species : list of strs 
+        The two metal species of the bimetallic catalyst.
+
+    cutoff: float, default 0.1
+        Minimum distance (in Angstrom) that the code can recognize 
+        between two neighbor layers. If the structure is irregular, 
+        use a higher cutoff.
+
+    composition: dict, default None
+        Generate symmetric orderings only at a certain composition.
+        The dictionary contains the two speices as keys and their 
+        concentrations as values. Generate orderings at all 
+        compositions if not specified.
+
+    trajectory : str, default 'orderings.traj'
+        The name of the output ase trajectory file.
+
+    append_trajectory : bool, default False
+        Whether to append structures to the existing trajectory. 
 
     """
 
@@ -133,6 +152,33 @@ class SymmetricOrderingGenerator(object):
 
 
 class RandomOrderingGenerator(object):
+    """`RandomOrderingGenerator` is a class for generating random 
+    chemical orderings for a bimetallic catalyst. The function is 
+    generalized for both periodic and non-periodic systems.
+ 
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The nanoparticle or surface slab to use as a template to
+        generate random chemical orderings. Accept any ase.Atoms 
+        object. No need to be built-in.
+
+    species : list of strs 
+        The two metal species of the bimetallic catalyst.
+
+    composition: dict, None
+        Generate random orderings only at a certain composition.
+        The dictionary contains the two speices as keys and their 
+        concentrations as values. Generate orderings at all 
+        compositions if not specified.
+
+    trajectory : str, default 'patterns.traj'
+        The name of the output ase trajectory file.
+
+    append_trajectory : bool, default False
+        Whether to append structures to the existing trajectory. 
+
+    """
 
     def __init__(self, atoms, species,
                  composition=None,
