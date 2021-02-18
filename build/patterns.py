@@ -2048,7 +2048,7 @@ def random_coverage_pattern(atoms, adsorbate_species,
     nads_dict = {ads: len(list(Formula(ads))) for ads in adsorbate_species}
 
     for st in site_list:
-        # Select adsorbate with probablity 
+        # Select adsorbate with probability 
         if not species_probabilities:
             adsorbate = random.choice(adsorbate_species)
         else: 
