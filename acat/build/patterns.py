@@ -17,6 +17,131 @@ import random
 
 
 class StochasticPatternGenerator(object):
+    """`StochasticPatternGenerator` is a class for generating 
+    adsorbate coverage patterns stochastically. Graph isomorphism
+    is implemented to identify identical coverage patterns.
+    4 adsorbate actions are supported: add, remove, move, replace. 
+    The function is generalized for both periodic and non-periodic 
+    systems (distinguished by atoms.pbc). 
+
+    Parameters
+    ----------
+    images : ase.Atoms object or list of ase.Atoms objects
+        The structure to perform the adsorbate action on. If 
+        a list of structures is provided, perform adsorbate 
+        action on one of the structures in each step. 
+        Accept any ase.Atoms object. No need to be built-in.
+
+    adsorbate_species : str or list of strs 
+        A list of adsorbate species to be randomly added to the surface.
+
+    image_probabilities : listt, default None
+        A list of the probabilities of selecting each structure.
+        Selecting structure with equal probability if not specified.
+
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of adding onto the surface.
+        Adding adsorbate species with equal probability if not specified.
+
+    min_adsorbate_distance : float, default 1.5
+        The minimum distance constraint between two atoms that belongs 
+        to two adsorbates.
+
+    adsorption_sites : acat.AdsorptionSites object, default None
+        Provide AdsorptionSites object to accelerate the pattern 
+        generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, 
+        you should only provide adsorption_sites when the surface 
+        composition is fixed.
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices).
+        Only required if the structure is a periodic surface slab.
+
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
+    allow_6fold : bool, default False
+        Whether to allow the adsorption on 6-fold subsurf sites 
+        beneath fcc hollow sites.
+
+    composition_effect : bool, default False
+        Whether to consider sites with different elemental 
+        compositions as different sites. It is recommended to 
+        set composition=False for monometallics.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    species_forbidden_sites : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of the site (can be one or multiple site types) that the 
+        speices is not allowed to add to. All sites are availabe for a
+        species if not specified. Note that this does not differentiate
+        sites with different compositions.
+
+    species_forbidden_labels : dict, default None
+        Same as species_forbidden_sites except that the adsorption sites
+        are written as numerical labels according to acat.labels. Useful
+        when you need to differentiate sites with different compositions.
+
+    fragmentation : bool, default True
+        Whether to cut multidentate species into fragments. This ensures 
+        that multidentate species with different orientations are
+        considered as different coverage patterns.
+
+    trajectory : str, default 'patterns.traj'
+        The name of the output ase trajectory file.
+
+    append_trajectory : bool, default False
+        Whether to append structures to the existing trajectory. 
+        If only unique patterns are accepted, the code will also check 
+        graph isomorphism for the existing structures in the trajectory.
+        This is also useful when you want to generate coverage patterns 
+        stochastically but for all images systematically, e.g. generating
+        10 stochastic coverage patterns for each image:
+        from acat.build.patterns import StochasticPatternGenerator as SPG
+        for atoms in images:
+            spg = SPG(atoms, ..., append_trajectory=True)
+            spg.run(ngen = 10)
+
+    logfile : str, default 'patterns.log'
+        The name of the log file.
+
+    Example
+    -------
+    The following example illustrates how to generate 100 stochastic
+    adsorbate coverage patterns with CO, OH, CH3 and CHO, based on 
+    10 Pt fcc111 surface slabs with random C and O coverages, where 
+    CH3 is forbidden to be added to ontop and bridge sites:
+
+        >>> from acat.build.patterns import StochasticPatternGenerator as SPG
+        >>> from acat.build.patterns import random_coverage_pattern
+        >>> from ase.build import fcc111
+        >>> slab = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
+        >>> slab.center()
+        >>> images = []
+        >>> for _ in range(10):
+        ...     atoms = slab.copy()
+        ...     image = random_coverage_pattern(atoms, adsorbate_species=['C','O'],
+        ...                                     surface='fcc111',
+        ...                                     min_adsorbate_distance=5.)
+        ...     images.append(image)
+        >>> spg = SPG(images, adsorbate_species=['CO','OH','CH3','CHO'],
+        ...           species_probabilities={'CO':0.3, 'OH': 0.3, 
+        ...                                  'CH3': 0.2, 'CHO': 0.2},
+        ...           min_adsorbate_distance=1.5, 
+        ...           surface='fcc111',
+        ...           composition_effect=False, 
+        ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
+        >>> spg.run(n_gen=100, action='add')
+        [moive]
+
+    """
 
     def __init__(self, images,                                                       
                  adsorbate_species,
@@ -35,26 +160,13 @@ class StochasticPatternGenerator(object):
                  trajectory='patterns.traj',
                  append_trajectory=False,
                  logfile='patterns.log'):
-        """
-        image_probabilities: list
-        species_probabilities: dictionary 
-        adsorption_sites: should only provide when the surface composition is fixed
-        unique: whether discard duplicates based on isomorphism or not
-        species_forbidden_sites: dictionary with species key and forbidden site (list) values 
-        append_trajecotry: if unique=True, also check for isomorphism for existing structures in the trajectory.
-
-        if you want to do stochastic pattern generation but for all images systematically, do
-        >>> for atoms in images:
-        >>>     SPG = StochasticPatternGenerator(atoms, ..., append_trajectory=True)
-        >>>     SPG.run(ngen = 10)
-        """
 
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
                                  adsorbate_species) else [adsorbate_species]
-        self.monodentate_adsorbates = [s for s in adsorbate_species if s in 
+        self.monodentate_adsorbates = [s for s in self.adsorbate_species if s in 
                                        monodentate_adsorbate_list]
-        self.multidentate_adsorbates = [s for s in adsorbate_species if s in
+        self.multidentate_adsorbates = [s for s in self.adsorbate_species if s in
                                         multidentate_adsorbate_list]
         if len(self.adsorbate_species) != len(self.monodentate_adsorbates +
         self.multidentate_adsorbates):
@@ -62,7 +174,7 @@ class StochasticPatternGenerator(object):
                         set(self.monodentate_adsorbates +
                             self.multidentate_adsorbates))
             raise ValueError('species {} are not defined '.format(diff) +
-                             'in adsorbate_list in settings.py')             
+                             'in adsorbate_list in acat.settings')             
 
         self.image_probabilities = image_probabilities
         if self.image_probabilities is not None:
@@ -153,14 +265,16 @@ class StochasticPatternGenerator(object):
                 if True in self.atoms.pbc:
                     def get_label(site):
                         if sas.composition_effect:
-                            signature = [site['site'], site['geometry'], site['composition']]
+                            signature = [site['site'], site['geometry'], 
+                                         site['composition']]
                         else:
                             signature = [site['site'], site['geometry']]
                         return sas.label_dict['|'.join(signature)]                        
                 else:
                     def get_label(site):
                         if sas.composition_effect:
-                            signature = [site['site'], site['surface'], site['composition']]
+                            signature = [site['site'], site['surface'], 
+                                         site['composition']]
                         else:
                             signature = [site['site'], site['surface']]
                         return sas.label_dict['|'.join(signature)]                   
@@ -275,6 +389,7 @@ class StochasticPatternGenerator(object):
         if True in self.atoms.pbc:
             nsac = SlabAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
                                          label_occupied_sites=self.unique) 
+        else:
             nsac = ClusterAdsorbateCoverage(self.atoms, sas, dmax=self.dmax,
                                             label_occupied_sites=self.unique)                      
         return nsac 
@@ -321,14 +436,16 @@ class StochasticPatternGenerator(object):
                 if True in self.atoms.pbc:
                     def get_label(site):
                         if sas.composition_effect:
-                            signature = [site['site'], site['geometry'], site['composition']]
+                            signature = [site['site'], site['geometry'], 
+                                         site['composition']]
                         else:
                             signature = [site['site'], site['geometry']]
                         return sas.label_dict['|'.join(signature)]                        
                 else:
                     def get_label(site):
                         if sas.composition_effect:
-                            signature = [site['site'], site['surface'], site['composition']]
+                            signature = [site['site'], site['surface'], 
+                                         site['composition']]
                         else:
                             signature = [site['site'], site['surface']]
                         return sas.label_dict['|'.join(signature)]                   
@@ -444,14 +561,16 @@ class StochasticPatternGenerator(object):
                 if o in self.species_forbidden_labels: 
                     if True in self.atoms.pbc:
                         if sas.composition_effect:
-                            signature = [rpst['site'], rpst['geometry'], rpst['composition']]
+                            signature = [rpst['site'], rpst['geometry'], 
+                                         rpst['composition']]
                         else:
                             signature = [rpst['site'], rpst['geometry']]
                         lab = sas.label_dict['|'.join(signature)]                        
                                                                                                  
                     else:
                         if sas.composition_effect:
-                            signature = [rpst['site'], rpst['surface'], rpst['composition']]
+                            signature = [rpst['site'], rpst['surface'], 
+                                         rpst['composition']]
                         else:
                             signature = [rpst['site'], rpst['surface']]
                         lab = sas.label_dict['|'.join(signature)]                                                                                            
@@ -547,8 +666,9 @@ class StochasticPatternGenerator(object):
 
         return nsac                        
  
+    '''unique: whether discard duplicates based on isomorphism or not'''
     def run(self, n_gen, 
-            actions=['add','remove','replace'], 
+            actions=['add','remove','move'], 
             action_probabilities=None,
             unique=True):
  
@@ -688,6 +808,115 @@ class StochasticPatternGenerator(object):
 
 
 class SystematicPatternGenerator(object):
+    """`SystematicPatternGenerator` is a class for generating 
+    adsorbate coverage patterns systematically. This is useful to 
+    enumerate all unique patterns at low coverage, but explodes at
+    higher coverages. Graph isomorphism is implemented to identify 
+    identical coverage patterns. 4 adsorbate actions are supported: 
+    add, remove, move, replace. The function is generalized for both
+    periodic and non-periodic systems (distinguished by atoms.pbc). 
+
+    Parameters
+    ----------
+    images : ase.Atoms object or list of ase.Atoms objects
+        The structure to perform the adsorbate action on. If 
+        a list of structures is provided, perform adsorbate 
+        action on one of the structures in each step. 
+        Accept any ase.Atoms object. No need to be built-in.
+
+    adsorbate_species : str or list of strs 
+        A list of adsorbate species to be randomly added to the surface.
+
+    min_adsorbate_distance : float, default 1.5
+        The minimum distance constraint between two atoms that belongs 
+        to two adsorbates.
+
+    adsorption_sites : acat.AdsorptionSites object, default None
+        Provide AdsorptionSites object to accelerate the pattern 
+        generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, 
+        you should only provide adsorption_sites when the surface 
+        composition is fixed.
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices).
+        Only required if the structure is a periodic surface slab.
+
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
+    allow_6fold : bool, default False
+        Whether to allow the adsorption on 6-fold subsurf sites 
+        beneath fcc hollow sites.
+
+    composition_effect : bool, default False
+        Whether to consider sites with different elemental 
+        compositions as different sites. It is recommended to 
+        set composition=False for monometallics.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    species_forbidden_sites : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of the site (can be one or multiple site types) that the 
+        speices is not allowed to add to. All sites are availabe for a
+        species if not specified. Note that this does not differentiate
+        sites with different compositions.
+
+    species_forbidden_labels : dict, default None
+        Same as species_forbidden_sites except that the adsorption sites
+        are written as numerical labels according to acat.labels. Useful
+        when you need to differentiate sites with different compositions.
+
+    enumerate_orientations: bool, default True
+        Whether to enumerate all orientations of multidentate species.
+        This ensures that multidentate species with different orientations 
+        are all enumerated.
+
+    trajectory : str, default 'patterns.traj'
+        The name of the output ase trajectory file.
+
+    append_trajectory : bool, default False
+        Whether to append structures to the existing trajectory. 
+        If only unique patterns are accepted, the code will also check 
+        graph isomorphism for the existing structures in the trajectory.
+        This is also useful when you want to generate coverage patterns 
+        stochastically but for all images systematically, e.g. generating
+        10 stochastic coverage patterns for each image:
+        from acat.build.patterns import StochasticPatternGenerator as SPG
+        for atoms in images:
+            spg = SPG(atoms, ..., append_trajectory=True)
+            spg.run(ngen = 10)
+
+    logfile : str, default 'patterns.log'
+        The name of the log file.
+
+    Example
+    -------
+    The following example illustrates how to add CO to all unique sites on 
+    a cuboctahedral bimetallic nanoparticle:
+
+        >>> from acat.adsorption_sites import ClusterAdsorptionSites
+        >>> from acat.build.patterns import SystematicPatternGenerator as SPG
+        >>> from ase.cluster import Octahedron
+        >>> atoms = Octahedron('Cu', length=7, cutoff=3)
+        >>> for atom in atoms:
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Au' 
+        >>> atoms.center(vacuum=5.)
+        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True)
+        >>> spg = SPG(atoms, adsorbate_species='CO',
+        ...           min_adsorbate_distance=2., 
+        ...           adsorption_sites=cas,
+        ...           composition_effect=True) 
+        >>> spg.run(action='add')
+        [moive]
+
+    """
 
     def __init__(self, images,                                                     
                  adsorbate_species,
@@ -705,16 +934,12 @@ class SystematicPatternGenerator(object):
                  append_trajectory=False,
                  logfile='patterns.log'):
 
-        """
-        enumerate_orientations: whether to enumerate all orientations of multidentate species
-        """
-
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
                                  adsorbate_species) else [adsorbate_species]
-        self.monodentate_adsorbates = [s for s in adsorbate_species if s in 
+        self.monodentate_adsorbates = [s for s in self.adsorbate_species if s in 
                                        monodentate_adsorbate_list]
-        self.multidentate_adsorbates = [s for s in adsorbate_species if s in
+        self.multidentate_adsorbates = [s for s in self.adsorbate_species if s in
                                         multidentate_adsorbate_list]
         if len(self.adsorbate_species) != len(self.monodentate_adsorbates +
         self.multidentate_adsorbates):
@@ -722,7 +947,7 @@ class SystematicPatternGenerator(object):
                         set(self.monodentate_adsorbates +
                             self.multidentate_adsorbates))
             raise ValueError('species {} is not defined '.format(diff) +
-                             'in adsorbate_list in settings.py')             
+                             'in adsorbate_list in acat.settings')             
 
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
@@ -814,13 +1039,15 @@ class SystematicPatternGenerator(object):
                     if adsorbate in self.species_forbidden_labels: 
                         if True in self.image.pbc:
                             if sas.composition_effect:
-                                signature = [nst['site'], nst['geometry'], nst['composition']]
+                                signature = [nst['site'], nst['geometry'], 
+                                             nst['composition']]
                             else:
                                 signature = [nst['site'], nst['geometry']]
                             lab = sas.label_dict['|'.join(signature)]                        
                         else:
                             if sas.composition_effect:
-                                signature = [nst['site'], nst['surface'], nst['composition']]
+                                signature = [nst['site'], nst['surface'], 
+                                             nst['composition']]
                             else:
                                 signature = [nst['site'], nst['surface']]
                             lab = sas.label_dict['|'.join(signature)]
@@ -1053,13 +1280,15 @@ class SystematicPatternGenerator(object):
                     if adsorbate in self.species_forbidden_labels: 
                         if True in atoms.pbc:
                             if sas.composition_effect:
-                                signature = [nst['site'], nst['geometry'], nst['composition']]
+                                signature = [nst['site'], nst['geometry'], 
+                                             nst['composition']]
                             else:
                                 signature = [nst['site'], nst['geometry']]
                             lab = sas.label_dict['|'.join(signature)]                        
                         else:
                             if sas.composition_effect:
-                                signature = [nst['site'], nst['surface'], nst['composition']]
+                                signature = [nst['site'], nst['surface'], 
+                                             nst['composition']]
                             else:
                                 signature = [nst['site'], nst['surface']]
                             lab = sas.label_dict['|'.join(signature)]
@@ -1191,14 +1420,16 @@ class SystematicPatternGenerator(object):
                     if o in self.species_forbidden_labels: 
                         if True in atoms.pbc:
                             if sas.composition_effect:
-                                signature = [rpst['site'], rpst['geometry'], rpst['composition']]
+                                signature = [rpst['site'], rpst['geometry'], 
+                                             rpst['composition']]
                             else:
                                 signature = [rpst['site'], rpst['geometry']]
                             lab = sas.label_dict['|'.join(signature)]                        
                                                                                                  
                         else:
                             if sas.composition_effect:
-                                signature = [rpst['site'], rpst['surface'], rpst['composition']]
+                                signature = [rpst['site'], rpst['surface'], 
+                                             rpst['composition']]
                             else:
                                 signature = [rpst['site'], rpst['surface']]
                             lab = sas.label_dict['|'.join(signature)]                            
@@ -1422,11 +1653,11 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
         The nanoparticle or surface slab onto which the adsorbates are
         added. Accept any ase.Atoms object. No need to be built-in.
 
-    adsorbate: str or ase.Atom object or ase.Atoms object
-        The adsorbate to be added onto the surface. For now only
-        support adding one type of adsorbate species.
+    adsorbate : str or ase.Atom object or ase.Atoms object
+        The adsorbate species to be added onto the surface. 
+        For now only support adding one type of adsorbate species.
 
-    coverage: float, default 1. 
+    coverage : float, default 1. 
         The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
         Support 4 coverage patterns (0.25 for p(2x2) pattern; 
         0.5 for c(2x2) pattern on fcc100 or honeycomb pattern on fcc111; 
@@ -1445,11 +1676,11 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
         If the structure is a nanoparticle, the function only add 
         adsorbates to the sites on the specified surface. 
 
-    height: float, default None
-        The height of the adsorbate from the surface.
+    height : float, default None
+        The height of the added adsorbate from the surface.
         Use the default settings if not specified.
 
-    min_adsorbate_distance: float, default 0.
+    min_adsorbate_distance : float, default 0.
         The minimum distance between two atoms that belongs to two 
         adsorbates.
     
@@ -1850,7 +2081,8 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
 def full_coverage_pattern(atoms, adsorbate, site, surface=None,
                           height=None, min_adsorbate_distance=0.):
     """A function for generating different p(1x1) adsorbate coverage 
-    patterns.
+    patterns. The function is generalized for both periodic and 
+    non-periodic systems (distinguished by atoms.pbc).
 
     Parameters
     ----------
@@ -1858,11 +2090,11 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
         The nanoparticle or surface slab onto which the adsorbates are
         added. Accept any ase.Atoms object. No need to be built-in.
 
-    adsorbate: str or ase.Atom object or ase.Atoms object
-        The adsorbate to be added onto the surface. For now only
-        support adding one type of adsorbate species.
+    adsorbate : str or ase.Atom object or ase.Atoms object
+        The adsorbate species to be added onto the surface.
+        For now only support adding one type of adsorbate species.
 
-    site: str
+    site : str
         The site type that the adsorbates should be added to.
 
     surface : str, default None
@@ -1871,11 +2103,11 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
         If the structure is a nanoparticle, the function only add 
         adsorbates to the sites on the specified surface. 
 
-    height: float, default None
-        The height of the adsorbate from the surface.
+    height : float, default None
+        The height of the added adsorbate from the surface.
         Use the default settings if not specified.
 
-    min_adsorbate_distance: float, default 0.
+    min_adsorbate_distance : float, default 0.
         The minimum distance between two atoms that belongs to two 
         adsorbates.
     
@@ -1941,7 +2173,9 @@ def random_coverage_pattern(atoms, adsorbate_species,
                             heights=site_heights,
                             allow_6fold=False):
     """A function for generating random coverage patterns with a 
-    minimum distance constraint.
+    minimum distance constraint. The function is generalized for 
+    both periodic and non-periodic systems (distinguished by 
+    atoms.pbc).
 
     Parameters
     ----------
@@ -1949,40 +2183,25 @@ def random_coverage_pattern(atoms, adsorbate_species,
         The nanoparticle or surface slab onto which the adsorbates are
         added. Accept any ase.Atoms object. No need to be built-in.
 
-    adsorbate_species: str or list of strs 
-        A list of adsorbate species to be randomly added onto the surface.
+    adsorbate_species : str or list of strs 
+        A list of adsorbate species to be randomly added to the surface.
 
-    species_probabilities: dict, default None
-
-    coverage: float, default 1. 
-        The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
-        Support 4 coverage patterns (0.25 for p(2x2) pattern; 
-        0.5 for c(2x2) pattern on fcc100 or honeycomb pattern on fcc111; 
-        0.75 for (2x2) pattern on fcc100 or Kagome pattern on fcc111; 
-        1 for p(1x1) pattern.
-        Note that for small nanoparticles, the function might give 
-        results that do not correspond to the coverage. This is normal 
-        since the surface area can be too small to encompass the 
-        coverage pattern properly. We expect this function to work 
-        well on large nanoparticles and surface slabs.                  
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of adding onto the surface.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices).
-        For now only support 2 common surfaces: fcc100 and fcc111. 
         If the structure is a periodic surface slab, this is required. 
         If the structure is a nanoparticle, the function only add 
         adsorbates to the sites on the specified surface. 
 
-    height: float, default None
-        The height of the adsorbate from the surface.
-        Use the default settings if not specified.
-
-    heights: dict, default acat.settings.site_heights
+    heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    min_adsorbate_distance: float, default 1.5
+    min_adsorbate_distance : float, default 1.5
         The minimum distance constraint between two atoms that belongs 
         to two adsorbates.
 
