@@ -13,15 +13,9 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 * asap3
 
 ## Installation
-Clone this repository:
+pip install -r requirements.txt --user
+python setup.py install --user
 
-```git clone https://gitlab.com/shuanghan/acat.git```
-
-Then edit ```~/.bashrc``` to add
-
-```export PYTHONPATH=/path-to-acat/:$PYTHONPATH```
-
-Remember to ```source ~/.bashrc```
 ## Usage
 ### Add adsorbates
 The code can automatically identify the shape and surfaces of nanoparticles.
