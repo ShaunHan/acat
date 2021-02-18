@@ -28,30 +28,37 @@ class ClusterAdsorptionSites(object):
 
     Parameters
     ----------
-    atoms: ase.Atoms object
+    atoms : ase.Atoms object
         The atoms object must be a non-periodic nanoparticle.
         Accept any ase.Atoms object. No need to be built-in.
-    allow_6fold: bool
+
+    allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
         beneath fcc hollow sites.
-    composition_effect: bool
+
+    composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
         set composition=True for monometallics.
-    label_sites: bool
+
+    label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
-    proxy_metal: str
+
+    proxy_metal : str, default None
+        The code is parameterized for pure transition metals.
         The generalization of the code is achieved by mapping all 
         input atoms to a proxy transition metal that is supported 
-        by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt and Au).
+        by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt or Au).
         Try changing the proxy metal when the site identification
-        is not satisfying. When the cell is small, Cu is normally 
-        the best choice, while Pt and Au are good for larger cells.
-    tol: float
+        is not satisfying.
+
+    tol : float, default 0.5
         The tolerence of neighbor distance (in Angstrom).
         Might be helpful to adjust this if the site identification 
-        is not satisfying. The default 0.5 is usually good enough.
+        is not satisfying. When the nanoparticle is small (less
+        than 300 atoms), Cu is normally the better choice, while 
+        Au should be good for larger nanoparticles.
 
     Example
     -------
@@ -85,12 +92,12 @@ class ClusterAdsorptionSites(object):
                  proxy_metal=None,
                  tol=.5):
 
-        assert True not in atoms.pbc
-        warnings.filterwarnings("ignore")
+        assert True not in atoms.pbc, 'the cell must be non-periodic'
+        warnings.filterwarnings('ignore')
         atoms = atoms.copy()
         for dim in range(3):
             if np.linalg.norm(atoms.cell[dim]) == 0:
-                atoms.cell[dim] = np.ptp(atoms.positions[:, dim], axis=0)
+                atoms.cell[dim][dim] = np.ptp(atoms.positions[:, dim]) + 10.
         del atoms.constraints
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
@@ -106,8 +113,13 @@ class ClusterAdsorptionSites(object):
         self.tol = tol
 
         ref_atoms = self.atoms.copy()
+        if proxy_metal is not None:
+            ref_symbol = proxy_metal
+        else:
+            ref_symbol = 'Au' if len(atoms) > 300 else 'Cu'
         for a in ref_atoms:
-            a.symbol = 'Pt' if proxy_metal is None else proxy_metal
+            a.symbol = ref_symbol
+
         ref_atoms.calc = asapEMT()
         opt = BFGS(ref_atoms, logfile=None)
         opt.run(fmax=0.1)
@@ -410,14 +422,14 @@ class ClusterAdsorptionSites(object):
         key_list = ['site', 'surface']
         if unique_composition:
             if not self.composition_effect:
-                raise ValueError('The site list does not include '
+                raise ValueError('the site list does not include '
                                  + 'information of composition')
             key_list.append('composition')
             if unique_subsurf:
                 key_list.append('subsurf_element') 
         else:
             if unique_subsurf:
-                raise ValueError('To include the subsurface element, ' +
+                raise ValueError('to include the subsurface element, ' +
                                  'unique_composition also need to be set to True')    
         sklist = sorted([[s[k] for k in key_list] for s in sl])
  
@@ -474,6 +486,7 @@ class ClusterAdsorptionSites(object):
         # Add support for having adsorbates on the particles already
         # by putting in elements to check for in the function below
         j = 2 * int(self.no_atom_too_close_to_pos(new_pos, (5./6)*self.r)) - 1
+
         return j * n / l
 
     def get_angle(self, sites):
@@ -741,15 +754,49 @@ class ClusterAdsorptionSites(object):
                 st['composition'] = newcomp                           
 
 
-def group_sites_by_surface(atoms, sites, site_list=None):            
-    """A function that uses networkx to group one type of sites 
-    by geometrical facets of the nanoparticle"""
+def group_sites_by_facet(atoms, sites, all_sites=None):            
+    """A function that uses networkx to group one set of sites by
+    geometrical facets of the nanoparticle. Different geometrical
+    facets can have the same surface type. The function returns a
+    list of lists, each contains sites on a same geometrical facet.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The atoms object must be a non-periodic nanoparticle.
+        Accept any ase.Atoms object. No need to be built-in.
+
+    sites : list of dicts
+        The adsorption sites to be grouped by geometrical facet.
+
+    all_sites : list of dicts, default None
+        The list of all sites. Provide this to make the grouping
+        much faster.
+
+    Example
+    -------
+    The following example shows how to group all fcc sites of an 
+    icosahedron nanoparticle by its 20 geometrical facets:
+
+        >>> from acat.adsorption_sites import ClusterAdsorptionSites
+        >>> from acat.adsorption_sites import group_sites_by_facet
+        >>> from ase.cluster import Icosahedron
+        >>> atoms = Icosahedron('Pt', noshells=5)
+        >>> atoms.center(vacuum=5.)
+        >>> cas = ClusterAdsorptionSites(atoms)
+        >>> all_sites = cas.get_sites()
+        >>> fcc_sites = [s for s in all_sites if s['site'] == 'fcc']
+        >>> groups = group_sites_by_facet(atoms, fcc_sites, all_sites)         
+        >>> print(len(groups))
+        20
+
+    """
                                                                      
     # Find all indices of vertex and edge sites
-    if not site_list:
+    if not all_sites:
         cas = ClusterAdsorptionSites(atoms)
-        site_list = cas.site_list
-    ve_indices = [s['indices'] for s in site_list if 
+        all_sites = cas.site_list
+    ve_indices = [s['indices'] for s in all_sites if 
                   s['site'] == 'ontop' and 
                   s['surface'] in ['vertex', 'edge']]
     unique_ve_indices = set(list(sum(ve_indices, ())))
@@ -788,29 +835,38 @@ class SlabAdsorptionSites(object):
 
     Parameters
     ----------
-    atoms: ase.Atoms object
-        The atoms object must be a non-periodic nanoparticle.
+    atoms : ase.Atoms object
+        The atoms object must be a periodic surface slab with at 
+        least 3 layers (e.g. all surface atoms make up one layer). 
         Accept any ase.Atoms object. No need to be built-in.
-    surface: str
-        The surface type of the slab (crystal + termination).
-    allow_6fold: bool
+
+    surface : str
+        The surface type (crystal structure + Miller indices)
+
+    allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
         beneath fcc hollow sites.
-    composition_effect: bool
+
+    composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
         set composition=True for monometallics.
-    label_sites: bool
+
+    label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
-    proxy_metal: str
+
+    proxy_metal : str, default None
+        The code is parameterized for pure transition metals.
         The generalization of the code is achieved by mapping all 
         input atoms to a proxy transition metal that is supported 
-        by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt and Au).
+        by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt or Au).
         Try changing the proxy metal when the site identification
         is not satisfying. When the cell is small, Cu is normally 
-        the best choice, while Pt and Au are good for larger cells.
-    tol: float
+        the better choice, while the Pt and Au should be good for 
+        larger cells.
+
+    tol : float, default 0.5
         The tolerence of neighbor distance (in Angstrom).
         Might be helpful to adjust this if the site identification 
         is not satisfying. The default 0.5 is usually good enough.
@@ -830,8 +886,7 @@ class SlabAdsorptionSites(object):
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc211',
         ...                           allow_6fold=False,
         ...                           composition_effect=True,
-        ...                           label_sites=True,
-        ...                           proxy_metal='Cu')
+        ...                           label_sites=True)
         >>> sites = sas.get_sites()
         >>> print(sites[-1])
         {'site': 'hcp', 'surface': 'fcc211', 'geometry': 'sc-tc-h', 
@@ -849,11 +904,13 @@ class SlabAdsorptionSites(object):
                  proxy_metal=None,
                  tol=.5):
 
-        assert True in atoms.pbc    
-        warnings.filterwarnings("ignore")
+        assert True in atoms.pbc, 'the cell must be periodic in at least one direction'   
+        warnings.filterwarnings('ignore')
         atoms = atoms.copy() 
-        if np.linalg.norm(atoms.cell[2]) == 0:
-            atoms.cell[2] = np.ptp(atoms.positions[:, 2], axis=0) + 5.
+
+        ptp = np.ptp(atoms.positions[:, 2]) 
+        if np.linalg.norm(atoms.cell[2]) - ptp < 10.:
+            atoms.cell[2][2] = ptp + 10.
         del atoms.constraints
         del atoms[[a.index for a in atoms if 'a' not in reference_states[a.number]]]
         del atoms[[a.index for a in atoms if a.symbol in adsorbate_elements]]
@@ -866,15 +923,22 @@ class SlabAdsorptionSites(object):
         self.surface = surface
 
         ref_atoms = self.atoms.copy()
+        a, b = np.linalg.norm(atoms.cell[0]), np.linalg.norm(atoms.cell[1]) 
         if self.surface in ['fcc100','fcc110','fcc211','fcc311','fcc221','fcc331',
         'fcc322','fcc332','bcc111','bcc210','bcc211']:
-            ref_symbol = 'Pt' if proxy_metal is None else proxy_metal
+            if a * b < 90.:
+                ref_symbol = 'Cu'
+            else:
+                ref_symbol = 'Pt' if proxy_metal is None else proxy_metal
         elif self.surface in ['fcc111','hcp0001','hcp10m10-h','hcp10m12']:
             ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
         elif self.surface in ['bcc100','bcc110','bcc310','hcp10m10-t','hcp10m11']:
-            ref_symbol = 'Au' if proxy_metal is None else proxy_metal
+            if a * b < 90.:
+                ref_symbol = 'Cu'
+            else:
+                ref_symbol = 'Au' if proxy_metal is None else proxy_metal
         else:
-            raise ValueError('Surface {} is not supported'.format(self.surface))
+            raise ValueError('surface {} is not supported'.format(self.surface))
         for a in ref_atoms:
             a.symbol = ref_symbol
         ref_atoms.calc = asapEMT()
@@ -1425,10 +1489,11 @@ class SlabAdsorptionSites(object):
                                        self.ref_atoms.positions[x], refpos, self.cell,
                                        return_squared_distance=True))[:4]
                         occurence = np.sum(cm[fold4ids], axis=0)
-                        isub = np.where(occurence >= 4)[0]
-                        if isub.size == 0:
+                        isub = np.where(occurence >= 4)[0]                        
+                        isub = [i for i in isub if i in self.subsurf_ids]
+                        if len(isub) == 0:
                             continue
-                        isub = [i for i in isub if i in self.subsurf_ids][0]
+                        isub = isub[0]
                         si = tuple(sorted(fold4ids)) 
                         pos = refpos + np.average(
                               self.delta_positions[fold4ids], 0)
@@ -1615,10 +1680,11 @@ class SlabAdsorptionSites(object):
                         site.update({'composition': composition})   
 
                     if sitetype == 'hcp':
-                        isub = np.where(occurence == 3)[0]
-                        if isub.size == 0:
+                        isub = np.where(occurence == 3)[0]                        
+                        isub = [i for i in isub if i in self.subsurf_ids]
+                        if len(isub) == 0:
                             continue
-                        isub = [i for i in isub if i in self.subsurf_ids][0]
+                        isub = isub[0]
                         spos = pos - normal * dh
                         if get_mic(self.positions[isub], spos, self.cell, 
                         return_squared_distance=True) > 2.:
@@ -1655,10 +1721,11 @@ class SlabAdsorptionSites(object):
                                    self.ref_atoms.positions[x], refpos, self.cell, 
                                    return_squared_distance=True))[:4]             
                     occurence = np.sum(cm[fold4ids], axis=0)
-                    isub = np.where(occurence == 4)[0]
-                    if isub.size == 0:
+                    isub = np.where(occurence == 4)[0]                    
+                    isub = [i for i in isub if i in self.subsurf_ids]
+                    if len(isub) == 0:
                         continue
-                    isub = [i for i in isub if i in self.subsurf_ids][0]
+                    isub = isub[0]
                     si = tuple(sorted(fold4ids))
                     pos = refpos + np.average(
                           self.delta_positions[fold4ids], 0)
@@ -1973,14 +2040,14 @@ class SlabAdsorptionSites(object):
         key_list = ['site', 'geometry']
         if unique_composition:
             if not self.composition_effect:
-                raise ValueError('The site list does not include '
+                raise ValueError('the site list does not include '
                                  + 'information of composition')
             key_list.append('composition')
             if unique_subsurf:
                 key_list.append('subsurf_element') 
         else:
             if unique_subsurf:
-                raise ValueError('To include the subsurface element ' +
+                raise ValueError('to include the subsurface element ' +
                                  'unique_composition also need to be set to True') 
         sklist = sorted([[s[k] for k in key_list] for s in sl])
  
@@ -2145,17 +2212,58 @@ def get_adsorption_site(atoms, indices,
                         surface=None, 
                         return_index=False):
 
+    """A function that returns the information of a site given the
+    indices of the atoms that contribute to the site. The function 
+    is generalized for both periodic and non-periodic systems
+    (distinguished by atoms.pbc).
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    indices : list or tuple
+        The indices of the atoms that contribute to the site
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices)
+        Only required for periodic surface slabs.
+
+    return_index : bool, default False
+        Whether to return the site index of the site list
+
+    Example
+    -------
+    This is an example of getting the site information of the
+    (24, 29, 31) 3-fold hollow site on a fcc110 surface:
+
+        >>> from acat.adsorption_sites import get_adsorption_site
+        >>> from ase.build import fcc110
+        >>> atoms = fcc110('Cu', (2, 2, 8), vacuum=5.)
+        >>> for atom in atoms:
+        >>>     if atom.index % 2 == 0:
+        >>>         atom.symbol = 'Au'
+        >>> atoms.center()
+        >>> site = get_adsorption_site(atoms, (24, 29, 31), surface='fcc110') 
+        >>> print(site)
+        {'site': 'fcc', 'surface': 'fcc110', 'geometry': 'sc-tc-h', 
+         'position': array([ 3.91083333,  1.91449161, 13.5088516 ]), 
+         'normal': array([-0.57735027,  0.        ,  0.81649658]), 
+         'indices': (24, 29, 31), 'composition': 'CuCuAu', 
+         'subsurf_index': None, 'subsurf_element': None, 'label': None}
+
+    """
+
     indices = indices if is_list_or_tuple(indices) else [indices]                                        
     indices = tuple(sorted(indices))
 
     if True not in atoms.pbc:
         sas = ClusterAdsorptionSites(atoms, allow_6fold=True,
-                                     composition_effect=False)                                                             
+                                     composition_effect=True)                                                             
     else:
-        assert surface is not None
         sas = SlabAdsorptionSites(atoms, surface, 
                                   allow_6fold=True, 
-                                  composition_effect=False)             
+                                  composition_effect=True)             
     site_list = sas.site_list
     sti, site = next(((i, s) for i, s in enumerate(site_list) if                        
                       s['indices'] == indices), None)                     
@@ -2170,6 +2278,57 @@ def enumerate_adsorption_sites(atoms, surface=None,
                                geometry=None, 
                                allow_6fold=False,
                                composition_effect=False):
+
+    """A function that enumerates all adsorption sites of the 
+    input atoms object. The function is generalized for both 
+    periodic and non-periodic systems (distinguished by atoms.pbc).
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices).
+        If the structure is a periodic surface slab, this is required.
+        If the structure is a nanoparticle, the function enumerates
+        only the sites on the specified surface.
+
+    geometry : str, default None
+        The function enumerates only the sites of the specified 
+        geometry. Only available for surface slabs.
+
+    allow_6fold : bool, default False
+        Whether to allow the adsorption on 6-fold subsurf sites 
+        beneath fcc hollow sites.
+ 
+    composition_effect : bool, default False
+        Whether to consider sites with different elemental 
+        compositions as different sites. It is recommended to 
+        set composition=True for monometallics.    
+
+    Example
+    -------
+    This is an example of enumerating all sites on the fcc100 surfaces
+    of a Marks decahedron nanoparticle:
+
+        >>> from acat.adsorption_sites import enumerate_adsorption_sites
+        >>> from ase.cluster import Decahedron
+        >>> atoms = Decahedron('Pb', p=3, q=2, r=1)
+        >>> for atom in atoms:
+        >>>     if atom.index % 2 == 0:
+        >>>         atom.symbol = 'Ag'
+        >>> atoms.center(vacuum=5.)
+        >>> sites = enumerate_adsorption_sites(atoms, surface='fcc100',
+                                               composition_effect=True) 
+        >>> print(sites[0])
+        {'site': '4fold', 'surface': 'fcc100', 
+         'position': array([22.63758191, 21.69793997, 13.75044642]), 
+         'normal': array([ 0.58778525,  0.80901699, -0.        ]), 
+         'indices': (116, 117, 118, 119), 'composition': 'AgAgPbPb', 
+         'subsurf_index': 75, 'subsurf_element': 'Pb', 'label': None}
+
+    """
 
     if True not in atoms.pbc:
         cas = ClusterAdsorptionSites(atoms, allow_6fold,
