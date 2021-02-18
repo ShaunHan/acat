@@ -10,12 +10,16 @@ class SymmetricOrderingGenerator(object):
     """
     As for now, only support clusters.
     Please align the z direction to the symmetry axis of the cluster.
-
+ 
+    Parameters
+    ----------
     cutoff: Minimum distance (A) that the code can recognize between 
          two neighbor layers. If the structure is irregular, use
          a higher cutoff.
+
     composition: e.g. {'Ni': 0.75, 'Pt': 0.25}
         All compositions if not specified
+
     """
 
     def __init__(self, atoms, species,
