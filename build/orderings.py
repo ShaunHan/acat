@@ -9,7 +9,7 @@ import math
 class SymmetricOrderingGenerator(object):
     """
     As for now, only support clusters.
-    Please align the z-direction to the symmetry axis of the cluster.
+    Please align the z direction to the symmetry axis of the cluster.
 
     cutoff: Minimum distance (A) that the code can recognize between 
          two neighbor layers. If the structure is irregular, use
