@@ -19,7 +19,7 @@ Install all dependencies:
 
 ```pip install -r requirements.txt --user```
 
-Install the acat package:
+Install the package:
 
 ```python setup.py install --user```
 
