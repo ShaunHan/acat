@@ -14,6 +14,7 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 
 ## Installation
 pip install -r requirements.txt --user
+
 python setup.py install --user
 
 ## Usage
