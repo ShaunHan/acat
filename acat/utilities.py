@@ -13,26 +13,35 @@ import math
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
                         different_species=False, mic=False,
                         radius=None, span=False):
-    """Make dict of neighboring shell atoms for both periodic and 
-    non-periodic systems.
+    """Make dict of neighboring shell atoms for both periodic 
+    and non-periodic systems.
 
-    Possible to return neighbors from defined neighbor shell e.g. 1st, 2nd,
-    3rd by changing the neighbor number.
+    Possible to return neighbors from defined neighbor shell 
+    e.g. 1st, 2nd, 3rd by changing the neighbor number.
+
     Parameters
     ----------
-    dx : float
+    dx : float, default 0.3
         Buffer to calculate nearest neighbor pairs.
-    neighbor_number : int
+
+    neighbor_number : int, default 1
         Neighbor shell.
-    different_species : boolean
-        Whether each neighbor pair are different species or not
-    mic: boolean
-        Whether to apply minimum image convention
-    radius: float
-        The radius of each shell. Works exactly as a conventional neighbor 
-        list when specified. If not specified, use covalent radii instead 
-    span: boolean
-        Whether to include all neighbors spanned within the shell
+
+    different_species : boolean, default False
+        Whether each neighbor pair are different species.
+
+    mic: boolean, default False
+        Whether to apply minimum image convention. Remember to set 
+        mic=True for periodic systems.
+
+    radius: float, default None 
+        The radius of each shell. Works exactly as a conventional 
+        neighbor list when specified. If not specified, use covalent 
+        radii instead.
+
+    span: boolean, default False
+        Whether to include all neighbors spanned within the shell.
+
     """
 
     natoms = len(atoms)
@@ -79,7 +88,15 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
 
 
 def get_connectivity_matrix(neighborlist):
-    """Generate a connections matrix from a neighborlist object.""" 
+    """Returns a connectivity matrix from a neighborlist object.
+
+    Parameters
+    ----------
+    neighborlist : dict
+        A neighborlist (dictionary) that contains keys of each 
+        atom index and values of their neighbor atom indices.
+
+    """ 
 
     conn_mat = []
     index = range(len(neighborlist.keys()))
@@ -96,81 +113,16 @@ def get_connectivity_matrix(neighborlist):
     return np.asarray(conn_mat)
 
 
-def expand_cell(atoms, cutoff=None, padding=None):
-    """Return Cartesian coordinates atoms within a supercell
-    which contains repetitions of the unit cell which contains
-    at least one neighboring atom.
-
-    Parameters
-    ----------
-    atoms : Atoms object
-        Atoms with the periodic boundary conditions and unit cell
-        information to use.
-    cutoff : float
-        Radius of maximum atomic bond distance to consider.
-    padding : ndarray (3,)
-        Padding of repetition of the unit cell in the x, y, z
-        directions. e.g. [1, 0, 1].
-
-    Returns
-    -------
-    index : ndarray (N,)
-        Indices associated with the original unit cell positions.
-    coords : ndarray (N, 3)
-        Cartesian coordinates associated with positions in the
-        supercell.
-    offsets : ndarray (M, 3)
-        Integer offsets of each unit cell.
-    """
-    cell = atoms.cell
-    pbc = [1, 1, 0]
-    pos = atoms.positions
-
-    if padding is None and cutoff is None:
-        diags = np.sqrt((([[1, 1, 1],
-                           [-1, 1, 1],
-                           [1, -1, 1],
-                           [-1, -1, 1]]
-                           @ cell)**2).sum(1))
-
-        if pos.shape[0] == 1:
-            cutoff = max(diags) / 2.
-        else:
-            dpos = (pos - pos[:, None]).reshape(-1, 3)
-            Dr = dpos @ np.linalg.inv(cell)
-            D = (Dr - np.round(Dr) * pbc) @ cell
-            D_len = np.sqrt((D**2).sum(1))
-
-            cutoff = min(max(D_len), max(diags) / 2.)
-
-    latt_len = np.sqrt((cell**2).sum(1))
-    V = abs(np.linalg.det(cell))
-    padding = pbc * np.array(np.ceil(cutoff * np.prod(latt_len) /
-                                     (V * latt_len)), dtype=int)
-
-    offsets = np.mgrid[-padding[0]:padding[0] + 1,
-                       -padding[1]:padding[1] + 1,
-                       -padding[2]:padding[2] + 1].T
-    tvecs = offsets @ cell
-    coords = pos[None, None, None, :, :] + tvecs[:, :, :, None, :]
-
-    ncell = np.prod(offsets.shape[:-1])
-    index = np.arange(len(atoms))[None, :].repeat(ncell, axis=0).flatten()
-    coords = coords.reshape(np.prod(coords.shape[:-1]), 3)
-    offsets = offsets.reshape(ncell, 3)
-
-    return index, coords, offsets
-
-
-def get_mic(p1, p2, cell, pbc=[1,1,0], max_cell_multiples=1e5, 
+def get_mic(p1, p2, cell, pbc=[1,1,0], 
+            max_cell_multiples=1e5, 
             return_squared_distance=False): 
-    """
-    Get all vectors from p1 to p2 that are less than the cutoff in length
-    Also able to calculate the distance using the minimum image convention
-
-    This function is useful when you want to constantly calculate mic between 
-    two given positions. Please use ase.geometry.find_mic if you want to 
-    calculate an array of vectors all at a time (useful for e.g. neighborlist).    
+    """A highly efficient function of getting all vectors from p1
+    to p2 that are less than the cutoff in length. Also able to 
+    calculate the distance using the minimum image convention (mic).
+    This function is useful when you want to constantly calculate 
+    mic between two given positions. Please use ase.geometry.find_mic 
+    if you want to calculate an array of vectors all at a time 
+    (useful for e.g. neighborlist).    
     
     :param p1:
     :param p2:
@@ -225,9 +177,54 @@ def get_mic(p1, p2, cell, pbc=[1,1,0], max_cell_multiples=1e5,
         return np.sum(min_dr**2)
 
 
+def expand_cell(atoms, cutoff=None, padding=None):
+    """Return Cartesian coordinates atoms within a supercell
+    which contains repetitions of the unit cell which contains
+    at least one neighboring atom. Borrowed from Catkit.
+    """
+
+    cell = atoms.cell
+    pbc = [1, 1, 0]
+    pos = atoms.positions
+
+    if padding is None and cutoff is None:
+        diags = np.sqrt((([[1, 1, 1],
+                           [-1, 1, 1],
+                           [1, -1, 1],
+                           [-1, -1, 1]]
+                           @ cell)**2).sum(1))
+
+        if pos.shape[0] == 1:
+            cutoff = max(diags) / 2.
+        else:
+            dpos = (pos - pos[:, None]).reshape(-1, 3)
+            Dr = dpos @ np.linalg.inv(cell)
+            D = (Dr - np.round(Dr) * pbc) @ cell
+            D_len = np.sqrt((D**2).sum(1))
+
+            cutoff = min(max(D_len), max(diags) / 2.)
+
+    latt_len = np.sqrt((cell**2).sum(1))
+    V = abs(np.linalg.det(cell))
+    padding = pbc * np.array(np.ceil(cutoff * np.prod(latt_len) /
+                                     (V * latt_len)), dtype=int)
+
+    offsets = np.mgrid[-padding[0]:padding[0] + 1,
+                       -padding[1]:padding[1] + 1,
+                       -padding[2]:padding[2] + 1].T
+    tvecs = offsets @ cell
+    coords = pos[None, None, None, :, :] + tvecs[:, :, :, None, :]
+
+    ncell = np.prod(offsets.shape[:-1])
+    index = np.arange(len(atoms))[None, :].repeat(ncell, axis=0).flatten()
+    coords = coords.reshape(np.prod(coords.shape[:-1]), 3)
+    offsets = offsets.reshape(ncell, 3)
+
+    return index, coords, offsets
+
+
 def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):
     """Get list of close atoms and delete one set of them if requested.
-
     Identify all atoms which lie within the cutoff radius of each other.
     """
 
