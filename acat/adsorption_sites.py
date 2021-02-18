@@ -21,8 +21,7 @@ import re
 
 
 class ClusterAdsorptionSites(object):
-    """
-    Base class for identifying adsorption sites on a nanoparticle.
+    """Base class for identifying adsorption sites on a nanoparticle.
     Support common nanoparticle shapes including: Mackay icosahedron, 
     (truncated) octahedron and (Marks) decahedron.
 
@@ -39,7 +38,7 @@ class ClusterAdsorptionSites(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=True for monometallics.
+        set composition=False for monometallics.
 
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
@@ -151,7 +150,7 @@ class ClusterAdsorptionSites(object):
  
     def populate_site_list(self):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
-           given an input nanoparticle and collect in a site list. 
+        given an input nanoparticle and collect in a site list. 
         """
 
         ss = self.surf_sites
@@ -771,12 +770,12 @@ def group_sites_by_facet(atoms, sites, all_sites=None):
 
     all_sites : list of dicts, default None
         The list of all sites. Provide this to make the grouping
-        much faster.
+        much faster. Useful when the function is called many times.
 
     Example
     -------
     The following example shows how to group all fcc sites of an 
-    icosahedron nanoparticle by its 20 geometrical facets:
+    icosahedral nanoparticle by its 20 geometrical facets:
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
         >>> from acat.adsorption_sites import group_sites_by_facet
@@ -826,8 +825,7 @@ def group_sites_by_facet(atoms, sites, all_sites=None):
 
 
 class SlabAdsorptionSites(object):
-    """                                                                 
-    Base class for identifying adsorption sites on a surface slab.
+    """Base class for identifying adsorption sites on a surface slab.
     Support 20 common surfaces: fcc100, fcc111, fcc110, fcc211,
     fcc221, fcc311, fcc322, fcc331, fcc332, bcc100, bcc111, bcc110,
     bcc210, bcc211, bcc310, hcp0001, hcp10m10-t, hcp10m10-h, 
@@ -850,7 +848,7 @@ class SlabAdsorptionSites(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=True for monometallics.
+        set composition=False for monometallics.
 
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
@@ -880,8 +878,8 @@ class SlabAdsorptionSites(object):
         >>> from ase.build import fcc211
         >>> atoms = fcc211('Cu', (3, 3, 4), vacuum=5.)
         >>> for atom in atoms:
-        >>>     if atom.index % 2 == 0:
-        >>>         atom.symbol = 'Au' 
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Au' 
         >>> atoms.center()
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc211',
         ...                           allow_6fold=False,
@@ -975,8 +973,8 @@ class SlabAdsorptionSites(object):
         
     def populate_site_list(self, allow_obtuse=True, cutoff=5.):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
-           given an input slab based on Delaunay triangulation of 
-           surface atoms of a super-cell and collect in a site list. 
+        given an input slab based on Delaunay triangulation of surface 
+        atoms of a super-cell and collect in a site list. 
         """
  
         top_indices = self.surf_ids
@@ -2090,14 +2088,14 @@ class SlabAdsorptionSites(object):
                                           neighbor_number, mic=True)
 
     def get_connectivity(self):                                      
-        """Generate a connection matrix from neighbor_shell_list."""       
+        """Generate a connection matrix from neighbor_shell_list.
+        """       
         return get_connectivity_matrix(self.nblist)                   
 
     def get_termination(self):
-        """Return lists surf and subsurf containing atom indices belonging to
-        those subsets of a surface atoms object.
-        This function relies on coordination number and the connectivity of 
-        the atoms.
+        """Return lists surf and subsurf containing atom indices belonging 
+        to those subsets of a surface atoms object. This function relies on 
+        coordination number and the connectivity of the atoms.
         """
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
@@ -2162,8 +2160,8 @@ class SlabAdsorptionSites(object):
         return G
 
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
-        """Returns the site_list index of all neighbor 
-        shell sites for each site
+        """Returns the site_list index of all neighbor shell 
+        sites for each site
         """
 
         sl = self.site_list
@@ -2223,7 +2221,7 @@ def get_adsorption_site(atoms, indices,
         Accept any ase.Atoms object. No need to be built-in.
 
     indices : list or tuple
-        The indices of the atoms that contribute to the site
+        The indices of the atoms that contribute to the site.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices)
@@ -2231,6 +2229,7 @@ def get_adsorption_site(atoms, indices,
 
     return_index : bool, default False
         Whether to return the site index of the site list
+        together with the site.
 
     Example
     -------
@@ -2241,8 +2240,8 @@ def get_adsorption_site(atoms, indices,
         >>> from ase.build import fcc110
         >>> atoms = fcc110('Cu', (2, 2, 8), vacuum=5.)
         >>> for atom in atoms:
-        >>>     if atom.index % 2 == 0:
-        >>>         atom.symbol = 'Au'
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Au'
         >>> atoms.center()
         >>> site = get_adsorption_site(atoms, (24, 29, 31), surface='fcc110') 
         >>> print(site)
@@ -2305,19 +2304,19 @@ def enumerate_adsorption_sites(atoms, surface=None,
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=True for monometallics.    
+        set composition=False for monometallics.    
 
     Example
     -------
     This is an example of enumerating all sites on the fcc100 surfaces
-    of a Marks decahedron nanoparticle:
+    of a Marks decahedral nanoparticle:
 
         >>> from acat.adsorption_sites import enumerate_adsorption_sites
         >>> from ase.cluster import Decahedron
         >>> atoms = Decahedron('Pb', p=3, q=2, r=1)
         >>> for atom in atoms:
-        >>>     if atom.index % 2 == 0:
-        >>>         atom.symbol = 'Ag'
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Ag'
         >>> atoms.center(vacuum=5.)
         >>> sites = enumerate_adsorption_sites(atoms, surface='fcc100',
                                                composition_effect=True) 
