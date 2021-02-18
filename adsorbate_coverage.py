@@ -12,23 +12,82 @@ import numpy as np
 
 
 class ClusterAdsorbateCoverage(object):
-    """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""       
+    """
+    Child class of ClusterAdsorptionSites for identifying adsorbate 
+    coverage on a nanoparticle. Support common nanoparticle shapes 
+    including: Mackay icosahedron, (truncated) octahedron and (Marks) 
+    decahedron.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The atoms object must be a non-periodic nanoparticle with at 
+        least one adsorbate attached to it. Accept any ase.Atoms object. 
+        No need to be built-in.
+
+    adsorption_sites : acat.ClusterAdsorptionSites object, default None
+        ClusterAdsorptionSites object of the nanoparticle. Initialize a 
+        ClusterAdsorptionSites object if not specified.
+
+    label_occupied_sites : bool, default False
+        Whether to assign a label to the occupied each site. The string 
+        of the occupying adsorbate is concatentated to the numerical 
+        label that represents the occpied site.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    Example
+    -------
+    The following example illustrates the most important use of a
+    `ClusterAdsorbateCoverage` object - getting occupied adsorption sites:
+
+        >>> from acat.adsorption_sites import ClusterAdsorptionSites
+        >>> from acat.adsorbate_coverage import ClusterAdsorbateCoverage
+        >>> from acat.build.actions import add_adsorbate_to_site
+        >>> from ase.cluster import Octahedron
+        >>> atoms = Octahedron('Ni', length=7, cutoff=2)
+        >>> for atom in atoms:
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Pt'
+        >>> atoms.center(vacuum=5.)
+        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True) 
+        >>> sites = cas.get_sites()
+        >>> for s in sites:
+        ...     if s['site'] == 'fcc':
+        ...         add_adsorbate_to_site(atoms, adsorbate='CO', site=s)
+        >>> cac = ClusterAdsorbateCoverage(atoms, adsorption_sites=cas,
+        ...                                label_occupied_sites=True)
+        >>> occupied_sites = cac.get_sites(occupied_only=True)
+        >>> print(occupied_sites[0])
+        {'site': 'fcc', 'surface': 'fcc111', 
+         'position': array([ 6.41470446,  8.17470446, 11.69470446]), 
+         'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
+         'indices': (0, 2, 4), 'composition': 'PtPtPt', 
+         'subsurf_index': None, 'subsurf_element': None, 'label': '21CO', 
+         'bonding_index': 201, 'bond_length': 1.3000000000000007, 
+         'adsorbate': 'CO', 'fragment': 'CO', 'adsorbate_indices': (201, 202), 
+         'occupied': 1, 'dentate': 1, 'fragment_indices': (201, 202)}
+
+    """
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
                  label_occupied_sites=False,
                  dmax=2.5):
 
+        atoms = atoms.copy()
         for dim in range(3):
             if np.linalg.norm(atoms.cell[dim]) == 0:
-                atoms.cell[dim] = np.ptp(atoms.positions[:, dim], axis=0)
+                atoms.cell[dim][dim] = np.ptp(atoms.positions[:, dim]) + 10.
 
-        self.atoms = atoms.copy()
+        self.atoms = atoms 
         self.positions = atoms.positions
         self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
-        assert self.ads_ids 
+        assert self.ads_ids, 'cannot find any adsorbate'  
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
@@ -315,8 +374,67 @@ class ClusterAdsorbateCoverage(object):
 
 
 class SlabAdsorbateCoverage(object):
+    """
+    Child class of SlabAdsorptionSites for identifying adsorbate 
+    coverage on a surface slab. Support 20 common surfaces: fcc100, 
+    fcc111, fcc110, fcc211, fcc221, fcc311, fcc322, fcc331, fcc332, 
+    bcc100, bcc111, bcc110, bcc210, bcc211, bcc310, hcp0001, 
+    hcp10m10-t, hcp10m10-h, hcp10m11, hcp10m12.
 
-    """dmax: maximum bond length [Ã] that should be considered as an adsorbate"""        
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The atoms object must be a non-periodic nanoparticle with at 
+        least one adsorbate attached to it. Accept any ase.Atoms object. 
+        No need to be built-in.
+
+    adsorption_sites : acat.SlabAdsorptionSites object, default None
+        SlabAdsorptionSites object of the nanoparticle. Initialize a         
+        SlabAdsorptionSites object if not specified.
+
+    surface : str
+        The surface type (crystal structure + Miller indices).
+        Required if adsorption_sites is not provided.
+
+    label_occupied_sites : bool, default False
+        Whether to assign a label to the occupied each site. The string 
+        of the occupying adsorbate is concatentated to the numerical 
+        label that represents the occpied site.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    Example
+    -------
+    The following example illustrates the most important use of a
+    `SlabAdsorbateCoverage` object - getting occupied adsorption sites:
+
+        >>> from acat.adsorption_sites import SlabAdsorptionSites
+        >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
+        >>> from acat.build.actions import add_adsorbate
+        >>> from ase.build import fcc211
+        >>> atoms = fcc211('Cu', (3, 3, 4), vacuum=5.)
+        >>> for atom in atoms:
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Au'
+        >>> atoms.center()
+        >>> add_adsorbate(atoms, adsorbate='CH3OH', surface='fcc211',
+        ...               indices=(5, 7, 8))
+        >>> sac = SlabAdsorbateCoverage(atoms, surface='fcc211', 
+        ...                             label_occupied_sites=True)
+        >>> occupied_sites = sac.get_sites(occupied_only=True)
+        >>> print(occupied_sites[0])
+        {'site': 'bridge', 'surface': 'fcc211', 'geometry': 'tc-cc-h', 
+         'position': array([ 2.08423447,  3.82898322, 12.00043756]), 
+         'normal': array([-0.33333333,  0.        ,  0.94280904]), 
+         'indices': (4, 7), 'composition': 'CuAu', 'subsurf_index': None, 
+         'subsurf_element': None, 'label': '17OH', 'bonding_index': 40, 
+         'bond_length': 1.4378365786909804, 'adsorbate': 'CH3OH', 
+         'fragment': 'OH', 'adsorbate_indices': (36, 37, 38, 39, 40, 41), 
+         'occupied': 1, 'dentate': 2, 'fragment_indices': (40, 41)}
+
+    """
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
@@ -324,15 +442,17 @@ class SlabAdsorbateCoverage(object):
                  label_occupied_sites=False,
                  dmax=2.5):
 
-        if np.linalg.norm(atoms.cell[2]) == 0:
-            atoms.cell[2] = np.ptp(atoms.positions[:, 2], axis=0) + 5.
+        atoms = atoms.copy()
+        ptp = np.ptp(atoms.positions[:, 2]) 
+        if np.linalg.norm(atoms.cell[2]) - ptp < 10.:
+            atoms.cell[2][2] = ptp + 10.
 
-        self.atoms = atoms.copy()
+        self.atoms = atoms 
         self.positions = atoms.positions
         self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
-        assert self.ads_ids
+        assert self.ads_ids, 'cannot find any adsorbate' 
         self.ads_atoms = atoms[self.ads_ids]
         self.cell = atoms.cell
         self.pbc = atoms.pbc
@@ -648,6 +768,60 @@ class SlabAdsorbateCoverage(object):
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
                              surface=None, dmax=2.5):
+    """A function that enumerates all occupied adsorption sites of
+    the input atoms object. The function is generalized for both 
+    periodic and non-periodic systems (distinguished by atoms.pbc).
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    adsorption_sites : acat.SlabAdsorptionSites object, default None
+        SlabAdsorptionSites object of the nanoparticle. Initialize a         
+        SlabAdsorptionSites object if not specified.
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices)
+        If the structure is a periodic surface slab, this is required.
+        If the structure is a nanoparticle, the function enumerates
+        only the sites on the specified surface.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    Example
+    -------
+    This is an example of enumerating all occupied sites on a truncated 
+    octahedron nanoparticle:
+
+        >>> from acat.adsorption_sites import ClusterAdsorptionSites
+        >>> from acat.adsorbate_coverage import enumerate_occupied_sites
+        >>> from acat.build.actions import add_adsorbate_to_site
+        >>> from ase.cluster import Octahedron
+        >>> atoms = Octahedron('Ni', length=7, cutoff=2)
+        >>> for atom in atoms:
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Pt'
+        >>> atoms.center(vacuum=5.)
+        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True) 
+        >>> sites = cas.get_sites()
+        >>> for s in sites:
+        ...     if s['site'] == 'ontop':
+        ...         add_adsorbate_to_site(atoms, adsorbate='OH', site=s)
+        >>> sites = enumerate_occupied_sites(atoms, adsorption_sites=cas) 
+        >>> print(sites[0])
+        {'site': 'ontop', 'surface': 'fcc111', 
+         'position': array([ 6.76,  8.52, 10.28]), 
+         'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
+         'indices': (2,), 'composition': 'Pt', 'subsurf_index': None, 
+         'subsurf_element': None, 'label': None, 'bonding_index': 201, 
+         'bond_length': 1.7999999999999996, 'adsorbate': 'OH', 
+         'fragment': 'OH', 'adsorbate_indices': (201, 202), 
+         'occupied': 1, 'dentate': 1, 'fragment_indices': (201, 202)}
+
+    """
 
     if True not in atoms.pbc:
         cac = ClusterAdsorbateCoverage(atoms, adsorption_sites,
