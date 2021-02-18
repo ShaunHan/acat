@@ -6,9 +6,7 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 
 ## Dependencies
 * python>=3.6
-* numpy
-* scipy
-* networkx
+* networkx>=2.4
 * ase
 * asap3
 
