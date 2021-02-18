@@ -13,7 +13,7 @@ import re
 
 def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,                 
                   indices=None, height=None, composition=None, orientation=None, 
-                  subsurf_element=None, site_list=None):
+                  subsurf_element=None, all_sites=None):
     """
     A function for adding adsorbate to a specific adsorption site on a 
     monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
@@ -76,9 +76,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
     else:
         scomp = None
 
-    if site_list:
-        all_sites = site_list
-    else:
+    if all_sites is None:
         all_sites = enumerate_adsorption_sites(atoms, surface, 
                                                geometry, True, 
                                                composition_effect)    
@@ -181,7 +179,7 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
                            surface=None, height=None,
                            orientation=None, 
                            composition_effect=False,
-                           site_list=None):
+                           all_sites=None):
 
     if composition_effect:
         slab = atoms[[a.index for a in atoms if a.symbol
@@ -217,7 +215,7 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
                   height=height,
                   composition=composition, 
                   orientation=orientation, 
-                  site_list=site_list)
+                  all_sites=all_sites)
 
 
 def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
