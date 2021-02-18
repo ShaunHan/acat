@@ -14,7 +14,7 @@ import re
 def add_adsorbate(atoms, adsorbate, site=None, surface=None, 
                   geometry=None, indices=None, height=None, 
                   composition=None, orientation=None, 
-                  tile_angle=None, subsurf_element=None, 
+                  tilt_angle=0., subsurf_element=None, 
                   all_sites=None):
     """A general function for adding one adsorbate to the surface.
     Note that this function adds one adsorbate to a random site
@@ -57,7 +57,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
     orientation : list or numpy.array, default None
         The vector that the multidentate adsorbate is aligned to.
 
-    tilt_angle: float, default None
+    tilt_angle: float, default 0.
         Tilt the adsorbate with an angle (in degress) relative to
         the surface normal.
 
@@ -185,8 +185,8 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     >>> view(atoms)
 
 
-    To add a CH3OH to the (54, 57, 58) site on a Pt fcc111 surface 
-    slab and rotate the orientation to a neighbor site:
+    To add a bidentate CH3OH to the (54, 57, 58) site on a Pt fcc111 
+    surface slab and rotate the orientation to a neighbor site:
 
     >>> from acat.adsorption_sites import SlabAdsorptionSites
     >>> from acat.adsorption_sites import get_adsorption_site
