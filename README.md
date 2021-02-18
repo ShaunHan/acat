@@ -13,9 +13,8 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 * asap3
 
 ## Installation
-pip install -r requirements.txt --user
-
-python setup.py install --user
+```pip install -r requirements.txt --user```
+```python setup.py install --user```
 
 ## Usage
 ### Add adsorbates
