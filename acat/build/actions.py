@@ -11,50 +11,85 @@ import numpy as np
 import re
 
 
-def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,                 
-                  indices=None, height=None, composition=None, orientation=None, 
-                  subsurf_element=None, all_sites=None):
-    """
-    A function for adding adsorbate to a specific adsorption site on a 
-    monometalic nanoparticle in icosahedron / cuboctahedron / decahedron / 
-    truncated-octahedron shapes, or a 100/111 surface slab.
-
-    Note that this function adds one adsorbate to a random site that can be already occupied.
+def add_adsorbate(atoms, adsorbate, site=None, surface=None, 
+                  geometry=None, indices=None, height=None, 
+                  composition=None, orientation=None, 
+                  tile_angle=None, subsurf_element=None, 
+                  all_sites=None):
+    """A general function for adding one adsorbate to the surface.
+    Note that this function adds one adsorbate to a random site
+    that meets the specified condition regardless of it is already 
+    occupied or not. The function is generalized for both periodic 
+    and non-periodic systems (distinguished by atoms.pbc).
 
     Parameters
     ----------
-    atoms: The nanoparticle or surface slab onto which the adsorbate should be added.
-        
-    adsorbate: The adsorbate. Must be one of the following three types:
-        A string containing the chemical symbol for a single atom.
-        An atom object.
-        An atoms object (for a molecular adsorbate).
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
 
-    site: Support 5 typical adsorption sites: 
-        1-fold site 'ontop', 
-        2-fold site 'bridge', 
-        3-fold hollow sites 'fcc' and 'hcp', 
-        4-fold hollow site '4fold'.
+    adsorbate : str or ase.Atom object or ase.Atoms object
+        The adsorbate species to be added onto the surface.
 
-    surface: Support 4 typical surfaces (positions) for fcc crystal where the 
-    adsorbate is attached: 
-        'vertex', 
-        'edge', 
-        'fcc100', 
-        'fcc111'.
+    site : str, default None
+        The site type that the adsorbates should be added to.
 
-    height: The height from the adsorbate to the surface.
-        Default is {'ontop': 2.0, 'bridge': 1.8, 'fcc': 1.8, 'hcp': 1.8, 
-        '4fold': 1.7} for nanoparticles and 2.0 for all sites on surface slabs.
+    surface : str, default None
+        The surface type (crystal structure + Miller indices)
+        If the structure is a periodic surface slab, this is required.
+        If the structure is a nanoparticle, the function enumerates
+        only the sites on the specified surface.
+
+    geometry : str, default None
+        The geometry type that the adsorbates should be added to. 
+        Only available for surface slabs.
+
+    indices : list or tuple
+        The indices of the atoms that contribute to the site that
+        you want to add adsorbate to. This has the highest priority.
+
+    height : float, default None
+        The height of the added adsorbate from the surface.
+        Use the default settings if not specified.
+
+    composition : str, default None
+        The elemental of the site that should be added to.
+
+    orientation : list or numpy.array, default None
+        The vector that the multidentate adsorbate is aligned to.
+
+    tilt_angle: float, default None
+        Tilt the adsorbate with an angle (in degress) relative to
+        the surface normal.
+
+    subsurf_element : str, default None
+        The subsurface element of the hcp or 4fold hollow site that 
+        should be added to.
+
+    all_sites : list of dicts, default None
+        The list of all sites. Provide this to make the function
+        much faster. Useful when the function is called many times.
 
     Example
-    ------- 
-    add_adsorbate(atoms,adsorbate='CO',site='4fold',surface='fcc100')
-    """
+    -------
+    To add a NO molecule to a bridge site consists of one Pt and 
+    one Ni on the fcc111 surface of a truncated octahedron:
 
+    >>> from acat.build.actions import add_adsorbate 
+    >>> from ase.cluster import Octahedron
+    >>> from ase.visualize import view
+    >>> atoms = Octahedron('Ni', length=7, cutoff=2)
+    >>> for atom in atoms:
+    ...     if atom.index % 2 == 0:
+    ...         atom.symbol = 'Pt' 
+    >>> add_adsorbate(atoms, adsorbate='NO', site='bridge',
+                      surface='fcc111', composition='NiPt')
+    >>> view(atoms)
+    [image]
+
+    """
     
-    
-    composition_effect = any(v is not None for v in [composition, subsurf_element])
+    composition_effect = any(v is not None for v in 
+                             [composition, subsurf_element])
 
     if composition:
         if '-' in composition or len(list(Formula(composition))) == 6:
@@ -99,13 +134,82 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None, geometry=None,
     else:
         if height is None:
             height = site_heights[st['site']]
-        add_adsorbate_to_site(atoms, adsorbate, st, height, orientation)
+        add_adsorbate_to_site(atoms, adsorbate, st, height, 
+                              orientation, tilt_angle)
 
 
 def add_adsorbate_to_site(atoms, adsorbate, site, height=None, 
                           orientation=None, tilt_angle=0.):            
-    '''orientation: vector that the adsorbate is algined to'''
-    
+    """The base function for adding one adsorbate to a site.
+    Useful for adding adsorbate to multiple sites or adding 
+    multidentate adsorbates.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    adsorbate : str or ase.Atom object or ase.Atoms object
+        The adsorbate species to be added onto the surface.
+
+    site : dict 
+        The site that the adsorbates should be added to.
+        Must contain information of the position and the
+        normal vector of the site.
+
+    height : float, default None
+        The height of the added adsorbate from the surface.
+        Use the default settings if not specified.
+
+    orientation : list or numpy.array, default None
+        The vector that the multidentate adsorbate is aligned to.
+
+    tilt_angle: float, default None
+        Tilt the adsorbate with an angle (in degress) relative to
+        the surface normal.
+
+    Example
+    -------
+    To add CO to all fcc sites of an icosahedral nanoparticle:
+
+    >>> from acat.adsorption_sites import ClusterAdsorptionSites
+    >>> from acat.build.actions import add_adsorbate_to_site
+    >>> from ase.cluster import Icosahedron
+    >>> from ase.visualize import view
+    >>> atoms = Icosahedron('Pt', noshells=5)
+    >>> atoms.center(vacuum=5.)
+    >>> cas = ClusterAdsorptionSites(atoms)
+    >>> fcc_sites = cas.get_sites(site='fcc')
+    >>> for site in fcc_sites:
+    ...     add_adsorbate_to_site(atoms, adsorbate='CO', site=site)
+    >>> view(atoms)
+
+
+    To add a CH3OH to the (54, 57, 58) site on a Pt fcc111 surface 
+    slab and rotate the orientation to a neighbor site:
+
+    >>> from acat.adsorption_sites import SlabAdsorptionSites
+    >>> from acat.adsorption_sites import get_adsorption_site
+    >>> from acat.build.actions import add_adsorbate_to_site 
+    >>> from acat.utilities import get_mic
+    >>> from ase.build import fcc111
+    >>> from ase.visualize import view
+    >>> atoms = fcc111('Pt', (4, 4, 4), vacuum=5.)
+    >>> i, site = get_adsorption_site(atoms, indices=(54, 57, 58),
+    ...                               surface='fcc111',
+    ...                               return_index=True)
+    >>> sas = SlabAdsorptionSites(atoms, surface='fcc111')
+    >>> sites = sas.get_sites()
+    >>> nbsites = sas.get_neighbor_site_list(neighbor_number=1)
+    >>> nbsite = sites[nbsites[i][0]] # Choose the first neighbor site
+    >>> ori = get_mic(site['position'], nbsite['position'], atoms.cell)
+    >>> add_adsorbate_to_site(atoms, adsorbate='CH3OH', site=site, 
+    ...                       orientation=ori)
+    >>> view(atoms)
+    [image]
+
+    """
+ 
     if height is None:
         height = site_heights[site['site']]
 
@@ -138,7 +242,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
         # Always sort the indices the same order as the input symbol.
         # This is a naive sorting which might cause H in wrong order.
         # Please sort your own adsorbate atoms by reindexing as has
-        # been done in the adsorbate_molecule function in settings.py
+        # been done in the adsorbate_molecule function in acat.settings.
         symout = list(Formula(adsorbate))
         symin = list(ads.symbols)
         newids = []
@@ -149,6 +253,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
         ads = ads[newids]
 
     if orientation is not None:
+        orientation = np.asarray(orientation)
         oripos = next((a.position for a in ads[1:] if 
                        a.symbol != 'H'), ads[1].position)
 
@@ -232,7 +337,8 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
                                 min_adsorbate_distance=0.5):
     """Find adsorbates that are too close, remove one set of them.
     The function is intended to remove atoms that are unphysically 
-    close. Please do not use a min_adsorbate_distace larger than 2."""
+    close. Please do not use a min_adsorbate_distace larger than 2.
+    """
 
     if adsorbate_coverage is not None:
         sac = adsorbate_coverage
