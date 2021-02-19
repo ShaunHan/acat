@@ -139,7 +139,7 @@ class StochasticPatternGenerator(object):
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
         >>> spg.run(n_gen=100, action='add')
-        [moive]
+        [movie]
 
     """
 
@@ -914,7 +914,7 @@ class SystematicPatternGenerator(object):
         ...           adsorption_sites=cas,
         ...           composition_effect=True) 
         >>> spg.run(action='add')
-        [moive]
+        [movie]
 
     """
 
