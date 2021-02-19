@@ -1,0 +1,590 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>acat.utilities &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/table_styling.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ga.html">Genetic Algorithm</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>acat.utilities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for acat.utilities</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">covalent_radii</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">atomic_masses</span>
+<span class="kn">from</span> <span class="nn">ase.geometry.geometry</span> <span class="kn">import</span> <span class="n">_row_col_from_pdist</span>
+<span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
+<span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">permutations</span><span class="p">,</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">abc</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+
+<div class="viewcode-block" id="neighbor_shell_list"><a class="viewcode-back" href="../../acat.html#acat.utilities.neighbor_shell_list">[docs]</a><span class="k">def</span> <span class="nf">neighbor_shell_list</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                        <span class="n">different_species</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make dict of neighboring shell atoms for both periodic </span>
+<span class="sd">    and non-periodic systems.</span>
+
+<span class="sd">    Possible to return neighbors from defined neighbor shell </span>
+<span class="sd">    e.g. 1st, 2nd, 3rd by changing the neighbor number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dx : float, default 0.3</span>
+<span class="sd">        Buffer to calculate nearest neighbor pairs.</span>
+
+<span class="sd">    neighbor_number : int, default 1</span>
+<span class="sd">        Neighbor shell.</span>
+
+<span class="sd">    different_species : boolean, default False</span>
+<span class="sd">        Whether each neighbor pair are different species.</span>
+
+<span class="sd">    mic: boolean, default False</span>
+<span class="sd">        Whether to apply minimum image convention. Remember to set </span>
+<span class="sd">        mic=True for periodic systems.</span>
+
+<span class="sd">    radius: float, default None </span>
+<span class="sd">        The radius of each shell. Works exactly as a conventional </span>
+<span class="sd">        neighbor list when specified. If not specified, use covalent </span>
+<span class="sd">        radii instead.</span>
+
+<span class="sd">    span: boolean, default False</span>
+<span class="sd">        Whether to include all neighbors spanned within the shell.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">natoms</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span>
+    
+    <span class="n">nums</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">nums</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">permutations</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)),</span><span class="mi">2</span><span class="p">)))</span>    
+    <span class="n">indices1</span><span class="p">,</span> <span class="n">indices2</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">indices1</span><span class="p">],</span> <span class="n">positions</span><span class="p">[</span><span class="n">indices2</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">mic</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">distances</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">distances</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">natoms</span><span class="p">),</span> <span class="mf">0.</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">radius</span><span class="p">:</span>
+        <span class="n">cr_dict</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span> <span class="p">(</span><span class="n">covalent_radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">covalent_radii</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">}</span>
+    
+    <span class="n">conn</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">atomi</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">atomj</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">atomi</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">atomj</span><span class="o">.</span><span class="n">index</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">different_species</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">atomi</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">atomj</span><span class="o">.</span><span class="n">symbol</span><span class="p">)):</span>
+                    <span class="n">d</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">natoms</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">natoms</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">crij</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius</span> <span class="k">if</span> <span class="n">radius</span> <span class="k">else</span> <span class="n">cr_dict</span><span class="p">[(</span><span class="n">atomi</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">atomj</span><span class="o">.</span><span class="n">number</span><span class="p">)]</span> 
+
+                    <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">span</span><span class="p">:</span>
+                        <span class="n">d_max1</span> <span class="o">=</span> <span class="mf">0.</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">d_max1</span> <span class="o">=</span> <span class="p">(</span><span class="n">neighbor_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">crij</span> <span class="o">+</span> <span class="n">dx</span>
+
+                    <span class="n">d_max2</span> <span class="o">=</span> <span class="n">neighbor_number</span> <span class="o">*</span> <span class="n">crij</span> <span class="o">+</span> <span class="n">dx</span>
+
+                    <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">d_max1</span> <span class="ow">and</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">d_max2</span><span class="p">:</span>
+                        <span class="n">conn</span><span class="p">[</span><span class="n">atomi</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atomj</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">conn</span></div>
+
+
+<div class="viewcode-block" id="get_connectivity_matrix"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_connectivity_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_connectivity_matrix</span><span class="p">(</span><span class="n">neighborlist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a connectivity matrix from a neighborlist object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    neighborlist : dict</span>
+<span class="sd">        A neighborlist (dictionary) that contains keys of each </span>
+<span class="sd">        atom index and values of their neighbor atom indices.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="n">conn_mat</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighborlist</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="c1"># Create binary matrix denoting connections.</span>
+    <span class="k">for</span> <span class="n">index1</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+        <span class="n">conn_x</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index2</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">index2</span> <span class="ow">in</span> <span class="n">neighborlist</span><span class="p">[</span><span class="n">index1</span><span class="p">]:</span>
+                <span class="n">conn_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">conn_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">conn_mat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conn_x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conn_mat</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_mic"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_mic">[docs]</a><span class="k">def</span> <span class="nf">get_mic</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> 
+            <span class="n">max_cell_multiples</span><span class="o">=</span><span class="mf">1e5</span><span class="p">,</span> 
+            <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;A highly efficient function for getting all vectors from p1</span>
+<span class="sd">    to p2 that are less than the cutoff in length. Also able to </span>
+<span class="sd">    calculate the distance using the minimum image convention (mic).</span>
+<span class="sd">    This function is useful when you want to constantly calculate </span>
+<span class="sd">    mic between two given positions. Please use ase.geometry.find_mic </span>
+<span class="sd">    if you want to calculate an array of vectors all at a time </span>
+<span class="sd">    (useful for e.g. neighborlist).    </span>
+<span class="sd">    </span>
+<span class="sd">    :param p1:</span>
+<span class="sd">    :param p2:</span>
+<span class="sd">    :param cutoff:</span>
+<span class="sd">    :param max_cell_multiples:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Precompute some useful values</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+    <span class="n">a_cross_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">a_cross_b_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a_cross_b</span><span class="p">)</span>
+    <span class="n">a_cross_b_hat</span> <span class="o">=</span> <span class="n">a_cross_b</span> <span class="o">/</span> <span class="n">a_cross_b_len</span>
+    <span class="n">b_cross_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">b_cross_c_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b_cross_c</span><span class="p">)</span>
+    <span class="n">b_cross_c_hat</span> <span class="o">=</span> <span class="n">b_cross_c</span> <span class="o">/</span> <span class="n">b_cross_c_len</span>
+    <span class="n">a_cross_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">a_cross_c_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a_cross_c</span><span class="p">)</span>
+    <span class="n">a_cross_c_hat</span> <span class="o">=</span> <span class="n">a_cross_c</span> <span class="o">/</span> <span class="n">a_cross_c_len</span>
+
+    <span class="c1"># TODO: Wrap p1, and p2 into the current unit cell</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span>
+    <span class="n">min_dr_sq</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">@</span> <span class="n">dr</span>
+    <span class="n">min_length</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">min_dr_sq</span><span class="p">)</span>
+    <span class="n">a_max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_length</span> <span class="o">/</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">b_cross_c_len</span><span class="p">)</span>
+    <span class="n">a_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">a_max</span><span class="p">,</span> <span class="n">max_cell_multiples</span><span class="p">)</span>
+    <span class="n">b_max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_length</span> <span class="o">/</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">a_cross_c_len</span><span class="p">)</span>
+    <span class="n">b_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">b_max</span><span class="p">,</span> <span class="n">max_cell_multiples</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pbc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="n">c_max</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c_max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_length</span> <span class="o">/</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">a_cross_b_len</span><span class="p">)</span>
+        <span class="n">c_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">c_max</span><span class="p">,</span> <span class="n">max_cell_multiples</span><span class="p">)</span>
+
+    <span class="n">min_dr</span> <span class="o">=</span> <span class="n">dr</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">a_max</span><span class="p">,</span> <span class="n">a_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">a</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">b_max</span><span class="p">,</span> <span class="n">b_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">rab</span> <span class="o">=</span> <span class="n">ra</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="n">b</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">c_max</span><span class="p">,</span> <span class="n">c_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">out_vec</span> <span class="o">=</span> <span class="n">rab</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="n">dr</span>
+                <span class="n">len_sq</span> <span class="o">=</span> <span class="n">out_vec</span> <span class="o">@</span> <span class="n">out_vec</span> 
+                <span class="k">if</span> <span class="n">len_sq</span> <span class="o">&lt;</span> <span class="n">min_dr_sq</span><span class="p">:</span>
+                    <span class="n">min_dr</span> <span class="o">=</span> <span class="n">out_vec</span>
+                    <span class="n">min_dr_sq</span> <span class="o">=</span> <span class="n">len_sq</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_squared_distance</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">min_dr</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">min_dr</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="expand_cell"><a class="viewcode-back" href="../../acat.html#acat.utilities.expand_cell">[docs]</a><span class="k">def</span> <span class="nf">expand_cell</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return Cartesian coordinates atoms within a supercell</span>
+<span class="sd">    which contains repetitions of the unit cell which contains</span>
+<span class="sd">    at least one neighboring atom. Borrowed from Catkit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">pbc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span>
+
+    <span class="k">if</span> <span class="n">padding</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">diags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<div class="viewcode-block" id="get_close_atoms"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_close_atoms">[docs]</a>                           <span class="o">@</span> <span class="n">cell</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dpos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">Dr</span> <span class="o">=</span> <span class="n">dpos</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dr</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">Dr</span><span class="p">)</span> <span class="o">*</span> <span class="n">pbc</span><span class="p">)</span> <span class="o">@</span> <span class="n">cell</span>
+            <span class="n">D_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">D_len</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+
+    <span class="n">latt_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">cell</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">cell</span><span class="p">))</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">pbc</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">cutoff</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">latt_len</span><span class="p">)</span> <span class="o">/</span>
+                                     <span class="p">(</span><span class="n">V</span> <span class="o">*</span> <span class="n">latt_len</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="o">-</span><span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="o">-</span><span class="n">padding</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">padding</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="o">-</span><span class="n">padding</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span><span class="n">padding</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">tvecs</span> <span class="o">=</span> <span class="n">offsets</span> <span class="o">@</span> <span class="n">cell</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">tvecs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">ncell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">offsets</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">ncell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">offsets</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ncell</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">offsets</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_close_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get list of close atoms and delete one set of them if requested.</span>
+<span class="sd">    Identify all atoms which lie within the cutoff radius of each other.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))),</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">indices1</span><span class="p">,</span> <span class="n">indices2</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">indices1</span><span class="p">],</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">indices2</span><span class="p">]</span>                      
+    <span class="k">if</span> <span class="n">mic</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">dists</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+
+    <span class="n">dup</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">dists</span> <span class="o">&lt;</span> <span class="n">cutoff</span><span class="p">)</span>
+    <span class="n">rem</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_row_col_from_pdist</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">),</span> <span class="n">dup</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">delete</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rem</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">atoms</span><span class="p">[</span><span class="n">rem</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rem</span></div>
+
+
+<div class="viewcode-block" id="atoms_too_close"><a class="viewcode-back" href="../../acat.html#acat.utilities.atoms_too_close">[docs]</a><span class="k">def</span> <span class="nf">atoms_too_close</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))),</span> <span class="mi">2</span><span class="p">)))</span>
+    <span class="n">indices1</span><span class="p">,</span> <span class="n">indices2</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">indices1</span><span class="p">],</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">indices2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mic</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">dists</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">dists</span> <span class="o">&lt;</span> <span class="n">cutoff</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="atoms_too_close_after_addition"><a class="viewcode-back" href="../../acat.html#acat.utilities.atoms_too_close_after_addition">[docs]</a><span class="k">def</span> <span class="nf">atoms_too_close_after_addition</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">n_added</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    atoms: the atoms after adding n_added new atom</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">newp</span><span class="p">,</span> <span class="n">oldp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="o">-</span><span class="n">n_added</span><span class="p">:],</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:</span><span class="o">-</span><span class="n">n_added</span><span class="p">]</span>
+    <span class="n">newps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">newp</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">oldp</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">oldps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">oldp</span><span class="p">,</span> <span class="p">(</span><span class="n">n_added</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">mic</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">dists</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">newps</span> <span class="o">-</span> <span class="n">oldps</span><span class="p">,</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">newps</span> <span class="o">-</span> <span class="n">oldps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">dists</span> <span class="o">&lt;</span> <span class="n">cutoff</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_angle_between"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_angle_between">[docs]</a><span class="k">def</span> <span class="nf">get_angle_between</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Returns the angle in radians between vectors </span>
+<span class="sd">    &#39;v1&#39; and &#39;v2&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">v1_u</span> <span class="o">=</span> <span class="n">v1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+    <span class="n">v2_u</span> <span class="o">=</span> <span class="n">v2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">v1_u</span> <span class="o">@</span> <span class="n">v2_u</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_rejection_between"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_rejection_between">[docs]</a><span class="k">def</span> <span class="nf">get_rejection_between</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the vector rejection of vector &#39;v1&#39; </span>
+<span class="sd">    perpendicular to vector &#39;v2&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">v1</span> <span class="o">-</span> <span class="n">v2</span> <span class="o">*</span> <span class="p">(</span><span class="n">v1</span> <span class="o">@</span> <span class="n">v2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">v2</span> <span class="o">@</span> <span class="n">v2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_rotation_matrix"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_rotation_matrix</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
+   <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   Return the rotation matrix R that rotates unit vector v1 </span>
+<span class="sd">   onto unit vector v2.</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+   <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">az</span> <span class="o">=</span> <span class="n">v1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+   <span class="n">bx</span><span class="p">,</span> <span class="n">by</span><span class="p">,</span> <span class="n">bz</span> <span class="o">=</span> <span class="n">v2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+   <span class="n">au</span> <span class="o">=</span> <span class="n">v1</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ax</span> <span class="o">*</span> <span class="n">ax</span> <span class="o">+</span> <span class="n">ay</span> <span class="o">*</span> <span class="n">ay</span> <span class="o">+</span> <span class="n">az</span> <span class="o">*</span> <span class="n">az</span><span class="p">))</span>
+   <span class="n">bu</span> <span class="o">=</span> <span class="n">v2</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bx</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">+</span> <span class="n">by</span> <span class="o">*</span> <span class="n">by</span> <span class="o">+</span> <span class="n">bz</span> <span class="o">*</span> <span class="n">bz</span><span class="p">))</span>
+
+   <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="n">bu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> 
+                   <span class="p">[</span><span class="n">bu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> 
+                   <span class="p">[</span><span class="n">bu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">au</span><span class="p">[</span><span class="mi">2</span><span class="p">]]])</span>
+   <span class="k">return</span> <span class="n">R</span></div>
+
+
+<div class="viewcode-block" id="get_rodrigues_rotation_matrix"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_rodrigues_rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_rodrigues_rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the rotation matrix associated with </span>
+<span class="sd">    counterclockwise rotation about the given </span>
+<span class="sd">    axis by angle in radians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+           <span class="n">axis</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">*</span> <span class="n">angle</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_total_masses"><a class="viewcode-back" href="../../acat.html#acat.utilities.get_total_masses">[docs]</a><span class="k">def</span> <span class="nf">get_total_masses</span><span class="p">(</span><span class="n">symbol</span><span class="p">):</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">atomic_masses</span><span class="p">[</span><span class="n">atomic_numbers</span><span class="p">[</span><span class="n">s</span><span class="p">]]</span> 
+                   <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">symbol</span><span class="p">))])</span></div>
+
+
+<div class="viewcode-block" id="draw_graph"><a class="viewcode-back" href="../../acat.html#acat.utilities.draw_graph">[docs]</a><span class="k">def</span> <span class="nf">draw_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="s1">&#39;graph.png&#39;</span><span class="p">):</span>               
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Get unique groups</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="s2">&quot;C</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">groups</span><span class="p">)}</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s1">&#39;symbol&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+
+    <span class="c1"># Drawing nodes, edges and labels separately</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> 
+                           <span class="n">nodelist</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> 
+                           <span class="n">node_color</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> 
+                           <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> 
+                            <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                            <span class="n">font_color</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">savefig</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="is_list_or_tuple"><a class="viewcode-back" href="../../acat.html#acat.utilities.is_list_or_tuple">[docs]</a><span class="k">def</span> <span class="nf">is_list_or_tuple</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="string_fragmentation"><a class="viewcode-back" href="../../acat.html#acat.utilities.string_fragmentation">[docs]</a><span class="k">def</span> <span class="nf">string_fragmentation</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A function for generating a fragment list (list of strings) </span>
+<span class="sd">    from a given adsorbate (string)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">adsorbate</span> <span class="o">==</span> <span class="s1">&#39;H2&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">]</span>
+    <span class="n">sym_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">))</span>
+    <span class="n">nsyms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sym_list</span><span class="p">)</span>
+    <span class="n">frag_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sym</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sym_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sym</span> <span class="o">!=</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">nsyms</span><span class="p">:</span>
+                <span class="n">hlen</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="n">sym_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>  <span class="o">==</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span>
+                    <span class="n">hlen</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="n">nsyms</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">hlen</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">frag</span> <span class="o">=</span> <span class="n">sym</span>
+                <span class="k">elif</span> <span class="n">hlen</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">frag</span> <span class="o">=</span> <span class="n">sym</span> <span class="o">+</span> <span class="s1">&#39;H&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">frag</span> <span class="o">=</span> <span class="n">sym</span> <span class="o">+</span> <span class="s1">&#39;H&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">hlen</span><span class="p">)</span>
+                <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frag</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">frag_list</span>        </div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

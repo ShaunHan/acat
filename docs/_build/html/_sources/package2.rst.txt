@@ -1,0 +1,13 @@
+Package2 package
+=====================
+
+Submodules
+----------
+
+Submodule1 module
+----------------------------------
+
+.. automodule:: acat.ga.adsorbate_operators
+    :members:
+    :undoc-members:
+    :show-inheritance:
