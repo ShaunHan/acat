@@ -26,7 +26,7 @@ class SymmetricOrderingGenerator(object):
     symmetry : str, default 'spherical'
         Support 4 symmetries: 
         'spherical' = centrosymmetry (layers defined by the distances 
-        to the centroid);
+        to the geometric center);
         'planar' = planar symmetry around z axis (layers defined by 
         the z coordinates);
         'cylindrical' = cylindrical symmetry around z axis (layers 
