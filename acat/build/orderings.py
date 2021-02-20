@@ -45,6 +45,9 @@ class SymmetricOrderingGenerator(object):
         defined by the primary symmetry, they can still end up in 
         different layers if they fall into two different layers that 
         defined by the secondary symmetry. Support same 4 symmetries. 
+        Note that secondary symmetry has the same importance as the 
+        primary symmetry, so you can set either of the two symmetries 
+        of interest as the secondary symmetry.
 
     secondary_cutoff : float, default 0.1
         Same as cutoff, except that it is for the secondary symmetry.
