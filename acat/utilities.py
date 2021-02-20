@@ -116,7 +116,7 @@ def get_connectivity_matrix(neighborlist):
 def get_mic(p1, p2, cell, pbc=[1,1,0], 
             max_cell_multiples=1e5, 
             return_squared_distance=False): 
-    """A highly efficient function of getting all vectors from p1
+    """A highly efficient function for getting all vectors from p1
     to p2 that are less than the cutoff in length. Also able to 
     calculate the distance using the minimum image convention (mic).
     This function is useful when you want to constantly calculate 
