@@ -82,9 +82,8 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
     ...     if atom.index % 2 == 0:
     ...         atom.symbol = 'Pt' 
     >>> add_adsorbate(atoms, adsorbate='NO', site='bridge',
-                      surface='fcc111', composition='NiPt')
+    ...               surface='fcc111', composition='NiPt')
     >>> view(atoms)
-    [image]
 
     """
     
@@ -206,7 +205,6 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     >>> add_adsorbate_to_site(atoms, adsorbate='CH3OH', site=site, 
     ...                       orientation=ori)
     >>> view(atoms)
-    [image]
 
     """
  
