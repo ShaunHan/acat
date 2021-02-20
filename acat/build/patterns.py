@@ -138,8 +138,7 @@ class StochasticPatternGenerator(object):
         ...           surface='fcc111',
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
-        >>> spg.run(n_gen=100, action='add')
-        [movie]
+        >>> spg.run(n_gen=100, actions='add')
 
     """
 
@@ -914,7 +913,6 @@ class SystematicPatternGenerator(object):
         ...           adsorption_sites=cas,
         ...           composition_effect=True) 
         >>> spg.run(action='add')
-        [movie]
 
     """
 
@@ -1696,7 +1694,6 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
         >>> pattern = symmetric_coverage_pattern(atoms, adsorbate='CO', 
         ...                                      coverage=0.5)
         >>> view(pattern)
-        [image]
 
     To add a 0.75 ML CO coverage pattern on a fcc111 surface slab:
 
@@ -1709,7 +1706,6 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
         ...                                      coverage=0.5, 
         ...                                      surface='fcc111')
         >>> view(pattern)
-        [image]
 
     """
 
@@ -2122,7 +2118,6 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
         >>> atoms.center(vacuum=5.)
         >>> pattern = full_coverage_pattern(atoms, adsorbate='CO', site='hcp')
         >>> view(pattern)
-        [image]
 
     To add a 1 ML CO coverage pattern to the 3fold sites on a bcc110 
     surface slab:
@@ -2135,7 +2130,6 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
         >>> pattern = full_coverage_pattern(atoms, adsorbate='CO',
         ...                                 surface='bcc110', site='3fold')
         >>> view(pattern)
-        [image]
 
     """
 
@@ -2222,7 +2216,6 @@ def random_coverage_pattern(atoms, adsorbate_species,
         >>> pattern = random_coverage_pattern(atoms, adsorbate_species='CO', 
         ...                                   min_adsorbate_distance=5.)
         >>> view(pattern)
-        [image]
 
     To add C, N, O randomly onto a hcp0001 surface slab with probabilities 
     of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
@@ -2240,7 +2233,6 @@ def random_coverage_pattern(atoms, adsorbate_species,
         ...                                   surface='hcp0001',
         ...                                   min_adsorbate_distance=2.)
         >>> view(pattern)
-        [image]
 
     """
     adsorbate_species = adsorbate_species if is_list_or_tuple(
