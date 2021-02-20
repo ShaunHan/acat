@@ -1,5 +1,6 @@
 from ase.geometry import get_distances
 from ase.io import Trajectory, read, write
+from asap3 import EMT as asapEMT
 from itertools import product
 import numpy as np
 import random
@@ -22,16 +23,40 @@ class SymmetricOrderingGenerator(object):
     species : list of strs 
         The two metal species of the bimetallic catalyst.
 
-    cutoff: float, default 0.1
-        Minimum distance (in Angstrom) that the code can recognize 
-        between two neighbor layers. If the structure is irregular, 
-        use a higher cutoff.
+    symmetry : str, default 'spherical'
+        Support 4 symmetries: 
+        'spherical' = centrosymmetry (layers defined by the distances 
+        to the centroid);
+        'planar' = planar symmetry around z axis (layers defined by 
+        the z coordinates);
+        'cylindrical' = cylindrical symmetry around z axis (layers 
+        defined by the distances to the z axis);
+        'chemical' = symmetry w.r.t chemical environment (layers 
+        defined by the atomic energy calculated by EMT).
 
-    composition: dict, default None
+    cutoff: float, default 0.1
+        Minimum distance (in Angstrom) or energy difference (in eV) 
+        that the code can recognize between two neighbor layers. 
+        If the structure is irregular, use a higher cutoff.
+
+    secondary_symmetry : str, default None
+        Add a secondary symmetry check to define layers hierarchically. 
+        For example, even if two atoms are classifed in one layer that 
+        defined by the primary symmetry, they can still end up in 
+        different layers if they fall into two different layers that 
+        defined by the secondary symmetry. Support same 4 symmetries. 
+
+    secondary_cutoff : float, default 0.1
+        Same as cutoff, except that it is for the secondary symmetry.
+
+    composition : dict, default None
         Generate symmetric orderings only at a certain composition.
         The dictionary contains the two speices as keys and their 
         concentrations as values. Generate orderings at all 
         compositions if not specified.
+
+    layer_threshold : int, default 20
+        Number of layers to switch to stochastic mode automatically.
 
     trajectory : str, default 'orderings.traj'
         The name of the output ase trajectory file.
@@ -39,12 +64,28 @@ class SymmetricOrderingGenerator(object):
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
 
+    Example
+    -------
+    To generate 100 symmetric chemical orderings of a truncated
+    octahedral NiPt nanoalloy:
+
+    >>> from acat.build.orderings import SymmetricOrderingGenerator as SOG
+    >>> from ase.cluster import Octahedron
+    >>> atoms = Octahedron('Ni', length=8, cutoff=3)
+    >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
+    >>> sog.run(max_gen=100, verbose=True)
+    10 layers classified
+    100 symmetric chemical orderings generated 
+
     """
 
     def __init__(self, atoms, species,
-                 symmetry='central', #'horizontal', 'vertical'
-                 cutoff=.1,                 
+                 symmetry='spherical', #'planar', 'cylindrical', 'chemical'
+                 cutoff=.1,       
+                 secondary_symmetry=None,
+                 secondary_cutoff=.1,
                  composition=None,
+                 layer_threshold=20,
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
@@ -54,6 +95,9 @@ class SymmetricOrderingGenerator(object):
         self.ma, self.mb = species[0], species[1]
         self.symmetry = symmetry
         self.cutoff = cutoff
+        self.secondary_symmetry = secondary_symmetry
+        self.secondary_cutoff = secondary_cutoff
+
         self.composition = composition
         if self.composition is not None:
             assert set(self.composition.keys()) == set(self.species)
@@ -61,41 +105,73 @@ class SymmetricOrderingGenerator(object):
             self.nma = int(round(len(self.atoms) * ca))
             self.nmb = len(self.atoms) - self.nma
 
+        self.layer_threshold = layer_threshold
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
         self.append_trajectory = append_trajectory
 
         self.layers = self.get_layers()
 
-    def get_nblist_from_center_atom(self):
+    def get_nblist_from_center_atom(self, symmetry):
         atoms = self.atoms.copy()
         atoms.center()
         geo_mid = [(atoms.cell/2.)[0][0], (atoms.cell/2.)[1][1], 
                    (atoms.cell/2.)[2][2]]
-        if self.symmetry == 'central':
+        if symmetry == 'central':
             dists = get_distances(atoms.positions, [geo_mid])[1]
-        elif self.symmetry == 'horizontal':
-            dists = atoms.positions[:, 2] - geo_mid[2]
-        elif self.symmetry == 'vertical':
+        elif symmetry == 'vertical':
+            dists = atoms.positions[:, 2]
+        elif symmetry == 'horizontal':
             dists = np.asarray([math.sqrt((a.position[0] - geo_mid[0])**2 + 
                                (a.position[1] - geo_mid[1])**2) for a in atoms])
+        elif symmetry == 'chemical':
+            calc = asapEMT()
+            ref_atoms = self.atoms.copy()
+            ref_atoms.center(vacuum=5.)
+            for a in atoms:
+                a.symbol = 'Pt'
+            ref_atoms.calc = calc
+            dists = ref_atoms.get_potential_energies()
+
         sorted_indices = np.argsort(np.ravel(dists))
         return sorted_indices, dists[sorted_indices]    
     
     def get_layers(self):
-        indices, dists = self.get_nblist_from_center_atom() 
+        indices, dists = self.get_nblist_from_center_atom(symmetry=self.symmetry) 
         layers = []
-        old_dist = -10.0
+        old_dist = -10.
         for i, dist in zip(indices, dists):
             if abs(dist-old_dist) > self.cutoff:
                 layers.append([i])
             else:
                 layers[-1].append(i)
             old_dist = dist
-    
+
+        if self.secondary_symmetry is not None:
+            indices2, dists2 = self.get_nblist_from_center_atom(
+                               symmetry=self.secondary_symmetry)
+            layers2 = []
+            old_dist2 = -10.
+            for j, dist2 in zip(indices2, dists2):
+                if abs(dist2-old_dist2) > self.secondary_cutoff:
+                    layers2.append([j])
+                else:
+                    layers2[-1].append(j)
+                old_dist2 = dist2
+
+            res = []
+            for layer in layers:
+                res2 = []
+                for layer2 in layers2:
+                    match = [i for i in layer if i in layer2]
+                    if match:
+                        res2.append(match)
+                res += res2
+            layers = res
+ 
         return layers
 
-    def run(self, max_gen=None, mode='systematic', verbose=True):
+    def run(self, max_gen=None, mode='systematic', verbose=False):
         traj_mode = 'a' if self.append_trajectory else 'w'
         traj = Trajectory(self.trajectory, mode=traj_mode)
         atoms = self.atoms
@@ -108,9 +184,9 @@ class SymmetricOrderingGenerator(object):
         # When the number of layers is too large (> 20), systematic enumeration 
         # is not feasible. Stochastic sampling is the only option
         if mode == 'systematic':
-            if nlayers > 20:
+            if nlayers > self.layer_threshold:
                 if verbose:
-                    print('{} layers is too large for systematic'.format(nlayers), 
+                    print('{} layers is infeasible for systematic'.format(nlayers), 
                           'generator. Use stochastic generator instead')
                 mode = 'stochastic'
             else:    
@@ -177,6 +253,18 @@ class RandomOrderingGenerator(object):
 
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
+
+    Example
+    -------
+    To generate 100 random chemical orderings of a icosahedral Ni3Pt 
+    nanoalloy:
+
+    >>> from acat.build.orderings import RandomOrderingGenerator as ROG
+    >>> from ase.cluster import Icosahedron
+    >>> atoms = Icosahedron('Ni', noshells=5)
+    >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
+    ...           composition={'Ni': 0.75, 'Pt': 0.25})
+    >>> rog.run(n_gen=100)
 
     """
 
