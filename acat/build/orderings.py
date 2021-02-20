@@ -117,11 +117,11 @@ class SymmetricOrderingGenerator(object):
         atoms.center()
         geo_mid = [(atoms.cell/2.)[0][0], (atoms.cell/2.)[1][1], 
                    (atoms.cell/2.)[2][2]]
-        if symmetry == 'central':
+        if symmetry == 'spherical':
             dists = get_distances(atoms.positions, [geo_mid])[1]
-        elif symmetry == 'vertical':
+        elif symmetry == 'planar':
             dists = atoms.positions[:, 2]
-        elif symmetry == 'horizontal':
+        elif symmetry == 'cylindrical':
             dists = np.asarray([math.sqrt((a.position[0] - geo_mid[0])**2 + 
                                (a.position[1] - geo_mid[1])**2) for a in atoms])
         elif symmetry == 'chemical':
