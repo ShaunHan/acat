@@ -72,13 +72,13 @@ class SymmetricOrderingGenerator(object):
     To generate 100 symmetric chemical orderings of a truncated
     octahedral NiPt nanoalloy:
 
-    >>> from acat.build.orderings import SymmetricOrderingGenerator as SOG
-    >>> from ase.cluster import Octahedron
-    >>> atoms = Octahedron('Ni', length=8, cutoff=3)
-    >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
-    >>> sog.run(max_gen=100, verbose=True)
-    10 layers classified
-    100 symmetric chemical orderings generated 
+        >>> from acat.build.orderings import SymmetricOrderingGenerator as SOG
+        >>> from ase.cluster import Octahedron
+        >>> atoms = Octahedron('Ni', length=8, cutoff=3)
+        >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
+        >>> sog.run(max_gen=100, verbose=True)
+        10 layers classified
+        100 symmetric chemical orderings generated 
 
     """
 
@@ -175,6 +175,26 @@ class SymmetricOrderingGenerator(object):
         return layers
 
     def run(self, max_gen=None, mode='systematic', verbose=False):
+
+        """Run the chemical ordering generator.
+
+        Parameters
+        ----------
+        max_gen : int, default None
+            Maximum number of chemical orderings to generate. Enumerate
+            all symetric patterns if not specified. 
+
+        mode : str, default 'systematic'
+            Mode 'systematic' = enumerate all possible chemical orderings.
+            Mode 'stochastic' = sample chemical orderings stochastically.
+            Stocahstic mode is recommended when there are many layers.
+
+        verbose : bool, default False 
+            Whether to print out information about number of layers and
+            number of generated structures.
+
+        """
+
         traj_mode = 'a' if self.append_trajectory else 'w'
         traj = Trajectory(self.trajectory, mode=traj_mode)
         atoms = self.atoms
@@ -262,12 +282,12 @@ class RandomOrderingGenerator(object):
     To generate 100 random chemical orderings of a icosahedral Ni3Pt 
     nanoalloy:
 
-    >>> from acat.build.orderings import RandomOrderingGenerator as ROG
-    >>> from ase.cluster import Icosahedron
-    >>> atoms = Icosahedron('Ni', noshells=5)
-    >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
-    ...           composition={'Ni': 0.75, 'Pt': 0.25})
-    >>> rog.run(n_gen=100)
+        >>> from acat.build.orderings import RandomOrderingGenerator as ROG
+        >>> from ase.cluster import Icosahedron
+        >>> atoms = Icosahedron('Ni', noshells=5)
+        >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
+        ...           composition={'Ni': 0.75, 'Pt': 0.25})
+        >>> rog.run(n_gen=100)
 
     """
 
@@ -292,6 +312,16 @@ class RandomOrderingGenerator(object):
         self.append_trajectory = append_trajectory
 
     def run(self, n_gen):
+
+        """Run the chemical ordering generator.
+
+        Parameters
+        ----------
+        n_gen : int
+            Number of chemical orderings to generate.
+
+        """
+
         traj_mode = 'a' if self.append_trajectory else 'w'
         traj = Trajectory(self.trajectory, mode=traj_mode)
         atoms = self.atoms
