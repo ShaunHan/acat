@@ -27,9 +27,9 @@ class StochasticPatternGenerator(object):
     Parameters
     ----------
     images : ase.Atoms object or list of ase.Atoms objects
-        The structure to perform the adsorbate action on. If 
-        a list of structures is provided, perform adsorbate 
-        action on one of the structures in each step. 
+        The structure to perform the adsorbate actions on. 
+        If a list of structures is provided, perform one 
+        adsorbate action on one of the structures in each step. 
         Accept any ase.Atoms object. No need to be built-in.
 
     adsorbate_species : str or list of strs 
@@ -48,12 +48,14 @@ class StochasticPatternGenerator(object):
         The minimum distance constraint between two atoms that belongs 
         to two adsorbates.
 
-    adsorption_sites : acat.AdsorptionSites object, default None
-        Provide AdsorptionSites object to accelerate the pattern 
-        generation. Make sure all the structures have the same 
-        periodicity and atom indexing. If composition_effect=True, 
-        you should only provide adsorption_sites when the surface 
-        composition is fixed.
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites or
+                       acat.adsorption_sites.SlabAdsorptionSites object, 
+                       default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, you 
+        should only provide adsorption_sites when the surface composition 
+        is fixed.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices).
@@ -100,7 +102,7 @@ class StochasticPatternGenerator(object):
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
-        graph isomorphism for the existing structures in the trajectory.
+         isomorphism for the existing structures in the trajectory.
         This is also useful when you want to generate coverage patterns 
         stochastically but for all images systematically, e.g. generating
         10 stochastic coverage patterns for each image:
@@ -665,11 +667,30 @@ class StochasticPatternGenerator(object):
 
         return nsac                        
  
-    '''unique: whether discard duplicates based on isomorphism or not'''
     def run(self, n_gen, 
-            actions=['add','remove','move'], 
+            actions='add','remove','move'], 
             action_probabilities=None,
             unique=True):
+
+        """Run the pattern generator.
+
+        Parameters
+        ----------
+        n_gen : int
+            Number of patterns to generate.
+
+        actions : str or list of strs, default ['add', 'remove', 'move']
+            Action(s) to perform.
+
+        action_probabilities : dict, default None
+            A dictionary that contains keys of each action and values of the 
+            corresponding probabilities. Select actions with equal probability 
+            if not specified.
+
+        unique : bool, default True 
+            Whether to discard duplicate patterns based on isomorphism.
+
+        """
  
         mode = 'a' if self.append_trajectory else 'w'
         self.traj = Trajectory(self.trajectory, mode=mode)
@@ -818,9 +839,10 @@ class SystematicPatternGenerator(object):
     Parameters
     ----------
     images : ase.Atoms object or list of ase.Atoms objects
-        The structure to perform the adsorbate action on. If 
-        a list of structures is provided, perform adsorbate 
-        action on one of the structures in each step. 
+
+        The structure to perform the adsorbate actions on. 
+        If a list of structures is provided, perform one 
+        adsorbate action on one of the structures in each step. 
         Accept any ase.Atoms object. No need to be built-in.
 
     adsorbate_species : str or list of strs 
@@ -830,12 +852,14 @@ class SystematicPatternGenerator(object):
         The minimum distance constraint between two atoms that belongs 
         to two adsorbates.
 
-    adsorption_sites : acat.AdsorptionSites object, default None
-        Provide AdsorptionSites object to accelerate the pattern 
-        generation. Make sure all the structures have the same 
-        periodicity and atom indexing. If composition_effect=True, 
-        you should only provide adsorption_sites when the surface 
-        composition is fixed.
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites or 
+                       acat.adsorption_sites.SlabAdsorptionSites object, 
+                       default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, you 
+        should only provide adsorption_sites when the surface composition 
+        is fixed.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices).
@@ -1551,6 +1575,22 @@ class SystematicPatternGenerator(object):
 
     def run(self, max_gen_per_image=None, action='add', unique=True):
 
+        """Run the pattern generator.
+
+        Parameters
+        ----------
+        max_gen_per_image : int, default None
+            Maximum number of patterns to generate for each image. Enumerate
+            all possible patterns if not specified.
+
+        action : str, defualt 'add'
+            Action to perform.
+
+        unique : bool, default True 
+            Whether to discard duplicate patterns based on isomorphism.
+
+        """
+
         mode = 'a' if self.append_trajectory else 'w'
         self.traj = Trajectory(self.trajectory, mode=mode)          
         self.max_gen_per_image = max_gen_per_image
@@ -2253,6 +2293,8 @@ def random_coverage_pattern(atoms, adsorbate_species,
         sas = SlabAdsorptionSites(atoms, surface=surface,
                                   allow_6fold=allow_6fold)
         site_list = sas.site_list
+        if surface is not None:
+            site_list = [s for s in site_list if s['surface'] == surface]
 
     random.shuffle(site_list)
     natoms = len(atoms)
