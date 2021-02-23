@@ -17,11 +17,11 @@ Clone the repository:
 
 Go to the installed path and install all dependencies:
 
-```pip install -r requirements.txt --user```
+```pip install -r requirements.txt```
 
 Install the main package:
 
-```python setup.py install --user```
+```python setup.py install```
 
 ## Usage
 ### Add adsorbates
