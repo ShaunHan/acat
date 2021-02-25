@@ -116,6 +116,16 @@ class SymmetricOrderingGenerator(object):
         self.layers = self.get_layers()
 
     def get_nblist_from_center_atom(self, symmetry):
+        """Returns the indices sorted by the distance to the center atom,
+        together with their distances, given a specific symmetry.
+
+        Parameters
+        ----------
+        symmetry : str
+            Support the same 4 symmetries.
+
+        """
+
         atoms = self.atoms.copy()
         atoms.center()
         geo_mid = [(atoms.cell/2.)[0][0], (atoms.cell/2.)[1][1], 
@@ -140,6 +150,9 @@ class SymmetricOrderingGenerator(object):
         return sorted_indices, dists[sorted_indices]    
     
     def get_layers(self):
+        """Get the layers (a list of lists of atom indices) that divided by 
+        the symmetry."""
+
         indices, dists = self.get_nblist_from_center_atom(symmetry=self.symmetry) 
         layers = []
         old_dist = -10.
