@@ -13,33 +13,34 @@ import math
 def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
                         different_species=False, mic=False,
                         radius=None, span=False):
-    """Make dict of neighboring shell atoms for both periodic 
-    and non-periodic systems.
-
-    Possible to return neighbors from defined neighbor shell 
-    e.g. 1st, 2nd, 3rd by changing the neighbor number.
+    """Make dict of neighboring shell atoms for both periodic and 
+    non-periodic systems. Possible to return neighbors from defined 
+    neighbor shell e.g. 1st, 2nd, 3rd by changing the neighbor number.
 
     Parameters
     ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
     dx : float, default 0.3
         Buffer to calculate nearest neighbor pairs.
 
     neighbor_number : int, default 1
-        Neighbor shell.
+        Neighbor shell number.
 
     different_species : boolean, default False
         Whether each neighbor pair are different species.
 
-    mic: boolean, default False
+    mic : boolean, default False
         Whether to apply minimum image convention. Remember to set 
         mic=True for periodic systems.
 
-    radius: float, default None 
+    radius : float, default None 
         The radius of each shell. Works exactly as a conventional 
         neighbor list when specified. If not specified, use covalent 
         radii instead.
 
-    span: boolean, default False
+    span : boolean, default False
         Whether to include all neighbors spanned within the shell.
 
     """
@@ -117,19 +118,35 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
             max_cell_multiples=1e5, 
             return_squared_distance=False): 
     """A highly efficient function for getting all vectors from p1
-    to p2 that are less than the cutoff in length. Also able to 
-    calculate the distance using the minimum image convention (mic).
-    This function is useful when you want to constantly calculate 
-    mic between two given positions. Please use ase.geometry.find_mic 
-    if you want to calculate an array of vectors all at a time 
-    (useful for e.g. neighborlist).    
+    to p2. Also able to calculate the squared distance using the 
+    minimum image convention (mic). This function is useful when you 
+    want to constantly calculate mic between two given positions. 
+    Please use ase.geometry.find_mic if you want to calculate an 
+    array of vectors all at a time (useful for e.g. neighborlist).  
+
+    Parameters
+    ----------
+    p1 : numpy.array
+        The 3D Cartesian coordinate of the position 1.
+
+    p2 : numpy.array
+        The 3D Cartesian coordinate of the position 2.
+
+    cell : numpy.array
+        The 3D parallel epipedal unit cell.
+
+    pbc : numpy.array or list, default [1, 1, 0]
+        Whether cell is periodic in each direction.
+
+    max_cell_multiples : int, default 1e5
+        A big number to 
+
+    return_squared_distance : bool, default False
+        Whether to return the squared mic distance instead of the
+        mic vector.
     
-    :param p1:
-    :param p2:
-    :param cutoff:
-    :param max_cell_multiples:
-    :return:
     """
+
     # Precompute some useful values
     a, b, c = cell[0], cell[1], cell[2]
     vol = np.abs(a @ np.cross(b, c))
@@ -178,11 +195,10 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
 
 
 def expand_cell(atoms, cutoff=None, padding=None):
-    """Return Cartesian coordinates atoms within a supercell
-    which contains repetitions of the unit cell which contains
-    at least one neighboring atom. Borrowed from Catkit.
-    """
 
+    #Return Cartesian coordinates atoms within a supercell
+    #which contains repetitions of the unit cell which contains
+    #at least one neighboring atom. Borrowed from Catkit.
     cell = atoms.cell
     pbc = [1, 1, 0]
     pos = atoms.positions
@@ -224,8 +240,25 @@ def expand_cell(atoms, cutoff=None, padding=None):
 
 
 def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):
-    """Get list of close atoms and delete one set of them if requested.
-    Identify all atoms which lie within the cutoff radius of each other.
+    """Get a list of close atoms and delete one set of them if requested.
+    Identify all atoms that lie within the cutoff radius of each other.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    cutoff : float, default 0.5
+        The cutoff radius. Two atoms are too close if the distance between
+        them is less than this cutoff
+
+    mic : bool, default False
+        Whether to apply minimum image convention. Remember to set 
+        mic=True for periodic systems.
+
+    delete : bool, default False
+        Whether to delete one set of the close atoms.
+
     """
 
     res = np.asarray(list(combinations(np.asarray(range(len(atoms))),2)))
@@ -246,6 +279,22 @@ def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):
 
 
 def atoms_too_close(atoms, cutoff=0.5, mic=False):
+    """Check if there are atoms that are too close to each other.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    cutoff : float, default 0.5
+        The cutoff radius. Two atoms are too close if the distance between
+        them is less than this cutoff
+
+    mic : bool, default False
+        Whether to apply minimum image convention. Remember to set 
+        mic=True for periodic systems.
+
+    """
 
     res = np.asarray(list(combinations(np.asarray(range(len(atoms))), 2)))
     indices1, indices2 = res[:, 0], res[:, 1]
@@ -259,9 +308,28 @@ def atoms_too_close(atoms, cutoff=0.5, mic=False):
 
 
 def atoms_too_close_after_addition(atoms, n_added, cutoff=1.5, mic=False): 
+
+    """Check if there are atoms that are too close to each other after 
+    adding some new atoms.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        Accept any ase.Atoms object. No need to be built-in.
+
+    n_added : int
+        Number of newly added atoms.
+
+    cutoff : float, default 1.5
+        The cutoff radius. Two atoms are too close if the distance between
+        them is less than this cutoff
+
+    mic : bool, default False
+        Whether to apply minimum image convention. Remember to set 
+        mic=True for periodic systems.
+
     """
-    atoms: the atoms after adding n_added new atom
-    """ 
+
     newp, oldp = atoms.positions[-n_added:], atoms.positions[:-n_added]
     newps = np.repeat(newp, len(oldp), axis=0)
     oldps = np.tile(oldp, (n_added, 1))
@@ -274,10 +342,17 @@ def atoms_too_close_after_addition(atoms, n_added, cutoff=1.5, mic=False):
 
 
 def get_angle_between(v1, v2):
-    """ 
-    Returns the angle in radians between vectors 
-    'v1' and 'v2'.
+    """Returns the angle in radians between vectors 'v1' and 'v2'.
+
+    Parameters
+    ----------
+    v1 : numpy.array
+        Vector 1.
+    v2 : numpy.array
+        Vector 2.
+
     """
+
     v1_u = v1 / np.linalg.norm(v1)
     v2_u = v2 / np.linalg.norm(v2)
 
@@ -285,18 +360,34 @@ def get_angle_between(v1, v2):
 
 
 def get_rejection_between(v1, v2):
+    """Calculate the vector rejection of vector 'v1' perpendicular 
+    to vector 'v2'.
+
+    Parameters
+    ----------
+    v1 : numpy.array
+        Vector 1.
+    v2 : numpy.array
+        Vector 2.
+
     """
-    Calculate the vector rejection of vector 'v1' 
-    perpendicular to vector 'v2'.
-    """
+
     return v1 - v2 * (v1 @ v2) / (v2 @ v2)
 
 
 def get_rotation_matrix(v1, v2):
+   """Return the rotation matrix R that rotates unit vector v1 onto 
+   unit vector v2.
+
+   Parameters
+   ----------
+   v1 : numpy.array
+       Vector 1.
+   v2 : numpy.array
+       Vector 2.
+
    """
-   Return the rotation matrix R that rotates unit vector v1 
-   onto unit vector v2.
-   """
+
    ax, ay, az = v1[0], v1[1], v1[2]
    bx, by, bz = v2[0], v2[1], v2[2]
    au = v1 / (np.sqrt(ax * ax + ay * ay + az * az))
@@ -309,44 +400,35 @@ def get_rotation_matrix(v1, v2):
 
 
 def get_rodrigues_rotation_matrix(axis, angle):
+    """Return the Rodrigues rotation matrix associated with counter-
+    clockwise rotation about the given axis by angle in radians.
+
+   Parameters
+   ----------
+   axis : numpy.array
+       The axis (vector) to rotate around with.
+   angle : numpy.array
+       The angle (in radians) to rotate around.
+
     """
-    Return the rotation matrix associated with 
-    counterclockwise rotation about the given 
-    axis by angle in radians.
-    """
+
     return scipy.linalg.expm(np.cross(np.eye(3),
            axis / np.linalg.norm(axis) * angle))
 
 
 def get_total_masses(symbol):
+    """Get the total molar mass given the chemical symbol of a 
+    molecule.
+
+    Parameters
+    ----------
+    symbol : str
+        Chemical symbol of the molecule.
+
+    """
 
     return np.sum([atomic_masses[atomic_numbers[s]] 
                    for s in list(Formula(symbol))])
-
-
-def draw_graph(G, savefig='graph.png'):               
-    import matplotlib.pyplot as plt
-    labels = nx.get_node_attributes(G, 'symbol')
-    
-    # Get unique groups
-    groups = sorted(set(labels.values()))
-    mapping = {x: "C{}".format(i) for i, x in enumerate(groups)}
-    nodes = G.nodes()
-    colors = [mapping[G.nodes[n]['symbol']] for n in nodes]
-
-    # Drawing nodes, edges and labels separately
-    pos = nx.spring_layout(G)
-    nx.draw_networkx_edges(G, pos, alpha=0.5)
-    nx.draw_networkx_nodes(G, pos, 
-                           nodelist=nodes, 
-                           node_color=colors, 
-                           node_size=500)
-    nx.draw_networkx_labels(G, pos, labels, 
-                            font_size=10, 
-                            font_color='w')
-    plt.axis('off')
-    plt.savefig(savefig)
-    plt.clf()
 
 
 def is_list_or_tuple(obj):
@@ -356,7 +438,12 @@ def is_list_or_tuple(obj):
 
 def string_fragmentation(adsorbate):
     """A function for generating a fragment list (list of strings) 
-    from a given adsorbate (string)
+    from a given adsorbate (string).
+
+    Parameters
+    ----------
+    adsorbate : the string of the adsorbate molecule.
+
     """
     if adsorbate == 'H2':
         return ['H', 'H']
@@ -384,3 +471,40 @@ def string_fragmentation(adsorbate):
                 frag_list.append(sym)
 
     return frag_list        
+
+
+def draw_graph(G, savefig='graph.png'):               
+    """Draw the graph using matplotlib.pyplot.
+
+    Parameters
+    ----------
+    G : networkx.Graph object
+        The graph object
+
+    savefig : str, default 'graph.png'
+        The name of the figure to be saved.
+
+    """
+
+    import matplotlib.pyplot as plt
+    labels = nx.get_node_attributes(G, 'symbol')
+    
+    # Get unique groups
+    groups = sorted(set(labels.values()))
+    mapping = {x: "C{}".format(i) for i, x in enumerate(groups)}
+    nodes = G.nodes()
+    colors = [mapping[G.nodes[n]['symbol']] for n in nodes]
+
+    # Drawing nodes, edges and labels separately
+    pos = nx.spring_layout(G)
+    nx.draw_networkx_edges(G, pos, alpha=0.5)
+    nx.draw_networkx_nodes(G, pos, 
+                           nodelist=nodes, 
+                           node_color=colors, 
+                           node_size=500)
+    nx.draw_networkx_labels(G, pos, labels, 
+                            font_size=10, 
+                            font_color='w')
+    plt.axis('off')
+    plt.savefig(savefig)
+    plt.clf()
