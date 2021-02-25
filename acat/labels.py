@@ -91,7 +91,7 @@ def get_monometallic_slab_labels(surface):
                 'bridge|terrace': 2,
                 '4fold|terrace': 3}
 
-    elif surface in ['fcc110','hcp10m10-h']:
+    elif surface in ['fcc110','hcp10m10h']:
         return {'ontop|step': 1,
                 'bridge|step': 2, 
                 'bridge|sc-tc-h': 3,
@@ -187,17 +187,17 @@ def get_monometallic_slab_labels(surface):
 
     elif surface == 'bcc110':
         return {'ontop|terrace': 1,
-                'long-bridge|terrace': 2,
-                'short-bridge|terrace': 3,
+                'longbridge|terrace': 2,
+                'shortbridge|terrace': 3,
                 '3fold|terrace': 4}
               
     elif surface == 'bcc111':           
         return {'ontop|step': 1,                       
                 'ontop|terrace': 2,        
                 'ontop|corner': 3,
-                'short-bridge|sc-tc-o': 4,
-                'short-bridge|tc-cc-o': 5,
-                'long-bridge|sc-cc-o': 6,
+                'shortbridge|sc-tc-o': 4,
+                'shortbridge|tc-cc-o': 5,
+                'longbridge|sc-cc-o': 6,
                 '3fold|sc-tc-cc-o': 7}
 
     elif surface == 'bcc210':
@@ -232,7 +232,7 @@ def get_monometallic_slab_labels(surface):
                 '3fold|sc-tc-o': 7,
                 '4fold|sc-tc-t': 8}
 
-    elif surface == 'hcp10m10-t':
+    elif surface == 'hcp10m10t':
         return {'ontop|step': 1,
                 'ontop|terrace': 2,
                 'bridge|step': 3,
@@ -327,7 +327,7 @@ def get_bimetallic_slab_labels(surface, metals):
                 '4fold|terrace|{}{}{}{}'.format(ma,mb,mb,mb): 10,
                 '4fold|terrace|{}{}{}{}'.format(mb,mb,mb,mb): 11}
 
-    elif surface in ['fcc110','hcp10m10-h']:
+    elif surface in ['fcc110','hcp10m10h']:
         return {'ontop|step|{}'.format(ma): 1,
                 'ontop|step|{}'.format(mb): 2,
                 'bridge|step|{}{}'.format(ma,ma): 3,
@@ -774,12 +774,12 @@ def get_bimetallic_slab_labels(surface, metals):
     elif surface == 'bcc110':
         return {'ontop|terrace|{}'.format(ma): 1, 
                 'ontop|terrace|{}'.format(mb): 2,
-                'short-bridge|terrace|{}{}'.format(ma,ma): 3,
-                'short-bridge|terrace|{}{}'.format(ma,mb): 4,
-                'short-bridge|terrace|{}{}'.format(mb,mb): 5,
-                'long-bridge|terrace|{}{}'.format(ma,ma): 6, 
-                'long-bridge|terrace|{}{}'.format(ma,mb): 7,
-                'long-bridge|terrace|{}{}'.format(mb,mb): 8, 
+                'shortbridge|terrace|{}{}'.format(ma,ma): 3,
+                'shortbridge|terrace|{}{}'.format(ma,mb): 4,
+                'shortbridge|terrace|{}{}'.format(mb,mb): 5,
+                'longbridge|terrace|{}{}'.format(ma,ma): 6, 
+                'longbridge|terrace|{}{}'.format(ma,mb): 7,
+                'longbridge|terrace|{}{}'.format(mb,mb): 8, 
                 '3fold|terrace|{}{}{}'.format(ma,ma,ma): 9,
                 '3fold|terrace|{}{}{}'.format(ma,ma,mb): 10, 
                 '3fold|terrace|{}{}{}'.format(ma,mb,mb): 11,
@@ -792,15 +792,15 @@ def get_bimetallic_slab_labels(surface, metals):
                 'ontop|terrace|{}'.format(mb): 4,
                 'ontop|corner|{}'.format(ma): 5,
                 'ontop|corner|{}'.format(mb): 6,
-                'short-bridge|sc-tc-o|{}{}'.format(ma,ma): 7, 
-                'short-bridge|sc-tc-o|{}{}'.format(ma,mb): 8,
-                'short-bridge|sc-tc-o|{}{}'.format(mb,mb): 9,
-                'short-bridge|tc-cc-o|{}{}'.format(ma,ma): 10,
-                'short-bridge|tc-cc-o|{}{}'.format(ma,mb): 11,
-                'short-bridge|tc-cc-o|{}{}'.format(mb,mb): 12,
-                'long-bridge|sc-cc-o|{}{}'.format(ma,ma): 13,
-                'long-bridge|sc-cc-o|{}{}'.format(ma,mb): 14,
-                'long-bridge|sc-cc-o|{}{}'.format(mb,mb): 15,
+                'shortbridge|sc-tc-o|{}{}'.format(ma,ma): 7, 
+                'shortbridge|sc-tc-o|{}{}'.format(ma,mb): 8,
+                'shortbridge|sc-tc-o|{}{}'.format(mb,mb): 9,
+                'shortbridge|tc-cc-o|{}{}'.format(ma,ma): 10,
+                'shortbridge|tc-cc-o|{}{}'.format(ma,mb): 11,
+                'shortbridge|tc-cc-o|{}{}'.format(mb,mb): 12,
+                'longbridge|sc-cc-o|{}{}'.format(ma,ma): 13,
+                'longbridge|sc-cc-o|{}{}'.format(ma,mb): 14,
+                'longbridge|sc-cc-o|{}{}'.format(mb,mb): 15,
                 '3fold|sc-tc-cc-o|{}{}{}'.format(ma,ma,ma): 16,
                 '3fold|sc-tc-cc-o|{}{}{}'.format(ma,ma,mb): 17, 
                 '3fold|sc-tc-cc-o|{}{}{}'.format(ma,mb,mb): 18,
@@ -912,7 +912,7 @@ def get_bimetallic_slab_labels(surface, metals):
                 '4fold|sc-tc-t|{}{}{}{}'.format(ma,mb,mb,mb): 25,
                 '4fold|sc-tc-t|{}{}{}{}'.format(mb,mb,mb,mb): 26}
 
-    elif surface == 'hcp10m10-t':
+    elif surface == 'hcp10m10t':
         return {'ontop|step|{}'.format(ma): 1,
                 'ontop|step|{}'.format(mb): 2,
                 'ontop|terrace|{}'.format(ma): 3,
