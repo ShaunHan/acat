@@ -175,7 +175,6 @@ class SymmetricOrderingGenerator(object):
         return layers
 
     def run(self, max_gen=None, mode='systematic', verbose=False):
-
         """Run the chemical ordering generator.
 
         Parameters
@@ -312,7 +311,6 @@ class RandomOrderingGenerator(object):
         self.append_trajectory = append_trajectory
 
     def run(self, n_gen):
-
         """Run the chemical ordering generator.
 
         Parameters
