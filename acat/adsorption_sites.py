@@ -62,7 +62,7 @@ class ClusterAdsorptionSites(object):
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
-        beneath fcc hollow sites.
+        underneath fcc hollow sites.
 
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
@@ -1000,7 +1000,7 @@ class SlabAdsorptionSites(object):
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
-        beneath fcc hollow sites.
+        underneath fcc hollow sites.
 
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
@@ -2529,7 +2529,7 @@ def enumerate_adsorption_sites(atoms, surface=None,
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
-        beneath fcc hollow sites.
+        underneath fcc hollow sites.
  
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
