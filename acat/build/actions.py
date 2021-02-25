@@ -386,7 +386,6 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
 
 
 def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
-
     """The base function for removing one adsorbate from an
     occupied site. The site must include information of 
     'adsorbate_indices' or 'fragment_indices'. Note that if
@@ -440,7 +439,6 @@ def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
 
 
 def remove_adsorbates_from_sites(atoms, sites, remove_fragments=False):
-
     """The base function for removing multiple adsorbates from
     an occupied site. The sites must include information of 
     'adsorbate_indices' or 'fragment_indices'.
@@ -518,8 +516,8 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
         adsorbates to the sites on the specified surface. 
 
     min_adsorbate_distance : float, default 0.
-        The minimum distance between two atoms that belongs to two 
-        adsorbates. This distance has to be very small.
+        The minimum distance between two atoms that is not considered to
+        be to close. This distance has to be small.
     
     Example
     -------
