@@ -25,6 +25,35 @@ class ClusterAdsorptionSites(object):
     Support common nanoparticle shapes including: Mackay icosahedron, 
     (truncated) octahedron and (Marks) decahedron.
 
+    The information of each site is stored in a dictionary with the 
+    following keys:
+
+    'site': the site type, support 'ontop', 'bridge', 'longbridge', 
+    'shortbridge', 'fcc', 'hcp', '3fold', '4fold', '5fold', '6fold'.
+
+    'surface': the surface of the site, support 'vertex', 'edge',
+    'fcc100', 'fcc111'.
+
+    'position': the 3D Cartesian coordinate of the site saved as a
+    numpy array.
+
+    'normal': the surface normal vector of the site saved as a numpy
+    array.
+
+    'indices': the indices of the atoms that constitute the site.
+
+    'composition': the elemental composition of the site. Always in 
+    the order of atomic numbers.
+
+    'subsurf_index': the index of the subsurface atom underneath an
+    hcp or 4fold site.
+
+    'subsurf_element': the element of the subsurface atom underneath
+    an hcp or 4fold site
+
+    'label': the numerical label assigned to the site if label_sites
+    is set to True. 
+
     Parameters
     ----------
     atoms : ase.Atoms object
@@ -150,8 +179,8 @@ class ClusterAdsorptionSites(object):
  
     def populate_site_list(self):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
-        given an input nanoparticle and collect in a site list. 
-        """
+        given an input nanoparticle based on CNA analysis of the suface
+        atoms and collect in a site list."""
 
         ss = self.surf_sites
         ssall = set(ss['all'])
@@ -375,6 +404,15 @@ class ClusterAdsorptionSites(object):
                     usi.add(si) 
 
     def get_site(self, indices):
+        """Get information of a site given its atom indices.
+        
+        Parameters
+        ----------
+        indices : list or tuple
+            The indices of the atoms that contribute to the site.
+        
+        """
+
         indices = indices if is_list_or_tuple(indices) else [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in self.site_list if 
@@ -385,6 +423,24 @@ class ClusterAdsorptionSites(object):
                   surface=None, 
                   composition=None, 
                   subsurf_element=None):
+        """Get information of all sites.
+                                                                     
+        Parameters                                                   
+        ----------                                                   
+        site : str, default None
+            Only return sites that belongs to this site type.
+
+        surface : str, default None
+            Only return sites that are on this surface.
+
+        composition : str, default None
+            Only return sites that have this composition.
+
+        subsurf_element : str, default None
+            Only return sites that have this subsurface element.
+                                                                     
+        """                                                          
+
         all_sites = self.site_list
         if site is not None:
             all_sites = [s for s in all_sites if s['site'] == site] 
@@ -417,6 +473,20 @@ class ClusterAdsorptionSites(object):
 
     def get_unique_sites(self, unique_composition=False,         
                          unique_subsurf=False):
+        """Get all unique sites.
+        
+        Parameters
+        ----------
+        unique_composition : bool, default False
+            Take site composition into consideration when 
+            checking uniqueness.
+
+        unique_subsurf : bool, default False
+            Take subsurface element into consideration when 
+            checking uniqueness.
+        
+        """
+
         sl = self.site_list
         key_list = ['site', 'surface']
         if unique_composition:
@@ -449,26 +519,11 @@ class ClusterAdsorptionSites(object):
                 'normal': None, 'indices': None, 'composition': None,
                 'subsurf_index': None, 'subsurf_element': None, 'label': None}
 
-    def get_all_sites_of_type(self, type):            
-        return [i for i in self.site_list
-                if i['site'] == type]
-
-    def get_all_fcc_sites(self):
-        return self.get_all_sites_of_type('fcc')
-
-    def get_all_from_surface(self, surface):
-        return [i for i in self.site_list
-                if i['surface'] == surface]
-
-    def get_sites_from_surface(self, site, surface):
-        surf = self.get_all_from_surface(surface)
-        return [i for i in surf if i['site'] == site]
-
-    def get_two_vectors(self, sites):
-        p1 = self.positions[sites[1]]
-        p2 = self.positions[sites[2]]
-        vec1 = p1 - self.positions[sites[0]]
-        vec2 = p2 - self.positions[sites[0]]
+    def get_two_vectors(self, indices):
+        p1 = self.positions[indices[1]]
+        p2 = self.positions[indices[2]]
+        vec1 = p1 - self.positions[indices[0]]
+        vec2 = p2 - self.positions[indices[0]]
         return vec1, vec2
 
     def is_eq(self, v1, v2, eps=0.1):
@@ -477,33 +532,53 @@ class ClusterAdsorptionSites(object):
         else:
             return False
 
-    def get_surface_normal(self, sites):
-        vec1, vec2 = self.get_two_vectors(sites)
+    def get_surface_normal(self, indices): 
+        """Get the surface normal vector of the plane from the indices 
+        of 3 atoms that forms to that plane.                                    
+                                                                    
+        Parameters
+        ----------
+        indices : list of tuple
+            The indices of the atoms that forms the plane.
+        
+        """
+        vec1, vec2 = self.get_two_vectors(indices)
         n = np.cross(vec1, vec2)
         l = math.sqrt(n @ n.conj())
-        new_pos = self.positions[sites[0]] + self.r * n / l
+        new_pos = self.positions[indices[0]] + self.r * n / l
         # Add support for having adsorbates on the particles already
         # by putting in elements to check for in the function below
         j = 2 * int(self.no_atom_too_close_to_pos(new_pos, (5./6)*self.r)) - 1
 
         return j * n / l
 
-    def get_angle(self, sites):
-        vec1, vec2 = self.get_two_vectors(sites)
+    def get_angle(self, indices):
+        vec1, vec2 = self.get_two_vectors(indices)
         p = (vec1 @ vec2)/(np.linalg.norm(vec1) * np.linalg.norm(vec1))
         return np.arccos(np.clip(p, -1,1))
 
     def no_atom_too_close_to_pos(self, pos, mindist):              
         """Returns True if no atoms are closer than mindist to pos,
-        otherwise False."""
+        otherwise False.
+
+        Parameters
+        ----------
+        pos : numpy.array
+            The position to be checked.
+
+        mindist : float
+            The minimum distance (in Angstrom) that is not considered 
+            as too close.
+
+        """
         dists = [np.linalg.norm(atom.position - pos) > mindist
                  for atom in self.ref_atoms]
         return all(dists)                                                       
 
     def get_surface_sites(self): 
-        """
-        Returns a dictionary with all the surface designations
-        """
+        """Returns the indices of the surface atoms and a dictionary 
+        with all the surface designations."""
+
         surf_sites = {'all': [],
                       'fcc111': [],
                       'fcc100': [],
@@ -533,6 +608,8 @@ class ClusterAdsorptionSites(object):
         return surf_ids, surf_sites  
 
     def get_subsurface(self):
+        """Returns the indices of the subsurface atoms."""
+
         notsurf = [a.index for a in self.atoms if a.index not in self.surf_ids]
         subfcna = FullCNA(self.ref_atoms[notsurf]).get_normal_cna() 
         
@@ -544,15 +621,37 @@ class ClusterAdsorptionSites(object):
             self.fullCNA[rCut] = FullCNA(self.ref_atoms, rCut=rCut).get_normal_cna()
 
     def get_fullCNA(self, rCut=None):
+        """Get the CNA signatures of all atoms by asap3 full CNA 
+        analysis.
+
+        Parameters
+        ----------
+        rCut : float, default None
+            The cutoff radius in Angstrom. If not specified, the 
+            asap3 CNA analysis will use a reasonable cutoff based 
+            on the crystalline lattice constant of the material.
+
+        """
+
         if rCut not in self.fullCNA:
             self.make_fullCNA(rCut=rCut)
         return self.fullCNA[rCut]
 
     def make_neighbor_list(self, rMax=10.):
+        """Get an asap3 neighborlist.
+
+        Parameters
+        ----------
+        rMax : float, default 10.
+            The maximum cutoff radius in Angstrom. 
+
+        """
+
         self.nblist = FullNeighborList(rCut=rMax, atoms=self.ref_atoms)
 
     def get_connectivity(self):                                      
-        """Generate a connection matrix from neighbor_shell_list."""
+        """Get the connection matrix."""
+
         nbslist = neighbor_shell_list(self.ref_atoms, 0.3, neighbor_number=1)
         return get_connectivity_matrix(nbslist)                  
 
@@ -671,21 +770,21 @@ class ClusterAdsorptionSites(object):
             i += 1
         self.r = x[i]
 
-    def get_surface_designation(self, sites):                                 
+    def get_surface_designation(self, indices):                                 
         fcna = self.get_fullCNA()
         sd = self.site_dict
-        if len(sites) == 1:
-            s = sites[0]
+        if len(indices) == 1:
+            s = indices[0]
             return sd[str(fcna[s])]
-        elif len(sites) == 2:
-            if str(fcna[sites[0]]) not in sd or str(fcna[sites[1]]) not in sd:
-               # for s in [sites[0], sites[1]]:
+        elif len(indices) == 2:
+            if str(fcna[indices[0]]) not in sd or str(fcna[indices[1]]) not in sd:
+               # for s in [indices[0], indices[1]]:
                #     scna = str(fcna[s])
                #     if scna not in sd:
                #         print('CNA {} is not supported.'.format(scna))
                 return 'unknown'
-            s0 = sd[str(fcna[sites[0]])]
-            s1 = sd[str(fcna[sites[1]])]
+            s0 = sd[str(fcna[indices[0]])]
+            s1 = sd[str(fcna[indices[1]])]
             ss01 = tuple(sorted([s0, s1]))
             if ss01 in [('edge', 'edge'), 
                         ('edge', 'vertex'),
@@ -699,10 +798,12 @@ class ClusterAdsorptionSites(object):
                           ('edge', 'fcc100'), 
                           ('fcc100', 'fcc100')]:
                 return 'fcc100'
-        elif len(sites) == 3:
+        elif len(indices) == 3:
             return 'fcc111'
 
     def get_graph(self):                             
+        """Get the graph representation of the nanoparticle."""
+
         cm = self.get_connectivity()
         G = nx.Graph()                               
         # Add edges from surface connectivity matrix
@@ -712,8 +813,18 @@ class ClusterAdsorptionSites(object):
         return G
 
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
-        """Returns the site_list index of all neighbor 
-        shell sites for each site
+        """Returns the site_list index of all neighbor shell sites 
+        for each site.
+
+        Parameters
+        ----------
+        neighbor_number : int, default 1
+            Neighbor shell number. 
+
+        span : bool, default True
+            Whether to include all neighbors sites spanned within 
+            the shell.
+
         """
 
         sl = self.site_list
@@ -742,6 +853,23 @@ class ClusterAdsorptionSites(object):
         return nbslist
 
     def update(self, atoms, update_composition=False):                 
+        """Update the position and composition of each adsorption site 
+        given an updated atoms object. Please only use this when the 
+        indexing of the atoms object is preserved. Useful for updating
+        adsorption sites e.g. after geometry optimization.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms object
+            The updated atoms object. 
+
+        update_composition : bool, default False
+            Whether to update the composition as well. It is recommended
+            to only set update_composition=True if the composition of 
+            the surface is not fixed.  
+
+        """ 
+
         sl = self.site_list
         for st in sl:
             si = list(st['indices'])
@@ -828,8 +956,37 @@ class SlabAdsorptionSites(object):
     """Base class for identifying adsorption sites on a surface slab.
     Support 20 common surfaces: fcc100, fcc111, fcc110, fcc211,
     fcc221, fcc311, fcc322, fcc331, fcc332, bcc100, bcc111, bcc110,
-    bcc210, bcc211, bcc310, hcp0001, hcp10m10-t, hcp10m10-h, 
+    bcc210, bcc211, bcc310, hcp0001, hcp10m10t, hcp10m10h, 
     hcp10m11, hcp10m12.
+
+    The information of each site is stored in a dictionary with the 
+    following keys:
+
+    'site': the site type, support 'ontop', 'bridge', 'longbridge', 
+    'shortbridge', 'fcc', 'hcp', '3fold', '4fold', '5fold', '6fold'.
+
+    'surface': the surface type (crystal structure + Miller indices) 
+    of the slab. Support 20 surfaces as listed above.
+
+    'position': the 3D Cartesian coordinate of the site saved as a
+    numpy array.
+
+    'normal': the surface normal vector of the site saved as a numpy
+    array.
+
+    'indices': the indices of the atoms that constitute the site.
+
+    'composition': the elemental composition of the site. Always in 
+    the order of atomic numbers.
+
+    'subsurf_index': the index of the subsurface atom underneath an
+    hcp or 4fold site.
+
+    'subsurf_element': the element of the subsurface atom underneath
+    an hcp or 4fold site
+
+    'label': the numerical label assigned to the site if label_sites
+    is set to True.
 
     Parameters
     ----------
@@ -928,9 +1085,9 @@ class SlabAdsorptionSites(object):
                 ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
             else:
                 ref_symbol = 'Pt' if proxy_metal is None else proxy_metal
-        elif self.surface in ['fcc111','hcp0001','hcp10m10-h','hcp10m12']:
+        elif self.surface in ['fcc111','hcp0001','hcp10m10h','hcp10m12']:
             ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
-        elif self.surface in ['bcc100','bcc110','bcc310','hcp10m10-t','hcp10m11']:
+        elif self.surface in ['bcc100','bcc110','bcc310','hcp10m10t','hcp10m11']:
             if area < 50.:
                 ref_symbol = 'Cu' if proxy_metal is None else proxy_metal
             else:
@@ -973,8 +1130,18 @@ class SlabAdsorptionSites(object):
         
     def populate_site_list(self, allow_obtuse=True, cutoff=5.):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
-        given an input slab based on Delaunay triangulation of surface 
-        atoms of a super-cell and collect in a site list. 
+        given an input slab based on Delaunay triangulation of the 
+        surface atoms in a supercell and collect in a site list.
+
+        Parameters
+        ----------
+        allow_obtuse : bool, default True
+            Whether simplices with obtuse angles are considered in the
+            Delaunay triangulation.
+
+        cutoff : float, default 5.
+            Radius of maximum atomic bond distance to consider. 
+
         """
  
         top_indices = self.surf_ids
@@ -998,12 +1165,12 @@ class SlabAdsorptionSites(object):
                     'fcc331','fcc332','bcc210','hcp10m12']:
                         geometry = 'corner'
                     elif self.surface in ['fcc110','fcc311','bcc111','bcc211',
-                    'hcp10m10-t','hcp10m10-h','bcc310']:
+                    'hcp10m10t','hcp10m10h','bcc310']:
                         geometry = 'terrace'
                 elif sumo >= 11:
                     if self.surface in ['fcc221','fcc331','fcc332','bcc111','hcp10m12']:
                         geometry = 'corner'
-                    elif self.surface in ['fcc110','bcc211','hcp10m10-h']:
+                    elif self.surface in ['fcc110','bcc211','hcp10m10h']:
                         geometry = 'terrace'
 
             si = (s,)
@@ -1013,7 +1180,7 @@ class SlabAdsorptionSites(object):
                          'geometry': geometry,
                          'position': self.positions[s],
                          'indices': si})
-            if (self.surface in ['fcc110','bcc211','hcp10m10-h'] and geometry 
+            if (self.surface in ['fcc110','bcc211','hcp10m10h'] and geometry 
             == 'terrace') or (self.surface in ['fcc331'] and geometry == 'corner'):
                 site.update({'extra': np.where(occurence==1)[0]})
             if self.composition_effect:
@@ -1045,7 +1212,7 @@ class SlabAdsorptionSites(object):
                 if st['geometry'] == 'step' and st['indices'][0] in terraceids:
                     st['geometry'] = 'terrace'
 
-        if self.surface in ['fcc110','fcc331','bcc211','hcp10m10-h']:   
+        if self.surface in ['fcc110','fcc331','bcc211','hcp10m10h']:   
             for st in sl:
                 if 'extra' in st:
                     extra = st['extra']
@@ -1163,7 +1330,7 @@ class SlabAdsorptionSites(object):
                 fold3_positions.append(fold3_position)
 
         fold4_surfaces = ['fcc100','fcc211','fcc311','fcc322','bcc100',
-                          'bcc210','bcc310','hcp10m10-t','hcp10m11','hcp10m12']
+                          'bcc210','bcc310','hcp10m10t','hcp10m11','hcp10m12']
 
         # Complete information of each site
         for n, poss in enumerate([bridge_positions,fold4_positions,fold3_positions]):
@@ -1212,7 +1379,7 @@ class SlabAdsorptionSites(object):
                     siset = set(si)
                     nstep = len(stepids.intersection(siset))
                     nterrace = len(terraceids.intersection(siset))
-                    if self.surface in ['fcc110','hcp10m10-h']:
+                    if self.surface in ['fcc110','hcp10m10h']:
                         sitetype = 'bridge'              
                         if nstep == 2:
                             geometry = 'step'
@@ -1302,15 +1469,15 @@ class SlabAdsorptionSites(object):
                             print('Cannot identify site {}'.format(si))
                             continue 
                     elif self.surface == 'bcc110':
-                        sitetype, geometry = 'short-bridge', 'terrace'
+                        sitetype, geometry = 'shortbridge', 'terrace'
                     elif self.surface == 'bcc111':
                         ncorner = len(cornerids.intersection(siset))
                         if nstep == 1 and ncorner == 1:
-                            sitetype, geometry = 'long-bridge', 'sc-cc-o'
+                            sitetype, geometry = 'longbridge', 'sc-cc-o'
                         elif nstep == 1 and nterrace == 1:
-                            sitetype, geometry = 'short-bridge', 'sc-tc-o'
+                            sitetype, geometry = 'shortbridge', 'sc-tc-o'
                         elif nterrace == 1 and ncorner == 1:
-                            sitetype, geometry = 'short-bridge', 'tc-cc-o'
+                            sitetype, geometry = 'shortbridge', 'tc-cc-o'
                         else:
                             print('Cannot identify site {}'.format(si))
                             continue
@@ -1362,7 +1529,7 @@ class SlabAdsorptionSites(object):
                         else:
                             print('Cannot identify site {}'.format(si))
                             continue
-                    elif self.surface == 'hcp10m10-t':
+                    elif self.surface == 'hcp10m10t':
                         sitetype = 'bridge'
                         if nstep == 2:
                             geometry = 'step'
@@ -1419,7 +1586,7 @@ class SlabAdsorptionSites(object):
                     
                     site = self.new_site()
                     special = False
-                    if (self.surface in ['fcc110','bcc211','hcp10m10-h'] and geometry 
+                    if (self.surface in ['fcc110','bcc211','hcp10m10h'] and geometry 
                     == 'terrace') or (self.surface in ['fcc331'] and geometry == 'corner'):
                         special = True
                         extraids = [xi for xi in np.where(occurence==2)[0]
@@ -1501,7 +1668,7 @@ class SlabAdsorptionSites(object):
                             normals_for_site[idx].append(normal)
 
                         site = self.new_site() 
-                        if self.surface in ['hcp10m10-t','hcp10m11']:
+                        if self.surface in ['hcp10m10t','hcp10m11']:
                             sitetype = '5fold'
                             site.update({'site': sitetype,
                                          'surface': self.surface,
@@ -1576,7 +1743,7 @@ class SlabAdsorptionSites(object):
                         usi.add(si)
              
             # Make 3-fold hollow sites (differentiate fcc / hcp)
-            if n == 2 and self.surface not in ['fcc100','bcc100','hcp10m10-t']:
+            if n == 2 and self.surface not in ['fcc100','bcc100','hcp10m10t']:
                 coexist_3_4 = (self.surface in ['fcc211','fcc311','fcc322',
                                                 'bcc210','bcc310','hcp10m12'])
                 if coexist_3_4:
@@ -1645,7 +1812,7 @@ class SlabAdsorptionSites(object):
                             sitetype = 'hcp'
                         else:
                             sitetype = 'fcc'
-                    elif self.surface in ['fcc110','fcc311','hcp10m10-h']:
+                    elif self.surface in ['fcc110','fcc311','hcp10m10h']:
                         geometry = 'sc-tc-h'
                         if np.max(occurence[self.subsurf_ids]) == 3:
                             sitetype = 'hcp'
@@ -1733,7 +1900,7 @@ class SlabAdsorptionSites(object):
                         normals_for_site[idx].append(normal)
                     
                     site = self.new_site()
-                    if self.surface in ['hcp10m10-t','hcp10m11']:
+                    if self.surface in ['hcp10m10t','hcp10m11']:
                         sitetype = '5fold'
                         site.update({'site': sitetype,
                                      'surface': self.surface,
@@ -1832,7 +1999,7 @@ class SlabAdsorptionSites(object):
                         t['site'] = '{}fold'.format(nstids)
                         t['indices'] = tuple(sorted(stids))
                 else:
-                    if self.surface == 'hcp10m10-t':
+                    if self.surface == 'hcp10m10t':
                         normals = [s['normal'] for s in sl if s['geometry'] 
                                    == 'subsurf' and len(set(s['indices']
                                    ).intersection(set(t['indices']))) == 2]
@@ -1877,7 +2044,7 @@ class SlabAdsorptionSites(object):
                     index_list.append(t['indices'])
                     pos_list.append(t['position'])
                     st_list.append(t['site'])
-            # Take care of long-bridge sites on bcc110
+            # Take care of longbridge sites on bcc110
             elif self.surface == 'bcc110' and sitetype in '3fold':
                 si = t['indices']
                 pairs = [(si[0], si[1]), (si[0], si[2]), (si[1], si[2])]
@@ -1888,14 +2055,14 @@ class SlabAdsorptionSites(object):
                 bcc110_long_bridges.append(longest)
         if self.surface == 'bcc110':
             for st in sl:
-                if st['site'] == 'short-bridge':
+                if st['site'] == 'shortbridge':
                     if st['indices'] in bcc110_long_bridges:
-                        st['site'] = 'long-bridge'
+                        st['site'] = 'longbridge'
 
         # Add 6-fold sites if allowed
         if self.allow_6fold:            
             for st in sl:
-                if self.surface in ['fcc110','hcp10m10-h'] and st['site'] == 'bridge' \
+                if self.surface in ['fcc110','hcp10m10h'] and st['site'] == 'bridge' \
                 and st['geometry'] == 'step':
                     site = st.copy()                     
                     subpos = st['position'] - st['normal'] * dh / 2
@@ -1937,7 +2104,7 @@ class SlabAdsorptionSites(object):
                 # Find the opposite element
                 if self.composition_effect:
                     metals = self.metals
-                    if self.surface in ['fcc110','hcp10m10-h']:
+                    if self.surface in ['fcc110','hcp10m10h']:
                         newsi = surfsi[:-1]
                         subsi.append(surfsi[-1])
                         metals = self.metals 
@@ -1992,6 +2159,15 @@ class SlabAdsorptionSites(object):
                 usi.add(si)
 
     def get_site(self, indices):
+        """Get information of a site given its atom indices.
+        
+        Parameters
+        ----------
+        indices : list or tuple
+            The indices of the atoms that contribute to the site.
+        
+        """
+
         indices = indices if is_list_or_tuple(indices) else [indices]
         indices = tuple(sorted(indices))
         st = next((s for s in self.site_list if 
@@ -2002,6 +2178,24 @@ class SlabAdsorptionSites(object):
                   geometry=None, 
                   composition=None, 
                   subsurf_element=None):
+        """Get information of all sites.
+                                                                     
+        Parameters                                                   
+        ----------                                                   
+        site : str, default None
+            Only return sites that belongs to this site type.
+
+        surface : str, default None
+            Only return sites that are on this surface.
+
+        composition : str, default None
+            Only return sites that have this composition.
+
+        subsurf_element : str, default None
+            Only return sites that have this subsurface element.
+                                                                     
+        """                                                          
+
         all_sites = self.site_list
         if site is not None:
             all_sites = [s for s in all_sites if s['site'] == site] 
@@ -2034,6 +2228,20 @@ class SlabAdsorptionSites(object):
 
     def get_unique_sites(self, unique_composition=False,                
                          unique_subsurf=False):
+        """Get all unique sites.
+        
+        Parameters
+        ----------
+        unique_composition : bool, default False
+            Take site composition into consideration when 
+            checking uniqueness.
+
+        unique_subsurf : bool, default False
+            Take subsurface element into consideration when 
+            checking uniqueness.
+        
+        """
+
         sl = self.site_list
         key_list = ['site', 'geometry']
         if unique_composition:
@@ -2067,36 +2275,21 @@ class SlabAdsorptionSites(object):
                 'composition': None, 'subsurf_index': None,
                 'subsurf_element': None, 'label': None}
 
-    def get_all_sites_of_type(self, type):            
-        return [i for i in self.site_list
-                if i['site'] == type]
-                                                      
-    def get_all_fcc_sites(self):
-        return self.get_all_sites_of_type('fcc')
-                                                      
-    def get_all_from_geometry(self, geometry):
-        return [i for i in self.site_list
-                if i['geometry'] == geometry]
-                                                      
-    def get_sites_from_geometry(self, site, surface):
-        surf = self.get_all_from_surface(surface)
-        return [i for i in surf if i['site'] == site]
-
     def make_neighbor_list(self, neighbor_number=1):
-        """Generate a periodic neighbor list (defaultdict)."""
         self.nblist = neighbor_shell_list(self.ref_atoms, self.tol, 
                                           neighbor_number, mic=True)
 
     def get_connectivity(self):                                      
-        """Generate a connection matrix from neighbor_shell_list.
-        """       
+        """Get the connection matrix."""
+
         return get_connectivity_matrix(self.nblist)                   
 
     def get_termination(self):
-        """Return lists surf and subsurf containing atom indices belonging 
-        to those subsets of a surface atoms object. This function relies on 
-        coordination number and the connectivity of the atoms.
-        """
+        """Return the indices of surface and subsurface atoms. This 
+        function relies on coordination number and the connectivity 
+        of the atoms. The top surface termination is singled out by 
+        graph connectivity using networkx."""
+
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
         indices = self.indices 
@@ -2133,16 +2326,26 @@ class SlabAdsorptionSites(object):
 
         return sorted(surf), sorted(subsurf)
 
-    def get_two_vectors(self, sites):
-        p1 = self.positions[sites[1]]
-        p2 = self.positions[sites[2]]
-        vec1 = get_mic(p1, self.positions[sites[0]], self.cell)
-        vec2 = get_mic(p2, self.positions[sites[0]], self.cell)
+    def get_two_vectors(self, indices):
+        p1 = self.positions[indices[1]]
+        p2 = self.positions[indices[2]]
+        vec1 = get_mic(p1, self.positions[indices[0]], self.cell)
+        vec2 = get_mic(p2, self.positions[indices[0]], self.cell)
 
         return vec1, vec2
 
-    def get_surface_normal(self, sites):
-        vec1, vec2 = self.get_two_vectors(sites)
+    def get_surface_normal(self, indices):
+        """Get the surface normal vector of the plane from the indices 
+        of 3 atoms that forms to that plane.                                    
+                                                                    
+        Parameters
+        ----------
+        indices : list of tuple
+            The indices of the atoms that forms the plane.
+        
+        """
+
+        vec1, vec2 = self.get_two_vectors(indices)
         n = np.cross(vec1, vec2)
         l = math.sqrt(n @ n.conj())
         n /= l
@@ -2151,6 +2354,8 @@ class SlabAdsorptionSites(object):
         return n
 
     def get_graph(self):                              
+        """Get the graph representation of the nanoparticle."""
+
         cm = self.connectivity_matrix
         G = nx.Graph()                                                  
         # Add edges from surface connectivity matrix
@@ -2160,8 +2365,18 @@ class SlabAdsorptionSites(object):
         return G
 
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
-        """Returns the site_list index of all neighbor shell 
-        sites for each site
+        """Returns the site_list index of all neighbor shell sites 
+        for each site.
+
+        Parameters
+        ----------
+        neighbor_number : int, default 1
+            Neighbor shell number. 
+
+        span : bool, default True
+            Whether to include all neighbors sites spanned within 
+            the shell.
+
         """
 
         sl = self.site_list
@@ -2192,6 +2407,23 @@ class SlabAdsorptionSites(object):
         return nbslist
 
     def update(self, atoms, update_composition=False):
+        """Update the position and composition of each adsorption site 
+        given an updated atoms object. Please only use this when the 
+        indexing of the atoms object is preserved. Useful for updating
+        adsorption sites e.g. after geometry optimization.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms object
+            The updated atoms object. 
+
+        update_composition : bool, default False
+            Whether to update the composition as well. It is recommended
+            to only set update_composition=True if the composition of 
+            the surface is not fixed.  
+
+        """
+
         sl = self.site_list
         new_slab = atoms[[a.index for a in atoms if 
                           a.symbol not in adsorbate_elements]]
@@ -2209,7 +2441,6 @@ class SlabAdsorptionSites(object):
 def get_adsorption_site(atoms, indices, 
                         surface=None, 
                         return_index=False):
-
     """A function that returns the information of a site given the
     indices of the atoms that contribute to the site. The function 
     is generalized for both periodic and non-periodic systems
@@ -2277,7 +2508,6 @@ def enumerate_adsorption_sites(atoms, surface=None,
                                geometry=None, 
                                allow_6fold=False,
                                composition_effect=False):
-
     """A function that enumerates all adsorption sites of the 
     input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
