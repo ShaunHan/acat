@@ -671,7 +671,6 @@ class StochasticPatternGenerator(object):
             actions='add','remove','move'], 
             action_probabilities=None,
             unique=True):
-
         """Run the pattern generator.
 
         Parameters
@@ -1574,7 +1573,6 @@ class SystematicPatternGenerator(object):
                             return
 
     def run(self, max_gen_per_image=None, action='add', unique=True):
-
         """Run the pattern generator.
 
         Parameters
