@@ -9,8 +9,8 @@ adsorbate_elements = 'SCHON'
 # Adsorbate height on different sites
 site_heights = {'ontop': 1.8, 
                 'bridge': 1.5, 
-                'short-bridge': 1.5,
-                'long-bridge': 1.5,
+                'shortbridge': 1.5,
+                'longbridge': 1.5,
                 'fcc': 1.3, 
                 'hcp': 1.3,
                 '3fold': 1.3, 
