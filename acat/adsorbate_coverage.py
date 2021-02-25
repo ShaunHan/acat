@@ -17,6 +17,33 @@ class ClusterAdsorbateCoverage(object):
     including: Mackay icosahedron, (truncated) octahedron and (Marks) 
     decahedron.
 
+    The information of each occupied site stored in the dictionary is 
+    updated with the following new keys:
+
+    'occupied': 1 if the site is occupied, otherwise 0.
+
+    'adsorbate': the name of the adsorbate that occupies this site.
+
+    'adsorbate_indices': the indices of the adosorbate atoms that occupy
+     this site. If the adsorbate is multidentate, these atoms might
+     occupy multiple sites.
+
+    'bonding_index': the index of the atom that directly bonds to the
+     site (closest to the site).
+
+    'fragment': the name of the fragment that occupies this site. Useful
+     for multidentate species.
+
+    'fragment_indices': the indices of the fragment atoms that occupy
+     this site. Useful for multidentate species.
+
+    'bond_length': the distance between the bonding atom and the site.
+
+    'dentate': dentate number.
+
+    'label': the updated label with the name of the occupying adsorbate
+    if label_occupied_sites is set to True.
+
     Parameters
     ----------
     atoms : ase.Atoms object
@@ -24,7 +51,8 @@ class ClusterAdsorbateCoverage(object):
         least one adsorbate attached to it. Accept any ase.Atoms object. 
         No need to be built-in.
 
-    adsorption_sites : acat.ClusterAdsorptionSites object, default None
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object, 
+                       default None
         ClusterAdsorptionSites object of the nanoparticle. Initialize a 
         ClusterAdsorptionSites object if not specified.
 
@@ -123,6 +151,7 @@ class ClusterAdsorbateCoverage(object):
         self.labels = self.get_occupied_labels()
 
     def identify_adsorbates(self):
+
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
 
@@ -150,19 +179,23 @@ class ClusterAdsorbateCoverage(object):
                 adsorbates += [nodes]
         else:
             adsorbates = [self.ads_ids]
+
         self.ads_list = adsorbates
 
     def get_hetero_connectivity(self):
-        """Generate a connection matrix of slab + adsorbates."""
+        """Get the connection matrix of slab + adsorbates."""
+
         nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
         return get_connectivity_matrix(nbslist)                          
 
     def get_ads_connectivity(self):
-        """Generate a connection matrix for adsorbate atoms."""
+        """Get the connection matrix for adsorbate atoms."""
+
         return get_connectivity_matrix(self.ads_nblist) 
 
     def get_site_connectivity(self):
-        """Generate a connection matrix for adsorption sites."""
+        """Get the connection matrix for adsorption sites."""
+
         sl = self.hetero_site_list
         conn_mat = []
         for i, sti in enumerate(sl):
@@ -189,6 +222,9 @@ class ClusterAdsorbateCoverage(object):
         return np.asarray(conn_mat) 
 
     def populate_occupied_sites(self):
+        """Find all the occupied sites, identify the adsorbate coverage
+        of those sites and collect in a heterogeneous site list."""
+
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
@@ -303,18 +339,55 @@ class ClusterAdsorbateCoverage(object):
         self.adsorbate_list = self.monodentate_adsorbate_list + \
                               self.multidentate_adsorbate_list 
 
+    def get_site(self, indices):
+        """Get information of a site given its atom indices.
+        
+        Parameters
+        ----------
+        indices : list or tuple
+            The indices of the atoms that contribute to the site.
+        
+        """
+
+        indices = indices if is_list_or_tuple(indices) else [indices]
+        indices = tuple(sorted(indices))
+        st = next((s for s in self.hetero_site_list if 
+                   s['indices'] == indices), None)
+        return st
+
     def get_sites(self, occupied_only=False):
+        """Get information of all sites.
+                                                                     
+        Parameters                                                   
+        ----------                                                   
+        occupied_only : bool, default False
+            Whether to only return occupied sites.
+
+        """                                                          
+
         all_sites = self.hetero_site_list
         if occupied_only:
             all_sites = [s for s in all_sites if s['occupied'] == 1]
         return all_sites
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
-        """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=False)
 
     def get_occupied_labels(self, fragmentation=True):
+        """Get a list of labels of all occupied sites. The label consists
+        of a numerical part that represents site, and a character part
+        that represents the occupying adsorbate.
+
+        Parameters
+        ----------
+        fragmentation : bool, default True
+            Whether to cut multidentate species into fragments. This ensures 
+            that multidentate species with different orientations have 
+            different labels.
+
+        """
+
         if not self.label_occupied_sites:
             return self.atoms[self.ads_ids].get_chemical_formula(mode='hill')
 
@@ -330,6 +403,17 @@ class ClusterAdsorbateCoverage(object):
         return sorted(labs)
 
     def get_graph(self, fragmentation=True):                                         
+        """Get the graph representation of the nanoparticle with adsorbates.
+
+        Parameters
+        ----------
+        fragmentation : bool, default True
+            Whether to cut multidentate species into fragments. This ensures 
+            that multidentate species with different orientations have 
+            different graphs.
+
+        """
+
         hsl = self.hetero_site_list
         hcm = self.cas.get_connectivity().copy()
         surfhcm = hcm[self.surf_ids]
@@ -367,7 +451,14 @@ class ClusterAdsorbateCoverage(object):
 
         return G
 
+    def get_coverage(self):
+        """Get the adsorbate coverage (ML) of the surface."""
+
+        return self.coverage
+
     def get_subsurf_coverage(self):
+        """Get the adsorbate coverage (ML) of the subsurface."""
+
         nsubsurf = len(self.cas.get_subsurface())
         return self.n_subsurf_occupied / nsubsurf
 
@@ -377,7 +468,34 @@ class SlabAdsorbateCoverage(object):
     coverage on a surface slab. Support 20 common surfaces: fcc100, 
     fcc111, fcc110, fcc211, fcc221, fcc311, fcc322, fcc331, fcc332, 
     bcc100, bcc111, bcc110, bcc210, bcc211, bcc310, hcp0001, 
-    hcp10m10-t, hcp10m10-h, hcp10m11, hcp10m12.
+    hcp10m10t, hcp10m10h, hcp10m11, hcp10m12.
+
+    The information of each occupied site stored in the dictionary is 
+    updated with the following new keys:
+
+    'occupied': 1 if the site is occupied, otherwise 0.
+
+    'adsorbate': the name of the adsorbate that occupies this site.
+
+    'adsorbate_indices': the indices of the adosorbate atoms that occupy
+     this site. If the adsorbate is multidentate, these atoms might
+     occupy multiple sites.
+
+    'bonding_index': the index of the atom that directly bonds to the
+     site (closest to the site).
+
+    'fragment': the name of the fragment that occupies this site. Useful
+     for multidentate species.
+
+    'fragment_indices': the indices of the fragment atoms that occupy
+     this site. Useful for multidentate species.
+
+    'bond_length': the distance between the bonding atom and the site.
+
+    'dentate': dentate number.
+
+    'label': the updated label with the name of the occupying adsorbate
+    if label_occupied_sites is set to True.
 
     Parameters
     ----------
@@ -386,7 +504,8 @@ class SlabAdsorbateCoverage(object):
         least one adsorbate attached to it. Accept any ase.Atoms object. 
         No need to be built-in.
 
-    adsorption_sites : acat.SlabAdsorptionSites object, default None
+    adsorption_sites : acat.adsorption_sites.SlabAdsorptionSites object, 
+                       default None
         SlabAdsorptionSites object of the nanoparticle. Initialize a         
         SlabAdsorptionSites object if not specified.
 
@@ -490,6 +609,7 @@ class SlabAdsorbateCoverage(object):
         self.labels = self.get_occupied_labels() 
 
     def identify_adsorbates(self):
+
         G = nx.Graph()
         adscm = self.ads_connectivity_matrix
 
@@ -517,19 +637,23 @@ class SlabAdsorbateCoverage(object):
                 adsorbates += [nodes]
         else:
             adsorbates = [self.ads_ids]
+
         self.ads_list = adsorbates
 
     def get_hetero_connectivity(self):
-        """Generate a connection matrix of slab + adsorbates."""
+        """Get the connection matrix of slab + adsorbates."""
+
         nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
         return get_connectivity_matrix(nbslist)                           
 
     def get_ads_connectivity(self):
-        """Generate a connection matrix for adsorbate atoms."""
+        """Get the connection matrix for adsorbate atoms."""
+
         return get_connectivity_matrix(self.ads_nblist) 
 
     def get_site_connectivity(self):
-        """Generate a connection matrix for adsorption sites."""
+        """Get the connection matrix for adsorption sites."""
+
         sl = self.hetero_site_list
         conn_mat = []
         for i, sti in enumerate(sl):
@@ -556,6 +680,9 @@ class SlabAdsorbateCoverage(object):
         return np.asarray(conn_mat) 
 
     def populate_occupied_sites(self):
+        """Find all the occupied sites, identify the adsorbate coverage
+        of those sites and collect in a heterogeneous site list."""
+
         hsl = self.hetero_site_list
         ll = self.label_list
         ads_list = self.ads_list
@@ -670,18 +797,55 @@ class SlabAdsorbateCoverage(object):
         self.adsorbate_list = self.monodentate_adsorbate_list + \
                               self.multidentate_adsorbate_list 
 
+    def get_site(self, indices):
+        """Get information of a site given its atom indices.
+        
+        Parameters
+        ----------
+        indices : list or tuple
+            The indices of the atoms that contribute to the site.
+        
+        """
+
+        indices = indices if is_list_or_tuple(indices) else [indices]
+        indices = tuple(sorted(indices))
+        st = next((s for s in self.hetero_site_list if 
+                   s['indices'] == indices), None)
+        return st
+
     def get_sites(self, occupied_only=False):
+        """Get information of all sites.
+                                                                     
+        Parameters                                                   
+        ----------                                                   
+        occupied_only : bool, default False
+            Whether to only return occupied sites.
+
+        """                                                          
+
         all_sites = self.hetero_site_list
         if occupied_only:
             all_sites = [s for s in all_sites if s['occupied'] == 1]
         return all_sites
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
-        """Generate a periodic neighbor list (defaultdict).""" 
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
                                               neighbor_number, mic=True)
 
     def get_occupied_labels(self, fragmentation=True):
+        """Get a list of labels of all occupied sites. The label consists
+        of a numerical part that represents site, and a character part
+        that represents the occupying adsorbate.
+
+        Parameters
+        ----------
+        fragmentation : bool, default True
+            Whether to cut multidentate species into fragments. This ensures 
+            that multidentate species with different orientations have 
+            different labels.
+
+        """
+
         if not self.label_occupied_sites:
             return self.atoms[self.ads_ids].get_chemical_formula(mode='hill')
 
@@ -697,6 +861,17 @@ class SlabAdsorbateCoverage(object):
         return sorted(labs)
 
     def get_graph(self, fragmentation=True):                                         
+        """Get the graph representation of the nanoparticle with adsorbates.
+
+        Parameters
+        ----------
+        fragmentation : bool, default True
+            Whether to cut multidentate species into fragments. This ensures 
+            that multidentate species with different orientations have 
+            different graphs.
+
+        """
+
         hsl = self.hetero_site_list
         hcm = self.connectivity_matrix.copy()
         surfhcm = hcm[self.surf_ids]
@@ -735,33 +910,43 @@ class SlabAdsorbateCoverage(object):
 
         return G
 
-    def get_surface_bond_count_matrix(self, species):
-        hsl = self.hetero_site_list
-        cm = self.connectivity_matrix
-        atoms = self.atoms
-        numbers = atoms.numbers
-        symbols = atoms.symbols
-        specs = species
-        specs.sort(key=lambda x: atomic_numbers[x])
-        ncols = len(specs) + 1
-        sbcm = np.zeros((len(atoms), ncols))
-        for st in hsl:
-            frags = list(Formula(st['fragment']))
-            counts = Counter(frags)
-            for i in st['indices']:
-                for j, spec in enumerate(specs):
-                    sbcm[i,j] += counts[spec]
-        top_ids = self.surf_ids + self.subsurf_ids if \
-                  self.allow_6fold else self.surf_ids
-        for si in top_ids:
-            nbids = np.where(cm[si]==1)[0]
-            nbs = [symbols[i] for i in nbids]
-            nbcounts = Counter(nbs)
-            for j, spec in enumerate(specs):
-                sbcm[si,j] += nbcounts[spec]
-            sbcm[si,ncols-1] = numbers[si] 
+#    def get_surface_bond_count_matrix(self, species):
+#        hsl = self.hetero_site_list
+#        cm = self.connectivity_matrix
+#        atoms = self.atoms
+#        numbers = atoms.numbers
+#        symbols = atoms.symbols
+#        specs = species
+#        specs.sort(key=lambda x: atomic_numbers[x])
+#        ncols = len(specs) + 1
+#        sbcm = np.zeros((len(atoms), ncols))
+#        for st in hsl:
+#            frags = list(Formula(st['fragment']))
+#            counts = Counter(frags)
+#            for i in st['indices']:
+#                for j, spec in enumerate(specs):
+#                    sbcm[i,j] += counts[spec]
+#        top_ids = self.surf_ids + self.subsurf_ids if \
+#                  self.allow_6fold else self.surf_ids
+#        for si in top_ids:
+#            nbids = np.where(cm[si]==1)[0]
+#            nbs = [symbols[i] for i in nbids]
+#            nbcounts = Counter(nbs)
+#            for j, spec in enumerate(specs):
+#                sbcm[si,j] += nbcounts[spec]
+#            sbcm[si,ncols-1] = numbers[si] 
+#
+#        return sbcm[top_ids]
 
-        return sbcm[top_ids]
+    def get_coverage(self):
+        """Get the adsorbate coverage (ML) of the surface."""
+
+        return self.coverage
+
+    def get_subsurf_coverage(self):
+        """Get the adsorbate coverage (ML) of the subsurface."""
+
+        return self.subsurf_coverage
 
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
@@ -775,9 +960,10 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     atoms : ase.Atoms object
         Accept any ase.Atoms object. No need to be built-in.
 
-    adsorption_sites : acat.SlabAdsorptionSites object, default None
-        SlabAdsorptionSites object of the nanoparticle. Initialize a         
-        SlabAdsorptionSites object if not specified.
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites or
+                       acat.adsorption_sites.SlabAdsorptionSites object, 
+                       default None
+        The built-in adsorption sites class.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices)
