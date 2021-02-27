@@ -88,7 +88,6 @@ class ClusterAdsorbateCoverage(object):
         ...                                label_occupied_sites=True)
         >>> occupied_sites = cac.get_sites(occupied_only=True)
         >>> print(occupied_sites[0])
-
         {'site': 'fcc', 'surface': 'fcc111', 
          'position': array([ 6.41470446,  8.17470446, 11.69470446]), 
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
@@ -562,7 +561,6 @@ class SlabAdsorbateCoverage(object):
         ...                             label_occupied_sites=True)
         >>> occupied_sites = sac.get_sites(occupied_only=True)
         >>> print(occupied_sites[0])
-
         {'site': 'bridge', 'surface': 'fcc211', 'geometry': 'tc-cc-h', 
          'position': array([ 2.08423447,  3.82898322, 12.00043756]), 
          'normal': array([-0.33333333,  0.        ,  0.94280904]), 
@@ -1036,7 +1034,6 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         ...         add_adsorbate_to_site(atoms, adsorbate='OH', site=s)
         >>> sites = enumerate_occupied_sites(atoms, adsorption_sites=cas) 
         >>> print(sites[0])
-
         {'site': 'ontop', 'surface': 'fcc111', 
          'position': array([ 6.76,  8.52, 10.28]), 
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
