@@ -77,8 +77,10 @@ class SymmetricOrderingGenerator(object):
         >>> atoms = Octahedron('Ni', length=8, cutoff=3)
         >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
         >>> sog.run(max_gen=100, verbose=True)
+
         10 layers classified
         100 symmetric chemical orderings generated 
+        [Output trajectory]
 
     """
 
@@ -300,6 +302,8 @@ class RandomOrderingGenerator(object):
         >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
         ...           composition={'Ni': 0.75, 'Pt': 0.25})
         >>> rog.run(n_gen=100)
+
+        [Output trajectory]
 
     """
 
