@@ -105,6 +105,7 @@ class ClusterAdsorptionSites(object):
         ...                              label_sites=True)
         >>> sites = cas.get_sites()
         >>> print(sites[0])
+
         {'site': 'bridge', 'surface': 'fcc111', 
          'position': array([6.96,  7.94, 11.86]), 
          'normal': array([-0.66666667, -0.66666667, -0.33333333]), 
@@ -911,6 +912,7 @@ def group_sites_by_facet(atoms, sites, all_sites=None):
         >>> fcc_sites = [s for s in all_sites if s['site'] == 'fcc']
         >>> groups = group_sites_by_facet(atoms, fcc_sites, all_sites)         
         >>> print(len(groups))
+
         20
 
     """
@@ -1040,6 +1042,7 @@ class SlabAdsorptionSites(object):
         ...                           label_sites=True)
         >>> sites = sas.get_sites()
         >>> print(sites[-1])
+
         {'site': 'hcp', 'surface': 'fcc211', 'geometry': 'sc-tc-h', 
          'position': array([ 4.51584136,  0.63816387, 12.86014042]), 
          'normal': array([-0.33333333, -0.        ,  0.94280904]), 
@@ -2472,6 +2475,7 @@ def get_adsorption_site(atoms, indices,
         >>> atoms.center()
         >>> site = get_adsorption_site(atoms, (24, 29, 31), surface='fcc110') 
         >>> print(site)
+
         {'site': 'fcc', 'surface': 'fcc110', 'geometry': 'sc-tc-h', 
          'position': array([ 3.91083333,  1.91449161, 13.5088516 ]), 
          'normal': array([-0.57735027,  0.        ,  0.81649658]), 
@@ -2547,6 +2551,7 @@ def enumerate_adsorption_sites(atoms, surface=None,
         >>> sites = enumerate_adsorption_sites(atoms, surface='fcc100',
         ...                                    composition_effect=True) 
         >>> print(sites[0])
+
         {'site': '4fold', 'surface': 'fcc100', 
          'position': array([22.63758191, 21.69793997, 13.75044642]), 
          'normal': array([ 0.58778525,  0.80901699, -0.        ]), 
