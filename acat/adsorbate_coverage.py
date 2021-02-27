@@ -258,9 +258,13 @@ class ClusterAdsorbateCoverage(object):
             st['bonding_index'] = adsid
             st['bond_length'] = bl
 
-            symbols = str(self.symbols[adsids])
+            symbols = ''.join(list(Formula(str(self.symbols[adsids]))))
             adssym = next((k for k, v in adsorbate_formulas.items() 
-                           if v == symbols), symbols)
+                           if v == symbols), None)
+            if adssym is None:
+                adssym = next((k for k, v in adsorbate_formulas.items()
+                               if sorted(v) == sorted(symbols)), symbols)
+
             st['adsorbate'] = adssym
             st['fragment'] = adssym
             st['adsorbate_indices'] = adsi 
@@ -300,7 +304,7 @@ class ClusterAdsorbateCoverage(object):
         multidentate_adsorbate_dict = {}
         for j, st in enumerate(hsl):
             adssym = st['adsorbate']
-            if st['occupied'] == 1:
+            if st['occupied']:
                 if st['dentate'] > 1:
                     bondid = st['bonding_index']
                     bondsym = self.symbols[bondid]
@@ -367,8 +371,23 @@ class ClusterAdsorbateCoverage(object):
 
         all_sites = self.hetero_site_list
         if occupied_only:
-            all_sites = [s for s in all_sites if s['occupied'] == 1]
+            all_sites = [s for s in all_sites if s['occupied']]
         return all_sites
+
+    def get_adsorbates(self):
+        """Get a list of tuples that contains each adsorbate (string)
+        and the corresponding adsorbate indices (tuple)."""
+
+        adsorbates = []
+        adsorbate_ids = set()
+        for st in self.hetero_site_list:
+            if st['occupied']:
+                adsi = st['adsorbate_indices']
+                if not set(adsi).issubset(adsorbate_ids):
+                    adsorbates.append((st['adsorbate'], adsi))
+                    adsorbate_ids.update(adsi)
+
+        return adsorbates
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
@@ -421,7 +440,7 @@ class ClusterAdsorbateCoverage(object):
         nrows, ncols = surfhcm.shape       
         newrows, frag_list = [], []
         for st in hsl:
-            if st['occupied'] == 1:
+            if st['occupied']:
                 if not fragmentation and st['dentate'] > 1: 
                     if st['bonding_index'] != st['adsorbate_indices'][0]:
                         continue 
@@ -715,9 +734,13 @@ class SlabAdsorbateCoverage(object):
             st['bonding_index'] = adsid
             st['bond_length'] = bl
 
-            symbols = str(self.symbols[adsids])
+            symbols = ''.join(list(Formula(str(self.symbols[adsids]))))
             adssym = next((k for k, v in adsorbate_formulas.items() 
-                           if v == symbols), symbols)
+                           if v == symbols), None)
+            if adssym is None:
+                adssym = next((k for k, v in adsorbate_formulas.items()
+                               if sorted(v) == sorted(symbols)), symbols)
+
             st['adsorbate'] = adssym
             st['fragment'] = adssym
             st['adsorbate_indices'] = adsi 
@@ -825,8 +848,23 @@ class SlabAdsorbateCoverage(object):
 
         all_sites = self.hetero_site_list
         if occupied_only:
-            all_sites = [s for s in all_sites if s['occupied'] == 1]
+            all_sites = [s for s in all_sites if s['occupied']]
         return all_sites
+
+    def get_adsorbates(self):
+        """Get a list of tuples that contains each adsorbate (string)
+        and the corresponding adsorbate indices (tuple)."""
+
+        adsorbates = []
+        adsorbate_ids = set()
+        for st in self.hetero_site_list:
+            if st['occupied']:
+                adsi = st['adsorbate_indices']
+                if not set(adsi).issubset(adsorbate_ids):
+                    adsorbates.append((st['adsorbate'], adsi))
+                    adsorbate_ids.update(adsi)
+
+        return adsorbates
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
