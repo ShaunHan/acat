@@ -85,6 +85,10 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
         ...               surface='fcc111', composition='NiPt')
         >>> view(atoms)
 
+    .. figure:: ../images/add_adsorbate.png
+       :scale: 50 %
+       What is going on.
+
     """
     
     composition_effect = any(v is not None for v in 
