@@ -2304,6 +2304,10 @@ def random_coverage_pattern(atoms, adsorbate_species,
         else: 
             adsorbate = random.choices(k=1, population=adsorbate_species,
                                        weights=probability_list)[0] 
+
+        if st['site'] == '6fold':
+            if len(adsorbate) != 1:
+                continue
         nads = nads_dict[adsorbate] 
         height = heights[st['site']]
         add_adsorbate_to_site(atoms, adsorbate, st, height)       
