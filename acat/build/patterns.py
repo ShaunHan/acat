@@ -68,7 +68,7 @@ class StochasticPatternGenerator(object):
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
-        beneath fcc hollow sites.
+        underneath fcc hollow sites.
 
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
@@ -141,6 +141,8 @@ class StochasticPatternGenerator(object):
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
         >>> spg.run(n_gen=100, actions='add')
+
+        [Output trajectory]
 
     """
 
@@ -871,7 +873,7 @@ class SystematicPatternGenerator(object):
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
-        beneath fcc hollow sites.
+        underneath fcc hollow sites.
 
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
@@ -936,6 +938,8 @@ class SystematicPatternGenerator(object):
         ...           adsorption_sites=cas,
         ...           composition_effect=True) 
         >>> spg.run(action='add')
+
+        [Output trajectory]
 
     """
 
@@ -2238,7 +2242,7 @@ def random_coverage_pattern(atoms, adsorbate_species,
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
-        beneath fcc hollow sites.
+        underneath fcc hollow sites.
     
     Example
     -------
