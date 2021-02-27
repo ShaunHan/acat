@@ -6,6 +6,7 @@ from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
 from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from ..build.actions import add_adsorbate_to_site, remove_adsorbate_from_site
 from ase.ga.offspring_creator import OffspringCreator
+from ase.formula import Formula
 from ase.optimize import BFGS
 from ase import Atoms, Atom
 from asap3 import FullNeighborList
@@ -50,21 +51,22 @@ class AdsorbateOperator(OffspringCreator):
         is free if no other adsorbates can be found in a sphere of radius
         min_adsorbate_distance around the chosen site.
 
-        Parameters:
+        Parameters
+        ----------
 
-        atoms: Atoms object
+        atoms : ase.Atoms object
             the atoms object that the adsorbate will be added to
 
-        hetero_site_list: list
+        hetero_site_list : list
             a list of dictionaries, each dictionary should be of the
             following form:
             {'normal': n, 'position': p, 'site': si, 'surface': su}
 
-        min_adsorbate_distance: float
+        min_adsorbate_distance : float
             the radius of the sphere inside which no other
             adsorbates should be found
         
-        tilt_angle: float
+        tilt_angle : float
             Tilt the adsorbate with an angle (in degress) relative to
             the surface normal.
         """
@@ -83,17 +85,17 @@ class AdsorbateOperator(OffspringCreator):
                 continue
 
             # Allow only single-atom species to enter subsurf 6fold sites
-            site_type = site['site']
-            if site_type == '6fold':
+            this_site = site['site']
+            if this_site == '6fold':
                 adsorbate_species = [s for s in adsorbate_species if len(s) == 1]
 
             # Add a random adsorbate to the correct position
             adsorbate = random.choice(adsorbate_species)
-            height = heights[site_type]
+            height = heights[this_site]
             add_adsorbate_to_site(atoms, adsorbate, site, height, 
                                   tilt_angle=tilt_angle)
 
-            nads = len(adsorbate)
+            nads = len(list(Formula(adsorbate)))
             ads_atoms = atoms[[a.index for a in atoms if 
                                a.symbol in adsorbate_elements]]
             if atoms_too_close_after_addition(ads_atoms, nads, 
@@ -108,7 +110,7 @@ class AdsorbateOperator(OffspringCreator):
         # relax-paste function to be executed in the calculation script.
         # There it should also reset the parameter to [], to indicate
         # that the adsorbates have been relaxed.
-        ads_indices = sorted([len(atoms) - k - 1 for k in range(len(adsorbate))])
+        ads_indices = sorted([len(atoms) - k - 1 for k in range(nads)])
         
         if 'unrelaxed_adsorbates' not in atoms.info['data']:
             atoms.info['data']['unrelaxed_adsorbates'] = []
@@ -237,7 +239,7 @@ class AddAdsorbate(AdsorbateOperator):
         """Returns the new individual as an atoms object"""
         f = parents[0]
 
-        print('Add')
+       # print('Add adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -268,19 +270,25 @@ class AddAdsorbate(AdsorbateOperator):
                     return x['site'] == self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
-            nindi = self.add_adsorbate(indi, ads_sites, self.heights,
-                                       self.adsorbate_species,
-                                       self.min_adsorbate_distance,
-                                       tilt_angle=self.tilt_angle)
-            if not nindi:
-                break            
-
-            if self.num_muts > 1:
-                if True in nindi.pbc:
-                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                else:
-                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                ads_sites = nsac.hetero_site_list                          
+            indi = self.add_adsorbate(indi, ads_sites, self.heights,
+                                      self.adsorbate_species,
+                                      self.min_adsorbate_distance,
+                                      tilt_angle=self.tilt_angle)
+            if True in indi.pbc:
+                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            else:
+                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = nsac.hetero_site_list                          
+        
+        adsorbates = []
+        adsorbate_ids = set()
+        for nst in ads_sites:
+            if nst['occupied'] == 1:
+                adsi = nst['adsorbate_indices']
+                if not set(adsi).issubset(adsorbate_ids):
+                    adsorbates.append(nst['adsorbate'])        
+                    adsorbate_ids.update(adsi)
+        indi.info['data']['adsorbates'] = adsorbates
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -313,7 +321,7 @@ class RemoveAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
-        print('Remove')
+       # print('Remove adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -344,17 +352,26 @@ class RemoveAdsorbate(AdsorbateOperator):
                     return x['site'] == self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
-            nindi = self.remove_adsorbate(indi, ads_sites)
+            indi = self.remove_adsorbate(indi, ads_sites)
 
-            if not nindi:
+            # Make sure there are still adsorbates to remove
+            if not [a for a in indi if a.symbol in adsorbate_elements]:
                 break
+            if True in indi.pbc:
+                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            else:
+                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = nsac.hetero_site_list                          
 
-            if self.num_muts > 1:
-                if True in nindi.pbc:
-                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                else:
-                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                ads_sites = nsac.hetero_site_list                          
+        adsorbates = []
+        adsorbate_ids = set()
+        for nst in ads_sites:
+            if nst['occupied'] == 1:
+                adsi = nst['adsorbate_indices']
+                if not set(adsi).issubset(adsorbate_ids):
+                    adsorbates.append(nst['adsorbate'])        
+                    adsorbate_ids.update(adsi)
+        indi.info['data']['adsorbates'] = adsorbates
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -397,7 +414,7 @@ class MoveAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
-        print('Move')
+       # print('Move adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -445,19 +462,25 @@ class MoveAdsorbate(AdsorbateOperator):
                     return x['site'] == self.site_preference_to
                 ads_sites.sort(key=func, reverse=True)
 
-            nindi = self.add_adsorbate(indi, ads_sites, 
-                                       self.heights, removed_species,
-                                       self.min_adsorbate_distance,
-                                       tilt_angle=self.tilt_angle)
-            if not nindi:
-                break
-            
-            if self.num_muts > 1:
-                if True in nindi.pbc:
-                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                else:
-                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                ads_sites = nsac.hetero_site_list                          
+            indi = self.add_adsorbate(indi, ads_sites, 
+                                      self.heights, removed_species,
+                                      self.min_adsorbate_distance,
+                                      tilt_angle=self.tilt_angle)
+            if True in indi.pbc:
+                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            else:
+                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = nsac.hetero_site_list                          
+
+        adsorbates = []
+        adsorbate_ids = set()
+        for nst in ads_sites:
+            if nst['occupied'] == 1:
+                adsi = nst['adsorbate_indices']
+                if not set(adsi).issubset(adsorbate_ids):
+                    adsorbates.append(nst['adsorbate'])        
+                    adsorbate_ids.update(adsi)
+        indi.info['data']['adsorbates'] = adsorbates
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -496,7 +519,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
-        print('Replace')
+       # print('Replace adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -536,19 +559,25 @@ class ReplaceAdsorbate(AdsorbateOperator):
             other_species = [s for s in self.adsorbate_species if
                              s != removed_species]
 
-            nindi = self.add_adsorbate(indi, [ads_sites[removed]], 
-                                     self.heights, other_species,
-                                     self.min_adsorbate_distance,
-                                     tilt_angle=self.tilt_angle)
-            if not nindi:
-                break
-            
-            if self.num_muts > 1:
-                if True in nindi.pbc:
-                    nsac = SlabAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                else:
-                    nsac = ClusterAdsorbateCoverage(nindi, sas, dmax=self.dmax)
-                ads_sites = nsac.hetero_site_list                          
+            indi = self.add_adsorbate(indi, [ads_sites[removed]], 
+                                      self.heights, other_species,
+                                      self.min_adsorbate_distance,
+                                      tilt_angle=self.tilt_angle)
+            if True in indi.pbc:
+                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            else:
+                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = nsac.hetero_site_list                          
+
+        adsorbates = []
+        adsorbate_ids = set()
+        for nst in ads_sites:
+            if nst['occupied'] == 1:
+                adsi = nst['adsorbate_indices']
+                if not set(adsi).issubset(adsorbate_ids):
+                    adsorbates.append(nst['adsorbate'])        
+                    adsorbate_ids.update(adsi)
+        indi.info['data']['adsorbates'] = adsorbates
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -784,14 +813,6 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         pcac = ClusterAdsorbateCoverage(indi, pcas, dmax=self.dmax)
         pads_sites = pcac.hetero_site_list       
  
-       # # Use EMT to pre-optimize the structure 
-       # indi = indi[[a.index for a in indi if
-       #              a.symbol not in adsorbate_elements]]
-       # indi.calc = EMT()
-       # opt = BFGS(indi, logfile=None) 
-       # opt.run(fmax=0.1)
-       # indi.calc = None
-
         adsi_dict = {}      
         for st in pads_sites:
             if st['occupied']:
@@ -802,8 +823,10 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                 adsi_dict[si] = {}
                 adsi_dict[si]['height'] = st['bond_length']
                 adsi_dict[si]['adsorbate'] = st['adsorbate']
-                
-        indi = pcas.ref_atoms
+                adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']
+
+        indi = pcas.atoms                
+        indi.positions = pcas.ref_atoms.positions
         cas = ClusterAdsorptionSites(indi, self.allow_6fold,         
                                      self.composition_effect)
         for st in cas.site_list:
@@ -812,6 +835,13 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                 adsorbate = adsi_dict[si]['adsorbate']
                 height = adsi_dict[si]['height']    
                 add_adsorbate_to_site(indi, adsorbate, st, height)
+
+                # Make sure no adsorbates too close to each other 
+                # after each adsorbate addition
+                nads = len(adsi_dict[si]['adsorbate_indices'])
+                if atoms_too_close_after_addition(indi, nads,
+                self.min_adsorbate_distance, mic=False):
+                    indi = indi[:-nads]                               
 
         cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
         ads_sites = cac.hetero_site_list
