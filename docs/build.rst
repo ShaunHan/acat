@@ -1,7 +1,7 @@
 Building things
 =====================
 
-Add and remove adsorbate
+Operate adsorbate
 ----------------------------------
 
 .. automodule:: acat.build.actions
