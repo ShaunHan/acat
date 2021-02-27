@@ -141,7 +141,6 @@ class StochasticPatternGenerator(object):
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
         >>> spg.run(n_gen=100, actions='add')
-
         [Output trajectory]
 
     """
@@ -938,7 +937,6 @@ class SystematicPatternGenerator(object):
         ...           adsorption_sites=cas,
         ...           composition_effect=True) 
         >>> spg.run(action='add')
-
         [Output trajectory]
 
     """
