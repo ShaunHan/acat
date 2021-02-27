@@ -668,7 +668,7 @@ class StochasticPatternGenerator(object):
         return nsac                        
  
     def run(self, n_gen, 
-            actions='add','remove','move'], 
+            actions=['add','remove','move'], 
             action_probabilities=None,
             unique=True):
         """Run the pattern generator.
@@ -2114,9 +2114,9 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
 
 def full_coverage_pattern(atoms, adsorbate, site, surface=None,
                           height=None, min_adsorbate_distance=0.):
-    """A function for generating different p(1x1) adsorbate coverage 
-    patterns. The function is generalized for both periodic and 
-    non-periodic systems (distinguished by atoms.pbc).
+    """A function for generating adsorbate coverage patterns on sites
+    that are of a same type. The function is generalized for both 
+    periodic and non-periodic systems (distinguished by atoms.pbc).
 
     Parameters
     ----------
@@ -2147,7 +2147,7 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
     
     Example
     -------
-    To add a 1 ML CO coverage pattern to the hcp sites on a icosahedron:
+    To add CO to all hcp sites on a icosahedron:
 
         >>> from acat.build.patterns import full_coverage_pattern
         >>> from ase.cluster import Icosahedron
@@ -2157,8 +2157,7 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
         >>> pattern = full_coverage_pattern(atoms, adsorbate='CO', site='hcp')
         >>> view(pattern)
 
-    To add a 1 ML CO coverage pattern to the 3fold sites on a bcc110 
-    surface slab:
+    To add CO to all 3fold sites on a bcc110 surface slab:
 
         >>> from acat.build.patterns import full_coverage_pattern
         >>> from ase.build import bcc110
