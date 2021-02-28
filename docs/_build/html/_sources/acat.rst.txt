@@ -1,42 +1,24 @@
-Base modules
-============
-
-Adsorption site identification
-------------------------------
+Adsorption sites
+================
 
 .. automodule:: acat.adsorption_sites
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: get_labels, new_site, get_two_vectors, is_eq, get_angle, make_fullCNA, get_site_dict, set_first_neighbor_distance_from_rdf, get_surface_designation, make_neighbor_list
 
-Adsorbate coverage identification
----------------------------------
+Adsorbate coverage
+==================
 
 .. automodule:: acat.adsorbate_coverage
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: identify_adsorbates, make_ads_neighbor_list  
 
-Utilities
----------------------
 
-.. automodule:: acat.utilities
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-Labels
-------------------
 
-.. automodule:: acat.labels
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-Default settings
---------------------
 
-.. automodule:: acat.settings
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
