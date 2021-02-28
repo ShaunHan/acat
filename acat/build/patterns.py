@@ -48,9 +48,8 @@ class StochasticPatternGenerator(object):
         The minimum distance constraint between two atoms that belongs 
         to two adsorbates.
 
-    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites or
-                       acat.adsorption_sites.SlabAdsorptionSites object, 
-                       default None
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
         Provide the built-in adsorption sites class to accelerate the 
         pattern generation. Make sure all the structures have the same 
         periodicity and atom indexing. If composition_effect=True, you 
@@ -102,46 +101,18 @@ class StochasticPatternGenerator(object):
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
-         isomorphism for the existing structures in the trajectory.
+        graph isomorphism for the existing structures in the trajectory.
         This is also useful when you want to generate coverage patterns 
         stochastically but for all images systematically, e.g. generating
         10 stochastic coverage patterns for each image:
-        from acat.build.patterns import StochasticPatternGenerator as SPG
-        for atoms in images:
-            spg = SPG(atoms, ..., append_trajectory=True)
-            spg.run(ngen = 10)
+
+        >>> from acat.build.patterns import StochasticPatternGenerator as SPG
+        >>> for atoms in images:
+        ...    spg = SPG(atoms, ..., append_trajectory=True)
+        ...    spg.run(ngen = 10)
 
     logfile : str, default 'patterns.log'
         The name of the log file.
-
-    Example
-    -------
-    The following example illustrates how to generate 100 stochastic
-    adsorbate coverage patterns with CO, OH, CH3 and CHO, based on 
-    10 Pt fcc111 surface slabs with random C and O coverages, where 
-    CH3 is forbidden to be added to ontop and bridge sites:
-
-        >>> from acat.build.patterns import StochasticPatternGenerator as SPG
-        >>> from acat.build.patterns import random_coverage_pattern
-        >>> from ase.build import fcc111
-        >>> slab = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
-        >>> slab.center()
-        >>> images = []
-        >>> for _ in range(10):
-        ...     atoms = slab.copy()
-        ...     image = random_coverage_pattern(atoms, adsorbate_species=['C','O'],
-        ...                                     surface='fcc111',
-        ...                                     min_adsorbate_distance=5.)
-        ...     images.append(image)
-        >>> spg = SPG(images, adsorbate_species=['CO','OH','CH3','CHO'],
-        ...           species_probabilities={'CO':0.3, 'OH': 0.3, 
-        ...                                  'CH3': 0.2, 'CHO': 0.2},
-        ...           min_adsorbate_distance=1.5, 
-        ...           surface='fcc111',
-        ...           composition_effect=False, 
-        ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
-        >>> spg.run(n_gen=100, actions='add')
-        [Output trajectory]
 
     """
 
@@ -852,9 +823,8 @@ class SystematicPatternGenerator(object):
         The minimum distance constraint between two atoms that belongs 
         to two adsorbates.
 
-    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites or 
-                       acat.adsorption_sites.SlabAdsorptionSites object, 
-                       default None
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
         Provide the built-in adsorption sites class to accelerate the 
         pattern generation. Make sure all the structures have the same 
         periodicity and atom indexing. If composition_effect=True, you 
@@ -907,37 +877,9 @@ class SystematicPatternGenerator(object):
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
         graph isomorphism for the existing structures in the trajectory.
-        This is also useful when you want to generate coverage patterns 
-        stochastically but for all images systematically, e.g. generating
-        10 stochastic coverage patterns for each image:
-        from acat.build.patterns import StochasticPatternGenerator as SPG
-        for atoms in images:
-            spg = SPG(atoms, ..., append_trajectory=True)
-            spg.run(ngen = 10)
 
     logfile : str, default 'patterns.log'
         The name of the log file.
-
-    Example
-    -------
-    The following example illustrates how to add CO to all unique sites on 
-    a cuboctahedral bimetallic nanoparticle:
-
-        >>> from acat.adsorption_sites import ClusterAdsorptionSites
-        >>> from acat.build.patterns import SystematicPatternGenerator as SPG
-        >>> from ase.cluster import Octahedron
-        >>> atoms = Octahedron('Cu', length=7, cutoff=3)
-        >>> for atom in atoms:
-        ...     if atom.index % 2 == 0:
-        ...         atom.symbol = 'Au' 
-        >>> atoms.center(vacuum=5.)
-        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True)
-        >>> spg = SPG(atoms, adsorbate_species='CO',
-        ...           min_adsorbate_distance=2., 
-        ...           adsorption_sites=cas,
-        ...           composition_effect=True) 
-        >>> spg.run(action='add')
-        [Output trajectory]
 
     """
 
@@ -1722,31 +1664,6 @@ def symmetric_coverage_pattern(atoms, adsorbate, coverage=1.,
         The minimum distance between two atoms that belongs to two 
         adsorbates.
     
-    Example
-    -------
-    To add a 0.5 ML CO coverage pattern on a cuboctahedron:
-
-        >>> from acat.build.patterns import symmetric_coverage_pattern
-        >>> from ase.cluster import Octahedron
-        >>> from ase.visualize import view
-        >>> atoms = Octahedron('Au', length=9, cutoff=4)
-        >>> atoms.center(vacuum=5.)
-        >>> pattern = symmetric_coverage_pattern(atoms, adsorbate='CO', 
-        ...                                      coverage=0.5)
-        >>> view(pattern)
-
-    To add a 0.75 ML CO coverage pattern on a fcc111 surface slab:
-
-        >>> from acat.build.patterns import symmetric_coverage_pattern
-        >>> from ase.build import fcc111
-        >>> from ase.visualize import view
-        >>> atoms = fcc111('Cu', (8, 8, 4), vacuum=5.)
-        >>> atoms.center()
-        >>> pattern = symmetric_coverage_pattern(atoms, adsorbate='CO',
-        ...                                      coverage=0.5, 
-        ...                                      surface='fcc111')
-        >>> view(pattern)
-
     """
 
     if True not in atoms.pbc:                            
@@ -2147,29 +2064,6 @@ def full_coverage_pattern(atoms, adsorbate, site, surface=None,
         The minimum distance between two atoms that belongs to two 
         adsorbates.
     
-    Example
-    -------
-    To add CO to all hcp sites on a icosahedron:
-
-        >>> from acat.build.patterns import full_coverage_pattern
-        >>> from ase.cluster import Icosahedron
-        >>> from ase.visualize import view
-        >>> atoms = Icosahedron('Au', noshells=5)
-        >>> atoms.center(vacuum=5.)
-        >>> pattern = full_coverage_pattern(atoms, adsorbate='CO', site='hcp')
-        >>> view(pattern)
-
-    To add CO to all 3fold sites on a bcc110 surface slab:
-
-        >>> from acat.build.patterns import full_coverage_pattern
-        >>> from ase.build import bcc110
-        >>> from ase.visualize import view
-        >>> atoms = bcc110('Mo', (8, 8, 4), vacuum=5.)
-        >>> atoms.center()
-        >>> pattern = full_coverage_pattern(atoms, adsorbate='CO',
-        ...                                 surface='bcc110', site='3fold')
-        >>> view(pattern)
-
     """
 
     if True not in atoms.pbc:                                 
@@ -2242,37 +2136,6 @@ def random_coverage_pattern(atoms, adsorbate_species,
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
     
-    Example
-    -------
-    To add CO randomly onto a cuboctahedron with a minimum adsorbate 
-    distance of 5 Angstrom:
-
-        >>> from acat.build.patterns import random_coverage_pattern
-        >>> from ase.cluster import Octahedron
-        >>> from ase.visualize import view
-        >>> atoms = Octahedron('Au', length=9, cutoff=4)
-        >>> atoms.center(vacuum=5.)
-        >>> pattern = random_coverage_pattern(atoms, adsorbate_species='CO', 
-        ...                                   min_adsorbate_distance=5.)
-        >>> view(pattern)
-
-    To add C, N, O randomly onto a hcp0001 surface slab with probabilities 
-    of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
-    2 Angstrom:
-
-        >>> from acat.build.patterns import random_coverage_pattern
-        >>> from ase.build import hcp0001
-        >>> from ase.visualize import view
-        >>> atoms = hcp0001('Ru', (8, 8, 4), vacuum=5.)
-        >>> atoms.center()
-        >>> pattern = random_coverage_pattern(atoms, adsorbate_species=['C','N','O'],
-        ...                                   species_probabilities={'C': 0.25, 
-        ...                                                          'N': 0.25, 
-        ...                                                          'O': 0.5},
-        ...                                   surface='hcp0001',
-        ...                                   min_adsorbate_distance=2.)
-        >>> view(pattern)
-
     """
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]

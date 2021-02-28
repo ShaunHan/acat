@@ -85,11 +85,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Getting Started</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
 </ul>
 
             
@@ -189,7 +191,7 @@
 <span class="sd">        The adsorbate species to be added onto the surface.</span>
 
 <span class="sd">    site : str, default None</span>
-<span class="sd">        The site type that the adsorbates should be added to.</span>
+<span class="sd">        The site type that the adsorbate should be added to.</span>
 
 <span class="sd">    surface : str, default None</span>
 <span class="sd">        The surface type (crystal structure + Miller indices)</span>
@@ -198,7 +200,7 @@
 <span class="sd">        only the sites on the specified surface.</span>
 
 <span class="sd">    geometry : str, default None</span>
-<span class="sd">        The geometry type that the adsorbates should be added to. </span>
+<span class="sd">        The geometry type that the adsorbate should be added to. </span>
 <span class="sd">        Only available for surface slabs.</span>
 
 <span class="sd">    indices : list or tuple</span>
@@ -226,22 +228,6 @@
 <span class="sd">    all_sites : list of dicts, default None</span>
 <span class="sd">        The list of all sites. Provide this to make the function</span>
 <span class="sd">        much faster. Useful when the function is called many times.</span>
-
-<span class="sd">    Example</span>
-<span class="sd">    -------</span>
-<span class="sd">    To add a NO molecule to a bridge site consists of one Pt and </span>
-<span class="sd">    one Ni on the fcc111 surface of a truncated octahedron:</span>
-
-<span class="sd">    &gt;&gt;&gt; from acat.build.actions import add_adsorbate </span>
-<span class="sd">    &gt;&gt;&gt; from ase.cluster import Octahedron</span>
-<span class="sd">    &gt;&gt;&gt; from ase.visualize import view</span>
-<span class="sd">    &gt;&gt;&gt; atoms = Octahedron(&#39;Ni&#39;, length=7, cutoff=2)</span>
-<span class="sd">    &gt;&gt;&gt; for atom in atoms:</span>
-<span class="sd">    ...     if atom.index % 2 == 0:</span>
-<span class="sd">    ...         atom.symbol = &#39;Pt&#39; </span>
-<span class="sd">    &gt;&gt;&gt; add_adsorbate(atoms, adsorbate=&#39;NO&#39;, site=&#39;bridge&#39;,</span>
-<span class="sd">    ...               surface=&#39;fcc111&#39;, composition=&#39;NiPt&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; view(atoms)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -279,11 +265,15 @@
         <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> 
                    <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
     
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">subsurf_element</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> 
                    <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span> <span class="ow">and</span>
-                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">scomp</span> <span class="ow">and</span> 
-                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;subsurf_element&#39;</span><span class="p">]</span> 
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">scomp</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span> <span class="ow">and</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">scomp</span> <span class="ow">and</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;subsurf_element&#39;</span><span class="p">]</span>
                    <span class="o">==</span> <span class="n">subsurf_element</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="p">:</span>
@@ -298,6 +288,7 @@
 <div class="viewcode-block" id="add_adsorbate_to_site"><a class="viewcode-back" href="../../../build.html#acat.build.actions.add_adsorbate_to_site">[docs]</a><span class="k">def</span> <span class="nf">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                           <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>            
     <span class="sd">&quot;&quot;&quot;The base function for adding one adsorbate to a site.</span>
+<span class="sd">    Site must include information of &#39;normal&#39; and &#39;position&#39;.</span>
 <span class="sd">    Useful for adding adsorbate to multiple sites or adding </span>
 <span class="sd">    multidentate adsorbates.</span>
 
@@ -310,7 +301,7 @@
 <span class="sd">        The adsorbate species to be added onto the surface.</span>
 
 <span class="sd">    site : dict </span>
-<span class="sd">        The site that the adsorbates should be added to.</span>
+<span class="sd">        The site that the adsorbate should be added to.</span>
 <span class="sd">        Must contain information of the position and the</span>
 <span class="sd">        normal vector of the site.</span>
 
@@ -324,45 +315,6 @@
 <span class="sd">    tilt_angle: float, default None</span>
 <span class="sd">        Tilt the adsorbate with an angle (in degress) relative to</span>
 <span class="sd">        the surface normal.</span>
-
-<span class="sd">    Example</span>
-<span class="sd">    -------</span>
-<span class="sd">    To add CO to all fcc sites of an icosahedral nanoparticle:</span>
-
-<span class="sd">    &gt;&gt;&gt; from acat.adsorption_sites import ClusterAdsorptionSites</span>
-<span class="sd">    &gt;&gt;&gt; from acat.build.actions import add_adsorbate_to_site</span>
-<span class="sd">    &gt;&gt;&gt; from ase.cluster import Icosahedron</span>
-<span class="sd">    &gt;&gt;&gt; from ase.visualize import view</span>
-<span class="sd">    &gt;&gt;&gt; atoms = Icosahedron(&#39;Pt&#39;, noshells=5)</span>
-<span class="sd">    &gt;&gt;&gt; atoms.center(vacuum=5.)</span>
-<span class="sd">    &gt;&gt;&gt; cas = ClusterAdsorptionSites(atoms)</span>
-<span class="sd">    &gt;&gt;&gt; fcc_sites = cas.get_sites(site=&#39;fcc&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; for site in fcc_sites:</span>
-<span class="sd">    ...     add_adsorbate_to_site(atoms, adsorbate=&#39;CO&#39;, site=site)</span>
-<span class="sd">    &gt;&gt;&gt; view(atoms)</span>
-
-
-<span class="sd">    To add a bidentate CH3OH to the (54, 57, 58) site on a Pt fcc111 </span>
-<span class="sd">    surface slab and rotate the orientation to a neighbor site:</span>
-
-<span class="sd">    &gt;&gt;&gt; from acat.adsorption_sites import SlabAdsorptionSites</span>
-<span class="sd">    &gt;&gt;&gt; from acat.adsorption_sites import get_adsorption_site</span>
-<span class="sd">    &gt;&gt;&gt; from acat.build.actions import add_adsorbate_to_site </span>
-<span class="sd">    &gt;&gt;&gt; from acat.utilities import get_mic</span>
-<span class="sd">    &gt;&gt;&gt; from ase.build import fcc111</span>
-<span class="sd">    &gt;&gt;&gt; from ase.visualize import view</span>
-<span class="sd">    &gt;&gt;&gt; atoms = fcc111(&#39;Pt&#39;, (4, 4, 4), vacuum=5.)</span>
-<span class="sd">    &gt;&gt;&gt; i, site = get_adsorption_site(atoms, indices=(54, 57, 58),</span>
-<span class="sd">    ...                               surface=&#39;fcc111&#39;,</span>
-<span class="sd">    ...                               return_index=True)</span>
-<span class="sd">    &gt;&gt;&gt; sas = SlabAdsorptionSites(atoms, surface=&#39;fcc111&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; sites = sas.get_sites()</span>
-<span class="sd">    &gt;&gt;&gt; nbsites = sas.get_neighbor_site_list(neighbor_number=1)</span>
-<span class="sd">    &gt;&gt;&gt; nbsite = sites[nbsites[i][0]] # Choose the first neighbor site</span>
-<span class="sd">    &gt;&gt;&gt; ori = get_mic(site[&#39;position&#39;], nbsite[&#39;position&#39;], atoms.cell)</span>
-<span class="sd">    &gt;&gt;&gt; add_adsorbate_to_site(atoms, adsorbate=&#39;CH3OH&#39;, site=site, </span>
-<span class="sd">    ...                       orientation=ori)</span>
-<span class="sd">    &gt;&gt;&gt; view(atoms)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
  
@@ -439,8 +391,50 @@
 <div class="viewcode-block" id="add_adsorbate_to_label"><a class="viewcode-back" href="../../../build.html#acat.build.actions.add_adsorbate_to_label">[docs]</a><span class="k">def</span> <span class="nf">add_adsorbate_to_label</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> 
                            <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                            <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                           <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                            <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                            <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Same as add_adsorbate function, except that the site type is </span>
+<span class="sd">    represented by a numerical label. The function is generalized for </span>
+<span class="sd">    both periodic and non-periodic systems (distinguished by atoms.pbc).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    adsorbate : str or ase.Atom object or ase.Atoms object</span>
+<span class="sd">        The adsorbate species to be added onto the surface.</span>
+
+<span class="sd">    label : int or str</span>
+<span class="sd">        The label of the site that the adsorbate should be added to.</span>
+
+<span class="sd">    surface : str, default None</span>
+<span class="sd">        The surface type (crystal structure + Miller indices)</span>
+<span class="sd">        If the structure is a periodic surface slab, this is required.</span>
+<span class="sd">        If the structure is a nanoparticle, the function enumerates</span>
+<span class="sd">        only the sites on the specified surface.</span>
+
+<span class="sd">    height : float, default None</span>
+<span class="sd">        The height of the added adsorbate from the surface.</span>
+<span class="sd">        Use the default settings if not specified.</span>
+
+<span class="sd">    orientation : list or numpy.array, default None</span>
+<span class="sd">        The vector that the multidentate adsorbate is aligned to.</span>
+
+<span class="sd">    tilt_angle: float, default 0.</span>
+<span class="sd">        Tilt the adsorbate with an angle (in degress) relative to</span>
+<span class="sd">        the surface normal.</span>
+
+<span class="sd">    composition_effect : bool, default False</span>
+<span class="sd">        Whether the label is defined in bimetallic labels or not.</span>
+
+<span class="sd">    all_sites : list of dicts, default None</span>
+<span class="sd">        The list of all sites. Provide this to make the function</span>
+<span class="sd">        much faster. Useful when the function is called many times.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">composition_effect</span><span class="p">:</span>
         <span class="n">slab</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[[</span><span class="n">a</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span>
@@ -480,11 +474,59 @@
 
 
 <div class="viewcode-block" id="remove_adsorbate_from_site"><a class="viewcode-back" href="../../../build.html#acat.build.actions.remove_adsorbate_from_site">[docs]</a><span class="k">def</span> <span class="nf">remove_adsorbate_from_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">remove_fragment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The base function for removing one adsorbate from an</span>
+<span class="sd">    occupied site. The site must include information of </span>
+<span class="sd">    &#39;adsorbate_indices&#39; or &#39;fragment_indices&#39;. Note that if</span>
+<span class="sd">    you want to remove adsorbates from multiple sites, call</span>
+<span class="sd">    this function multiple times will return the wrong result.</span>
+<span class="sd">    Please use remove_adsorbates_from_sites instead.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    site : dict </span>
+<span class="sd">        The site that the adsorbate should be removed from.</span>
+<span class="sd">        Must contain information of the adsorbate indices.</span>
+
+<span class="sd">    remove_fragment : bool, default False</span>
+<span class="sd">        Remove the fragment of a multidentate adsorbate instead </span>
+<span class="sd">        of the whole adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">remove_fragment</span><span class="p">:</span>
         <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">])</span>
+    <span class="k">del</span> <span class="n">atoms</span><span class="p">[</span><span class="n">si</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="remove_adsorbates_from_sites"><a class="viewcode-back" href="../../../build.html#acat.build.actions.remove_adsorbates_from_sites">[docs]</a><span class="k">def</span> <span class="nf">remove_adsorbates_from_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="p">,</span> <span class="n">remove_fragments</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The base function for removing multiple adsorbates from</span>
+<span class="sd">    an occupied site. The sites must include information of </span>
+<span class="sd">    &#39;adsorbate_indices&#39; or &#39;fragment_indices&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    sites : list of dicts </span>
+<span class="sd">        The site that the adsorbate should be removed from.</span>
+<span class="sd">        Must contain information of the adsorbate indices.</span>
+
+<span class="sd">    remove_fragments : bool, default False</span>
+<span class="sd">        Remove the fragment of a multidentate adsorbate instead </span>
+<span class="sd">        of the whole adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">remove_fragments</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]]</span>
     <span class="k">del</span> <span class="n">atoms</span><span class="p">[</span><span class="n">si</span><span class="p">]</span></div>
 
 
@@ -494,6 +536,31 @@
     <span class="sd">&quot;&quot;&quot;Find adsorbates that are too close, remove one set of them.</span>
 <span class="sd">    The function is intended to remove atoms that are unphysically </span>
 <span class="sd">    close. Please do not use a min_adsorbate_distace larger than 2.</span>
+<span class="sd">    The function is generalized for both periodic and non-periodic </span>
+<span class="sd">    systems (distinguished by atoms.pbc).</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        The nanoparticle or surface slab onto which the adsorbates are</span>
+<span class="sd">        added. Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    adsorbate_coverage : acat.adsorbate_coverage.ClusterAdsorbateCoverage \</span>
+<span class="sd">        object or acat.adsorbate_coverage.SlabAdsorbateCoverage object, \</span>
+<span class="sd">        default None</span>
+<span class="sd">        The built-in adsorbate coverage class.</span>
+
+<span class="sd">    surface : str, default None</span>
+<span class="sd">        The surface type (crystal structure + Miller indices). </span>
+<span class="sd">        If the structure is a periodic surface slab, this is required. </span>
+<span class="sd">        If the structure is a nanoparticle, the function only add </span>
+<span class="sd">        adsorbates to the sites on the specified surface. </span>
+
+<span class="sd">    min_adsorbate_distance : float, default 0.</span>
+<span class="sd">        The minimum distance between two atoms that is not considered to</span>
+<span class="sd">        be to close. This distance has to be small.</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">adsorbate_coverage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
