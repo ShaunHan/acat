@@ -400,7 +400,7 @@ def get_rotation_matrix(v1, v2):
 
 
 def get_rodrigues_rotation_matrix(axis, angle):
-    """Return the Rodrigues rotation matrix associated with counter-
+    """Return the Rodrigues rotation matrix associated with counter
     clockwise rotation about the given axis by angle in radians.
 
    Parameters
@@ -442,7 +442,8 @@ def string_fragmentation(adsorbate):
 
     Parameters
     ----------
-    adsorbate : the string of the adsorbate molecule.
+    adsorbate : str
+        The string of the adsorbate molecule.
 
     """
     if adsorbate == 'H2':

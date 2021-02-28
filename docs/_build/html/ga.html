@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Genetic Algorithm &mdash; ACAT 1.0.0 documentation</title>
+  <title>Genetic algorithm &mdash; ACAT 1.0.0 documentation</title>
   
 
   
@@ -41,6 +41,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Other utilities" href="utilities.html" />
     <link rel="prev" title="Building things" href="build.html" /> 
 </head>
 
@@ -86,14 +87,17 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Getting Started</a></li>
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Genetic Algorithm</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Genetic algorithm</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.adsorbate_operators">Adsorbate procreation operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
 </ul>
 
             
@@ -142,7 +146,7 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Genetic Algorithm</li>
+      <li>Genetic algorithm</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -162,7 +166,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="genetic-algorithm">
-<h1>Genetic Algorithm<a class="headerlink" href="#genetic-algorithm" title="Permalink to this headline">¶</a></h1>
+<h1>Genetic algorithm<a class="headerlink" href="#genetic-algorithm" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-acat.ga.adsorbate_operators">
 <span id="adsorbate-procreation-operators"></span><h2>Adsorbate procreation operators<a class="headerlink" href="#module-acat.ga.adsorbate_operators" title="Permalink to this headline">¶</a></h2>
 <p>Adsorbate operators that adds an adsorbate to the surface
@@ -196,19 +200,21 @@ Overwrite in subclass.</p>
 object at the first free site in the specified site_list. A site
 is free if no other adsorbates can be found in a sphere of radius
 min_adsorbate_distance around the chosen site.</p>
-<p>Parameters:</p>
-<dl class="simple">
-<dt>atoms: Atoms object</dt><dd><p>the atoms object that the adsorbate will be added to</p>
-</dd>
-<dt>hetero_site_list: list</dt><dd><p>a list of dictionaries, each dictionary should be of the
-following form:
-{‘normal’: n, ‘position’: p, ‘site’: si, ‘surface’: su}</p>
-</dd>
-<dt>min_adsorbate_distance: float</dt><dd><p>the radius of the sphere inside which no other
-adsorbates should be found</p>
-</dd>
-<dt>tilt_angle: float</dt><dd><p>Tilt the adsorbate with an angle (in degress) relative to
-the surface normal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object that the adsorbate will be added to.</p></li>
+<li><p><strong>hetero_site_list</strong> (<em>list</em>) – A list of dictionaries, each dictionary contains site
+information given by acat.adsorbate_coverage module.</p></li>
+<li><p><strong>heights</strong> (<em>dict</em>) – A dictionary that contains the adsorbate height for each site
+type.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default None</em>) – One or a list of adsorbate species to be added to the surface.
+Use self.adsorbate_species if not specified.</p></li>
+<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 2.</em>) – The radius of the sphere inside which no other adsorbates
+should be found.</p></li>
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to the
+surface normal.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -219,35 +225,73 @@ the surface normal.</p>
 <dd><p>Removes an adsorbate from the atoms object at the first occupied
 site in hetero_site_list. If no adsorbates can be found, one will be
 added instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object that the adsorbate will be added to</p></li>
+<li><p><strong>hetero_site_list</strong> (<em>list</em>) – A list of dictionaries, each dictionary contains site
+information given by acat.adsorbate_coverage module.</p></li>
+<li><p><strong>return_site_index</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the site index of the hetero_site_list instead
+of the site. Useful for moving or replacing adsorbate.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
-
-<dl class="py method">
-<dt id="acat.ga.adsorbate_operators.AdsorbateOperator.get_all_adsorbate_indices">
-<code class="sig-name descname">get_all_adsorbate_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#AdsorbateOperator.get_all_adsorbate_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.AdsorbateOperator.get_all_adsorbate_indices" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt id="acat.ga.adsorbate_operators.AdsorbateOperator.get_adsorbate_indices">
 <code class="sig-name descname">get_adsorbate_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">position</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#AdsorbateOperator.get_adsorbate_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.AdsorbateOperator.get_adsorbate_indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the indices of the adsorbate at the supplied position</p>
+<dd><p>Returns the indices of the adsorbate at the supplied position.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt id="acat.ga.adsorbate_operators.AddAdsorbate">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">AddAdsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'long-bridge': 1.5, 'ontop': 1.8, 'short-bridge': 1.5}</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#AddAdsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.AddAdsorbate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">AddAdsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#AddAdsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.AddAdsorbate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
 <p>Use this operator to add adsorbates to the surface.
 The surface is allowed to change during the algorithm run.</p>
+<p>There is no limit of adsorbate species. You can either provide one
+species or a list of species.</p>
 <p>Site and surface preference can be supplied. If both are supplied site
 will be considered first.</p>
 <p>Supplying a tilt angle will tilt the adsorbate with an angle relative
-to the standard perpendicular to the surface</p>
+to the standard perpendicular to the surface.</p>
+<p>The operator is generalized for both periodic and non-periodic systems
+(distinguished by atoms.pbc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – One or a list of adsorbate species to be added to the surface.</p></li>
+<li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
+type. Use the default height settings if the height for a site
+type is not specified.</p></li>
+<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 2.</em>) – The radius of the sphere inside which no other adsorbates
+should be found.</p></li>
+<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
+Only required if the structure is a periodic surface slab.</p></li>
+<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
+underneath fcc hollow sites.</p></li>
+<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to consider sites with different elemental compositions
+as different sites. It is recommended to set composition=False
+for monometallics. Since GA is commonly used for bimetallics,
+the default is set to True.</p></li>
+<li><p><strong>site_preference</strong> (<em>str</em><em>, </em><em>defualt None</em>) – The site type that has higher priority to attach adsorbates.</p></li>
+<li><p><strong>surface_preference</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type that has higher priority to attach adsorbates.
+Please only use this for nanoparticles.</p></li>
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to the
+surface normal.</p></li>
+<li><p><strong>num_muts</strong> (<em>int</em><em>, </em><em>default 1</em>) – The number of times to perform this operation.</p></li>
+<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
+bonding atom  that should be considered as an adsorbate.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="acat.ga.adsorbate_operators.AddAdsorbate.get_new_individual">
 <code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#AddAdsorbate.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.AddAdsorbate.get_new_individual" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the new individual as an atoms object</p>
+<dd><p>Returns the new individual as an atoms object.</p>
 </dd></dl>
 
 </dd></dl>
@@ -258,6 +302,31 @@ to the standard perpendicular to the surface</p>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
 <p>This operator removes an adsorbate from the surface. It works
 exactly (but doing the opposite) as the AddAdsorbate operator.</p>
+<p>The operator is generalized for both periodic and non-periodic systems
+(distinguished by atoms.pbc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – One or a list of adsorbate species to be removed from the surface.</p></li>
+<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
+Only required if the structure is a periodic surface slab.</p></li>
+<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites underneath
+fcc hollow sites.</p></li>
+<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to consider sites with different elemental compositions as
+different sites. It is recommended to set composition=False for
+monometallics. Since GA is commonly used for bimetallics, the
+default is set to True.</p></li>
+<li><p><strong>site_preference</strong> (<em>str</em><em>, </em><em>defualt None</em>) – The site type that has higher priority to attach adsorbates.</p></li>
+<li><p><strong>surface_preference</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type that has higher priority to attach adsorbates.
+Please only use this for nanoparticles.</p></li>
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to the
+surface normal.</p></li>
+<li><p><strong>num_muts</strong> (<em>int</em><em>, </em><em>default 1</em>) – The number of times to perform this operation.</p></li>
+<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
+bonding atom  that should be considered as an adsorbate.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="acat.ga.adsorbate_operators.RemoveAdsorbate.get_new_individual">
 <code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#RemoveAdsorbate.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.RemoveAdsorbate.get_new_individual" title="Permalink to this definition">¶</a></dt>
@@ -269,10 +338,43 @@ Overwrite in subclass.</p>
 
 <dl class="py class">
 <dt id="acat.ga.adsorbate_operators.MoveAdsorbate">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">MoveAdsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'long-bridge': 1.5, 'ontop': 1.8, 'short-bridge': 1.5}</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_preference_to</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference_to</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#MoveAdsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.MoveAdsorbate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">MoveAdsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_preference_to</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference_to</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#MoveAdsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.MoveAdsorbate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
 <p>This operator removes an adsorbate from the surface and adds it
 again to a different site, i.e. effectively moving the adsorbate.</p>
+<p>The operator is generalized for both periodic and non-periodic systems
+(distinguished by atoms.pbc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – One or a list of adsorbate species to be added to the surface.</p></li>
+<li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
+type. Use the default height settings if the height for a site
+type is not specified.</p></li>
+<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 2.</em>) – The radius of the sphere inside which no other adsorbates
+should be found.</p></li>
+<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
+Only required if the structure is a periodic surface slab.</p></li>
+<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
+underneath fcc hollow sites.</p></li>
+<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to consider sites with different elemental compositions
+as different sites. It is recommended to set composition=False
+for monometallics. Since GA is commonly used for bimetallics,
+the default is set to True.</p></li>
+<li><p><strong>site_preference_from</strong> (<em>str</em><em>, </em><em>defualt None</em>) – The site type that has higher priority to detach adsorbates.</p></li>
+<li><p><strong>surface_preference_from</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type that has higher priority to detach adsorbates.
+Please only use this for nanoparticles.</p></li>
+<li><p><strong>site_preference_to</strong> (<em>str</em><em>, </em><em>defualt None</em>) – The site type that has higher priority to attach adsorbates.</p></li>
+<li><p><strong>surface_preference_to</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type that has higher priority to attach adsorbates.
+Please only use this for nanoparticles.</p></li>
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to the
+surface normal.</p></li>
+<li><p><strong>num_muts</strong> (<em>int</em><em>, </em><em>default 1</em>) – The number of times to perform this operation.</p></li>
+<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
+bonding atom  that should be considered as an adsorbate.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="acat.ga.adsorbate_operators.MoveAdsorbate.get_new_individual">
 <code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#MoveAdsorbate.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.MoveAdsorbate.get_new_individual" title="Permalink to this definition">¶</a></dt>
@@ -284,10 +386,40 @@ Overwrite in subclass.</p>
 
 <dl class="py class">
 <dt id="acat.ga.adsorbate_operators.ReplaceAdsorbate">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">ReplaceAdsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'long-bridge': 1.5, 'ontop': 1.8, 'short-bridge': 1.5}</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#ReplaceAdsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.ReplaceAdsorbate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">ReplaceAdsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_preference_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#ReplaceAdsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.ReplaceAdsorbate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
 <p>This operator removes an adsorbate from the surface and adds another
 species to the same site, i.e. effectively replacing the adsorbate.</p>
+<p>The operator is generalized for both periodic and non-periodic systems
+(distinguished by atoms.pbc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – One or a list of adsorbate species to be added to the surface.</p></li>
+<li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
+type. Use the default height settings if the height for a site
+type is not specified.</p></li>
+<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 2.</em>) – The radius of the sphere inside which no other adsorbates
+should be found.</p></li>
+<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
+Only required if the structure is a periodic surface slab.</p></li>
+<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
+underneath fcc hollow sites.</p></li>
+<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to consider sites with different elemental compositions
+as different sites. It is recommended to set composition=False
+for monometallics. Since GA is commonly used for bimetallics,
+the default is set to True.</p></li>
+<li><p><strong>site_preference_from</strong> (<em>str</em><em>, </em><em>defualt None</em>) – The site type that has higher priority to replace adsorbates.</p></li>
+<li><p><strong>surface_preference_from</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type that has higher priority to replace adsorbates.
+Please only use this for nanoparticles.</p></li>
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to the
+surface normal.</p></li>
+<li><p><strong>num_muts</strong> (<em>int</em><em>, </em><em>default 1</em>) – The number of times to perform this operation.</p></li>
+<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
+bonding atom  that should be considered as an adsorbate.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="acat.ga.adsorbate_operators.ReplaceAdsorbate.get_new_individual">
 <code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#ReplaceAdsorbate.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.ReplaceAdsorbate.get_new_individual" title="Permalink to this definition">¶</a></dt>
@@ -301,32 +433,40 @@ Overwrite in subclass.</p>
 <dt id="acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates">
 <em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">CutSpliceCrossoverWithAdsorbates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">blmin</span></em>, <em class="sig-param"><span class="n">keep_composition</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">fix_coverage</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">rotate_vectors</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rotate_angles</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#CutSpliceCrossoverWithAdsorbates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
-<p>Crossover that cuts two particles through a plane in space and
-merges two halfes from different particles together.</p>
-<p>Implementation of the method presented in:
-D. M. Deaven and K. M. Ho, Phys. Rev. Lett., 75, 2, 288-291 (1995)</p>
+<p>Crossover that cuts two particles with adsorbates through a plane
+in space and merges two halfes from different particles together.</p>
 <p>It keeps the correct composition by randomly assigning elements in
 the new particle. If some of the atoms in the two particle halves
 are too close, the halves are moved away from each other perpendicular
 to the cutting plane.</p>
-<p>Parameters:</p>
-<dl class="simple">
-<dt>adsorbate: str or Atoms</dt><dd><p>specifies the type of adsorbate, it will not be taken into account
-when keeping the correct size and composition</p>
-</dd>
-<dt>blmin: dict</dt><dd><p>Dictionary of minimum distance between atomic numbers.
-e.g. {(28,29): 1.5}</p>
-</dd>
-<dt>keep_composition: boolean</dt><dd><p>Should the composition be the same as in the parents</p>
-</dd>
-<dt>rotate_vectors: list</dt><dd><p>A list of vectors that the part of the structure that is cut
+<p>The complexity of crossover with adsorbates makes this operator not
+robust enough. The adsorption site identification will fail once the
+nanoparticle shape becomes too irregular after crossover.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – One or a list of adsorbate species to be added to the surface.</p></li>
+<li><p><strong>blmin</strong> (<em>dict</em>) – Dictionary of minimum distance between atomic numbers.
+e.g. {(28,29): 1.5}</p></li>
+<li><p><strong>keep_composition</strong> (<em>bool</em><em>, </em><em>default True</em>) – Should the composition be the same as in the parents.</p></li>
+<li><p><strong>fix_coverage</strong> (<em>bool</em><em>, </em><em>default False</em>) – Should the adsorbate coverage be the same as in the parents.</p></li>
+<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 2.</em>) – The radius of the sphere inside which no other adsorbates
+should be found.</p></li>
+<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
+underneath fcc hollow sites.</p></li>
+<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to consider sites with different elemental compositions
+as different sites. It is recommended to set composition=False
+for monometallics. Since GA is commonly used for bimetallics,
+the default is set to True.</p></li>
+<li><p><strong>rotate_vectors</strong> (<em>list</em><em>, </em><em>default None</em>) – A list of vectors that the part of the structure that is cut
 is able to rotate around, the size of rotation is set in
-rotate_angles.
-Default None meaning no rotation is performed</p>
-</dd>
-<dt>rotate_angles: list</dt><dd><p>A list of angles that the structure cut can be rotated. The vector
-being rotated around is set in rotate_vectors.
-Default None meaning no rotation is performed</p>
+rotate_angles. Default None meaning no rotation is performed.</p></li>
+<li><p><strong>rotate_angles</strong> (<em>list</em><em>, </em><em>default None</em>) – A list of angles that the structure cut can be rotated. The
+vector being rotated around is set in rotate_vectors. Default
+None meaning no rotation is performed.</p></li>
+<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
+bonding atom  that should be considered as an adsorbate.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
@@ -335,18 +475,6 @@ Default None meaning no rotation is performed</p>
 <dd><p>Function that returns a new individual.
 Overwrite in subclass.</p>
 </dd></dl>
-
-<dl class="py method">
-<dt id="acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates.get_numbers">
-<code class="sig-name descname">get_numbers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#CutSpliceCrossoverWithAdsorbates.get_numbers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates.get_numbers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the atomic numbers of the atoms object
-without adsorbates</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates.get_atoms_without_adsorbates">
-<code class="sig-name descname">get_atoms_without_adsorbates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#CutSpliceCrossoverWithAdsorbates.get_atoms_without_adsorbates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates.get_atoms_without_adsorbates" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt id="acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates.get_vectors_below_min_dist">
@@ -359,6 +487,201 @@ that is shorter than the minimum distance for those atom types
 </dd></dl>
 
 </div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>All the adsorbate operators can be easily used with other ASE operators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> operator only works for nanoparticles, and it is not recommonded as it is not stable yet.</p>
+<p>As an example we will find the stable structures of a Ni110Pt37 icosahedral nanoparticle with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
+<p>The script for the genetic algorithm looks as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
+<span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
+<span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
+<span class="kn">from</span> <span class="nn">acat.build.patterns</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_operators</span> <span class="kn">import</span> <span class="n">AddAdsorbate</span><span class="p">,</span> <span class="n">RemoveAdsorbate</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_operators</span> <span class="kn">import</span> <span class="n">MoveAdsorbate</span><span class="p">,</span> <span class="n">ReplaceAdsorbate</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_operators</span> <span class="kn">import</span> <span class="n">CutSpliceCrossoverWithAdsorbates</span>
+<span class="kn">from</span> <span class="nn">ase.ga.particle_mutations</span> <span class="kn">import</span> <span class="n">RandomPermutation</span><span class="p">,</span> <span class="n">COM2surfPermutation</span>
+<span class="kn">from</span> <span class="nn">ase.ga.particle_mutations</span> <span class="kn">import</span> <span class="n">Rich2poorPermutation</span><span class="p">,</span> <span class="n">Poor2richPermutation</span>
+<span class="kn">from</span> <span class="nn">ase.ga.particle_comparator</span> <span class="kn">import</span> <span class="n">NNMatComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.standard_comparators</span> <span class="kn">import</span> <span class="n">SequentialComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.adsorbate_comparators</span> <span class="kn">import</span> <span class="n">AdsorptionSitesComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OperationSelector</span>
+<span class="kn">from</span> <span class="nn">ase.ga.population</span> <span class="kn">import</span> <span class="n">Population</span><span class="p">,</span> <span class="n">RankFitnessPopulation</span>
+<span class="kn">from</span> <span class="nn">ase.ga.convergence</span> <span class="kn">import</span> <span class="n">GenerationRepetitionConvergence</span>
+<span class="kn">from</span> <span class="nn">ase.ga.utilities</span> <span class="kn">import</span> <span class="n">closest_distances_generator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.data</span> <span class="kn">import</span> <span class="n">DataConnection</span><span class="p">,</span> <span class="n">PrepareDB</span>
+<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
+<span class="kn">from</span> <span class="nn">ase.calculators.emt</span> <span class="kn">import</span> <span class="n">EMT</span>
+<span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">uniform</span>
+
+<span class="c1"># Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">})</span>
+<span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">n_gen</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="c1"># Generate random coverage on each nanoparticle</span>
+<span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;CH&#39;</span><span class="p">,</span> <span class="s1">&#39;CH2&#39;</span><span class="p">,</span> <span class="s1">&#39;CH3&#39;</span><span class="p">]</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="n">patterns</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+    <span class="n">dmin</span> <span class="o">=</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">)</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">random_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="n">species</span><span class="p">,</span>
+                                      <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="n">dmin</span><span class="p">)</span>
+    <span class="n">patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+<span class="c1"># Instantiate the db</span>
+<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;emt_ridge_Ni110Pt37_ads.db&#39;</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">PrepareDB</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+
+<span class="c1"># Connect to the db</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">DataConnection</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+
+<span class="c1"># Define operators</span>
+<span class="n">soclist</span> <span class="o">=</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+           <span class="p">[</span><span class="n">Rich2poorPermutation</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">Poor2richPermutation</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">RandomPermutation</span><span class="p">(</span><span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">AddAdsorbate</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">RemoveAdsorbate</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">MoveAdsorbate</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">ReplaceAdsorbate</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),])</span>
+
+<span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
+
+<span class="n">comp</span> <span class="o">=</span> <span class="n">SequentialComparator</span><span class="p">([</span><span class="n">AdsorptionSitesComparator</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+                             <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])],</span>
+                            <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">get_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of adsorbate names and corresponding indices.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s1">&#39;adsorbates&#39;</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">adsorbates</span>
+
+<span class="k">def</span> <span class="nf">vf</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the descriptor that distinguishes candidates in the</span>
+<span class="sd">    niched population.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span>
+
+<span class="c1"># Define population</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;population_size&#39;</span><span class="p">)</span>
+
+<span class="c1"># Give fittest candidates at different coverages equal fitness</span>
+<span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                            <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
+                            <span class="n">comparator</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
+                            <span class="n">variable_function</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                            <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Normal fitness ranking regardless of coverage</span>
+<span class="c1">#pop = Population(data_connection=db,</span>
+<span class="c1">#                 population_size=pop_size,</span>
+<span class="c1">#                 comparator=comp,</span>
+<span class="c1">#                 logfile=&#39;log.txt&#39;)</span>
+
+<span class="c1"># Set convergence criteria</span>
+<span class="n">cc</span> <span class="o">=</span> <span class="n">GenerationRepetitionConvergence</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Calculate chemical potentials</span>
+<span class="n">chem_pots</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;CH4&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">24.039</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">14.169</span><span class="p">,</span> <span class="s1">&#39;H2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">6.989</span><span class="p">}</span>
+
+<span class="c1"># Define the relax function</span>
+<span class="k">def</span> <span class="nf">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">EMT</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">single_point</span><span class="p">:</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">BFGS</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+    <span class="n">Epot</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span>
+    <span class="n">num_H</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span><span class="p">])</span>
+    <span class="n">num_C</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">])</span>
+    <span class="n">num_O</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;O&#39;</span><span class="p">])</span>
+    <span class="n">mutot</span> <span class="o">=</span> <span class="n">num_C</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;CH4&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">num_O</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">num_H</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">num_C</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">num_O</span><span class="p">)</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;H2&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">-</span> <span class="n">mutot</span>
+
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
+
+    <span class="k">return</span> <span class="n">atoms</span>
+
+<span class="c1"># Relax starting generation</span>
+<span class="k">while</span> <span class="n">db</span><span class="o">.</span><span class="n">get_number_of_unrelaxed_candidates</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_an_unrelaxed_candidate</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+    <span class="n">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point for simplification</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_step</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+<span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+<span class="c1"># Number of generations</span>
+<span class="n">num_gens</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># Below is the iterative part of the algorithm</span>
+<span class="n">gen_num</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_generation_number</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_gens</span><span class="p">):</span>
+    <span class="c1"># Check if converged</span>
+    <span class="k">if</span> <span class="n">cc</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converged&#39;</span><span class="p">)</span>
+        <span class="k">break</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating and evaluating generation </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_num</span> <span class="o">+</span> <span class="n">i</span><span class="p">))</span>
+    <span class="n">new_generation</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">):</span>
+        <span class="c1"># Select an operator and use it</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
+        <span class="c1"># Select parents for a new candidate</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
+
+        <span class="c1"># Pure or bare nanoparticles are not considered</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">offspring</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_new_individual</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+        <span class="c1"># An operator could return None if an offspring cannot be formed</span>
+        <span class="c1"># by the chosen parents</span>
+        <span class="k">if</span> <span class="n">offspring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point for simplification</span>
+        <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+
+    <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
+    <span class="c1"># one at a time</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">new_generation</span><span class="p">)</span>
+
+    <span class="c1"># update the population to allow new candidates to enter</span>
+    <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -367,6 +690,7 @@ that is shorter than the minimum distance for those atom types
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="utilities.html" class="btn btn-neutral float-right" title="Other utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="build.html" class="btn btn-neutral float-left" title="Building things" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

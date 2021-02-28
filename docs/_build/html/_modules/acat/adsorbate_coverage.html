@@ -85,11 +85,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Getting Started</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../build.html">Building things</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../ga.html">Genetic Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notes.html">Notes</a></li>
 </ul>
 
             
@@ -169,11 +171,38 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage">[docs]</a><span class="k">class</span> <span class="nc">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Child class of ClusterAdsorptionSites for identifying adsorbate </span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage">[docs]</a><span class="k">class</span> <span class="nc">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Child class of `ClusterAdsorptionSites` for identifying adsorbate </span>
 <span class="sd">    coverage on a nanoparticle. Support common nanoparticle shapes </span>
 <span class="sd">    including: Mackay icosahedron, (truncated) octahedron and (Marks) </span>
 <span class="sd">    decahedron.</span>
+
+<span class="sd">    The information of each occupied site stored in the dictionary is </span>
+<span class="sd">    updated with the following new keys:</span>
+
+<span class="sd">    **&#39;occupied&#39;**: 1 if the site is occupied, otherwise 0.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;adsorbate&#39;**: the name of the adsorbate that occupies this site.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;adsorbate_indices&#39;**: the indices of the adosorbate atoms that occupy</span>
+<span class="sd">    this site. If the adsorbate is multidentate, these atoms might</span>
+<span class="sd">    occupy multiple sites.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;bonding_index&#39;**: the index of the atom that directly bonds to the</span>
+<span class="sd">    site (closest to the site).</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;fragment&#39;**: the name of the fragment that occupies this site. Useful</span>
+<span class="sd">    for multidentate species.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;fragment_indices&#39;**: the indices of the fragment atoms that occupy</span>
+<span class="sd">    this site. Useful for multidentate species.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;bond_length&#39;**: the distance between the bonding atom and the site.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;dentate&#39;**: dentate number.</span>
+<span class="sd"> </span>
+<span class="sd">    **&#39;label&#39;**: the updated label with the name of the occupying adsorbate</span>
+<span class="sd">    if label_occupied_sites is set to True.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -182,9 +211,10 @@
 <span class="sd">        least one adsorbate attached to it. Accept any ase.Atoms object. </span>
 <span class="sd">        No need to be built-in.</span>
 
-<span class="sd">    adsorption_sites : acat.ClusterAdsorptionSites object, default None</span>
-<span class="sd">        ClusterAdsorptionSites object of the nanoparticle. Initialize a </span>
-<span class="sd">        ClusterAdsorptionSites object if not specified.</span>
+<span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object, \</span>
+<span class="sd">        default None</span>
+<span class="sd">        `ClusterAdsorptionSites` object of the nanoparticle. Initialize a </span>
+<span class="sd">        `ClusterAdsorptionSites` object if not specified.</span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -218,6 +248,11 @@
 <span class="sd">        ...                                label_occupied_sites=True)</span>
 <span class="sd">        &gt;&gt;&gt; occupied_sites = cac.get_sites(occupied_only=True)</span>
 <span class="sd">        &gt;&gt;&gt; print(occupied_sites[0])</span>
+
+<span class="sd">    Output:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
 <span class="sd">        {&#39;site&#39;: &#39;fcc&#39;, &#39;surface&#39;: &#39;fcc111&#39;, </span>
 <span class="sd">         &#39;position&#39;: array([ 6.41470446,  8.17470446, 11.69470446]), </span>
 <span class="sd">         &#39;normal&#39;: array([-0.57735027, -0.57735027, -0.57735027]), </span>
@@ -280,7 +315,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">()</span>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.identify_adsorbates"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.identify_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">identify_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">identify_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
         <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
         <span class="n">adscm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_connectivity_matrix</span>
 
@@ -308,19 +344,23 @@
                 <span class="n">adsorbates</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nodes</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span> <span class="o">=</span> <span class="n">adsorbates</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_hetero_connectivity"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_hetero_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a connection matrix of slab + adsorbates.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span> <span class="o">=</span> <span class="n">adsorbates</span>
+
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_hetero_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_hetero_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the connection matrix of slab + adsorbates.&quot;&quot;&quot;</span>
+
         <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)</span>                          </div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_ads_connectivity"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_ads_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_ads_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a connection matrix for adsorbate atoms.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_ads_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_ads_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_ads_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorbate atoms.&quot;&quot;&quot;</span>
+
         <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_site_connectivity"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a connection matrix for adsorption sites.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_site_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorption sites.&quot;&quot;&quot;</span>
+
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">conn_mat</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sti</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
@@ -346,7 +386,10 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conn_mat</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.populate_occupied_sites"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.populate_occupied_sites">[docs]</a>    <span class="k">def</span> <span class="nf">populate_occupied_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.populate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.populate_occupied_sites">[docs]</a>    <span class="k">def</span> <span class="nf">populate_occupied_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all the occupied sites, identify the adsorbate coverage</span>
+<span class="sd">        of those sites and collect in a heterogeneous site list.&quot;&quot;&quot;</span>
+
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_list</span>
         <span class="n">ads_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span>
@@ -380,9 +423,13 @@
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adsid</span>
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bond_length&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bl</span>
 
-            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">adsids</span><span class="p">])</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">adsids</span><span class="p">]))))</span>
             <span class="n">adssym</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">adsorbate_formulas</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
-                           <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">symbols</span><span class="p">),</span> <span class="n">symbols</span><span class="p">)</span>
+                           <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">symbols</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">adssym</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">adssym</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">adsorbate_formulas</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                               <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">symbols</span><span class="p">)),</span> <span class="n">symbols</span><span class="p">)</span>
+
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adssym</span>
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adssym</span>
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adsi</span> 
@@ -422,7 +469,7 @@
         <span class="n">multidentate_adsorbate_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hsl</span><span class="p">):</span>
             <span class="n">adssym</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">bondid</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span>
                     <span class="n">bondsym</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">bondid</span><span class="p">]</span>
@@ -461,18 +508,70 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">monodentate_adsorbate_list</span> <span class="o">+</span> \
                               <span class="bp">self</span><span class="o">.</span><span class="n">multidentate_adsorbate_list</span> </div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_sites"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">occupied_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get information of a site given its atom indices.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : list or tuple</span>
+<span class="sd">            The indices of the atoms that contribute to the site.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span> <span class="k">if</span> 
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">st</span></div>
+
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">occupied_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get information of all sites.</span>
+<span class="sd">                                                                     </span>
+<span class="sd">        Parameters                                                   </span>
+<span class="sd">        ----------                                                   </span>
+<span class="sd">        occupied_only : bool, default False</span>
+<span class="sd">            Whether to only return occupied sites.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>                                                          
+
         <span class="n">all_sites</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="k">if</span> <span class="n">occupied_only</span><span class="p">:</span>
-            <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
         <span class="k">return</span> <span class="n">all_sites</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.make_ads_neighbor_list"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.make_ads_neighbor_list">[docs]</a>    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a periodic neighbor list (defaultdict).&quot;&quot;&quot;</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
-                                              <span class="n">neighbor_number</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each adsorbate (string)</span>
+<span class="sd">        and the corresponding adsorbate indices (tuple).&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_occupied_labels"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_occupied_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_occupied_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
+                    <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">],</span> <span class="n">adsi</span><span class="p">))</span>
+                    <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">adsorbates</span></div>
+
+    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
+                                              <span class="n">neighbor_number</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_occupied_labels"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_occupied_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_occupied_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of labels of all occupied sites. The label consists</span>
+<span class="sd">        of a numerical part that represents site, and a character part</span>
+<span class="sd">        that represents the occupying adsorbate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragmentation : bool, default True</span>
+<span class="sd">            Whether to cut multidentate species into fragments. This ensures </span>
+<span class="sd">            that multidentate species with different orientations have </span>
+<span class="sd">            different labels.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">]</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
 
@@ -487,7 +586,18 @@
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>                                         
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>                                         
+        <span class="sd">&quot;&quot;&quot;Get the graph representation of the nanoparticle with adsorbates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragmentation : bool, default True</span>
+<span class="sd">            Whether to cut multidentate species into fragments. This ensures </span>
+<span class="sd">            that multidentate species with different orientations have </span>
+<span class="sd">            different graphs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_connectivity</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">]</span>
@@ -495,7 +605,7 @@
         <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
         <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
                     <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
                         <span class="k">continue</span> 
@@ -525,17 +635,51 @@
 
         <span class="k">return</span> <span class="n">G</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_subsurf_coverage"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_subsurf_coverage">[docs]</a>    <span class="k">def</span> <span class="nf">get_subsurf_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_coverage"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_coverage">[docs]</a>    <span class="k">def</span> <span class="nf">get_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the adsorbate coverage (ML) of the surface.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage</span></div>
+
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_subsurf_coverage"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_subsurf_coverage">[docs]</a>    <span class="k">def</span> <span class="nf">get_subsurf_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the adsorbate coverage (ML) of the subsurface.&quot;&quot;&quot;</span>
+
         <span class="n">nsubsurf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_subsurface</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_subsurf_occupied</span> <span class="o">/</span> <span class="n">nsubsurf</span></div></div>
 
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage">[docs]</a><span class="k">class</span> <span class="nc">SlabAdsorbateCoverage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Child class of SlabAdsorptionSites for identifying adsorbate </span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage">[docs]</a><span class="k">class</span> <span class="nc">SlabAdsorbateCoverage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Child class of `SlabAdsorptionSites` for identifying adsorbate </span>
 <span class="sd">    coverage on a surface slab. Support 20 common surfaces: fcc100, </span>
 <span class="sd">    fcc111, fcc110, fcc211, fcc221, fcc311, fcc322, fcc331, fcc332, </span>
 <span class="sd">    bcc100, bcc111, bcc110, bcc210, bcc211, bcc310, hcp0001, </span>
-<span class="sd">    hcp10m10-t, hcp10m10-h, hcp10m11, hcp10m12.</span>
+<span class="sd">    hcp10m10t, hcp10m10h, hcp10m11, hcp10m12.</span>
+
+<span class="sd">    The information of each occupied site stored in the dictionary is </span>
+<span class="sd">    updated with the following new keys:</span>
+
+<span class="sd">    **&#39;occupied&#39;**: 1 if the site is occupied, otherwise 0.</span>
+
+<span class="sd">    **&#39;adsorbate&#39;**: the name of the adsorbate that occupies this site.</span>
+
+<span class="sd">    **&#39;adsorbate_indices&#39;**: the indices of the adosorbate atoms that occupy</span>
+<span class="sd">    this site. If the adsorbate is multidentate, these atoms might</span>
+<span class="sd">    occupy multiple sites.</span>
+
+<span class="sd">    **&#39;bonding_index&#39;**: the index of the atom that directly bonds to the</span>
+<span class="sd">    site (closest to the site).</span>
+
+<span class="sd">    **&#39;fragment&#39;**: the name of the fragment that occupies this site. Useful</span>
+<span class="sd">    for multidentate species.</span>
+
+<span class="sd">    **&#39;fragment_indices&#39;**: the indices of the fragment atoms that occupy</span>
+<span class="sd">    this site. Useful for multidentate species.</span>
+
+<span class="sd">    **&#39;bond_length&#39;**: the distance between the bonding atom and the site.</span>
+
+<span class="sd">    **&#39;dentate&#39;**: dentate number.</span>
+
+<span class="sd">    **&#39;label&#39;**: the updated label with the name of the occupying adsorbate</span>
+<span class="sd">    if label_occupied_sites is set to True.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -544,9 +688,10 @@
 <span class="sd">        least one adsorbate attached to it. Accept any ase.Atoms object. </span>
 <span class="sd">        No need to be built-in.</span>
 
-<span class="sd">    adsorption_sites : acat.SlabAdsorptionSites object, default None</span>
-<span class="sd">        SlabAdsorptionSites object of the nanoparticle. Initialize a         </span>
-<span class="sd">        SlabAdsorptionSites object if not specified.</span>
+<span class="sd">    adsorption_sites : acat.adsorption_sites.SlabAdsorptionSites object, \</span>
+<span class="sd">        default None</span>
+<span class="sd">        `SlabAdsorptionSites` object of the nanoparticle. Initialize a         </span>
+<span class="sd">        `SlabAdsorptionSites` object if not specified.</span>
 
 <span class="sd">    surface : str</span>
 <span class="sd">        The surface type (crystal structure + Miller indices).</span>
@@ -581,6 +726,11 @@
 <span class="sd">        ...                             label_occupied_sites=True)</span>
 <span class="sd">        &gt;&gt;&gt; occupied_sites = sac.get_sites(occupied_only=True)</span>
 <span class="sd">        &gt;&gt;&gt; print(occupied_sites[0])</span>
+
+<span class="sd">    Output:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
 <span class="sd">        {&#39;site&#39;: &#39;bridge&#39;, &#39;surface&#39;: &#39;fcc211&#39;, &#39;geometry&#39;: &#39;tc-cc-h&#39;, </span>
 <span class="sd">         &#39;position&#39;: array([ 2.08423447,  3.82898322, 12.00043756]), </span>
 <span class="sd">         &#39;normal&#39;: array([-0.33333333,  0.        ,  0.94280904]), </span>
@@ -647,7 +797,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">()</span> 
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.identify_adsorbates"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.identify_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">identify_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">identify_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
         <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
         <span class="n">adscm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_connectivity_matrix</span>
 
@@ -675,19 +826,23 @@
                 <span class="n">adsorbates</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nodes</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span> <span class="o">=</span> <span class="n">adsorbates</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_hetero_connectivity"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_hetero_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a connection matrix of slab + adsorbates.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span> <span class="o">=</span> <span class="n">adsorbates</span>
+
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_hetero_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_hetero_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the connection matrix of slab + adsorbates.&quot;&quot;&quot;</span>
+
         <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)</span>                           </div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_ads_connectivity"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_ads_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_ads_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a connection matrix for adsorbate atoms.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_ads_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_ads_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_ads_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorbate atoms.&quot;&quot;&quot;</span>
+
         <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_site_connectivity"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a connection matrix for adsorption sites.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_site_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorption sites.&quot;&quot;&quot;</span>
+
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">conn_mat</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sti</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
@@ -713,7 +868,10 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conn_mat</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.populate_occupied_sites"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.populate_occupied_sites">[docs]</a>    <span class="k">def</span> <span class="nf">populate_occupied_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.populate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.populate_occupied_sites">[docs]</a>    <span class="k">def</span> <span class="nf">populate_occupied_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all the occupied sites, identify the adsorbate coverage</span>
+<span class="sd">        of those sites and collect in a heterogeneous site list.&quot;&quot;&quot;</span>
+
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_list</span>
         <span class="n">ads_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span>
@@ -746,9 +904,13 @@
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adsid</span>
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bond_length&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bl</span>
 
-            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">adsids</span><span class="p">])</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">adsids</span><span class="p">]))))</span>
             <span class="n">adssym</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">adsorbate_formulas</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
-                           <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">symbols</span><span class="p">),</span> <span class="n">symbols</span><span class="p">)</span>
+                           <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">symbols</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">adssym</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">adssym</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">adsorbate_formulas</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                               <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">symbols</span><span class="p">)),</span> <span class="n">symbols</span><span class="p">)</span>
+
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adssym</span>
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adssym</span>
             <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adsi</span> 
@@ -828,18 +990,70 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">monodentate_adsorbate_list</span> <span class="o">+</span> \
                               <span class="bp">self</span><span class="o">.</span><span class="n">multidentate_adsorbate_list</span> </div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_sites"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">occupied_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get information of a site given its atom indices.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : list or tuple</span>
+<span class="sd">            The indices of the atoms that contribute to the site.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span> <span class="k">if</span> 
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">st</span></div>
+
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">occupied_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get information of all sites.</span>
+<span class="sd">                                                                     </span>
+<span class="sd">        Parameters                                                   </span>
+<span class="sd">        ----------                                                   </span>
+<span class="sd">        occupied_only : bool, default False</span>
+<span class="sd">            Whether to only return occupied sites.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>                                                          
+
         <span class="n">all_sites</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="k">if</span> <span class="n">occupied_only</span><span class="p">:</span>
-            <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
         <span class="k">return</span> <span class="n">all_sites</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.make_ads_neighbor_list"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.make_ads_neighbor_list">[docs]</a>    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a periodic neighbor list (defaultdict).&quot;&quot;&quot;</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
-                                              <span class="n">neighbor_number</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each adsorbate (string)</span>
+<span class="sd">        and the corresponding adsorbate indices (tuple).&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_occupied_labels"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_occupied_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_occupied_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
+                    <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">],</span> <span class="n">adsi</span><span class="p">))</span>
+                    <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">adsorbates</span></div>
+
+    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
+                                              <span class="n">neighbor_number</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_occupied_labels"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_occupied_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_occupied_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of labels of all occupied sites. The label consists</span>
+<span class="sd">        of a numerical part that represents site, and a character part</span>
+<span class="sd">        that represents the occupying adsorbate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragmentation : bool, default True</span>
+<span class="sd">            Whether to cut multidentate species into fragments. This ensures </span>
+<span class="sd">            that multidentate species with different orientations have </span>
+<span class="sd">            different labels.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">]</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
 
@@ -854,7 +1068,18 @@
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>                                         
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>                                         
+        <span class="sd">&quot;&quot;&quot;Get the graph representation of the nanoparticle with adsorbates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragmentation : bool, default True</span>
+<span class="sd">            Whether to cut multidentate species into fragments. This ensures </span>
+<span class="sd">            that multidentate species with different orientations have </span>
+<span class="sd">            different graphs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivity_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">]</span>
@@ -893,37 +1118,49 @@
 
         <span class="k">return</span> <span class="n">G</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_surface_bond_count_matrix"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_surface_bond_count_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_surface_bond_count_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">species</span><span class="p">):</span>
-        <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
-        <span class="n">cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivity_matrix</span>
-        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span>
-        <span class="n">numbers</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">numbers</span>
-        <span class="n">symbols</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span>
-        <span class="n">specs</span> <span class="o">=</span> <span class="n">species</span>
-        <span class="n">specs</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
-        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">sbcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">),</span> <span class="n">ncols</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">:</span>
-            <span class="n">frags</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]))</span>
-            <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">frags</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]:</span>
-                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">specs</span><span class="p">):</span>
-                    <span class="n">sbcm</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counts</span><span class="p">[</span><span class="n">spec</span><span class="p">]</span>
-        <span class="n">top_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span> <span class="k">if</span> \
-                  <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
-        <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">top_ids</span><span class="p">:</span>
-            <span class="n">nbids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cm</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">nbs</span> <span class="o">=</span> <span class="p">[</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nbids</span><span class="p">]</span>
-            <span class="n">nbcounts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">nbs</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">specs</span><span class="p">):</span>
-                <span class="n">sbcm</span><span class="p">[</span><span class="n">si</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nbcounts</span><span class="p">[</span><span class="n">spec</span><span class="p">]</span>
-            <span class="n">sbcm</span><span class="p">[</span><span class="n">si</span><span class="p">,</span><span class="n">ncols</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="n">si</span><span class="p">]</span> 
+<span class="c1">#    def get_surface_bond_count_matrix(self, species):</span>
+<span class="c1">#        hsl = self.hetero_site_list</span>
+<span class="c1">#        cm = self.connectivity_matrix</span>
+<span class="c1">#        atoms = self.atoms</span>
+<span class="c1">#        numbers = atoms.numbers</span>
+<span class="c1">#        symbols = atoms.symbols</span>
+<span class="c1">#        specs = species</span>
+<span class="c1">#        specs.sort(key=lambda x: atomic_numbers[x])</span>
+<span class="c1">#        ncols = len(specs) + 1</span>
+<span class="c1">#        sbcm = np.zeros((len(atoms), ncols))</span>
+<span class="c1">#        for st in hsl:</span>
+<span class="c1">#            frags = list(Formula(st[&#39;fragment&#39;]))</span>
+<span class="c1">#            counts = Counter(frags)</span>
+<span class="c1">#            for i in st[&#39;indices&#39;]:</span>
+<span class="c1">#                for j, spec in enumerate(specs):</span>
+<span class="c1">#                    sbcm[i,j] += counts[spec]</span>
+<span class="c1">#        top_ids = self.surf_ids + self.subsurf_ids if \</span>
+<span class="c1">#                  self.allow_6fold else self.surf_ids</span>
+<span class="c1">#        for si in top_ids:</span>
+<span class="c1">#            nbids = np.where(cm[si]==1)[0]</span>
+<span class="c1">#            nbs = [symbols[i] for i in nbids]</span>
+<span class="c1">#            nbcounts = Counter(nbs)</span>
+<span class="c1">#            for j, spec in enumerate(specs):</span>
+<span class="c1">#                sbcm[si,j] += nbcounts[spec]</span>
+<span class="c1">#            sbcm[si,ncols-1] = numbers[si] </span>
+<span class="c1">#</span>
+<span class="c1">#        return sbcm[top_ids]</span>
 
-        <span class="k">return</span> <span class="n">sbcm</span><span class="p">[</span><span class="n">top_ids</span><span class="p">]</span></div></div>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_coverage"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_coverage">[docs]</a>    <span class="k">def</span> <span class="nf">get_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the adsorbate coverage (ML) of the surface.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage</span></div>
+
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_subsurf_coverage"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_subsurf_coverage">[docs]</a>    <span class="k">def</span> <span class="nf">get_subsurf_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the adsorbate coverage (ML) of the subsurface.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_coverage</span></div></div>
 
 
-<div class="viewcode-block" id="enumerate_occupied_sites"><a class="viewcode-back" href="../../acat.html#acat.adsorbate_coverage.enumerate_occupied_sites">[docs]</a><span class="k">def</span> <span class="nf">enumerate_occupied_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                             <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
+<div class="viewcode-block" id="enumerate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.enumerate_occupied_sites">[docs]</a><span class="k">def</span> <span class="nf">enumerate_occupied_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                             <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                             
+                             <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function that enumerates all occupied adsorption sites of</span>
 <span class="sd">    the input atoms object. The function is generalized for both </span>
 <span class="sd">    periodic and non-periodic systems (distinguished by atoms.pbc).</span>
@@ -933,15 +1170,21 @@
 <span class="sd">    atoms : ase.Atoms object</span>
 <span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
 
-<span class="sd">    adsorption_sites : acat.SlabAdsorptionSites object, default None</span>
-<span class="sd">        SlabAdsorptionSites object of the nanoparticle. Initialize a         </span>
-<span class="sd">        SlabAdsorptionSites object if not specified.</span>
+<span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites \</span>
+<span class="sd">        object or acat.adsorption_sites.SlabAdsorptionSites object, \</span>
+<span class="sd">        default None</span>
+<span class="sd">        The built-in adsorption sites class.</span>
 
 <span class="sd">    surface : str, default None</span>
 <span class="sd">        The surface type (crystal structure + Miller indices)</span>
 <span class="sd">        If the structure is a periodic surface slab, this is required.</span>
 <span class="sd">        If the structure is a nanoparticle, the function enumerates</span>
 <span class="sd">        only the sites on the specified surface.</span>
+
+<span class="sd">    label_occupied_sites : bool, default False</span>
+<span class="sd">        Whether to assign a label to the occupied each site. The string </span>
+<span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
+<span class="sd">        label that represents the occpied site.</span>
 
 <span class="sd">    dmax : float, default 2.5</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
@@ -968,6 +1211,11 @@
 <span class="sd">        ...         add_adsorbate_to_site(atoms, adsorbate=&#39;OH&#39;, site=s)</span>
 <span class="sd">        &gt;&gt;&gt; sites = enumerate_occupied_sites(atoms, adsorption_sites=cas) </span>
 <span class="sd">        &gt;&gt;&gt; print(sites[0])</span>
+
+<span class="sd">    Output:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
 <span class="sd">        {&#39;site&#39;: &#39;ontop&#39;, &#39;surface&#39;: &#39;fcc111&#39;, </span>
 <span class="sd">         &#39;position&#39;: array([ 6.76,  8.52, 10.28]), </span>
 <span class="sd">         &#39;normal&#39;: array([-0.57735027, -0.57735027, -0.57735027]), </span>
@@ -980,8 +1228,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span>
-                                       <span class="n">surface</span><span class="p">,</span> <span class="n">dmax</span><span class="p">)</span>
+        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span>
+                                       <span class="n">label_occupied_sites</span><span class="p">,</span> <span class="n">dmax</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="k">if</span> <span class="n">surface</span><span class="p">:</span>
             <span class="n">occupied_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span> 
@@ -990,8 +1238,8 @@
             <span class="n">occupied_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span>
-                                    <span class="n">surface</span><span class="p">,</span> <span class="n">dmax</span><span class="p">)</span>
+        <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span>
+                                    <span class="n">label_occupied_sites</span><span class="p">,</span> <span class="n">dmax</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">occupied_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
 

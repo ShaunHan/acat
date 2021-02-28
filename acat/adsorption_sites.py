@@ -28,30 +28,30 @@ class ClusterAdsorptionSites(object):
     The information of each site is stored in a dictionary with the 
     following keys:
 
-    'site': the site type, support 'ontop', 'bridge', 'longbridge', 
+    **'site'**: the site type, support 'ontop', 'bridge', 'longbridge', 
     'shortbridge', 'fcc', 'hcp', '3fold', '4fold', '5fold', '6fold'.
 
-    'surface': the surface of the site, support 'vertex', 'edge',
+    **'surface'**: the surface of the site, support 'vertex', 'edge',
     'fcc100', 'fcc111'.
 
-    'position': the 3D Cartesian coordinate of the site saved as a
+    **'position'**: the 3D Cartesian coordinate of the site saved as a
     numpy array.
 
-    'normal': the surface normal vector of the site saved as a numpy
+    **'normal'**: the surface normal vector of the site saved as a numpy
     array.
 
-    'indices': the indices of the atoms that constitute the site.
+    **'indices'**: the indices of the atoms that constitute the site.
 
-    'composition': the elemental composition of the site. Always in 
+    **'composition'**: the elemental composition of the site. Always in 
     the order of atomic numbers.
 
-    'subsurf_index': the index of the subsurface atom underneath an
+    **'subsurf_index'**: the index of the subsurface atom underneath an
     hcp or 4fold site.
 
-    'subsurf_element': the element of the subsurface atom underneath
+    **'subsurf_element'**: the element of the subsurface atom underneath
     an hcp or 4fold site
 
-    'label': the numerical label assigned to the site if label_sites
+    **'label'**: the numerical label assigned to the site if label_sites
     is set to True. 
 
     Parameters
@@ -72,6 +72,8 @@ class ClusterAdsorptionSites(object):
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
+        Use the bimetallic labels if composition_effect=True,
+        otherwise use the monometallic labels.
 
     proxy_metal : str, default None
         The code is parameterized for pure transition metals.
@@ -105,6 +107,11 @@ class ClusterAdsorptionSites(object):
         ...                              label_sites=True)
         >>> sites = cas.get_sites()
         >>> print(sites[0])
+
+    Output:
+
+    .. code-block:: python
+
         {'site': 'bridge', 'surface': 'fcc111', 
          'position': array([6.96,  7.94, 11.86]), 
          'normal': array([-0.66666667, -0.66666667, -0.33333333]), 
@@ -911,6 +918,11 @@ def group_sites_by_facet(atoms, sites, all_sites=None):
         >>> fcc_sites = [s for s in all_sites if s['site'] == 'fcc']
         >>> groups = group_sites_by_facet(atoms, fcc_sites, all_sites)         
         >>> print(len(groups))
+
+    Output:
+
+    .. code-block:: python
+
         20
 
     """
@@ -958,30 +970,30 @@ class SlabAdsorptionSites(object):
     The information of each site is stored in a dictionary with the 
     following keys:
 
-    'site': the site type, support 'ontop', 'bridge', 'longbridge', 
+    **'site'**: the site type, support 'ontop', 'bridge', 'longbridge', 
     'shortbridge', 'fcc', 'hcp', '3fold', '4fold', '5fold', '6fold'.
 
-    'surface': the surface type (crystal structure + Miller indices) 
+    **'surface'**: the surface type (crystal structure + Miller indices) 
     of the slab. Support 20 surfaces as listed above.
 
-    'position': the 3D Cartesian coordinate of the site saved as a
+    **'position'**: the 3D Cartesian coordinate of the site saved as a
     numpy array.
 
-    'normal': the surface normal vector of the site saved as a numpy
+    **'normal'**: the surface normal vector of the site saved as a numpy
     array.
 
-    'indices': the indices of the atoms that constitute the site.
+    **'indices'**: the indices of the atoms that constitute the site.
 
-    'composition': the elemental composition of the site. Always in 
+    **'composition'**: the elemental composition of the site. Always in 
     the order of atomic numbers.
 
-    'subsurf_index': the index of the subsurface atom underneath an
+    **'subsurf_index'**: the index of the subsurface atom underneath an
     hcp or 4fold site.
 
-    'subsurf_element': the element of the subsurface atom underneath
+    **'subsurf_element'**: the element of the subsurface atom underneath
     an hcp or 4fold site
 
-    'label': the numerical label assigned to the site if label_sites
+    **'label'**: the numerical label assigned to the site if label_sites
     is set to True.
 
     Parameters
@@ -1006,6 +1018,8 @@ class SlabAdsorptionSites(object):
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
+        Use the bimetallic labels if composition_effect=True,
+        otherwise use the monometallic labels.
 
     proxy_metal : str, default None
         The code is parameterized for pure transition metals.
@@ -1040,6 +1054,11 @@ class SlabAdsorptionSites(object):
         ...                           label_sites=True)
         >>> sites = sas.get_sites()
         >>> print(sites[-1])
+
+    Output:
+
+    .. code-block:: python
+
         {'site': 'hcp', 'surface': 'fcc211', 'geometry': 'sc-tc-h', 
          'position': array([ 4.51584136,  0.63816387, 12.86014042]), 
          'normal': array([-0.33333333, -0.        ,  0.94280904]), 
@@ -2472,6 +2491,11 @@ def get_adsorption_site(atoms, indices,
         >>> atoms.center()
         >>> site = get_adsorption_site(atoms, (24, 29, 31), surface='fcc110') 
         >>> print(site)
+
+    Output:
+
+    .. code-block:: python
+
         {'site': 'fcc', 'surface': 'fcc110', 'geometry': 'sc-tc-h', 
          'position': array([ 3.91083333,  1.91449161, 13.5088516 ]), 
          'normal': array([-0.57735027,  0.        ,  0.81649658]), 
@@ -2503,7 +2527,8 @@ def get_adsorption_site(atoms, indices,
 def enumerate_adsorption_sites(atoms, surface=None, 
                                geometry=None, 
                                allow_6fold=False,
-                               composition_effect=False):
+                               composition_effect=False,
+                               label_sites=False):
     """A function that enumerates all adsorption sites of the 
     input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -2532,6 +2557,12 @@ def enumerate_adsorption_sites(atoms, surface=None,
         compositions as different sites. It is recommended to 
         set composition=False for monometallics.    
 
+    label_sites : bool, default False
+        Whether to assign a numerical label to each site.
+        Labels for different sites are listed in acat.labels.
+        Use the bimetallic labels if composition_effect=True,
+        otherwise use the monometallic labels.
+
     Example
     -------
     This is an example of enumerating all sites on the fcc100 surfaces
@@ -2547,6 +2578,11 @@ def enumerate_adsorption_sites(atoms, surface=None,
         >>> sites = enumerate_adsorption_sites(atoms, surface='fcc100',
         ...                                    composition_effect=True) 
         >>> print(sites[0])
+
+    Output:
+
+    .. code-block:: python
+
         {'site': '4fold', 'surface': 'fcc100', 
          'position': array([22.63758191, 21.69793997, 13.75044642]), 
          'normal': array([ 0.58778525,  0.80901699, -0.        ]), 
@@ -2557,7 +2593,8 @@ def enumerate_adsorption_sites(atoms, surface=None,
 
     if True not in atoms.pbc:
         cas = ClusterAdsorptionSites(atoms, allow_6fold,
-                                     composition_effect)
+                                     composition_effect,
+                                     label_sites)
         all_sites = cas.site_list
         if surface:
             all_sites = [s for s in all_sites if 
@@ -2566,7 +2603,8 @@ def enumerate_adsorption_sites(atoms, surface=None,
     else:
         sas = SlabAdsorptionSites(atoms, surface,
                                   allow_6fold, 
-                                  composition_effect)            
+                                  composition_effect,
+                                  label_sites)            
         all_sites = sas.site_list
         if geometry:
             all_sites = [s for s in all_sites if 

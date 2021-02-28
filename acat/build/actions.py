@@ -69,26 +69,6 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
         The list of all sites. Provide this to make the function
         much faster. Useful when the function is called many times.
 
-    Example
-    -------
-    To add a NO molecule to a bridge site consists of one Pt and 
-    one Ni on the fcc111 surface of a truncated octahedron:
-
-        >>> from acat.build.actions import add_adsorbate 
-        >>> from ase.cluster import Octahedron
-        >>> from ase.visualize import view
-        >>> atoms = Octahedron('Ni', length=7, cutoff=2)
-        >>> for atom in atoms:
-        ...     if atom.index % 2 == 0:
-        ...         atom.symbol = 'Pt' 
-        >>> add_adsorbate(atoms, adsorbate='NO', site='bridge',
-        ...               surface='fcc111', composition='NiPt')
-        >>> view(atoms)
-
-    .. figure:: ../images/add_adsorbate.png
-       :scale: 50 %
-       What is going on.
-
     """
     
     composition_effect = any(v is not None for v in 
@@ -175,45 +155,6 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     tilt_angle: float, default None
         Tilt the adsorbate with an angle (in degress) relative to
         the surface normal.
-
-    Example
-    -------
-    To add CO to all fcc sites of an icosahedral nanoparticle:
-
-        >>> from acat.adsorption_sites import ClusterAdsorptionSites
-        >>> from acat.build.actions import add_adsorbate_to_site
-        >>> from ase.cluster import Icosahedron
-        >>> from ase.visualize import view
-        >>> atoms = Icosahedron('Pt', noshells=5)
-        >>> atoms.center(vacuum=5.)
-        >>> cas = ClusterAdsorptionSites(atoms)
-        >>> fcc_sites = cas.get_sites(site='fcc')
-        >>> for site in fcc_sites:
-        ...     add_adsorbate_to_site(atoms, adsorbate='CO', site=site)
-        >>> view(atoms)
-
-
-    To add a bidentate CH3OH to the (54, 57, 58) site on a Pt fcc111 
-    surface slab and rotate the orientation to a neighbor site:
-
-        >>> from acat.adsorption_sites import SlabAdsorptionSites
-        >>> from acat.adsorption_sites import get_adsorption_site
-        >>> from acat.build.actions import add_adsorbate_to_site 
-        >>> from acat.utilities import get_mic
-        >>> from ase.build import fcc111
-        >>> from ase.visualize import view
-        >>> atoms = fcc111('Pt', (4, 4, 4), vacuum=5.)
-        >>> i, site = get_adsorption_site(atoms, indices=(54, 57, 58),
-        ...                               surface='fcc111',
-        ...                               return_index=True)
-        >>> sas = SlabAdsorptionSites(atoms, surface='fcc111')
-        >>> sites = sas.get_sites()
-        >>> nbsites = sas.get_neighbor_site_list(neighbor_number=1)
-        >>> nbsite = sites[nbsites[i][0]] # Choose the first neighbor site
-        >>> ori = get_mic(site['position'], nbsite['position'], atoms.cell)
-        >>> add_adsorbate_to_site(atoms, adsorbate='CH3OH', site=site, 
-        ...                       orientation=ori)
-        >>> view(atoms)
 
     """
  
@@ -333,23 +274,6 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
         The list of all sites. Provide this to make the function
         much faster. Useful when the function is called many times.
 
-    Example
-    -------
-    To add a NH molecule to a site with bimetallic label 14 (an hcp 
-    CuCuAu site) on a fcc110 surface slab:
-
-        >>> from acat.build.actions import add_adsorbate_to_label 
-        >>> from ase.build import fcc110
-        >>> from ase.visualize import view
-        >>> atoms = fcc110('Cu', (3, 3, 8), vacuum=5.)
-        >>> for atom in atoms:
-        ...     if atom.index % 2 == 0:
-        ...         atom.symbol = 'Au'
-        ... atoms.center()
-        >>> add_adsorbate_to_label(atoms, adsorbate='NH', label=14,
-        ...                        surface='fcc110', composition_effect=True)
-        >>> view(atoms)
-
     """
 
     if composition_effect:
@@ -410,29 +334,6 @@ def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
         Remove the fragment of a multidentate adsorbate instead 
         of the whole adsorbate.
 
-    Example
-    -------
-    To remove a CO molecule from a fcc111 surface slab with one 
-    CO and one OH:
-
-        >>> from acat.adsorption_sites import SlabAdsorptionSites
-        >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-        >>> from acat.build.actions import add_adsorbate_to_site 
-        >>> from acat.build.actions import remove_adsorbate_from_site
-        >>> from ase.build import fcc111
-        >>> from ase.visualize import view
-        >>> atoms = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
-        >>> atoms.center() 
-        >>> sas = SlabAdsorptionSites(atoms, surface='fcc111')
-        >>> sites = sas.get_sites()
-        >>> add_adsorbate_to_site(atoms, adsorbate='OH', site=sites[0])
-        >>> add_adsorbate_to_site(atoms, adsorbate='CO', site=sites[-1])
-        >>> sac = SlabAdsorbateCoverage(atoms, sas)
-        >>> occupied_sites = sac.get_sites(occupied_only=True)
-        >>> CO_site = next((s for s in occupied_sites if s['adsorbate'] == 'CO'))
-        >>> remove_adsorbate_from_site(atoms, site=CO_site)
-        >>> view(atoms)
-
     """
 
     if not remove_fragment:
@@ -460,29 +361,6 @@ def remove_adsorbates_from_sites(atoms, sites, remove_fragments=False):
         Remove the fragment of a multidentate adsorbate instead 
         of the whole adsorbate.
 
-    Example
-    -------
-    To remove all CO species from a fcc111 surface slab covered 
-    with both CO and OH:
-
-       >>> from acat.adsorption_sites import SlabAdsorptionSites
-       >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-       >>> from acat.build.patterns import random_coverage_pattern
-       >>> from acat.build.actions import remove_adsorbates_from_sites
-       >>> from ase.build import fcc111
-       >>> from ase.visualize import view
-       >>> slab = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
-       >>> slab.center()
-       >>> atoms = random_coverage_pattern(slab, adsorbate_species=['OH','CO'],
-       ...                                 surface='fcc111',
-       ...                                 min_adsorbate_distance=5.)
-       >>> sas = SlabAdsorptionSites(atoms, surface='fcc111')
-       >>> sac = SlabAdsorbateCoverage(atoms, sas)
-       >>> occupied_sites = sac.get_sites(occupied_only=True)
-       >>> CO_sites = [s for s in occupied_sites if s['adsorbate'] == 'CO']
-       >>> remove_adsorbates_from_sites(atoms, sites=CO_sites)
-       >>> view(atoms)
-
     """
 
     if not remove_fragments:
@@ -508,9 +386,9 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
         The nanoparticle or surface slab onto which the adsorbates are
         added. Accept any ase.Atoms object. No need to be built-in.
 
-    adsorbate_coverage : acat.adsorbate_coverage.ClusterAdsorbateCoverage
-                         or acat.adsorbate_coverage.SlabAdsorbateCoverage
-                         object, default None
+    adsorbate_coverage : acat.adsorbate_coverage.ClusterAdsorbateCoverage \
+        object or acat.adsorbate_coverage.SlabAdsorbateCoverage object, \
+        default None
         The built-in adsorbate coverage class.
 
     surface : str, default None
@@ -523,22 +401,6 @@ def remove_adsorbates_too_close(atoms, adsorbate_coverage=None,
         The minimum distance between two atoms that is not considered to
         be to close. This distance has to be small.
     
-    Example
-    -------
-    To remove unphysically close adsorbates on the edges of a Marks 
-    decahedron with 0.75 ML symmetric CO coverage:
-
-        >>> from acat.build.patterns import symmetric_coverage_pattern
-        >>> from acat.build.actions import remove_adsorbates_too_close
-        >>> from ase.cluster import Decahedron
-        >>> from ase.visualize import view
-        >>> atoms = Decahedron('Pt', p=4, q=3, r=1)
-        >>> atoms.center(vacuum=5.)
-        >>> pattern = symmetric_coverage_pattern(atoms, adsorbate='CO', 
-        ...                                      coverage=0.75)
-        >>> remove_adsorbates_too_close(pattern, min_adsorbate_distance=1.)
-        >>> view(pattern)
-
     """
 
     if adsorbate_coverage is not None:

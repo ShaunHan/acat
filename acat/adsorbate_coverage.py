@@ -12,7 +12,7 @@ import numpy as np
 
 
 class ClusterAdsorbateCoverage(object):
-    """Child class of ClusterAdsorptionSites for identifying adsorbate 
+    """Child class of `ClusterAdsorptionSites` for identifying adsorbate 
     coverage on a nanoparticle. Support common nanoparticle shapes 
     including: Mackay icosahedron, (truncated) octahedron and (Marks) 
     decahedron.
@@ -20,28 +20,28 @@ class ClusterAdsorbateCoverage(object):
     The information of each occupied site stored in the dictionary is 
     updated with the following new keys:
 
-    'occupied': 1 if the site is occupied, otherwise 0.
-
-    'adsorbate': the name of the adsorbate that occupies this site.
-
-    'adsorbate_indices': the indices of the adosorbate atoms that occupy
-     this site. If the adsorbate is multidentate, these atoms might
-     occupy multiple sites.
-
-    'bonding_index': the index of the atom that directly bonds to the
-     site (closest to the site).
-
-    'fragment': the name of the fragment that occupies this site. Useful
-     for multidentate species.
-
-    'fragment_indices': the indices of the fragment atoms that occupy
-     this site. Useful for multidentate species.
-
-    'bond_length': the distance between the bonding atom and the site.
-
-    'dentate': dentate number.
-
-    'label': the updated label with the name of the occupying adsorbate
+    **'occupied'**: 1 if the site is occupied, otherwise 0.
+ 
+    **'adsorbate'**: the name of the adsorbate that occupies this site.
+ 
+    **'adsorbate_indices'**: the indices of the adosorbate atoms that occupy
+    this site. If the adsorbate is multidentate, these atoms might
+    occupy multiple sites.
+ 
+    **'bonding_index'**: the index of the atom that directly bonds to the
+    site (closest to the site).
+ 
+    **'fragment'**: the name of the fragment that occupies this site. Useful
+    for multidentate species.
+ 
+    **'fragment_indices'**: the indices of the fragment atoms that occupy
+    this site. Useful for multidentate species.
+ 
+    **'bond_length'**: the distance between the bonding atom and the site.
+ 
+    **'dentate'**: dentate number.
+ 
+    **'label'**: the updated label with the name of the occupying adsorbate
     if label_occupied_sites is set to True.
 
     Parameters
@@ -51,10 +51,10 @@ class ClusterAdsorbateCoverage(object):
         least one adsorbate attached to it. Accept any ase.Atoms object. 
         No need to be built-in.
 
-    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object, 
-                       default None
-        ClusterAdsorptionSites object of the nanoparticle. Initialize a 
-        ClusterAdsorptionSites object if not specified.
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object, \
+        default None
+        `ClusterAdsorptionSites` object of the nanoparticle. Initialize a 
+        `ClusterAdsorptionSites` object if not specified.
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -88,6 +88,11 @@ class ClusterAdsorbateCoverage(object):
         ...                                label_occupied_sites=True)
         >>> occupied_sites = cac.get_sites(occupied_only=True)
         >>> print(occupied_sites[0])
+
+    Output:
+
+    .. code-block:: python
+
         {'site': 'fcc', 'surface': 'fcc111', 
          'position': array([ 6.41470446,  8.17470446, 11.69470446]), 
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
@@ -483,7 +488,7 @@ class ClusterAdsorbateCoverage(object):
 
 
 class SlabAdsorbateCoverage(object):
-    """Child class of SlabAdsorptionSites for identifying adsorbate 
+    """Child class of `SlabAdsorptionSites` for identifying adsorbate 
     coverage on a surface slab. Support 20 common surfaces: fcc100, 
     fcc111, fcc110, fcc211, fcc221, fcc311, fcc322, fcc331, fcc332, 
     bcc100, bcc111, bcc110, bcc210, bcc211, bcc310, hcp0001, 
@@ -492,28 +497,28 @@ class SlabAdsorbateCoverage(object):
     The information of each occupied site stored in the dictionary is 
     updated with the following new keys:
 
-    'occupied': 1 if the site is occupied, otherwise 0.
+    **'occupied'**: 1 if the site is occupied, otherwise 0.
 
-    'adsorbate': the name of the adsorbate that occupies this site.
+    **'adsorbate'**: the name of the adsorbate that occupies this site.
 
-    'adsorbate_indices': the indices of the adosorbate atoms that occupy
-     this site. If the adsorbate is multidentate, these atoms might
-     occupy multiple sites.
+    **'adsorbate_indices'**: the indices of the adosorbate atoms that occupy
+    this site. If the adsorbate is multidentate, these atoms might
+    occupy multiple sites.
 
-    'bonding_index': the index of the atom that directly bonds to the
-     site (closest to the site).
+    **'bonding_index'**: the index of the atom that directly bonds to the
+    site (closest to the site).
 
-    'fragment': the name of the fragment that occupies this site. Useful
-     for multidentate species.
+    **'fragment'**: the name of the fragment that occupies this site. Useful
+    for multidentate species.
 
-    'fragment_indices': the indices of the fragment atoms that occupy
-     this site. Useful for multidentate species.
+    **'fragment_indices'**: the indices of the fragment atoms that occupy
+    this site. Useful for multidentate species.
 
-    'bond_length': the distance between the bonding atom and the site.
+    **'bond_length'**: the distance between the bonding atom and the site.
 
-    'dentate': dentate number.
+    **'dentate'**: dentate number.
 
-    'label': the updated label with the name of the occupying adsorbate
+    **'label'**: the updated label with the name of the occupying adsorbate
     if label_occupied_sites is set to True.
 
     Parameters
@@ -523,10 +528,10 @@ class SlabAdsorbateCoverage(object):
         least one adsorbate attached to it. Accept any ase.Atoms object. 
         No need to be built-in.
 
-    adsorption_sites : acat.adsorption_sites.SlabAdsorptionSites object, 
-                       default None
-        SlabAdsorptionSites object of the nanoparticle. Initialize a         
-        SlabAdsorptionSites object if not specified.
+    adsorption_sites : acat.adsorption_sites.SlabAdsorptionSites object, \
+        default None
+        `SlabAdsorptionSites` object of the nanoparticle. Initialize a         
+        `SlabAdsorptionSites` object if not specified.
 
     surface : str
         The surface type (crystal structure + Miller indices).
@@ -561,6 +566,11 @@ class SlabAdsorbateCoverage(object):
         ...                             label_occupied_sites=True)
         >>> occupied_sites = sac.get_sites(occupied_only=True)
         >>> print(occupied_sites[0])
+
+    Output:
+
+    .. code-block:: python
+
         {'site': 'bridge', 'surface': 'fcc211', 'geometry': 'tc-cc-h', 
          'position': array([ 2.08423447,  3.82898322, 12.00043756]), 
          'normal': array([-0.33333333,  0.        ,  0.94280904]), 
@@ -988,7 +998,9 @@ class SlabAdsorbateCoverage(object):
 
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
-                             surface=None, dmax=2.5):
+                             surface=None, 
+                             label_occupied_sites=False,                             
+                             dmax=2.5):
     """A function that enumerates all occupied adsorption sites of
     the input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -998,9 +1010,9 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     atoms : ase.Atoms object
         Accept any ase.Atoms object. No need to be built-in.
 
-    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites or
-                       acat.adsorption_sites.SlabAdsorptionSites object, 
-                       default None
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites \
+        object or acat.adsorption_sites.SlabAdsorptionSites object, \
+        default None
         The built-in adsorption sites class.
 
     surface : str, default None
@@ -1008,6 +1020,11 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         If the structure is a periodic surface slab, this is required.
         If the structure is a nanoparticle, the function enumerates
         only the sites on the specified surface.
+
+    label_occupied_sites : bool, default False
+        Whether to assign a label to the occupied each site. The string 
+        of the occupying adsorbate is concatentated to the numerical 
+        label that represents the occpied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between the site and the 
@@ -1034,6 +1051,11 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         ...         add_adsorbate_to_site(atoms, adsorbate='OH', site=s)
         >>> sites = enumerate_occupied_sites(atoms, adsorption_sites=cas) 
         >>> print(sites[0])
+
+    Output:
+
+    .. code-block:: python
+
         {'site': 'ontop', 'surface': 'fcc111', 
          'position': array([ 6.76,  8.52, 10.28]), 
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
@@ -1046,8 +1068,8 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     """
 
     if True not in atoms.pbc:
-        cac = ClusterAdsorbateCoverage(atoms, adsorption_sites,
-                                       surface, dmax)
+        cac = ClusterAdsorbateCoverage(atoms, adsorption_sites, surface,
+                                       label_occupied_sites, dmax)
         all_sites = cac.hetero_site_list
         if surface:
             occupied_sites = [s for s in all_sites if s['surface'] 
@@ -1056,8 +1078,8 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
             occupied_sites = [s for s in all_sites if s['occupied']]
 
     else:
-        sac = SlabAdsorbateCoverage(atoms, adsorption_sites,
-                                    surface, dmax)
+        sac = SlabAdsorbateCoverage(atoms, adsorption_sites, surface,
+                                    label_occupied_sites, dmax)
         all_sites = sac.hetero_site_list
         occupied_sites = [s for s in all_sites if s['occupied']]
 
