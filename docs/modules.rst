@@ -1,5 +1,5 @@
-Getting Started
-===============
+Base modules
+============
 
 .. toctree::
    :maxdepth: 4
