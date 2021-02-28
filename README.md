@@ -1,5 +1,9 @@
 # ACAT: **A**lloy **C**atalysis **A**utomated **T**oolkit
-A Python package for identifying adsorption sites and generating adsorbate coverage patterns on metal / alloy surfaces and nanoparticles.
+ACAT is a Python package for atomistic modelling of metal / alloy catalysts used in heterogeneous catalysis. The package is based on automatic identifications of adsorption sites and adsorbate coverages on surface slabs and nanoparticles. Synergized with ASE, ACAT provides useful tools for building atomistic models of alloy catalysts with and without adsorbates. The goal is to automate workflows so that the structure generations can be readily adapted in a global optimization.
+
+ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials Modelling, Department of Energy Conversion and Storage, Technical University of Denmark (DTU) in Lyngby, Denmark.
+
+To use ACAT, please see ACAT documentation at ```docs/_build/html/index.html```
 
 ## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
@@ -22,13 +26,6 @@ Go to the installed path and install all dependencies:
 Install the main package:
 
 ```python setup.py install --user```
-
-## Introduction
-ACAT is a Python package for atomistic modelling of metal / alloy catalysts used in heterogeneous catalysis. The package is based on automatic identifications of adsorption sites and adsorbate coverages on surface slabs and nanoparticles. Synergized with ASE, ACAT provides useful tools for building atomistic models of alloy catalysts with and without adsorbates. The goal is to automate workflows so that the structure generations can be readily adapted in a global optimization.
-
-ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials Modelling, Department of Energy Conversion and Storage, Technical University of Denmark (DTU) in Lyngby, Denmark.
-
-To use ACAT, please see ACAT documentation at ```docs/_build/html/index.html```
  
 ## Known issues
 1. Some functions distinguishes between nanoparticle and surface slabs based on periodic boundary condition (PBC). Therefore, before using the code, it is recommended to **set all directions as non-periodic for nanoparticles and at least one direction periodic for surface slabs, and also add vacuum layers to all non-periodic directions. Note that the half-top half-bottom slab model is not supported by the code. Please make sure the slab is a unity.**
