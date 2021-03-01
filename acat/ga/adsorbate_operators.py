@@ -1,5 +1,5 @@
 """Adsorbate operators that adds an adsorbate to the surface
-of a particle or given structure, using a supplied list of sites."""
+of a particle or given structure."""
 from ..settings import adsorbate_elements, adsorbate_molecule, site_heights
 from ..utilities import is_list_or_tuple, atoms_too_close_after_addition
 from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
