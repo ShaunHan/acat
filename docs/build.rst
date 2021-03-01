@@ -393,9 +393,8 @@ Generate chemical orderings
             >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
             >>> sog.run(max_gen=100, verbose=True)
 
-        Output:
-
             10 layers classified
+
             100 symmetric chemical orderings generated 
 
         Output trajectory:

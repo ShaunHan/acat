@@ -139,7 +139,10 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
         Whether cell is periodic in each direction.
 
     max_cell_multiples : int, default 1e5
-        A big number to 
+        A large number to account for the maximum repetitions of each 
+        of the lattice vectors. The minimum number of repetitions is
+        hence calculated by the algorithm using the intersection of a 
+        sphere and the unit cell.
 
     return_squared_distance : bool, default False
         Whether to return the squared mic distance instead of the
@@ -376,40 +379,40 @@ def get_rejection_between(v1, v2):
 
 
 def get_rotation_matrix(v1, v2):
-   """Return the rotation matrix R that rotates unit vector v1 onto 
-   unit vector v2.
-
-   Parameters
-   ----------
-   v1 : numpy.array
-       Vector 1.
-   v2 : numpy.array
-       Vector 2.
-
-   """
-
-   ax, ay, az = v1[0], v1[1], v1[2]
-   bx, by, bz = v2[0], v2[1], v2[2]
-   au = v1 / (np.sqrt(ax * ax + ay * ay + az * az))
-   bu = v2 / (np.sqrt(bx * bx + by * by + bz * bz))
-
-   R = np.asarray([[bu[0] * au[0], bu[0] * au[1], bu[0] * au[2]], 
-                   [bu[1] * au[0], bu[1] * au[1], bu[1] * au[2]], 
-                   [bu[2] * au[0], bu[2] * au[1], bu[2] * au[2]]])
-   return R
+    """Return the rotation matrix R that rotates unit vector v1 onto 
+    unit vector v2.
+ 
+    Parameters
+    ----------
+    v1 : numpy.array
+        Vector 1.
+    v2 : numpy.array
+        Vector 2.
+ 
+    """
+ 
+    ax, ay, az = v1[0], v1[1], v1[2]
+    bx, by, bz = v2[0], v2[1], v2[2]
+    au = v1 / (np.sqrt(ax * ax + ay * ay + az * az))
+    bu = v2 / (np.sqrt(bx * bx + by * by + bz * bz))
+ 
+    R = np.asarray([[bu[0] * au[0], bu[0] * au[1], bu[0] * au[2]], 
+                    [bu[1] * au[0], bu[1] * au[1], bu[1] * au[2]], 
+                    [bu[2] * au[0], bu[2] * au[1], bu[2] * au[2]]])
+    return R
 
 
 def get_rodrigues_rotation_matrix(axis, angle):
-    """Return the Rodrigues rotation matrix associated with counter
-    clockwise rotation about the given axis by angle in radians.
-
-   Parameters
-   ----------
-   axis : numpy.array
-       The axis (vector) to rotate around with.
-   angle : numpy.array
-       The angle (in radians) to rotate around.
-
+    """Return the Rodrigues rotation matrix associated with 
+    counter-clockwise rotation about the given axis by an angle.
+ 
+    Parameters
+    ----------
+    axis : numpy.array
+        The axis (vector) to rotate around with.
+    angle : numpy.array
+        The angle (in radians) to rotate around.
+ 
     """
 
     return scipy.linalg.expm(np.cross(np.eye(3),

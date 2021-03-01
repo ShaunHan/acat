@@ -215,18 +215,16 @@ array of vectors all at a time (useful for e.g. neighborlist).</p>
 <li><p><strong>p2</strong> (<em>numpy.array</em>) – The 3D Cartesian coordinate of the position 2.</p></li>
 <li><p><strong>cell</strong> (<em>numpy.array</em>) – The 3D parallel epipedal unit cell.</p></li>
 <li><p><strong>pbc</strong> (<em>numpy.array</em><em> or </em><em>list</em><em>, </em><em>default</em><em> [</em><em>1</em><em>, </em><em>1</em><em>, </em><em>0</em><em>]</em>) – Whether cell is periodic in each direction.</p></li>
-<li><p><strong>max_cell_multiples</strong> (<em>int</em><em>, </em><em>default 1e5</em>) – A big number to</p></li>
+<li><p><strong>max_cell_multiples</strong> (<em>int</em><em>, </em><em>default 1e5</em>) – A large number to account for the maximum repetitions of each
+of the lattice vectors. The minimum number of repetitions is
+hence calculated by the algorithm using the intersection of a
+sphere and the unit cell.</p></li>
 <li><p><strong>return_squared_distance</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the squared mic distance instead of the
 mic vector.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py function">
-<dt id="acat.utilities.expand_cell">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">expand_cell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#expand_cell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.expand_cell" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py function">
 <dt id="acat.utilities.get_close_atoms">
@@ -330,10 +328,8 @@ unit vector v2.</p>
 <dl class="py function">
 <dt id="acat.utilities.get_rodrigues_rotation_matrix">
 <code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_rodrigues_rotation_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">angle</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rodrigues_rotation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_rodrigues_rotation_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Return the Rodrigues rotation matrix associated with counter</dt><dd><p>clockwise rotation about the given axis by angle in radians.</p>
-</dd>
-</dl>
+<dd><p>Return the Rodrigues rotation matrix associated with
+counter-clockwise rotation about the given axis by an angle.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -355,11 +351,6 @@ molecule.</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py function">
-<dt id="acat.utilities.is_list_or_tuple">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">is_list_or_tuple</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#is_list_or_tuple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.is_list_or_tuple" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py function">
 <dt id="acat.utilities.string_fragmentation">

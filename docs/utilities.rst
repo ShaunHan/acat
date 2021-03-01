@@ -5,3 +5,4 @@ Other utilities
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: expand_cell, is_list_or_tuple
