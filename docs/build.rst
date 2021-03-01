@@ -211,6 +211,8 @@ Generate adsorbate coverage patterns
             >>> from acat.build.patterns import StochasticPatternGenerator as SPG
             >>> from acat.build.patterns import random_coverage_pattern
             >>> from ase.build import fcc111
+            >>> from ase.io import read
+            >>> from ase.visualize import view
             >>> slab = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
             >>> slab.center()
             >>> images = []
@@ -228,8 +230,10 @@ Generate adsorbate coverage patterns
             ...           composition_effect=False, 
             ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
             >>> spg.run(n_gen=100, actions='add')
+            >>> images = read('patterns.traj', index=':') 
+            >>> view(images)
 
-        Output trajectory:
+        Output:
 
         .. image:: ../images/StochasticPatternGenerator.gif
            :scale: 60 %
@@ -245,6 +249,8 @@ Generate adsorbate coverage patterns
             >>> from acat.adsorption_sites import ClusterAdsorptionSites
             >>> from acat.build.patterns import SystematicPatternGenerator as SPG
             >>> from ase.cluster import Octahedron
+            >>> from ase.io import read
+            >>> from ase.visualize import view
             >>> atoms = Octahedron('Cu', length=7, cutoff=3)
             >>> for atom in atoms:
             ...     if atom.index % 2 == 0:
@@ -256,8 +262,10 @@ Generate adsorbate coverage patterns
             ...           adsorption_sites=cas,
             ...           composition_effect=True) 
             >>> spg.run(action='add')
+            >>> images = read('patterns.traj', index=':') 
+            >>> view(images)
 
-        Output trajectory:
+        Output:
 
         .. image:: ../images/SystematicPatternGenerator.gif
  
@@ -389,15 +397,19 @@ Generate chemical orderings
  
             >>> from acat.build.orderings import SymmetricOrderingGenerator as SOG
             >>> from ase.cluster import Octahedron
+            >>> from ase.io import read
+            >>> from ase.visualize import view
             >>> atoms = Octahedron('Ni', length=8, cutoff=3)
             >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
             >>> sog.run(max_gen=100, verbose=True)
+            >>> images = read('orderings.traj', index=':') 
+            >>> view(images)
+
+        Output:
 
             10 layers classified
 
             100 symmetric chemical orderings generated 
-
-        Output trajectory:
 
         .. image:: ../images/SymmetricOrderingGenerator.gif
            :scale: 60 %
@@ -412,12 +424,16 @@ Generate chemical orderings
  
             >>> from acat.build.orderings import RandomOrderingGenerator as ROG
             >>> from ase.cluster import Icosahedron
+            >>> from ase.io import read
+            >>> from ase.visualize import view
             >>> atoms = Icosahedron('Ni', noshells=5)
             >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
             ...           composition={'Ni': 0.75, 'Pt': 0.25})
             >>> rog.run(n_gen=100)
+            >>> images = read('orderings.traj', index=':') 
+            >>> view(images)
 
-        Output trajectory:
+        Output:
 
         .. image:: ../images/RandomOrderingGenerator.gif
            :scale: 60 %
