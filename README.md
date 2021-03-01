@@ -27,7 +27,7 @@ Go to the installed path and install all dependencies:
 
 Install the main package:
 
-```python setup.py install --user```
+```python3 setup.py install --user```
  
 ## Known issues
 1. Some functions distinguishes between nanoparticle and surface slabs based on periodic boundary condition (PBC). Therefore, before using the code, it is recommended to **set all directions as non-periodic for nanoparticles and at least one direction periodic for surface slabs, and also add vacuum layers to all non-periodic directions. Note that the half-top half-bottom slab model is not supported by the code. Please make sure the slab is a unity.**
