@@ -395,6 +395,7 @@ Generate chemical orderings
 
         Output:
 
+        .. code-block:: python
             10 layers classified
             100 symmetric chemical orderings generated 
 
