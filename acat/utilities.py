@@ -139,7 +139,10 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
         Whether cell is periodic in each direction.
 
     max_cell_multiples : int, default 1e5
-        A big number to 
+        A large number to account for the maximum repetitions of each 
+        of the lattice vectors. The minimum number of repetitions is
+        hence calculated by the algorithm using the intersection of a 
+        sphere and the unit cell.
 
     return_squared_distance : bool, default False
         Whether to return the squared mic distance instead of the
