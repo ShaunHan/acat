@@ -227,12 +227,15 @@ class SymmetricOrderingGenerator(object):
                         if n_write == max_gen:
                             break
 
-        if mode == 'stochastic':                                              
+        if mode == 'stochastic':
             combs = set()
-            going = True
-            while going:
+            too_few = (2 ** nlayers * 0.95 <= max_gen)
+            if verbose:
+                print('Too few layers. The generated images are not all unique.')
+
+            while True:
                 comb = tuple(np.random.choice(self.species, size=nlayers))
-                if comb not in combs: 
+                if comb not in combs or too_few: 
                     combs.add(comb)
                     for j, specie in enumerate(comb):
                         atoms.symbols[layers[j]] = specie
@@ -244,7 +247,7 @@ class SymmetricOrderingGenerator(object):
                     n_write += 1
                     if max_gen is not None:
                         if n_write == max_gen:
-                            going = False
+                            break
         if verbose:
             print('{} symmetric chemical orderings generated'.format(n_write))
 
