@@ -393,14 +393,14 @@ Generate chemical orderings
         Example
         -------
         To generate 100 symmetric chemical orderings of a truncated
-        octahedral NiPt nanoalloy:
+        octahedral NiPt nanoalloy with spherical symmetry:
  
             >>> from acat.build.orderings import SymmetricOrderingGenerator as SOG
             >>> from ase.cluster import Octahedron
             >>> from ase.io import read
             >>> from ase.visualize import view
             >>> atoms = Octahedron('Ni', length=8, cutoff=3)
-            >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='central')
+            >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='spherical')
             >>> sog.run(max_gen=100, verbose=True)
             >>> images = read('orderings.traj', index=':') 
             >>> view(images)
