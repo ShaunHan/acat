@@ -199,7 +199,7 @@ Generate adsorbate coverage patterns
     :show-inheritance:
     :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, symmetric_coverage_pattern, full_coverage_pattern, random_coverage_pattern
 
-    .. autofunction:: StochasticPatternGenerator
+    .. autoclass:: StochasticPatternGenerator
 
         Example
         -------
@@ -239,7 +239,7 @@ Generate adsorbate coverage patterns
            :scale: 60 %
            :align: center
 
-    .. autofunction:: SystematicPatternGenerator
+    .. autoclass:: SystematicPatternGenerator
 
         Example
         -------
@@ -388,7 +388,7 @@ Generate chemical orderings
     :show-inheritance:
     :exclude-members: SymmetricOrderingGenerator, RandomOrderingGenerator
 
-    .. autofunction:: SymmetricOrderingGenerator
+    .. autoclass:: SymmetricOrderingGenerator
 
         Example
         -------
@@ -415,7 +415,7 @@ Generate chemical orderings
            :scale: 60 %
            :align: center
                
-    .. autofunction:: RandomOrderingGenerator       
+    .. autoclass:: RandomOrderingGenerator       
 
         Example
         -------
