@@ -201,6 +201,8 @@ Generate adsorbate coverage patterns
 
     .. autoclass:: StochasticPatternGenerator
 
+        .. automethod:: run
+
         Example
         -------
         The following example illustrates how to generate 100 stochastic
@@ -240,6 +242,8 @@ Generate adsorbate coverage patterns
            :align: center
 
     .. autoclass:: SystematicPatternGenerator
+
+        .. automethod:: run
 
         Example
         -------
@@ -390,6 +394,8 @@ Generate chemical orderings
 
     .. autoclass:: SymmetricOrderingGenerator
 
+        .. automethod:: run
+
         Example
         -------
         To generate 100 symmetric chemical orderings of a truncated
@@ -416,6 +422,8 @@ Generate chemical orderings
            :align: center
                
     .. autoclass:: RandomOrderingGenerator       
+
+        .. automethod:: run
 
         Example
         -------

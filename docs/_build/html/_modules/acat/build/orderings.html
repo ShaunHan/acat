@@ -334,7 +334,7 @@
  
         <span class="k">return</span> <span class="n">layers</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;systematic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="SymmetricOrderingGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.orderings.SymmetricOrderingGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;systematic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the chemical ordering generator.</span>
 
 <span class="sd">        Parameters</span>
@@ -409,7 +409,7 @@
                         <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
                             <span class="k">break</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> symmetric chemical orderings generated&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_write</span><span class="p">))</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> symmetric chemical orderings generated&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_write</span><span class="p">))</span></div></div>
 
 
 <div class="viewcode-block" id="RandomOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.orderings.RandomOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">RandomOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -461,7 +461,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span> <span class="o">=</span> <span class="n">trajectory</span>                        
         <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="o">=</span> <span class="n">append_trajectory</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gen</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomOrderingGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.orderings.RandomOrderingGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gen</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the chemical ordering generator.</span>
 
 <span class="sd">        Parameters</span>
@@ -486,7 +486,7 @@
                 <span class="n">nmb</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">natoms</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">to_mb</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">),</span> <span class="n">nmb</span><span class="p">)</span>
             <span class="n">indi</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">to_mb</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span>
-            <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span></div>
+            <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

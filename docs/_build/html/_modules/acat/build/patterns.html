@@ -799,7 +799,7 @@
 
         <span class="k">return</span> <span class="n">nsac</span>                        
  
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gen</span><span class="p">,</span> 
+<div class="viewcode-block" id="StochasticPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.patterns.StochasticPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gen</span><span class="p">,</span> 
             <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;add&#39;</span><span class="p">,</span><span class="s1">&#39;remove&#39;</span><span class="p">,</span><span class="s1">&#39;move&#39;</span><span class="p">],</span> 
             <span class="n">action_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -955,7 +955,7 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labs</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span>
-            <span class="n">n_new</span> <span class="o">+=</span> <span class="mi">1</span></div>
+            <span class="n">n_new</span> <span class="o">+=</span> <span class="mi">1</span></div></div>
 
 
 <div class="viewcode-block" id="SystematicPatternGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.patterns.SystematicPatternGenerator">[docs]</a><span class="k">class</span> <span class="nc">SystematicPatternGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -1676,7 +1676,7 @@
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_write_per_image</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_gen_per_image</span><span class="p">:</span>
                             <span class="k">return</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen_per_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="SystematicPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.patterns.SystematicPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen_per_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the pattern generator.</span>
 
 <span class="sd">        Parameters</span>
@@ -1777,7 +1777,7 @@
                                    <span class="o">+</span> <span class="s1">&#39;for image </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span>
                                    <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> patterns were &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span><span class="p">)</span>
                                    <span class="o">+</span> <span class="s1">&#39;discarded by </span><span class="si">{}</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div></div>
 
 
 <div class="viewcode-block" id="symmetric_coverage_pattern"><a class="viewcode-back" href="../../../build.html#acat.build.patterns.symmetric_coverage_pattern">[docs]</a><span class="k">def</span> <span class="nf">symmetric_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">coverage</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> 
