@@ -72,3 +72,6 @@ html_favicon = 'acat_favicon.ico'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+#latex_documents = [
+# ('index', 'acat.tex', u'ACAT', u'Shuang Han', 'manual'),
+#]
