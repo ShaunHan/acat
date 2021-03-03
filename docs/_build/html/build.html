@@ -207,6 +207,9 @@ much faster. Useful when the function is called many times.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To add a NO molecule to a bridge site consists of one Pt and
 one Ni on the fcc111 surface of a truncated octahedron:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.actions</span> <span class="kn">import</span> <span class="n">add_adsorbate</span>
@@ -223,8 +226,6 @@ one Ni on the fcc111 surface of a truncated octahedron:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/add_adsorbate.png"><img alt="_images/add_adsorbate.png" class="align-center" src="_images/add_adsorbate.png" style="width: 533.4px; height: 253.39999999999998px;" /></a>
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.actions.add_adsorbate_to_site">
 <code class="sig-prename descclassname">acat.build.actions.</code><code class="sig-name descname">add_adsorbate_to_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">site</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/actions.html#add_adsorbate_to_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.actions.add_adsorbate_to_site" title="Permalink to this definition">¶</a></dt>
@@ -248,6 +249,9 @@ the surface normal.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To add CO to all fcc sites of an icosahedral nanoparticle:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.actions</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
@@ -288,8 +292,6 @@ surface slab and rotate the orientation to a neighbor site:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/add_adsorbate_to_site_2.png"><img alt="_images/add_adsorbate_to_site_2.png" class="align-center" src="_images/add_adsorbate_to_site_2.png" style="width: 471.09999999999997px; height: 223.29999999999998px;" /></a>
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.actions.add_adsorbate_to_label">
 <code class="sig-prename descclassname">acat.build.actions.</code><code class="sig-name descname">add_adsorbate_to_label</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">label</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">all_sites</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/actions.html#add_adsorbate_to_label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.actions.add_adsorbate_to_label" title="Permalink to this definition">¶</a></dt>
@@ -317,6 +319,9 @@ much faster. Useful when the function is called many times.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To add a NH molecule to a site with bimetallic label 14 (an hcp
 CuCuAu site) on a fcc110 surface slab:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.actions</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_label</span>
@@ -334,8 +339,6 @@ CuCuAu site) on a fcc110 surface slab:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/add_adsorbate_to_label.png"><img alt="_images/add_adsorbate_to_label.png" class="align-center" src="_images/add_adsorbate_to_label.png" style="width: 301.7px; height: 143.5px;" /></a>
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.actions.remove_adsorbate_from_site">
 <code class="sig-prename descclassname">acat.build.actions.</code><code class="sig-name descname">remove_adsorbate_from_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">site</span></em>, <em class="sig-param"><span class="n">remove_fragment</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/actions.html#remove_adsorbate_from_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.actions.remove_adsorbate_from_site" title="Permalink to this definition">¶</a></dt>
@@ -356,6 +359,9 @@ of the whole adsorbate.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To remove a CO molecule from a fcc111 surface slab with one
 CO and one OH:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
@@ -378,8 +384,6 @@ CO and one OH:</p>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/remove_adsorbate_from_site.png"><img alt="_images/remove_adsorbate_from_site.png" src="_images/remove_adsorbate_from_site.png" style="width: 576.6px; height: 273.59999999999997px;" /></a>
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.actions.remove_adsorbates_from_sites">
 <code class="sig-prename descclassname">acat.build.actions.</code><code class="sig-name descname">remove_adsorbates_from_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">sites</span></em>, <em class="sig-param"><span class="n">remove_fragments</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/actions.html#remove_adsorbates_from_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.actions.remove_adsorbates_from_sites" title="Permalink to this definition">¶</a></dt>
@@ -397,6 +401,9 @@ of the whole adsorbate.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To remove all CO species from a fcc111 surface slab covered
 with both CO and OH:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
@@ -420,8 +427,6 @@ with both CO and OH:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/remove_adsorbates_from_sites.png"><img alt="_images/remove_adsorbates_from_sites.png" src="_images/remove_adsorbates_from_sites.png" style="width: 576.6px; height: 273.59999999999997px;" /></a>
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.actions.remove_adsorbates_too_close">
 <code class="sig-prename descclassname">acat.build.actions.</code><code class="sig-name descname">remove_adsorbates_too_close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_coverage</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/actions.html#remove_adsorbates_too_close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.actions.remove_adsorbates_too_close" title="Permalink to this definition">¶</a></dt>
@@ -445,6 +450,9 @@ be to close. This distance has to be small.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To remove unphysically close adsorbates on the edges of a Marks
 decahedron with 0.75 ML symmetric CO coverage:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.patterns</span> <span class="kn">import</span> <span class="n">symmetric_coverage_pattern</span>
@@ -461,8 +469,6 @@ decahedron with 0.75 ML symmetric CO coverage:</p>
 </div>
 <p>Output:</p>
 <img alt="_images/remove_adsorbates_too_close.png" src="_images/remove_adsorbates_too_close.png" />
-</dd></dl>
-
 </div>
 <div class="section" id="module-acat.build.patterns">
 <span id="generate-adsorbate-coverage-patterns"></span><h2>Generate adsorbate coverage patterns<a class="headerlink" href="#module-acat.build.patterns" title="Permalink to this headline">¶</a></h2>
@@ -554,6 +560,9 @@ if not specified.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>The following example illustrates how to generate 100 stochastic
 adsorbate coverage patterns with CO, OH, CH3 and CHO, based on
 10 Pt fcc111 surface slabs with random C and O coverages, where
@@ -586,8 +595,6 @@ CH3 is forbidden to be added to ontop and bridge sites:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/StochasticPatternGenerator.gif"><img alt="_images/StochasticPatternGenerator.gif" class="align-center" src="_images/StochasticPatternGenerator.gif" style="width: 300.0px; height: 193.79999999999998px;" /></a>
-</dd></dl>
-
 <dl class="py class">
 <dt id="acat.build.patterns.SystematicPatternGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">acat.build.patterns.</code><code class="sig-name descname">SystematicPatternGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="n">species_forbidden_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">species_forbidden_labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">enumerate_orientations</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'patterns.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">logfile</span><span class="o">=</span><span class="default_value">'patterns.log'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/patterns.html#SystematicPatternGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.patterns.SystematicPatternGenerator" title="Permalink to this definition">¶</a></dt>
@@ -660,6 +667,9 @@ all possible patterns if not specified.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>The following example illustrates how to add CO to all unique sites on
 a cuboctahedral bimetallic nanoparticle:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
@@ -684,8 +694,6 @@ a cuboctahedral bimetallic nanoparticle:</p>
 </div>
 <p>Output:</p>
 <img alt="_images/SystematicPatternGenerator.gif" src="_images/SystematicPatternGenerator.gif" />
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.patterns.symmetric_coverage_pattern">
 <code class="sig-prename descclassname">acat.build.patterns.</code><code class="sig-name descname">symmetric_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/patterns.html#symmetric_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.patterns.symmetric_coverage_pattern" title="Permalink to this definition">¶</a></dt>
@@ -721,6 +729,9 @@ adsorbates.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To add a 0.5 ML CO coverage pattern on a cuboctahedron:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.patterns</span> <span class="kn">import</span> <span class="n">symmetric_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
@@ -748,8 +759,6 @@ adsorbates.</p></li>
 </div>
 <p>Output:</p>
 <img alt="_images/symmetric_coverage_pattern_2.png" src="_images/symmetric_coverage_pattern_2.png" />
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.patterns.full_coverage_pattern">
 <code class="sig-prename descclassname">acat.build.patterns.</code><code class="sig-name descname">full_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">site</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/patterns.html#full_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.patterns.full_coverage_pattern" title="Permalink to this definition">¶</a></dt>
@@ -775,6 +784,9 @@ adsorbates.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To add CO to all hcp sites on a icosahedron:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.patterns</span> <span class="kn">import</span> <span class="n">full_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
@@ -800,8 +812,6 @@ adsorbates.</p></li>
 </div>
 <p>Output:</p>
 <img alt="_images/full_coverage_pattern_2.png" src="_images/full_coverage_pattern_2.png" />
-</dd></dl>
-
 <dl class="py function">
 <dt id="acat.build.patterns.random_coverage_pattern">
 <code class="sig-prename descclassname">acat.build.patterns.</code><code class="sig-name descname">random_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/patterns.html#random_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.patterns.random_coverage_pattern" title="Permalink to this definition">¶</a></dt>
@@ -831,6 +841,9 @@ underneath fcc hollow sites.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To add CO randomly onto a cuboctahedron with a minimum adsorbate
 distance of 5 Angstrom:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.patterns</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
@@ -864,8 +877,6 @@ of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 </div>
 <p>Output:</p>
 <img alt="_images/random_coverage_pattern_2.png" src="_images/random_coverage_pattern_2.png" />
-</dd></dl>
-
 </div>
 <div class="section" id="module-acat.build.orderings">
 <span id="generate-chemical-orderings"></span><h2>Generate chemical orderings<a class="headerlink" href="#module-acat.build.orderings" title="Permalink to this headline">¶</a></h2>
@@ -933,6 +944,9 @@ number of generated structures.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To generate 100 symmetric chemical orderings of a truncated
 octahedral NiPt nanoalloy with spherical symmetry:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
@@ -952,8 +966,6 @@ octahedral NiPt nanoalloy with spherical symmetry:</p>
 <p>100 symmetric chemical orderings generated</p>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/SymmetricOrderingGenerator.gif"><img alt="_images/SymmetricOrderingGenerator.gif" class="align-center" src="_images/SymmetricOrderingGenerator.gif" style="width: 208.2px; height: 208.2px;" /></a>
-</dd></dl>
-
 <dl class="py class">
 <dt id="acat.build.orderings.RandomOrderingGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">acat.build.orderings.</code><code class="sig-name descname">RandomOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">species</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator" title="Permalink to this definition">¶</a></dt>
@@ -987,6 +999,9 @@ compositions if not specified.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<p><strong>Example</strong></p>
 <p>To generate 100 random chemical orderings of a icosahedral Ni3Pt
 nanoalloy:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
@@ -1003,8 +1018,6 @@ nanoalloy:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/RandomOrderingGenerator.gif"><img alt="_images/RandomOrderingGenerator.gif" class="align-center" src="_images/RandomOrderingGenerator.gif" style="width: 244.2px; height: 247.2px;" /></a>
-</dd></dl>
-
 </div>
 </div>
 
