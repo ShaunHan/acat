@@ -294,6 +294,8 @@
                 <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
             <span class="n">ref_atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
             <span class="n">dists</span> <span class="o">=</span> <span class="n">ref_atoms</span><span class="o">.</span><span class="n">get_potential_energies</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Symmetry &#39;</span><span class="si">{}</span><span class="s2">&#39; is not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symmetry</span><span class="p">))</span>
 
         <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">dists</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">sorted_indices</span><span class="p">,</span> <span class="n">dists</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>    
@@ -392,9 +394,8 @@
         <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;stochastic&#39;</span><span class="p">:</span>
             <span class="n">combs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="n">too_few</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">nlayers</span> <span class="o">*</span> <span class="mf">0.95</span> <span class="o">&lt;=</span> <span class="n">max_gen</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">too_few</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too few layers. The generated images are not all unique.&#39;</span><span class="p">)</span>
-
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="n">comb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">nlayers</span><span class="p">))</span>
                 <span class="k">if</span> <span class="n">comb</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">combs</span> <span class="ow">or</span> <span class="n">too_few</span><span class="p">:</span> 
