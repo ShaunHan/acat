@@ -132,6 +132,8 @@ class SymmetricOrderingGenerator(object):
                 a.symbol = 'Pt'
             ref_atoms.calc = calc
             dists = ref_atoms.get_potential_energies()
+        else:
+            raise ValueError("Symmetry '{}' is not supported".format(symmetry))
 
         sorted_indices = np.argsort(np.ravel(dists))
         return sorted_indices, dists[sorted_indices]    
@@ -230,9 +232,8 @@ class SymmetricOrderingGenerator(object):
         if mode == 'stochastic':
             combs = set()
             too_few = (2 ** nlayers * 0.95 <= max_gen)
-            if verbose:
+            if too_few and verbose:
                 print('Too few layers. The generated images are not all unique.')
-
             while True:
                 comb = tuple(np.random.choice(self.species, size=nlayers))
                 if comb not in combs or too_few: 
