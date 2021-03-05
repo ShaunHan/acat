@@ -801,7 +801,7 @@
 
         <span class="k">return</span> <span class="n">nsac</span>                        
  
-<div class="viewcode-block" id="StochasticPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.patterns.StochasticPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gen</span><span class="p">,</span> 
+<div class="viewcode-block" id="StochasticPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.patterns.StochasticPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_gen</span><span class="p">,</span> 
             <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;add&#39;</span><span class="p">,</span><span class="s1">&#39;remove&#39;</span><span class="p">,</span><span class="s1">&#39;move&#39;</span><span class="p">],</span> 
             <span class="n">action_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -809,7 +809,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        n_gen : int</span>
+<span class="sd">        num_gen : int</span>
 <span class="sd">            Number of patterns to generate.</span>
 
 <span class="sd">        actions : str or list of strs, default [&#39;add&#39;, &#39;remove&#39;, &#39;move&#39;]</span>
@@ -868,7 +868,7 @@
         <span class="n">n_new</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">n_old</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="c1"># Start the iteration</span>
-        <span class="k">while</span> <span class="n">n_new</span> <span class="o">&lt;</span> <span class="n">n_gen</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">n_new</span> <span class="o">&lt;</span> <span class="n">num_gen</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">n_old</span> <span class="o">==</span> <span class="n">n_new</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                    
                     <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Generating pattern </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_new</span><span class="p">))</span>

@@ -639,7 +639,7 @@ class StochasticPatternGenerator(object):
 
         return nsac                        
  
-    def run(self, n_gen, 
+    def run(self, num_gen, 
             actions=['add','remove','move'], 
             action_probabilities=None,
             unique=True):
@@ -647,7 +647,7 @@ class StochasticPatternGenerator(object):
 
         Parameters
         ----------
-        n_gen : int
+        num_gen : int
             Number of patterns to generate.
 
         actions : str or list of strs, default ['add', 'remove', 'move']
@@ -706,7 +706,7 @@ class StochasticPatternGenerator(object):
         n_new = 0
         n_old = 0
         # Start the iteration
-        while n_new < n_gen:
+        while n_new < num_gen:
             if n_old == n_new:
                 if self.logfile is not None:                                    
                     self.logfile.write('Generating pattern {}\n'.format(n_new))

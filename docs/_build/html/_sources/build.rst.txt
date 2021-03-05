@@ -231,7 +231,7 @@ Generate adsorbate coverage patterns
         ...           surface='fcc111',
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
-        >>> spg.run(n_gen=100, actions='add')
+        >>> spg.run(num_gen=100, actions='add')
         >>> images = read('patterns.traj', index=':') 
         >>> view(images)
 
@@ -437,7 +437,7 @@ Generate chemical orderings
         >>> atoms = Icosahedron('Ni', noshells=5)
         >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
         ...           composition={'Ni': 0.75, 'Pt': 0.25})
-        >>> rog.run(n_gen=100)
+        >>> rog.run(num_gen=100)
         >>> images = read('orderings.traj', index=':') 
         >>> view(images)
 
