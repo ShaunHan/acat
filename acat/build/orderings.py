@@ -21,8 +21,8 @@ class SymmetricOrderingGenerator(object):
         chemical orderings. Accept any ase.Atoms object. No need to be 
         built-in.
 
-    species : list of strs 
-        The two metal species of the bimetallic catalyst.
+    elements : list of strs 
+        The two metal elements of the bimetallic nanoparticle.
 
     symmetry : str, default 'spherical'
         Support 4 symmetries: 
@@ -73,7 +73,7 @@ class SymmetricOrderingGenerator(object):
 
     """
 
-    def __init__(self, atoms, species,
+    def __init__(self, atoms, elements,
                  symmetry='spherical', #'planar', 'cylindrical', 'chemical'
                  cutoff=.1,       
                  secondary_symmetry=None,
@@ -83,10 +83,10 @@ class SymmetricOrderingGenerator(object):
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
-        assert len(species) == 2
+        assert len(elements) == 2
         self.atoms = atoms
-        self.species = species
-        self.ma, self.mb = species[0], species[1]
+        self.elements = elements
+        self.ma, self.mb = elements[0], elements[1]
         self.symmetry = symmetry
         self.cutoff = cutoff
         self.secondary_symmetry = secondary_symmetry
@@ -94,7 +94,7 @@ class SymmetricOrderingGenerator(object):
 
         self.composition = composition
         if self.composition is not None:
-            assert set(self.composition.keys()) == set(self.species)
+            assert set(self.composition.keys()) == set(self.elements)
             ca = self.composition[self.ma] / sum(self.composition.values())
             self.nma = int(round(len(self.atoms) * ca))
             self.nmb = len(self.atoms) - self.nma
@@ -232,7 +232,7 @@ class SymmetricOrderingGenerator(object):
                           'generator. Use stochastic generator instead')
                 mode = 'stochastic'
             else:    
-                combs = list(product(self.species, repeat=len(shells)))
+                combs = list(product(self.elements, repeat=len(shells)))
                 random.shuffle(combs)
                 for comb in combs:
                     for j, specie in enumerate(comb):
@@ -253,7 +253,7 @@ class SymmetricOrderingGenerator(object):
             if too_few and verbose:
                 print('Too few shells. The generated images are not all unique.')
             while True:
-                comb = tuple(np.random.choice(self.species, size=nshells))
+                comb = tuple(np.random.choice(self.elements, size=nshells))
                 if comb not in combs or too_few: 
                     combs.add(comb)
                     for j, specie in enumerate(comb):
@@ -283,8 +283,8 @@ class RandomOrderingGenerator(object):
         generate random chemical orderings. Accept any ase.Atoms 
         object. No need to be built-in.
 
-    species : list of strs 
-        The two metal species of the bimetallic catalyst.
+    elements : list of strs 
+        The two metal elements of the bimetallic catalyst.
 
     composition: dict, None
         Generate random orderings only at a certain composition.
@@ -300,18 +300,18 @@ class RandomOrderingGenerator(object):
 
     """
 
-    def __init__(self, atoms, species,
+    def __init__(self, atoms, elements,
                  composition=None,
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
-        assert len(species) == 2
+        assert len(elements) == 2
         self.atoms = atoms
-        self.species = species
-        self.ma, self.mb = species[0], species[1]
+        self.elements = elements
+        self.ma, self.mb = elements[0], elements[1]
         self.composition = composition
         if self.composition is not None:
-            assert set(self.composition.keys()) == set(self.species)
+            assert set(self.composition.keys()) == set(self.elements)
             ca = self.composition[self.ma] / sum(self.composition.values())
             self.nma = int(round(len(self.atoms) * ca))
             self.nmb = len(self.atoms) - self.nma

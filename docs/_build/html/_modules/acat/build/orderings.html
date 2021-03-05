@@ -183,8 +183,8 @@
 <span class="sd">        chemical orderings. Accept any ase.Atoms object. No need to be </span>
 <span class="sd">        built-in.</span>
 
-<span class="sd">    species : list of strs </span>
-<span class="sd">        The two metal species of the bimetallic catalyst.</span>
+<span class="sd">    elements : list of strs </span>
+<span class="sd">        The two metal elements of the bimetallic nanoparticle.</span>
 
 <span class="sd">    symmetry : str, default &#39;spherical&#39;</span>
 <span class="sd">        Support 4 symmetries: </span>
@@ -235,7 +235,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span>
                  <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">,</span> <span class="c1">#&#39;planar&#39;, &#39;cylindrical&#39;, &#39;chemical&#39;</span>
                  <span class="n">cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>       
                  <span class="n">secondary_symmetry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -245,10 +245,10 @@
                  <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
                  <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">species</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">species</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span> <span class="o">=</span> <span class="n">species</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">species</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="n">symmetry</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">=</span> <span class="n">cutoff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">=</span> <span class="n">secondary_symmetry</span>
@@ -256,7 +256,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
             <span class="n">ca</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nma</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">*</span> <span class="n">ca</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nmb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nma</span>
@@ -394,7 +394,7 @@
                           <span class="s1">&#39;generator. Use stochastic generator instead&#39;</span><span class="p">)</span>
                 <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
             <span class="k">else</span><span class="p">:</span>    
-                <span class="n">combs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">)))</span>
+                <span class="n">combs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">)))</span>
                 <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">combs</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">combs</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">specie</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comb</span><span class="p">):</span>
@@ -415,7 +415,7 @@
             <span class="k">if</span> <span class="n">too_few</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too few shells. The generated images are not all unique.&#39;</span><span class="p">)</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">comb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">nshells</span><span class="p">))</span>
+                <span class="n">comb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">nshells</span><span class="p">))</span>
                 <span class="k">if</span> <span class="n">comb</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">combs</span> <span class="ow">or</span> <span class="n">too_few</span><span class="p">:</span> 
                     <span class="n">combs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">specie</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comb</span><span class="p">):</span>
@@ -445,8 +445,8 @@
 <span class="sd">        generate random chemical orderings. Accept any ase.Atoms </span>
 <span class="sd">        object. No need to be built-in.</span>
 
-<span class="sd">    species : list of strs </span>
-<span class="sd">        The two metal species of the bimetallic catalyst.</span>
+<span class="sd">    elements : list of strs </span>
+<span class="sd">        The two metal elements of the bimetallic catalyst.</span>
 
 <span class="sd">    composition: dict, None</span>
 <span class="sd">        Generate random orderings only at a certain composition.</span>
@@ -462,18 +462,18 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span>
                  <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
                  <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">species</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">species</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span> <span class="o">=</span> <span class="n">species</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">species</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
             <span class="n">ca</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nma</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">*</span> <span class="n">ca</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nmb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nma</span>
