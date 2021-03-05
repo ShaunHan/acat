@@ -394,7 +394,7 @@ Generate chemical orderings
 
     .. autoclass:: SymmetricOrderingGenerator
 
-        .. automethod:: get_nblist_from_center_atom
+        .. automethod:: get_sorted_indices
 
         .. automethod:: get_shells
 
