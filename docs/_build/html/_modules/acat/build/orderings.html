@@ -172,8 +172,9 @@
 
 <div class="viewcode-block" id="SymmetricOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.orderings.SymmetricOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">SymmetricOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;`SymmetricOrderingGenerator` is a class for generating </span>
-<span class="sd">    symmetric chemical orderings for a bimetallic catalyst.</span>
-<span class="sd">    As for now, only support clusters. Please align the z direction </span>
+<span class="sd">    symmetric chemical orderings for a nanoalloy.</span>
+<span class="sd">    As for now, only support clusters, but there is no limitation </span>
+<span class="sd">    of the number of metal elements. Please align the z direction </span>
 <span class="sd">    to the symmetry axis of the cluster.</span>
 <span class="sd"> </span>
 <span class="sd">    Parameters</span>
@@ -184,7 +185,7 @@
 <span class="sd">        built-in.</span>
 
 <span class="sd">    elements : list of strs </span>
-<span class="sd">        The two metal elements of the bimetallic nanoparticle.</span>
+<span class="sd">        The metal elements of the nanoalloy.</span>
 
 <span class="sd">    symmetry : str, default &#39;spherical&#39;</span>
 <span class="sd">        Support 4 symmetries: </span>
@@ -195,7 +196,8 @@
 <span class="sd">        &#39;cylindrical&#39; = cylindrical symmetry around z axis (shells </span>
 <span class="sd">        defined by the distances to the z axis);</span>
 <span class="sd">        &#39;chemical&#39; = symmetry w.r.t chemical environment (shells </span>
-<span class="sd">        defined by CNA signature).</span>
+<span class="sd">        defined by vertex / edge / fcc111 / fcc100 / bulk identified</span>
+<span class="sd">        by CNA analysis).</span>
 
 <span class="sd">    cutoff: float, default 0.1</span>
 <span class="sd">        Minimum distance (in Angstrom) that the code can recognize </span>
@@ -245,10 +247,8 @@
                  <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
                  <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="n">symmetry</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">=</span> <span class="n">cutoff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">=</span> <span class="n">secondary_symmetry</span>
@@ -257,9 +257,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
-            <span class="n">ca</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nma</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">*</span> <span class="n">ca</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nmb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nma</span>
+            <span class="n">tot</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">*</span> <span class="n">natoms</span> <span class="o">/</span> <span class="n">tot</span><span class="p">))</span> 
+                             <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">shell_threshold</span> <span class="o">=</span> <span class="n">shell_threshold</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -400,8 +401,9 @@
                     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">specie</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comb</span><span class="p">):</span>
                         <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">shells</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="n">specie</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">nnma</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">])</span>
-                        <span class="k">if</span> <span class="n">nnma</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nma</span><span class="p">:</span>
+                        <span class="n">nums</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="nb">len</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">e</span><span class="p">])</span> 
+                                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">}</span>
+                        <span class="k">if</span> <span class="n">nums</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span><span class="p">:</span>
                             <span class="k">continue</span>
                     <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
                     <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -421,8 +423,10 @@
                     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">specie</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comb</span><span class="p">):</span>
                         <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">shells</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="n">specie</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">nnma</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">])</span>
-                        <span class="k">if</span> <span class="n">nnma</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nma</span><span class="p">:</span>
+                        <span class="n">nums</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="nb">len</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">e</span><span class="p">])</span> 
+                                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">}</span>
+                        <span class="k">if</span> <span class="n">nums</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span>
                             <span class="k">continue</span>
                     <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
                     <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -435,7 +439,7 @@
 
 <div class="viewcode-block" id="RandomOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.orderings.RandomOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">RandomOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;`RandomOrderingGenerator` is a class for generating random </span>
-<span class="sd">    chemical orderings for a bimetallic catalyst. The function is </span>
+<span class="sd">    chemical orderings for an alloy catalyst. The function is </span>
 <span class="sd">    generalized for both periodic and non-periodic systems.</span>
 <span class="sd"> </span>
 <span class="sd">    Parameters</span>
@@ -446,7 +450,7 @@
 <span class="sd">        object. No need to be built-in.</span>
 
 <span class="sd">    elements : list of strs </span>
-<span class="sd">        The two metal elements of the bimetallic catalyst.</span>
+<span class="sd">        The metal elements of the alloy catalyst.</span>
 
 <span class="sd">    composition: dict, None</span>
 <span class="sd">        Generate random orderings only at a certain composition.</span>
@@ -467,20 +471,42 @@
                  <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
                  <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
-            <span class="n">ca</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ma</span><span class="p">]</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nma</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">*</span> <span class="n">ca</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nmb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nma</span>
+            <span class="n">tot</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">*</span> 
+                             <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">/</span> <span class="n">tot</span><span class="p">))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span> <span class="o">=</span> <span class="n">trajectory</span>                        
         <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="o">=</span> <span class="n">append_trajectory</span>
+
+    <span class="k">def</span> <span class="nf">randint_with_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a randomly chosen list of N positive integers i</span>
+<span class="sd">        summing to the number of atoms. N is the number of elements.</span>
+<span class="sd">        Each such list is equally likely to occur.&quot;&quot;&quot;</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span>
+        <span class="n">dividers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total</span><span class="p">),</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dividers</span> <span class="o">+</span> <span class="p">[</span><span class="n">total</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dividers</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">random_split_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate random chunks of indices given sizes of </span>
+<span class="sd">        each chunk.&quot;&quot;&quot;</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)))</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">pointer</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">pointer</span><span class="p">:</span><span class="n">pointer</span><span class="o">+</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">pointer</span> <span class="o">+=</span> <span class="n">v</span>
+
+        <span class="k">return</span> <span class="n">res</span>
 
 <div class="viewcode-block" id="RandomOrderingGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.orderings.RandomOrderingGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_gen</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the chemical ordering generator.</span>
@@ -496,17 +522,16 @@
         <span class="n">traj</span> <span class="o">=</span> <span class="n">Trajectory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">traj_mode</span><span class="p">)</span>
         <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span>
         <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-            <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ma</span>
 
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_gen</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rands</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">randint_with_sum</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="n">rands</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> 
+                                 <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)}</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_split_indices</span><span class="p">()</span>    
             <span class="n">indi</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">nmb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nmb</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">nmb</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">natoms</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">to_mb</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">),</span> <span class="n">nmb</span><span class="p">)</span>
-            <span class="n">indi</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">to_mb</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb</span>
+            <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">chunks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">indi</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
             <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span></div></div>
 </pre></div>
 

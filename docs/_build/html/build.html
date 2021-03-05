@@ -884,8 +884,9 @@ of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 <dt id="acat.build.orderings.SymmetricOrderingGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">acat.build.orderings.</code><code class="sig-name descname">SymmetricOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'spherical'</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">secondary_symmetry</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secondary_cutoff</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shell_threshold</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>SymmetricOrderingGenerator</cite> is a class for generating
-symmetric chemical orderings for a bimetallic catalyst.
-As for now, only support clusters. Please align the z direction
+symmetric chemical orderings for a nanoalloy.
+As for now, only support clusters, but there is no limitation
+of the number of metal elements. Please align the z direction
 to the symmetry axis of the cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -893,7 +894,7 @@ to the symmetry axis of the cluster.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle to use as a template to generate symmetric
 chemical orderings. Accept any ase.Atoms object. No need to be
 built-in.</p></li>
-<li><p><strong>elements</strong> (<em>list of strs</em>) – The two metal elements of the bimetallic nanoparticle.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the nanoalloy.</p></li>
 <li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'spherical'</em>) – Support 4 symmetries:
 ‘spherical’ = centrosymmetry (shells defined by the distances
 to the geometric center);
@@ -902,7 +903,8 @@ the z coordinate differences to the geometric center);
 ‘cylindrical’ = cylindrical symmetry around z axis (shells
 defined by the distances to the z axis);
 ‘chemical’ = symmetry w.r.t chemical environment (shells
-defined by CNA signature).</p></li>
+defined by vertex / edge / fcc111 / fcc100 / bulk identified
+by CNA analysis).</p></li>
 <li><p><strong>cutoff</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Minimum distance (in Angstrom) that the code can recognize
 between two neighbor shells. If symmetry=’chemical’, this is
 the cutoff radius (in Angstrom) for CNA and will automatically
@@ -957,7 +959,7 @@ octahedral NiPt nanoalloy with spherical symmetry:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
@@ -973,7 +975,7 @@ octahedral NiPt nanoalloy with spherical symmetry:</p>
 <dt id="acat.build.orderings.RandomOrderingGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">acat.build.orderings.</code><code class="sig-name descname">RandomOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>RandomOrderingGenerator</cite> is a class for generating random
-chemical orderings for a bimetallic catalyst. The function is
+chemical orderings for an alloy catalyst. The function is
 generalized for both periodic and non-periodic systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -981,7 +983,7 @@ generalized for both periodic and non-periodic systems.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle or surface slab to use as a template to
 generate random chemical orderings. Accept any ase.Atoms
 object. No need to be built-in.</p></li>
-<li><p><strong>elements</strong> (<em>list of strs</em>) – The two metal elements of the bimetallic catalyst.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
 <li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>None</em>) – Generate random orderings only at a certain composition.
 The dictionary contains the two speices as keys and their
 concentrations as values. Generate orderings at all
@@ -1005,22 +1007,22 @@ compositions if not specified.</p></li>
 </dd></dl>
 
 <p><strong>Example</strong></p>
-<p>To generate 100 random chemical orderings of a icosahedral Ni3Pt
+<p>To generate 50 random chemical orderings of a icosahedral Ni0.5Pt0.2Au0.3
 nanoalloy:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
-<span class="gp">... </span>          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
+<span class="gp">... </span>          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<a class="reference internal image-reference" href="_images/RandomOrderingGenerator.gif"><img alt="_images/RandomOrderingGenerator.gif" class="align-center" src="_images/RandomOrderingGenerator.gif" style="width: 244.2px; height: 247.2px;" /></a>
+<a class="reference internal image-reference" href="_images/RandomOrderingGenerator.gif"><img alt="_images/RandomOrderingGenerator.gif" class="align-center" src="_images/RandomOrderingGenerator.gif" style="width: 192.6px; height: 193.79999999999998px;" /></a>
 </div>
 </div>
 
