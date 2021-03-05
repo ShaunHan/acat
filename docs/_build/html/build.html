@@ -931,6 +931,25 @@ compositions if not specified.</p></li>
 </dd>
 </dl>
 <dl class="py method">
+<dt id="acat.build.orderings.SymmetricOrderingGenerator.get_nblist_from_center_atom">
+<code class="sig-name descname">get_nblist_from_center_atom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symmetry</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator.get_nblist_from_center_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator.get_nblist_from_center_atom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the indices sorted by the distance to the center atom,
+together with their distances, given a specific symmetry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>symmetry</strong> (<em>str</em>) – Support 4 symmetries: spherical, planar, cylindrical, chemical.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.build.orderings.SymmetricOrderingGenerator.get_shells">
+<code class="sig-name descname">get_shells</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator.get_shells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator.get_shells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the shells (a list of lists of atom indices) that divided by
+the symmetry.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="acat.build.orderings.SymmetricOrderingGenerator.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the chemical ordering generator.</p>
@@ -993,6 +1012,21 @@ compositions if not specified.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt id="acat.build.orderings.RandomOrderingGenerator.randint_with_sum">
+<code class="sig-name descname">randint_with_sum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator.randint_with_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator.randint_with_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a randomly chosen list of N positive integers i
+summing to the number of atoms. N is the number of elements.
+Each such list is equally likely to occur.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.build.orderings.RandomOrderingGenerator.random_split_indices">
+<code class="sig-name descname">random_split_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator.random_split_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator.random_split_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate random chunks of indices given sizes of
+each chunk.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt id="acat.build.orderings.RandomOrderingGenerator.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>

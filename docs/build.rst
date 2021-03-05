@@ -394,6 +394,10 @@ Generate chemical orderings
 
     .. autoclass:: SymmetricOrderingGenerator
 
+        .. automethod:: get_nblist_from_center_atom
+
+        .. automethod:: get_shells
+
         .. automethod:: run
 
     **Example**
@@ -422,6 +426,10 @@ Generate chemical orderings
        :align: center
                
     .. autoclass:: RandomOrderingGenerator       
+
+        .. automethod:: randint_with_sum
+
+        .. automethod:: random_split_indices
 
         .. automethod:: run
 
