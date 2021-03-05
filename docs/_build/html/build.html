@@ -882,12 +882,12 @@ of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 <span id="generate-chemical-orderings"></span><h2>Generate chemical orderings<a class="headerlink" href="#module-acat.build.orderings" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="acat.build.orderings.SymmetricOrderingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.orderings.</code><code class="sig-name descname">SymmetricOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'spherical'</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">secondary_symmetry</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secondary_cutoff</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shell_threshold</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.build.orderings.</code><code class="sig-name descname">SymmetricOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'spherical'</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">secondary_symmetry</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secondary_cutoff</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">shell_threshold</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>SymmetricOrderingGenerator</cite> is a class for generating
 symmetric chemical orderings for a nanoalloy.
-As for now, only support clusters, but there is no limitation
-of the number of metal elements. Please align the z direction
-to the symmetry axis of the cluster.</p>
+As for now only support clusters without fixing the composition,
+but there is no limitation of the number of metal components.
+Please align the z direction to the symmetry axis of the cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -895,17 +895,20 @@ to the symmetry axis of the cluster.</p>
 chemical orderings. Accept any ase.Atoms object. No need to be
 built-in.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the nanoalloy.</p></li>
-<li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'spherical'</em>) – Support 4 symmetries:
+<li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'spherical'</em>) – Support 5 symmetries:
 ‘spherical’ = centrosymmetry (shells defined by the distances
 to the geometric center);
-‘planar’ = planar symmetry around z axis (shells defined by
-the z coordinate differences to the geometric center);
 ‘cylindrical’ = cylindrical symmetry around z axis (shells
 defined by the distances to the z axis);
+‘planar’ = planar symmetry around z axis (shells defined by
+the z coordinates);
+‘parallel_planar’ = double planar symmetry around both z and
+x (or y) axis (shells defined by the z vertical distance to
+the geometric center);
 ‘chemical’ = symmetry w.r.t chemical environment (shells
 defined by vertex / edge / fcc111 / fcc100 / bulk identified
 by CNA analysis).</p></li>
-<li><p><strong>cutoff</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Minimum distance (in Angstrom) that the code can recognize
+<li><p><strong>cutoff</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Minimum distance (in Angstrom) that the code can distinguish
 between two neighbor shells. If symmetry=’chemical’, this is
 the cutoff radius (in Angstrom) for CNA and will automatically
 use a reasonable cutoff based on the lattice constant of the
@@ -915,15 +918,11 @@ use a larger cutoff.</p></li>
 For example, even if two atoms are classifed in one shell that
 defined by the primary symmetry, they can still end up in
 different shells if they fall into two different shells that
-defined by the secondary symmetry. Support same 4 symmetries.
+defined by the secondary symmetry. Support same 5 symmetries.
 Note that secondary symmetry has the same importance as the
 primary symmetry, so you can set either of the two symmetries
 of interest as the secondary symmetry.</p></li>
 <li><p><strong>secondary_cutoff</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Same as cutoff, except that it is for the secondary symmetry.</p></li>
-<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – Generate symmetric orderings only at a certain composition.
-The dictionary contains the two speices as keys and their
-concentrations as values. Generate orderings at all
-compositions if not specified.</p></li>
 <li><p><strong>shell_threshold</strong> (<em>int</em><em>, </em><em>default 20</em>) – Number of shells to switch to stochastic mode automatically.</p></li>
 <li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'orderings.traj'</em>) – The name of the output ase trajectory file.</p></li>
 <li><p><strong>append_trajectory</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to append structures to the existing trajectory.</p></li>
@@ -931,13 +930,16 @@ compositions if not specified.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.orderings.SymmetricOrderingGenerator.get_nblist_from_center_atom">
-<code class="sig-name descname">get_nblist_from_center_atom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symmetry</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator.get_nblist_from_center_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator.get_nblist_from_center_atom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the indices sorted by the distance to the center atom,
-together with their distances, given a specific symmetry.</p>
+<dt id="acat.build.orderings.SymmetricOrderingGenerator.get_sorted_indices">
+<code class="sig-name descname">get_sorted_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symmetry</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator.get_sorted_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator.get_sorted_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the indices sorted by the metric that defines different
+shells, together with the corresponding vlues, given a specific
+symmetry. Returns the indices sorted by chemical environment if
+symmetry=’chemical’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>symmetry</strong> (<em>str</em>) – Support 4 symmetries: spherical, planar, cylindrical, chemical.</p>
+<dd class="field-odd"><p><strong>symmetry</strong> (<em>str</em>) – Support 5 symmetries: spherical, cylindrical, planar,
+parallel_planar, chemical.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -945,8 +947,8 @@ together with their distances, given a specific symmetry.</p>
 <dl class="py method">
 <dt id="acat.build.orderings.SymmetricOrderingGenerator.get_shells">
 <code class="sig-name descname">get_shells</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#SymmetricOrderingGenerator.get_shells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.SymmetricOrderingGenerator.get_shells" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the shells (a list of lists of atom indices) that divided by
-the symmetry.</p>
+<dd><p>Get the shells (a list of lists of atom indices) that divided
+by the symmetry.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -995,7 +997,8 @@ octahedral NiPt nanoalloy with spherical symmetry:</p>
 <em class="property">class </em><code class="sig-prename descclassname">acat.build.orderings.</code><code class="sig-name descname">RandomOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>RandomOrderingGenerator</cite> is a class for generating random
 chemical orderings for an alloy catalyst. The function is
-generalized for both periodic and non-periodic systems.</p>
+generalized for both periodic and non-periodic systems, and
+there is no limitation of the number of metal components.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1004,8 +1007,8 @@ generate random chemical orderings. Accept any ase.Atoms
 object. No need to be built-in.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
 <li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>None</em>) – Generate random orderings only at a certain composition.
-The dictionary contains the two speices as keys and their
-concentrations as values. Generate orderings at all
+The dictionary contains the metal elements as keys and
+their concentrations as values. Generate orderings at all
 compositions if not specified.</p></li>
 <li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'patterns.traj'</em>) – The name of the output ase trajectory file.</p></li>
 <li><p><strong>append_trajectory</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to append structures to the existing trajectory.</p></li>
@@ -1023,8 +1026,8 @@ Each such list is equally likely to occur.</p>
 <dl class="py method">
 <dt id="acat.build.orderings.RandomOrderingGenerator.random_split_indices">
 <code class="sig-name descname">random_split_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/orderings.html#RandomOrderingGenerator.random_split_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.orderings.RandomOrderingGenerator.random_split_indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate random chunks of indices given sizes of
-each chunk.</p>
+<dd><p>Generate random chunks of indices given sizes of each
+chunk.</p>
 </dd></dl>
 
 <dl class="py method">

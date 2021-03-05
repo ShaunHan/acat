@@ -11,9 +11,9 @@ import math
 class SymmetricOrderingGenerator(object):
     """`SymmetricOrderingGenerator` is a class for generating 
     symmetric chemical orderings for a nanoalloy.
-    As for now, only support clusters, but there is no limitation 
-    of the number of metal elements. Please align the z direction 
-    to the symmetry axis of the cluster.
+    As for now only support clusters without fixing the composition, 
+    but there is no limitation of the number of metal components. 
+    Please align the z direction to the symmetry axis of the cluster.
  
     Parameters
     ----------
@@ -26,19 +26,22 @@ class SymmetricOrderingGenerator(object):
         The metal elements of the nanoalloy.
 
     symmetry : str, default 'spherical'
-        Support 4 symmetries: 
+        Support 5 symmetries: 
         'spherical' = centrosymmetry (shells defined by the distances 
         to the geometric center);
-        'planar' = planar symmetry around z axis (shells defined by 
-        the z coordinate differences to the geometric center);
         'cylindrical' = cylindrical symmetry around z axis (shells 
         defined by the distances to the z axis);
+        'planar' = planar symmetry around z axis (shells defined by 
+        the z coordinates);
+        'parallel_planar' = double planar symmetry around both z and 
+        x (or y) axis (shells defined by the z vertical distance to
+        the geometric center);
         'chemical' = symmetry w.r.t chemical environment (shells 
         defined by vertex / edge / fcc111 / fcc100 / bulk identified
         by CNA analysis).
 
     cutoff: float, default 0.1
-        Minimum distance (in Angstrom) that the code can recognize 
+        Minimum distance (in Angstrom) that the code can distinguish 
         between two neighbor shells. If symmetry='chemical', this is 
         the cutoff radius (in Angstrom) for CNA and will automatically 
         use a reasonable cutoff based on the lattice constant of the 
@@ -50,19 +53,13 @@ class SymmetricOrderingGenerator(object):
         For example, even if two atoms are classifed in one shell that 
         defined by the primary symmetry, they can still end up in 
         different shells if they fall into two different shells that 
-        defined by the secondary symmetry. Support same 4 symmetries. 
+        defined by the secondary symmetry. Support same 5 symmetries. 
         Note that secondary symmetry has the same importance as the 
         primary symmetry, so you can set either of the two symmetries 
         of interest as the secondary symmetry.
 
     secondary_cutoff : float, default 0.1
         Same as cutoff, except that it is for the secondary symmetry.
-
-    composition : dict, default None
-        Generate symmetric orderings only at a certain composition.
-        The dictionary contains the two speices as keys and their 
-        concentrations as values. Generate orderings at all 
-        compositions if not specified.
 
     shell_threshold : int, default 20
         Number of shells to switch to stochastic mode automatically.
@@ -76,11 +73,10 @@ class SymmetricOrderingGenerator(object):
     """
 
     def __init__(self, atoms, elements,
-                 symmetry='spherical', #'planar', 'cylindrical', 'chemical'
+                 symmetry='spherical', #'planar' / 'cylindrical' / 'chemical'
                  cutoff=.1,       
                  secondary_symmetry=None,
                  secondary_cutoff=.1,
-                 composition=None,
                  shell_threshold=20,
                  trajectory='orderings.traj',
                  append_trajectory=False):
@@ -92,14 +88,6 @@ class SymmetricOrderingGenerator(object):
         self.secondary_symmetry = secondary_symmetry
         self.secondary_cutoff = secondary_cutoff
 
-        self.composition = composition
-        if self.composition is not None:
-            assert set(self.composition.keys()) == set(self.elements)
-            tot = sum(self.composition.values())
-            natoms = len(self.atoms)
-            self.num_dict = {e: int(round(self.composition[e] * natoms / tot)) 
-                             for e in self.elements}
-
         self.shell_threshold = shell_threshold
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
@@ -107,14 +95,17 @@ class SymmetricOrderingGenerator(object):
 
         self.shells = self.get_shells()
 
-    def get_nblist_from_center_atom(self, symmetry):
-        """Returns the indices sorted by the distance to the center atom,
-        together with their distances, given a specific symmetry.
+    def get_sorted_indices(self, symmetry):
+        """Returns the indices sorted by the metric that defines different 
+        shells, together with the corresponding vlues, given a specific 
+        symmetry. Returns the indices sorted by chemical environment if 
+        symmetry='chemical'.
 
         Parameters
         ----------
         symmetry : str
-            Support 4 symmetries: spherical, planar, cylindrical, chemical.
+            Support 5 symmetries: spherical, cylindrical, planar, 
+            parallel_planar, chemical.
 
         """
 
@@ -124,11 +115,13 @@ class SymmetricOrderingGenerator(object):
                    (atoms.cell/2.)[2][2]]
         if symmetry == 'spherical':
             dists = get_distances(atoms.positions, [geo_mid])[1]
-        elif symmetry == 'planar':
-            dists = abs(atoms.positions[:, 2] - geo_mid[2])
         elif symmetry == 'cylindrical':
             dists = np.asarray([math.sqrt((a.position[0] - geo_mid[0])**2 + 
                                (a.position[1] - geo_mid[1])**2) for a in atoms])
+        elif symmetry == 'planar':
+            dists = atoms.positions[:, 2]
+        elif symmetry == 'parallel_planar':
+            dists = abs(atoms.positions[:, 2] - geo_mid[2])
         elif symmetry == 'chemical':
             if self.symmetry == 'chemical':
                 rCut = None if self.cutoff < 1. else self.cutoff
@@ -151,10 +144,10 @@ class SymmetricOrderingGenerator(object):
         return sorted_indices, dists[sorted_indices]    
     
     def get_shells(self):
-        """Get the shells (a list of lists of atom indices) that divided by 
-        the symmetry."""
+        """Get the shells (a list of lists of atom indices) that divided 
+        by the symmetry."""
 
-        indices, dists = self.get_nblist_from_center_atom(symmetry=self.symmetry) 
+        indices, dists = self.get_sorted_indices(symmetry=self.symmetry) 
 
         if self.symmetry == 'chemical':
             shells = indices
@@ -169,8 +162,8 @@ class SymmetricOrderingGenerator(object):
                 old_dist = dist
 
         if self.secondary_symmetry is not None:
-            indices2, dists2 = self.get_nblist_from_center_atom(
-                               symmetry=self.secondary_symmetry)
+            indices2, dists2 = self.get_sorted_indices(symmetry=
+                                                       self.secondary_symmetry)
             if self.secondary_symmetry == 'chemical':
                 shells2 = indices2
             else:
@@ -221,7 +214,7 @@ class SymmetricOrderingGenerator(object):
         shells = self.shells
         nshells = len(shells)
         if verbose:
-            print('{} shells classified'.format(len(shells)))
+            print('{} shells classified'.format(nshells))
         n_write = 0
 
         # When the number of shells is too large (> 20), systematic enumeration 
@@ -236,13 +229,8 @@ class SymmetricOrderingGenerator(object):
                 combs = list(product(self.elements, repeat=len(shells)))
                 random.shuffle(combs)
                 for comb in combs:
-                    for j, specie in enumerate(comb):
-                        atoms.symbols[shells[j]] = specie
-                    if self.composition is not None:
-                        nums = {e: len([a for a in atoms if a.symbol == e]) 
-                                for e in self.elements}
-                        if nums != self.num_dict:
-                            continue
+                    for j, spec in enumerate(comb):
+                        atoms.symbols[shells[j]] = spec
                     traj.write(atoms)
                     n_write += 1
                     if max_gen is not None:
@@ -258,14 +246,8 @@ class SymmetricOrderingGenerator(object):
                 comb = tuple(np.random.choice(self.elements, size=nshells))
                 if comb not in combs or too_few: 
                     combs.add(comb)
-                    for j, specie in enumerate(comb):
-                        atoms.symbols[shells[j]] = specie
-                    if self.composition is not None:
-                        nums = {e: len([a for a in atoms if a.symbol == e]) 
-                                for e in self.elements}
-                        if nums != self.num_dict:
-                            print(nums)
-                            continue
+                    for j, spec in enumerate(comb):
+                        atoms.symbols[shells[j]] = spec
                     traj.write(atoms)
                     n_write += 1
                     if max_gen is not None:
@@ -278,7 +260,8 @@ class SymmetricOrderingGenerator(object):
 class RandomOrderingGenerator(object):
     """`RandomOrderingGenerator` is a class for generating random 
     chemical orderings for an alloy catalyst. The function is 
-    generalized for both periodic and non-periodic systems.
+    generalized for both periodic and non-periodic systems, and 
+    there is no limitation of the number of metal components.
  
     Parameters
     ----------
@@ -292,8 +275,8 @@ class RandomOrderingGenerator(object):
 
     composition: dict, None
         Generate random orderings only at a certain composition.
-        The dictionary contains the two speices as keys and their 
-        concentrations as values. Generate orderings at all 
+        The dictionary contains the metal elements as keys and 
+        their concentrations as values. Generate orderings at all 
         compositions if not specified.
 
     trajectory : str, default 'patterns.traj'
@@ -333,8 +316,8 @@ class RandomOrderingGenerator(object):
         return [a - b for a, b in zip(dividers + [total], [0] + dividers)]
 
     def random_split_indices(self):
-        """Generate random chunks of indices given sizes of 
-        each chunk."""
+        """Generate random chunks of indices given sizes of each 
+        chunk."""
 
         indices = list(range(len(self.atoms)))
         random.shuffle(indices)
