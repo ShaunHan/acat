@@ -406,7 +406,7 @@ Generate chemical orderings
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', length=8, cutoff=3)
-        >>> sog = SOG(atoms, species=['Ni', 'Pt'], symmetry='spherical')
+        >>> sog = SOG(atoms, elements=['Ni', 'Pt'], symmetry='spherical')
         >>> sog.run(max_gen=100, verbose=True)
         >>> images = read('orderings.traj', index=':') 
         >>> view(images)
@@ -427,17 +427,17 @@ Generate chemical orderings
 
     **Example**
 
-    To generate 100 random chemical orderings of a icosahedral Ni3Pt 
+    To generate 50 random chemical orderings of a icosahedral Ni0.5Pt0.2Au0.3
     nanoalloy:
 
         >>> from acat.build.orderings import RandomOrderingGenerator as ROG
         >>> from ase.cluster import Icosahedron
         >>> from ase.io import read
         >>> from ase.visualize import view
-        >>> atoms = Icosahedron('Ni', noshells=5)
-        >>> rog = ROG(atoms, species=['Ni', 'Pt'], 
-        ...           composition={'Ni': 0.75, 'Pt': 0.25})
-        >>> rog.run(num_gen=100)
+        >>> atoms = Icosahedron('Ni', noshells=4)
+        >>> rog = ROG(atoms, elements=['Ni', 'Pt', 'Au'], 
+        ...           composition={'Ni': 0.5, 'Pt': 0.2, 'Au': 0.3})
+        >>> rog.run(num_gen=50)
         >>> images = read('orderings.traj', index=':') 
         >>> view(images)
 

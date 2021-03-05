@@ -10,8 +10,9 @@ import math
 
 class SymmetricOrderingGenerator(object):
     """`SymmetricOrderingGenerator` is a class for generating 
-    symmetric chemical orderings for a bimetallic catalyst.
-    As for now, only support clusters. Please align the z direction 
+    symmetric chemical orderings for a nanoalloy.
+    As for now, only support clusters, but there is no limitation 
+    of the number of metal elements. Please align the z direction 
     to the symmetry axis of the cluster.
  
     Parameters
@@ -22,7 +23,7 @@ class SymmetricOrderingGenerator(object):
         built-in.
 
     elements : list of strs 
-        The two metal elements of the bimetallic nanoparticle.
+        The metal elements of the nanoalloy.
 
     symmetry : str, default 'spherical'
         Support 4 symmetries: 
@@ -33,7 +34,8 @@ class SymmetricOrderingGenerator(object):
         'cylindrical' = cylindrical symmetry around z axis (shells 
         defined by the distances to the z axis);
         'chemical' = symmetry w.r.t chemical environment (shells 
-        defined by CNA signature).
+        defined by vertex / edge / fcc111 / fcc100 / bulk identified
+        by CNA analysis).
 
     cutoff: float, default 0.1
         Minimum distance (in Angstrom) that the code can recognize 
@@ -83,10 +85,8 @@ class SymmetricOrderingGenerator(object):
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
-        assert len(elements) == 2
         self.atoms = atoms
         self.elements = elements
-        self.ma, self.mb = elements[0], elements[1]
         self.symmetry = symmetry
         self.cutoff = cutoff
         self.secondary_symmetry = secondary_symmetry
@@ -95,9 +95,10 @@ class SymmetricOrderingGenerator(object):
         self.composition = composition
         if self.composition is not None:
             assert set(self.composition.keys()) == set(self.elements)
-            ca = self.composition[self.ma] / sum(self.composition.values())
-            self.nma = int(round(len(self.atoms) * ca))
-            self.nmb = len(self.atoms) - self.nma
+            tot = sum(self.composition.values())
+            natoms = len(self.atoms)
+            self.num_dict = {e: int(round(self.composition[e] * natoms / tot)) 
+                             for e in self.elements}
 
         self.shell_threshold = shell_threshold
         if isinstance(trajectory, str):
@@ -238,8 +239,9 @@ class SymmetricOrderingGenerator(object):
                     for j, specie in enumerate(comb):
                         atoms.symbols[shells[j]] = specie
                     if self.composition is not None:
-                        nnma = len([a for a in atoms if a.symbol == self.ma])
-                        if nnma != self.nma:
+                        nums = {e: len([a for a in atoms if a.symbol == e]) 
+                                for e in self.elements}
+                        if nums != self.num_dict:
                             continue
                     traj.write(atoms)
                     n_write += 1
@@ -259,8 +261,10 @@ class SymmetricOrderingGenerator(object):
                     for j, specie in enumerate(comb):
                         atoms.symbols[shells[j]] = specie
                     if self.composition is not None:
-                        nnma = len([a for a in atoms if a.symbol == self.ma])
-                        if nnma != self.nma:
+                        nums = {e: len([a for a in atoms if a.symbol == e]) 
+                                for e in self.elements}
+                        if nums != self.num_dict:
+                            print(nums)
                             continue
                     traj.write(atoms)
                     n_write += 1
@@ -273,7 +277,7 @@ class SymmetricOrderingGenerator(object):
 
 class RandomOrderingGenerator(object):
     """`RandomOrderingGenerator` is a class for generating random 
-    chemical orderings for a bimetallic catalyst. The function is 
+    chemical orderings for an alloy catalyst. The function is 
     generalized for both periodic and non-periodic systems.
  
     Parameters
@@ -284,7 +288,7 @@ class RandomOrderingGenerator(object):
         object. No need to be built-in.
 
     elements : list of strs 
-        The two metal elements of the bimetallic catalyst.
+        The metal elements of the alloy catalyst.
 
     composition: dict, None
         Generate random orderings only at a certain composition.
@@ -305,20 +309,42 @@ class RandomOrderingGenerator(object):
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
-        assert len(elements) == 2
         self.atoms = atoms
         self.elements = elements
-        self.ma, self.mb = elements[0], elements[1]
         self.composition = composition
         if self.composition is not None:
             assert set(self.composition.keys()) == set(self.elements)
-            ca = self.composition[self.ma] / sum(self.composition.values())
-            self.nma = int(round(len(self.atoms) * ca))
-            self.nmb = len(self.atoms) - self.nma
+            tot = sum(self.composition.values())
+            self.num_dict = {e: int(round(self.composition[e] * 
+                             len(self.atoms) / tot)) for e in self.elements}
 
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
         self.append_trajectory = append_trajectory
+
+    def randint_with_sum(self):
+        """Return a randomly chosen list of N positive integers i
+        summing to the number of atoms. N is the number of elements.
+        Each such list is equally likely to occur."""
+
+        N = len(self.elements)
+        total = len(self.atoms)
+        dividers = sorted(random.sample(range(1, total), N - 1))
+        return [a - b for a, b in zip(dividers + [total], [0] + dividers)]
+
+    def random_split_indices(self):
+        """Generate random chunks of indices given sizes of 
+        each chunk."""
+
+        indices = list(range(len(self.atoms)))
+        random.shuffle(indices)
+        res = {}
+        pointer = 0
+        for k, v in self.num_dict.items():
+            res[k] = indices[pointer:pointer+v]
+            pointer += v
+
+        return res
 
     def run(self, num_gen):
         """Run the chemical ordering generator.
@@ -334,15 +360,14 @@ class RandomOrderingGenerator(object):
         traj = Trajectory(self.trajectory, mode=traj_mode)
         atoms = self.atoms
         natoms = len(atoms)
-        for a in atoms:
-            a.symbol = self.ma
 
         for _ in range(num_gen):
+            if self.composition is None:
+                rands = self.randint_with_sum()
+                self.num_dict = {e: rands[i] for i, e in 
+                                 enumerate(self.elements)}
+            chunks = self.random_split_indices()    
             indi = atoms.copy()
-            if self.composition is not None:
-                nmb = self.nmb
-            else:
-                nmb = random.randint(1, natoms-1)
-            to_mb = random.sample(range(natoms), nmb)
-            indi.symbols[to_mb] = self.mb
+            for e, ids in chunks.items():
+                indi.symbols[ids] = e
             traj.write(indi)
