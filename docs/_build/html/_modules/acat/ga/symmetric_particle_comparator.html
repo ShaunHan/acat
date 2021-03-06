@@ -191,19 +191,17 @@
 
         <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">a1</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">())</span> <span class="o">|</span>
-                     <span class="nb">set</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">a1</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span>
 
         <span class="n">shells</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shells</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">sorted_elems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">a1</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">())</span> <span class="o">|</span>
-                              <span class="nb">set</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="n">sorted_elems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">a1</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
         <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">!=</span> <span class="n">sorted_elems</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">shell</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">:</span>
                 <span class="n">torem</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">shell</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">a1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
                         <span class="n">torem</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">torem</span><span class="p">:</span>
                     <span class="n">shell</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>

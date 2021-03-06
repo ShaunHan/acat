@@ -754,7 +754,7 @@ Overwrite in subclass.</p>
 
 <dl class="py method">
 <dt id="acat.ga.symmetric_particle_operators.SymmetricPermutation.mutate">
-<em class="property">classmethod </em><code class="sig-name descname">mutate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricPermutation.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricPermutation.mutate" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">mutate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricPermutation.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricPermutation.mutate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do the actual permutation.</p>
 </dd></dl>
 
@@ -844,7 +844,7 @@ elements into account.</p></li>
 
 <span class="c1"># Generate 100 truncated ocatahedral NixPt405-x nanoalloys with chemical</span>
 <span class="c1"># and cylindrical orderings. Get the shells at the same time.</span>
-<span class="n">particle</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
           <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
@@ -855,7 +855,7 @@ elements into account.</p></li>
 <span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 
 <span class="c1"># Instantiate the db</span>
-<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;emt_ridge_chemical_cylindrical_NiPt_TO201.db&#39;</span>
+<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;emt_ridge_chemical_cylindrical_NiPt_TO405.db&#39;</span>
 
 <span class="n">db</span> <span class="o">=</span> <span class="n">PrepareDB</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
 

@@ -252,7 +252,7 @@ The script for the genetic algorithm looks as follows:
     
     # Generate 100 truncated ocatahedral NixPt405-x nanoalloys with chemical
     # and cylindrical orderings. Get the shells at the same time.
-    particle = Octahedron('Ni', length=7, cutoff=2)
+    particle = Octahedron('Ni', length=9, cutoff=3)
     particle.center(vacuum=5.)
     sog = SOG(particle, elements=['Ni', 'Pt'],
               symmetry='chemical',
@@ -263,7 +263,7 @@ The script for the genetic algorithm looks as follows:
     images = read('starting_generation.traj', index=':')
     
     # Instantiate the db
-    db_name = 'emt_ridge_chemical_cylindrical_NiPt_TO201.db'
+    db_name = 'emt_ridge_chemical_cylindrical_NiPt_TO405.db'
     
     db = PrepareDB(db_name, cell=particle.cell, population_size=pop_size)
     

@@ -45,8 +45,6 @@ class SymmetricSubstitute(Mutation):
     def substitute(self, atoms):
         """Does the actual substitution"""
 
-        print('substitution')
-
         atoms = atoms.copy() 
 
         if self.elements is None:
@@ -124,7 +122,7 @@ class SymmetricPermutation(Mutation):
         indi.info['data']['parents'] = [f.info['confid']]
 
         for _ in range(self.num_muts):
-            RandomPermutation.mutate(f, self.elements)
+            SymmetricPermutation.mutate(f, self.shells, self.elements)
 
         for atom in f:
             indi.append(atom)
@@ -133,20 +131,17 @@ class SymmetricPermutation(Mutation):
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
 
     @classmethod
-    def mutate(cls, atoms, elements=None):
+    def mutate(cls, atoms, shells, elements=None):
         """Do the actual permutation."""
 
-        print('permutation')
-
-        shells = cls.shells
-        if self.elements is None:
+        if elements is None:
             e = list(set(atoms.get_chemical_symbols()))
         else:
-            e = self.elements
+            e = elements
 
         sorted_elems = sorted(set(atoms.get_chemical_symbols()))
         if e is not None and sorted(e) != sorted_elems:
-            for shell in self.shells:
+            for shell in shells:
                 torem = []
                 for i in shell:
                     if atoms[i].symbol not in e:
@@ -198,34 +193,34 @@ class SymmetricCrossover(Crossover):
         
     def get_new_individual(self, parents):
         f, m = parents
-        print('crossover') 
 
-        indi = self.initialize_individual(f)
-        indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
-        indi.info['data']['operation'] = 'crossover'
-        parent_message = ':Parents {0} {1}'.format(f.info['confid'],
-                                                   m.info['confid']) 
+        indi = f.copy()
         shells = self.shells.copy()
         if self.elements is None:
-            e = list(set(atoms.get_chemical_symbols()))
+            e = list(set(f.get_chemical_symbols()))
         else:
             e = self.elements
 
-        sorted_elems = sorted(set(atoms.get_chemical_symbols()))
+        sorted_elems = sorted(set(f.get_chemical_symbols()))
         if e is not None and sorted(e) != sorted_elems:
             for shell in shells:
                 torem = []
                 for i in shell:
-                    if atoms[i].symbol not in e:
+                    if f[i].symbol not in e:
                         torem.append(i)
                 for i in torem:
                     shell.remove(i)
 
         random.shuffle(shells)
-        fshells, mshells = shells[:len(shells)//2], shells[len(shells)//2:]
-        flat_ids = [i for shell in shells for i in shell]
-        indi.symbols[flat_ids] = str(f.symbols[fshells]) + str(
-                                     m.symbols[mshells])
+        mshells = shells[len(shells)//2:]
+        mids = [i for shell in mshells for i in shell]
+        indi.symbols[mids] = m.symbols[mids]
+
+        indi = self.initialize_individual(f, indi)
+        indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
+        indi.info['data']['operation'] = 'crossover'
+        parent_message = ':Parents {0} {1}'.format(f.info['confid'],
+                                                   m.info['confid']) 
 
         return (self.finalize_individual(indi),
                 self.descriptor + parent_message)

@@ -29,19 +29,17 @@ class ShellCompositionComparator(Comparator):
 
         elements = self.elements
         if self.elements is None:
-            e = list(set(a1.get_chemical_symbols()) |
-                     set(a2.get_chemical_symbols()))
+            e = list(set(a1.get_chemical_symbols()))
         else:
             e = self.elements
 
         shells = self.shells.copy()
-        sorted_elems = sorted(set(a1.get_chemical_symbols()) |
-                              set(a2.get_chemical_symbols()))
+        sorted_elems = sorted(set(a1.get_chemical_symbols()))
         if e is not None and sorted(e) != sorted_elems:
             for shell in shells:
                 torem = []
                 for i in shell:
-                    if atoms[i].symbol not in e:
+                    if a1[i].symbol not in e:
                         torem.append(i)
                 for i in torem:
                     shell.remove(i)
