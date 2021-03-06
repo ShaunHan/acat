@@ -1,8 +1,8 @@
 Genetic algorithm
 =================
 
-Adsorbate procreation operators
--------------------------------
+Optimize adsorbate coverage patterns
+------------------------------------
 
 .. automodule:: acat.ga.adsorbate_operators
     :members:
@@ -210,17 +210,22 @@ The script for the genetic algorithm looks as follows:
         # update the population to allow new candidates to enter
         pop.update()
 
-Particle symmetric operators
--------------------------------
+Optimize symmetric nanoalloys
+-----------------------------
 
-.. automodule:: acat.ga.particle_symmetric_operators
+.. automodule:: acat.ga.symmetric_particle_operators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: acat.ga.symmetric_particle_comparator
     :members:
     :undoc-members:
     :show-inheritance:
 
 **Example**
 
-All the adsorbate operators can be easily used with other ASE operators.
+All the symmetric particle operators can be easily used with other ASE operators.
 
 As an example we will find the convex hull of NixPt405-x truncated octahedral nanoalloys using the ASAP EMT calculator.
 
@@ -229,10 +234,10 @@ The script for the genetic algorithm looks as follows:
 .. code-block:: python
 
     from acat.build.orderings import SymmetricOrderingGenerator as SOG
-    from acat.ga.particle_symmetric_operators import SymmetricSubstitute
-    from acat.ga.particle_symmetric_operators import SymmetricPermutation
-    from acat.ga.particle_symmetric_operators import SymmetricCrossover
-    from ase.ga.particle_comparator import NNMatComparator
+    from acat.ga.symmetric_particle_operators import SymmetricSubstitute
+    from acat.ga.symmetric_particle_operators import SymmetricPermutation
+    from acat.ga.symmetric_particle_operators import SymmetricCrossover
+    from acat.ga.symmetric_particle_comparator import ShellCompositionComparator
     from ase.ga.offspring_creator import OperationSelector
     from ase.ga.population import Population, RankFitnessPopulation
     from ase.ga.convergence import GenerationRepetitionConvergence
@@ -247,7 +252,7 @@ The script for the genetic algorithm looks as follows:
     
     # Generate 100 truncated ocatahedral NixPt405-x nanoalloys with chemical
     # and cylindrical orderings. Get the shells at the same time.
-    particle = Octahedron('Ni', length=9, cutoff=3)
+    particle = Octahedron('Ni', length=7, cutoff=2)
     particle.center(vacuum=5.)
     sog = SOG(particle, elements=['Ni', 'Pt'],
               symmetry='chemical',
@@ -258,7 +263,7 @@ The script for the genetic algorithm looks as follows:
     images = read('starting_generation.traj', index=':')
     
     # Instantiate the db
-    db_name = 'emt_ridge_chemical_cylindrical_NiPt_TO405.db'
+    db_name = 'emt_ridge_chemical_cylindrical_NiPt_TO201.db'
     
     db = PrepareDB(db_name, cell=particle.cell, population_size=pop_size)
     
@@ -279,7 +284,7 @@ The script for the genetic algorithm looks as follows:
     op_selector = OperationSelector(*soclist)
     
     # Define comparators
-    comp = NNMatComparator(0.2, ['Ni', 'Pt'])
+    comp = ShellCompositionComparator(shells, ['Ni', 'Pt'])
     
     def vf(atoms):
         """Returns the descriptor that distinguishes candidates in the 
@@ -375,11 +380,12 @@ The script for the genetic algorithm looks as follows:
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
             relax(offspring)
-            new_generation.append(offspring)
+    #        new_generation.append(offspring)
+            db.add_relaxed_candidate(offspring)
     
         # We add a full relaxed generation at once, this is faster than adding
         # one at a time
-        db.add_more_relaxed_candidates(new_generation)
+    #    db.add_more_relaxed_candidates(new_generation)
     
         # update the population to allow new candidates to enter
         pop.update()
