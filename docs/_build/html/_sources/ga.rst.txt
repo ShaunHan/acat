@@ -364,11 +364,10 @@ The script for the genetic algorithm looks as follows:
             op = op_selector.get_operator()
             # Select parents for a new candidate
             p1, p2 = pop.get_two_candidates()
-            parents = [p1, p2]
-    
-            # Pure or bare nanoparticles are not considered
-            if len(set(p1.numbers)) < 3:
+            # Pure candidates are not considered
+            if len(set(p1.numbers))==1:
                 continue 
+            parents = [p1, p2]
             offspring, desc = op.get_new_individual(parents)
             # An operator could return None if an offspring cannot be formed
             # by the chosen parents
@@ -380,12 +379,11 @@ The script for the genetic algorithm looks as follows:
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
             relax(offspring)
-    #        new_generation.append(offspring)
-            db.add_relaxed_candidate(offspring)
+            new_generation.append(offspring)
     
         # We add a full relaxed generation at once, this is faster than adding
         # one at a time
-    #    db.add_more_relaxed_candidates(new_generation)
+        db.add_more_relaxed_candidates(new_generation)
     
         # update the population to allow new candidates to enter
         pop.update()
