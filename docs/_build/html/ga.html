@@ -956,11 +956,10 @@ elements into account.</p></li>
         <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
         <span class="c1"># Select parents for a new candidate</span>
         <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
-        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
-
-        <span class="c1"># Pure or bare nanoparticles are not considered</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Pure candidates are not considered</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
             <span class="k">continue</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
         <span class="n">offspring</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_new_individual</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
         <span class="c1"># An operator could return None if an offspring cannot be formed</span>
         <span class="c1"># by the chosen parents</span>
@@ -972,12 +971,11 @@ elements into account.</p></li>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
             <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
-<span class="c1">#        new_generation.append(offspring)</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+        <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
     <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
     <span class="c1"># one at a time</span>
-<span class="c1">#    db.add_more_relaxed_candidates(new_generation)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">new_generation</span><span class="p">)</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
