@@ -95,7 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Genetic algorithm</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.adsorbate_operators">Adsorbate procreation operators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.particle_symmetric_operators">Particle symmetric operators</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
@@ -488,11 +488,9 @@ that is shorter than the minimum distance for those atom types
 
 </dd></dl>
 
-</div>
-<div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>Example</strong></p>
 <p>All the adsorbate operators can be easily used with other ASE operators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> operator only works for nanoparticles, and it is not recommonded as it is not stable yet.</p>
-<p>As an example we will find the stable structures of a Ni110Pt37 icosahedral nanoparticle with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
+<p>As an example we will find the stable structures (chemical ordering + coverage pattern) of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
 <p>The script for the genetic algorithm looks as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
 <span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
@@ -515,20 +513,22 @@ that is shorter than the minimum distance for those atom types
 <span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="kn">from</span> <span class="nn">ase.calculators.emt</span> <span class="kn">import</span> <span class="n">EMT</span>
 <span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">uniform</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">uniform</span>
+
+<span class="c1"># Define population</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">50</span>
 
 <span class="c1"># Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings</span>
-<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">50</span>
 <span class="n">particle</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
-          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">})</span>
+<span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+          <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">)</span>
 <span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">n_gen</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
 
 <span class="c1"># Generate random coverage on each nanoparticle</span>
 <span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;CH&#39;</span><span class="p">,</span> <span class="s1">&#39;CH2&#39;</span><span class="p">,</span> <span class="s1">&#39;CH3&#39;</span><span class="p">]</span>
-<span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="n">patterns</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
     <span class="n">dmin</span> <span class="o">=</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">)</span>
@@ -561,6 +561,7 @@ that is shorter than the minimum distance for those atom types
 
 <span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
 
+<span class="c1"># Define comparators</span>
 <span class="n">comp</span> <span class="o">=</span> <span class="n">SequentialComparator</span><span class="p">([</span><span class="n">AdsorptionSitesComparator</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
                              <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])],</span>
                             <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
@@ -584,10 +585,8 @@ that is shorter than the minimum distance for those atom types
 
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span>
 
-<span class="c1"># Define population</span>
-<span class="n">pop_size</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;population_size&#39;</span><span class="p">)</span>
-
 <span class="c1"># Give fittest candidates at different coverages equal fitness</span>
+<span class="c1"># Use this to find global minima for each coverage</span>
 <span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
                             <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
                             <span class="n">comparator</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
@@ -595,7 +594,8 @@ that is shorter than the minimum distance for those atom types
                             <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                             <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
 
-<span class="c1"># Normal fitness ranking regardless of coverage</span>
+<span class="c1"># Normal fitness ranking irrespective of coverage</span>
+<span class="c1"># Use this to find global minimum irrespective of coverage</span>
 <span class="c1">#pop = Population(data_connection=db,</span>
 <span class="c1">#                 population_size=pop_size,</span>
 <span class="c1">#                 comparator=comp,</span>
@@ -673,6 +673,277 @@ that is shorter than the minimum distance for those atom types
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
             <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point for simplification</span>
+        <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+
+    <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
+    <span class="c1"># one at a time</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">new_generation</span><span class="p">)</span>
+
+    <span class="c1"># update the population to allow new candidates to enter</span>
+    <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-acat.ga.particle_symmetric_operators">
+<span id="particle-symmetric-operators"></span><h2>Particle symmetric operators<a class="headerlink" href="#module-acat.ga.particle_symmetric_operators" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="acat.ga.particle_symmetric_operators.Mutation">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">Mutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#Mutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.Mutation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.offspring_creator.OffspringCreator</span></code></p>
+<p>Base class for all particle mutation type operators.
+Do not call this class directly.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricSubstitute">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">SymmetricSubstitute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricSubstitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricSubstitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.particle_symmetric_operators.Mutation" title="acat.ga.particle_symmetric_operators.Mutation"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.particle_symmetric_operators.Mutation</span></code></a></p>
+<p>Substitute all the atoms in a shell with a different metal
+element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
+obtained by <cite>acat.build.SymmetricOrderingGenerator</cite>.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
+the elements specified in this list. Default is to take all
+elements into account.</p></li>
+<li><p><strong>num_muts</strong> (<em>int</em><em>, </em><em>default 1</em>) – The number of times to perform this operation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricSubstitute.substitute">
+<code class="sig-name descname">substitute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricSubstitute.substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricSubstitute.substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does the actual substitution</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricSubstitute.get_new_individual">
+<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricSubstitute.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricSubstitute.get_new_individual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that returns a new individual.
+Overwrite in subclass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricPermutation">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">SymmetricPermutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricPermutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricPermutation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.particle_symmetric_operators.Mutation" title="acat.ga.particle_symmetric_operators.Mutation"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.particle_symmetric_operators.Mutation</span></code></a></p>
+<p>Permutes the elements in two random shells.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
+obtained by <cite>acat.build.SymmetricOrderingGenerator</cite>.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
+the elements specified in this list. Default is to take all
+elements into account.</p></li>
+<li><p><strong>num_muts</strong> (<em>int</em><em>, </em><em>default 1</em>) – The number of times to perform this operation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricPermutation.get_new_individual">
+<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricPermutation.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricPermutation.get_new_individual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that returns a new individual.
+Overwrite in subclass.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricPermutation.mutate">
+<em class="property">classmethod </em><code class="sig-name descname">mutate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricPermutation.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricPermutation.mutate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do the actual permutation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.particle_symmetric_operators.Crossover">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">Crossover</code><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#Crossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.Crossover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.offspring_creator.OffspringCreator</span></code></p>
+<p>Base class for all particle crossovers.
+Do not call this class directly.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricCrossover">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">SymmetricCrossover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricCrossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricCrossover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.particle_symmetric_operators.Crossover" title="acat.ga.particle_symmetric_operators.Crossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.particle_symmetric_operators.Crossover</span></code></a></p>
+<p>Merge the elemental distributions in two half shells from
+different particles together.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
+obtained by <cite>acat.build.SymmetricOrderingGenerator</cite>.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
+the elements specified in this list. Default is to take all
+elements into account.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.particle_symmetric_operators.SymmetricCrossover.get_new_individual">
+<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricCrossover.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricCrossover.get_new_individual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that returns a new individual.
+Overwrite in subclass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>Example</strong></p>
+<p>All the adsorbate operators can be easily used with other ASE operators.</p>
+<p>As an example we will find the convex hull of NixPt405-x truncated octahedral nanoalloys using the ASAP EMT calculator.</p>
+<p>The script for the genetic algorithm looks as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
+<span class="kn">from</span> <span class="nn">acat.ga.particle_symmetric_operators</span> <span class="kn">import</span> <span class="n">SymmetricSubstitute</span>
+<span class="kn">from</span> <span class="nn">acat.ga.particle_symmetric_operators</span> <span class="kn">import</span> <span class="n">SymmetricPermutation</span>
+<span class="kn">from</span> <span class="nn">acat.ga.particle_symmetric_operators</span> <span class="kn">import</span> <span class="n">SymmetricCrossover</span>
+<span class="kn">from</span> <span class="nn">ase.ga.particle_comparator</span> <span class="kn">import</span> <span class="n">NNMatComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OperationSelector</span>
+<span class="kn">from</span> <span class="nn">ase.ga.population</span> <span class="kn">import</span> <span class="n">Population</span><span class="p">,</span> <span class="n">RankFitnessPopulation</span>
+<span class="kn">from</span> <span class="nn">ase.ga.convergence</span> <span class="kn">import</span> <span class="n">GenerationRepetitionConvergence</span>
+<span class="kn">from</span> <span class="nn">ase.ga.data</span> <span class="kn">import</span> <span class="n">DataConnection</span><span class="p">,</span> <span class="n">PrepareDB</span>
+<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
+<span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
+<span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
+
+<span class="c1"># Define population</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="c1"># Generate 100 truncated ocatahedral NixPt405-x nanoalloys with chemical</span>
+<span class="c1"># and cylindrical orderings. Get the shells at the same time.</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+          <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
+          <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;cylindrical&#39;</span><span class="p">,</span>
+          <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">)</span>
+<span class="n">sog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">shells</span> <span class="o">=</span> <span class="n">sog</span><span class="o">.</span><span class="n">get_shells</span><span class="p">()</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+<span class="c1"># Instantiate the db</span>
+<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;emt_ridge_chemical_cylindrical_NiPt_TO405.db&#39;</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">PrepareDB</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+
+<span class="c1"># Connect to the db</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">DataConnection</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+
+<span class="c1"># Define operators</span>
+<span class="n">soclist</span> <span class="o">=</span> <span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+           <span class="p">[</span><span class="n">SymmetricSubstitute</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+            <span class="n">SymmetricPermutation</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">SymmetricCrossover</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">]),])</span>
+
+<span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
+
+<span class="c1"># Define comparators</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">vf</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the descriptor that distinguishes candidates in the</span>
+<span class="sd">    niched population.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+
+<span class="c1"># Give fittest candidates at different compositions equal fitness</span>
+<span class="c1"># Use this to find global minima at each composition</span>
+<span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                            <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
+                            <span class="n">comparator</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
+                            <span class="n">variable_function</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                            <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Normal fitness ranking irrespective of coverage</span>
+<span class="c1"># Use this to find global minimum irrespective of composition</span>
+<span class="c1">#pop = Population(data_connection=db,</span>
+<span class="c1">#                 population_size=pop_size,</span>
+<span class="c1">#                 comparator=comp,</span>
+<span class="c1">#                 logfile=&#39;log.txt&#39;)</span>
+
+<span class="c1"># Set convergence criteria</span>
+<span class="n">cc</span> <span class="o">=</span> <span class="n">GenerationRepetitionConvergence</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Calculate the relaxed energies for pure Ni405 and Pt405</span>
+<span class="n">pure_pots</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">147.532</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span>  <span class="mf">86.892</span><span class="p">}</span>
+
+<span class="c1"># Define the relax function</span>
+<span class="k">def</span> <span class="nf">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">asapEMT</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">single_point</span><span class="p">:</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">BFGS</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">Epot</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
+
+    <span class="c1"># There is a known issue of asapEMT in GA. You can either detach</span>
+    <span class="c1"># the calculator or re-assign to a SinglePointCalculator</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Calculte mixing energy</span>
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">syms</span><span class="p">):</span>
+        <span class="n">Epot</span> <span class="o">-=</span> <span class="p">(</span><span class="n">pure_pots</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span> <span class="o">*</span> <span class="n">syms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Epot</span>
+
+    <span class="k">return</span> <span class="n">atoms</span>
+
+<span class="c1"># Relax starting generation</span>
+<span class="k">while</span> <span class="n">db</span><span class="o">.</span><span class="n">get_number_of_unrelaxed_candidates</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_an_unrelaxed_candidate</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+    <span class="n">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_step</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+<span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+<span class="c1"># Number of generations</span>
+<span class="n">num_gens</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># Below is the iterative part of the algorithm</span>
+<span class="n">gen_num</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_generation_number</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_gens</span><span class="p">):</span>
+    <span class="c1"># Check if converged</span>
+    <span class="k">if</span> <span class="n">cc</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converged&#39;</span><span class="p">)</span>
+        <span class="k">break</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating and evaluating generation </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_num</span> <span class="o">+</span> <span class="n">i</span><span class="p">))</span>
+    <span class="n">new_generation</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">):</span>
+        <span class="c1"># Select an operator and use it</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
+        <span class="c1"># Select parents for a new candidate</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
+
+        <span class="c1"># Pure or bare nanoparticles are not considered</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">offspring</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_new_individual</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+        <span class="c1"># An operator could return None if an offspring cannot be formed</span>
+        <span class="c1"># by the chosen parents</span>
+        <span class="k">if</span> <span class="n">offspring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
         <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
     <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
