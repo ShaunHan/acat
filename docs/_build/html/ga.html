@@ -94,8 +94,8 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Genetic algorithm</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.adsorbate_operators">Adsorbate procreation operators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.particle_symmetric_operators">Particle symmetric operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.adsorbate_operators">Optimize adsorbate coverage patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.symmetric_particle_operators">Optimize symmetric nanoalloys</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
@@ -170,9 +170,9 @@
   <div class="section" id="genetic-algorithm">
 <h1>Genetic algorithm<a class="headerlink" href="#genetic-algorithm" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-acat.ga.adsorbate_operators">
-<span id="adsorbate-procreation-operators"></span><h2>Adsorbate procreation operators<a class="headerlink" href="#module-acat.ga.adsorbate_operators" title="Permalink to this headline">¶</a></h2>
-<p>Adsorbate operators that adds an adsorbate to the surface of a particle
-or given structure.</p>
+<span id="optimize-adsorbate-coverage-patterns"></span><h2>Optimize adsorbate coverage patterns<a class="headerlink" href="#module-acat.ga.adsorbate_operators" title="Permalink to this headline">¶</a></h2>
+<p>Adsorbate procreation operators that adds an adsorbate to the surface of
+a particle or given structure.</p>
 <dl class="py class">
 <dt id="acat.ga.adsorbate_operators.AdsorbateOperator">
 <em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">AdsorbateOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#AdsorbateOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="Permalink to this definition">¶</a></dt>
@@ -684,27 +684,28 @@ that is shorter than the minimum distance for those atom types
 </pre></div>
 </div>
 </div>
-<div class="section" id="module-acat.ga.particle_symmetric_operators">
-<span id="particle-symmetric-operators"></span><h2>Particle symmetric operators<a class="headerlink" href="#module-acat.ga.particle_symmetric_operators" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-acat.ga.symmetric_particle_operators">
+<span id="optimize-symmetric-nanoalloys"></span><h2>Optimize symmetric nanoalloys<a class="headerlink" href="#module-acat.ga.symmetric_particle_operators" title="Permalink to this headline">¶</a></h2>
+<p>Procreation operators meant to be used with symmetric particles.</p>
 <dl class="py class">
-<dt id="acat.ga.particle_symmetric_operators.Mutation">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">Mutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#Mutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.Mutation" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.Mutation">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_operators.</code><code class="sig-name descname">Mutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#Mutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.Mutation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.offspring_creator.OffspringCreator</span></code></p>
 <p>Base class for all particle mutation type operators.
 Do not call this class directly.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricSubstitute">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">SymmetricSubstitute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricSubstitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricSubstitute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#acat.ga.particle_symmetric_operators.Mutation" title="acat.ga.particle_symmetric_operators.Mutation"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.particle_symmetric_operators.Mutation</span></code></a></p>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricSubstitute">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_operators.</code><code class="sig-name descname">SymmetricSubstitute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricSubstitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricSubstitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.symmetric_particle_operators.Mutation" title="acat.ga.symmetric_particle_operators.Mutation"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.symmetric_particle_operators.Mutation</span></code></a></p>
 <p>Substitute all the atoms in a shell with a different metal
 element.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
-obtained by <cite>acat.build.SymmetricOrderingGenerator</cite>.</p></li>
+obtained by <cite>acat.build.orderings.SymmetricOrderingGenerator</cite>.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
 the elements specified in this list. Default is to take all
 elements into account.</p></li>
@@ -713,14 +714,14 @@ elements into account.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricSubstitute.substitute">
-<code class="sig-name descname">substitute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricSubstitute.substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricSubstitute.substitute" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricSubstitute.substitute">
+<code class="sig-name descname">substitute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricSubstitute.substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricSubstitute.substitute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Does the actual substitution</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricSubstitute.get_new_individual">
-<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricSubstitute.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricSubstitute.get_new_individual" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricSubstitute.get_new_individual">
+<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricSubstitute.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricSubstitute.get_new_individual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that returns a new individual.
 Overwrite in subclass.</p>
 </dd></dl>
@@ -728,15 +729,15 @@ Overwrite in subclass.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricPermutation">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">SymmetricPermutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricPermutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricPermutation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#acat.ga.particle_symmetric_operators.Mutation" title="acat.ga.particle_symmetric_operators.Mutation"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.particle_symmetric_operators.Mutation</span></code></a></p>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricPermutation">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_operators.</code><code class="sig-name descname">SymmetricPermutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_muts</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricPermutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricPermutation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.symmetric_particle_operators.Mutation" title="acat.ga.symmetric_particle_operators.Mutation"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.symmetric_particle_operators.Mutation</span></code></a></p>
 <p>Permutes the elements in two random shells.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
-obtained by <cite>acat.build.SymmetricOrderingGenerator</cite>.</p></li>
+obtained by <cite>acat.build.orderings.SymmetricOrderingGenerator</cite>.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
 the elements specified in this list. Default is to take all
 elements into account.</p></li>
@@ -745,39 +746,39 @@ elements into account.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricPermutation.get_new_individual">
-<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricPermutation.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricPermutation.get_new_individual" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricPermutation.get_new_individual">
+<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricPermutation.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricPermutation.get_new_individual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that returns a new individual.
 Overwrite in subclass.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricPermutation.mutate">
-<em class="property">classmethod </em><code class="sig-name descname">mutate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricPermutation.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricPermutation.mutate" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricPermutation.mutate">
+<em class="property">classmethod </em><code class="sig-name descname">mutate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricPermutation.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricPermutation.mutate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do the actual permutation.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="acat.ga.particle_symmetric_operators.Crossover">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">Crossover</code><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#Crossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.Crossover" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.Crossover">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_operators.</code><code class="sig-name descname">Crossover</code><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#Crossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.Crossover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.offspring_creator.OffspringCreator</span></code></p>
 <p>Base class for all particle crossovers.
 Do not call this class directly.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricCrossover">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.particle_symmetric_operators.</code><code class="sig-name descname">SymmetricCrossover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricCrossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricCrossover" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#acat.ga.particle_symmetric_operators.Crossover" title="acat.ga.particle_symmetric_operators.Crossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.particle_symmetric_operators.Crossover</span></code></a></p>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricCrossover">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_operators.</code><code class="sig-name descname">SymmetricCrossover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricCrossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricCrossover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.symmetric_particle_operators.Crossover" title="acat.ga.symmetric_particle_operators.Crossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.symmetric_particle_operators.Crossover</span></code></a></p>
 <p>Merge the elemental distributions in two half shells from
 different particles together.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
-obtained by <cite>acat.build.SymmetricOrderingGenerator</cite>.</p></li>
+obtained by <cite>acat.build.orderings.SymmetricOrderingGenerator</cite>.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
 the elements specified in this list. Default is to take all
 elements into account.</p></li>
@@ -785,23 +786,50 @@ elements into account.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.ga.particle_symmetric_operators.SymmetricCrossover.get_new_individual">
-<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/particle_symmetric_operators.html#SymmetricCrossover.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.particle_symmetric_operators.SymmetricCrossover.get_new_individual" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.symmetric_particle_operators.SymmetricCrossover.get_new_individual">
+<code class="sig-name descname">get_new_individual</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parents</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_operators.html#SymmetricCrossover.get_new_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_operators.SymmetricCrossover.get_new_individual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that returns a new individual.
 Overwrite in subclass.</p>
 </dd></dl>
 
 </dd></dl>
 
+<span class="target" id="module-acat.ga.symmetric_particle_comparator"></span><p>Comparators meant to be used with symmetric particles</p>
+<dl class="py class">
+<dt id="acat.ga.symmetric_particle_comparator.ShellCompositionComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_comparator.</code><code class="sig-name descname">ShellCompositionComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_comparator.html#ShellCompositionComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_comparator.ShellCompositionComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.standard_comparators.Comparator</span></code></p>
+<p>Compares the elemental compositions of all shells defined
+by the symmetry of the particle. Returns True if the numbers
+are the same, False otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shells</strong> (<em>list of lists</em>) – The atom indices in each shell divided by symmetry. Can be
+obtained by <cite>acat.build.orderings.SymmetricOrderingGenerator</cite>.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
+the elements specified in this list. Default is to take all
+elements into account.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.symmetric_particle_comparator.ShellCompositionComparator.looks_like">
+<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_comparator.html#ShellCompositionComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_comparator.ShellCompositionComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return if structure a1 or a2 are similar or not.</p>
+</dd></dl>
+
+</dd></dl>
+
 <p><strong>Example</strong></p>
-<p>All the adsorbate operators can be easily used with other ASE operators.</p>
+<p>All the symmetric particle operators can be easily used with other ASE operators.</p>
 <p>As an example we will find the convex hull of NixPt405-x truncated octahedral nanoalloys using the ASAP EMT calculator.</p>
 <p>The script for the genetic algorithm looks as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
-<span class="kn">from</span> <span class="nn">acat.ga.particle_symmetric_operators</span> <span class="kn">import</span> <span class="n">SymmetricSubstitute</span>
-<span class="kn">from</span> <span class="nn">acat.ga.particle_symmetric_operators</span> <span class="kn">import</span> <span class="n">SymmetricPermutation</span>
-<span class="kn">from</span> <span class="nn">acat.ga.particle_symmetric_operators</span> <span class="kn">import</span> <span class="n">SymmetricCrossover</span>
-<span class="kn">from</span> <span class="nn">ase.ga.particle_comparator</span> <span class="kn">import</span> <span class="n">NNMatComparator</span>
+<span class="kn">from</span> <span class="nn">acat.ga.symmetric_particle_operators</span> <span class="kn">import</span> <span class="n">SymmetricSubstitute</span>
+<span class="kn">from</span> <span class="nn">acat.ga.symmetric_particle_operators</span> <span class="kn">import</span> <span class="n">SymmetricPermutation</span>
+<span class="kn">from</span> <span class="nn">acat.ga.symmetric_particle_operators</span> <span class="kn">import</span> <span class="n">SymmetricCrossover</span>
+<span class="kn">from</span> <span class="nn">acat.ga.symmetric_particle_comparator</span> <span class="kn">import</span> <span class="n">ShellCompositionComparator</span>
 <span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OperationSelector</span>
 <span class="kn">from</span> <span class="nn">ase.ga.population</span> <span class="kn">import</span> <span class="n">Population</span><span class="p">,</span> <span class="n">RankFitnessPopulation</span>
 <span class="kn">from</span> <span class="nn">ase.ga.convergence</span> <span class="kn">import</span> <span class="n">GenerationRepetitionConvergence</span>
@@ -816,7 +844,7 @@ Overwrite in subclass.</p>
 
 <span class="c1"># Generate 100 truncated ocatahedral NixPt405-x nanoalloys with chemical</span>
 <span class="c1"># and cylindrical orderings. Get the shells at the same time.</span>
-<span class="n">particle</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
           <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
@@ -827,7 +855,7 @@ Overwrite in subclass.</p>
 <span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 
 <span class="c1"># Instantiate the db</span>
-<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;emt_ridge_chemical_cylindrical_NiPt_TO405.db&#39;</span>
+<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;emt_ridge_chemical_cylindrical_NiPt_TO201.db&#39;</span>
 
 <span class="n">db</span> <span class="o">=</span> <span class="n">PrepareDB</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
 
@@ -848,7 +876,7 @@ Overwrite in subclass.</p>
 <span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
 
 <span class="c1"># Define comparators</span>
-<span class="n">comp</span> <span class="o">=</span> <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">ShellCompositionComparator</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])</span>
 
 <span class="k">def</span> <span class="nf">vf</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the descriptor that distinguishes candidates in the</span>
@@ -944,11 +972,12 @@ Overwrite in subclass.</p>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
             <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
-        <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+<span class="c1">#        new_generation.append(offspring)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
     <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
     <span class="c1"># one at a time</span>
-    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">new_generation</span><span class="p">)</span>
+<span class="c1">#    db.add_more_relaxed_candidates(new_generation)</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
