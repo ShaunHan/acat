@@ -490,8 +490,8 @@ that is shorter than the minimum distance for those atom types
 
 <p><strong>Example</strong></p>
 <p>All the adsorbate operators can be easily used with other ASE operators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> operator only works for nanoparticles, and it is not recommonded as it is not stable yet.</p>
-<p>As an example we will find the stable structures (chemical ordering + coverage pattern) of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
-<p>The script for the genetic algorithm looks as follows:</p>
+<p>As an example we will optimize both the adsorbate coverage pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
+<p>The script for a parallel genetic algorithm looks as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
 <span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
 <span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
@@ -513,7 +513,10 @@ that is shorter than the minimum distance for those atom types
 <span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="kn">from</span> <span class="nn">ase.calculators.emt</span> <span class="kn">import</span> <span class="n">EMT</span>
 <span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">uniform</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">uniform</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="c1"># Define population</span>
 <span class="n">pop_size</span> <span class="o">=</span> <span class="mi">50</span>
@@ -561,7 +564,6 @@ that is shorter than the minimum distance for those atom types
 
 <span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
 
-<span class="c1"># Define comparators</span>
 <span class="n">comp</span> <span class="o">=</span> <span class="n">SequentialComparator</span><span class="p">([</span><span class="n">AdsorptionSitesComparator</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
                              <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])],</span>
                             <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
@@ -586,7 +588,6 @@ that is shorter than the minimum distance for those atom types
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span>
 
 <span class="c1"># Give fittest candidates at different coverages equal fitness</span>
-<span class="c1"># Use this to find global minima for each coverage</span>
 <span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
                             <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
                             <span class="n">comparator</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
@@ -594,8 +595,7 @@ that is shorter than the minimum distance for those atom types
                             <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                             <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
 
-<span class="c1"># Normal fitness ranking irrespective of coverage</span>
-<span class="c1"># Use this to find global minimum irrespective of coverage</span>
+<span class="c1"># Normal fitness ranking regardless of coverage</span>
 <span class="c1">#pop = Population(data_connection=db,</span>
 <span class="c1">#                 population_size=pop_size,</span>
 <span class="c1">#                 comparator=comp,</span>
@@ -649,16 +649,14 @@ that is shorter than the minimum distance for those atom types
     <span class="k">if</span> <span class="n">cc</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converged&#39;</span><span class="p">)</span>
         <span class="k">break</span>
-
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating and evaluating generation </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_num</span> <span class="o">+</span> <span class="n">i</span><span class="p">))</span>
-    <span class="n">new_generation</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="c1"># Select an operator and use it</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
         <span class="c1"># Select parents for a new candidate</span>
         <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
         <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
-
         <span class="c1"># Pure or bare nanoparticles are not considered</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">continue</span>
@@ -667,17 +665,18 @@ that is shorter than the minimum distance for those atom types
         <span class="c1"># by the chosen parents</span>
         <span class="k">if</span> <span class="n">offspring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">continue</span>
-
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
             <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point for simplification</span>
-        <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
-    <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
-    <span class="c1"># one at a time</span>
-    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">new_generation</span><span class="p">)</span>
+    <span class="c1"># Create a multiprocessing Pool</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+    <span class="c1"># Perform procreation in parallel. Especially useful when</span>
+    <span class="c1"># using adsorbate operators which requires site identification</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -824,7 +823,7 @@ elements into account.</p></li>
 <p><strong>Example</strong></p>
 <p>All the symmetric particle operators can be easily used with other ASE operators.</p>
 <p>As an example we will find the convex hull of NixPt405-x truncated octahedral nanoalloys using the ASAP EMT calculator.</p>
-<p>The script for the genetic algorithm looks as follows:</p>
+<p>The script for a parallel genetic algorithm looks as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.build.orderings</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
 <span class="kn">from</span> <span class="nn">acat.ga.symmetric_particle_operators</span> <span class="kn">import</span> <span class="n">SymmetricSubstitute</span>
 <span class="kn">from</span> <span class="nn">acat.ga.symmetric_particle_operators</span> <span class="kn">import</span> <span class="n">SymmetricPermutation</span>
@@ -838,6 +837,8 @@ elements into account.</p></li>
 <span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
 <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="c1"># Define population</span>
 <span class="n">pop_size</span> <span class="o">=</span> <span class="mi">100</span>
@@ -883,7 +884,7 @@ elements into account.</p></li>
 <span class="sd">    niched population.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
 
-<span class="c1"># Give fittest candidates at different compositions equal fitness</span>
+<span class="c1"># Give fittest candidates at different compositions equal fitness.</span>
 <span class="c1"># Use this to find global minima at each composition</span>
 <span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
                             <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
@@ -892,7 +893,7 @@ elements into account.</p></li>
                             <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                             <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
 
-<span class="c1"># Normal fitness ranking irrespective of coverage</span>
+<span class="c1"># Normal fitness ranking irrespective of coverage.</span>
 <span class="c1"># Use this to find global minimum irrespective of composition</span>
 <span class="c1">#pop = Population(data_connection=db,</span>
 <span class="c1">#                 population_size=pop_size,</span>
@@ -948,34 +949,35 @@ elements into account.</p></li>
     <span class="k">if</span> <span class="n">cc</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converged&#39;</span><span class="p">)</span>
         <span class="k">break</span>
-
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating and evaluating generation </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_num</span> <span class="o">+</span> <span class="n">i</span><span class="p">))</span>
-    <span class="n">new_generation</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">):</span>
+
+    <span class="c1"># Performing procreations in parallel</span>
+    <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="c1"># Select an operator and use it</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
         <span class="c1"># Select parents for a new candidate</span>
         <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
         <span class="c1"># Pure candidates are not considered</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
-            <span class="k">continue</span>
+            <span class="k">return</span>
         <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
         <span class="n">offspring</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_new_individual</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
         <span class="c1"># An operator could return None if an offspring cannot be formed</span>
         <span class="c1"># by the chosen parents</span>
         <span class="k">if</span> <span class="n">offspring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-
+            <span class="k">return</span>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
             <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
-        <span class="n">new_generation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
-    <span class="c1"># We add a full relaxed generation at once, this is faster than adding</span>
-    <span class="c1"># one at a time</span>
-    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">new_generation</span><span class="p">)</span>
+    <span class="c1"># Create a multiprocessing Pool</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+    <span class="c1"># Perform procreation in parallel. Especially</span>
+    <span class="c1"># useful when running GA on large nanoparticles</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
