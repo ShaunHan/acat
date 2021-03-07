@@ -14,13 +14,13 @@ Optimize adsorbate coverage patterns
 
 All the adsorbate operators can be easily used with other ASE operators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` operator only works for nanoparticles, and it is not recommonded as it is not stable yet.
 
-As an example we will find the stable structures (chemical ordering + coverage pattern) of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
+As an example we will optimize both the adsorbate coverage pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
 
-The script for the genetic algorithm looks as follows:
+The script for a parallel genetic algorithm looks as follows:
 
 .. code-block:: python
-
-    from acat.settings import adsorbate_elements                                                       
+   
+    from acat.settings import adsorbate_elements                                                         
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.orderings import RandomOrderingGenerator as ROG
     from acat.build.patterns import random_coverage_pattern
@@ -41,11 +41,14 @@ The script for the genetic algorithm looks as follows:
     from ase.cluster import Icosahedron
     from ase.calculators.emt import EMT
     from ase.optimize import BFGS
-    from random import uniform
+    from collections import defaultdict
+    from random import choices, uniform
+    from multiprocessing import Pool
+    import os
     
     # Define population
     pop_size = 50
-
+    
     # Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings
     particle = Icosahedron('Ni', noshells=4)
     particle.center(vacuum=5.)
@@ -89,7 +92,6 @@ The script for the genetic algorithm looks as follows:
     
     op_selector = OperationSelector(*soclist)
     
-    # Define comparators
     comp = SequentialComparator([AdsorptionSitesComparator(10),
                                  NNMatComparator(0.2,['Ni', 'Pt'])], 
                                 [0.5, 0.5])
@@ -114,7 +116,6 @@ The script for the genetic algorithm looks as follows:
         return len(get_ads(atoms))
     
     # Give fittest candidates at different coverages equal fitness
-    # Use this to find global minima for each coverage
     pop = RankFitnessPopulation(data_connection=db,
                                 population_size=pop_size,
                                 comparator=comp,
@@ -122,8 +123,7 @@ The script for the genetic algorithm looks as follows:
                                 exp_function=True,
                                 logfile='log.txt')
     
-    # Normal fitness ranking irrespective of coverage
-    # Use this to find global minimum irrespective of coverage
+    # Normal fitness ranking regardless of coverage
     #pop = Population(data_connection=db, 
     #                 population_size=pop_size, 
     #                 comparator=comp, 
@@ -177,16 +177,14 @@ The script for the genetic algorithm looks as follows:
         if cc.converged():
             print('Converged')
             break             
-    
         print('Creating and evaluating generation {0}'.format(gen_num + i))
-        new_generation = []
-        for _ in range(pop_size):
+    
+        def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
             # Select parents for a new candidate
             p1, p2 = pop.get_two_candidates()
             parents = [p1, p2]
-    
             # Pure or bare nanoparticles are not considered
             if len(set(p1.numbers)) < 3:
                 continue 
@@ -195,17 +193,18 @@ The script for the genetic algorithm looks as follows:
             # by the chosen parents
             if offspring is None:
                 continue
-    
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)        
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
             relax(offspring, single_point=True) # Single point for simplification
-            new_generation.append(offspring)
+            db.add_relaxed_candidate(offspring)
     
-        # We add a full relaxed generation at once, this is faster than adding
-        # one at a time
-        db.add_more_relaxed_candidates(new_generation)
+        # Create a multiprocessing Pool
+        pool = Pool(os.cpu_count())
+        # Perform procreation in parallel. Especially useful when
+        # using adsorbate operators which requires site identification
+        pool.map(procreation, range(pop_size))  
     
         # update the population to allow new candidates to enter
         pop.update()
@@ -229,7 +228,7 @@ All the symmetric particle operators can be easily used with other ASE operators
 
 As an example we will find the convex hull of NixPt405-x truncated octahedral nanoalloys using the ASAP EMT calculator.
 
-The script for the genetic algorithm looks as follows:
+The script for a parallel genetic algorithm looks as follows:
 
 .. code-block:: python
 
@@ -246,6 +245,8 @@ The script for the genetic algorithm looks as follows:
     from ase.cluster import Octahedron
     from ase.optimize import BFGS
     from asap3 import EMT as asapEMT
+    from multiprocessing import Pool
+    import os
     
     # Define population
     pop_size = 100
@@ -291,7 +292,7 @@ The script for the genetic algorithm looks as follows:
         niched population."""
         return atoms.get_chemical_formula(mode='hill')
     
-    # Give fittest candidates at different compositions equal fitness
+    # Give fittest candidates at different compositions equal fitness.
     # Use this to find global minima at each composition
     pop = RankFitnessPopulation(data_connection=db,
                                 population_size=pop_size,
@@ -300,7 +301,7 @@ The script for the genetic algorithm looks as follows:
                                 exp_function=True,
                                 logfile='log.txt')
     
-    # Normal fitness ranking irrespective of coverage
+    # Normal fitness ranking irrespective of coverage.
     # Use this to find global minimum irrespective of composition
     #pop = Population(data_connection=db, 
     #                 population_size=pop_size, 
@@ -356,34 +357,35 @@ The script for the genetic algorithm looks as follows:
         if cc.converged():
             print('Converged')
             break             
-    
         print('Creating and evaluating generation {0}'.format(gen_num + i))
-        new_generation = []
-        for _ in range(pop_size):
+    
+        # Performing procreations in parallel
+        def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
             # Select parents for a new candidate
             p1, p2 = pop.get_two_candidates()
             # Pure candidates are not considered
             if len(set(p1.numbers))==1:
-                continue 
+                return 
             parents = [p1, p2]
             offspring, desc = op.get_new_individual(parents)
             # An operator could return None if an offspring cannot be formed
             # by the chosen parents
             if offspring is None:
-                continue
-    
+                return
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)        
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
             relax(offspring)
-            new_generation.append(offspring)
+            db.add_relaxed_candidate(offspring)
     
-        # We add a full relaxed generation at once, this is faster than adding
-        # one at a time
-        db.add_more_relaxed_candidates(new_generation)
+        # Create a multiprocessing Pool
+        pool = Pool(os.cpu_count())
+        # Perform procreation in parallel. Especially
+        # useful when running GA on large nanoparticles  
+        pool.map(procreation, range(pop_size))  
     
         # update the population to allow new candidates to enter
         pop.update()
