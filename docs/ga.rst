@@ -34,9 +34,9 @@ The script for a parallel genetic algorithm looks as follows:
     from acat.ga.adsorbate_operators import CutSpliceCrossoverWithAdsorbates
     from ase.ga.particle_mutations import RandomPermutation, COM2surfPermutation
     from ase.ga.particle_mutations import Rich2poorPermutation, Poor2richPermutation
+    from acat.ga.adsorbate_comparators import AdsorptionSitesComparator
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
-    from ase.ga.adsorbate_comparators import AdsorptionSitesComparator
     from ase.ga.offspring_creator import OperationSelector
     from ase.ga.population import Population, RankFitnessPopulation
     from ase.ga.convergence import GenerationRepetitionConvergence
