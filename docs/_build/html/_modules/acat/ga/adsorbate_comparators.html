@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>acat.ga.adsorbate_comparators &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/table_styling.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/acat_favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>acat.ga.adsorbate_comparators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for acat.ga.adsorbate_comparators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Comparator objects relevant to particles with adsorbates.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+
+
+<div class="viewcode-block" id="count_ads"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.count_ads">[docs]</a><span class="k">def</span> <span class="nf">count_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Very naive implementation only taking into account</span>
+<span class="sd">    the symbols. atoms and adsorbate should both be supplied</span>
+<span class="sd">    as Atoms objects.&quot;&quot;&quot;</span>
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ads_syms</span> <span class="o">=</span> <span class="n">adsorbate</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># It is hopefully a string</span>
+        <span class="n">ads_syms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()</span>
+
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ads_syms</span><span class="p">:</span>
+        <span class="n">counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">syms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">counts</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="AdsorbateCountComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorbateCountComparator">[docs]</a><span class="k">class</span> <span class="nc">AdsorbateCountComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the number of adsorbates on the particles and</span>
+<span class="sd">    returns True if the numbers are the same, False otherwise.</span>
+
+<span class="sd">    Parameters:</span>
+
+<span class="sd">    adsorbate: list or string</span>
+<span class="sd">    a supplied list of adsorbates or a string if only one adsorbate</span>
+<span class="sd">    is possible</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">adsorbate</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span>
+            <span class="c1"># It is a string (or similar) type</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate</span> <span class="o">=</span> <span class="p">[</span><span class="n">adsorbate</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsorbate</span>
+
+<div class="viewcode-block" id="AdsorbateCountComparator.looks_like"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorbateCountComparator.looks_like">[docs]</a>    <span class="k">def</span> <span class="nf">looks_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does the actual comparison.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ads</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate</span><span class="p">:</span>
+            <span class="n">ads</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="n">ads</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">count_ads</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">ads</span><span class="p">)</span> <span class="o">!=</span> <span class="n">count_ads</span><span class="p">(</span><span class="n">a2</span><span class="p">,</span> <span class="n">ads</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="AdsorptionSitesComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorptionSitesComparator">[docs]</a><span class="k">class</span> <span class="nc">AdsorptionSitesComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the metal atoms in the adsorption sites and returns True</span>
+<span class="sd">    if less than min_diff_adsorption_sites of the sites with adsorbates</span>
+<span class="sd">    consist of different atoms.</span>
+
+<span class="sd">    Ex:</span>
+<span class="sd">    a1.info[&#39;data&#39;][&#39;adsorbates_site_atoms&#39;] =</span>
+<span class="sd">    [(&#39;Cu&#39;,&#39;Ni&#39;),(&#39;Cu&#39;,&#39;Ni&#39;),(&#39;Ni&#39;),(&#39;Ni&#39;)]</span>
+
+<span class="sd">    a2.info[&#39;data&#39;][&#39;adsorbates_site_atoms&#39;] =</span>
+<span class="sd">    [(&#39;Cu&#39;,&#39;Ni&#39;),(&#39;Ni&#39;,&#39;Ni&#39;, &#39;Ni&#39;),(&#39;Ni&#39;),(&#39;Ni&#39;)]</span>
+
+<span class="sd">    will have a difference of 2:</span>
+<span class="sd">    (2*(&#39;Cu&#39;,&#39;Ni&#39;)-1*(&#39;Cu&#39;,&#39;Ni&#39;)=1, 1*(&#39;Ni&#39;,&#39;Ni&#39;,&#39;Ni&#39;)=1, 2*(&#39;Ni&#39;)-2*(&#39;Ni&#39;)=0)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_diff_adsorption_sites</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_diff_adsorption_sites</span> <span class="o">=</span> <span class="n">min_diff_adsorption_sites</span>
+
+<div class="viewcode-block" id="AdsorptionSitesComparator.looks_like"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorptionSitesComparator.looks_like">[docs]</a>    <span class="k">def</span> <span class="nf">looks_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;adsorbates_site_atoms&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">and</span>
+                     <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]</span> <span class="o">!=</span> <span class="p">[])</span>
+                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">]]):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">counter</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">asa</span> <span class="ow">in</span> <span class="n">a1</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]:</span>
+            <span class="n">t_asa</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">asa</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">t_asa</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">counter</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">counter</span><span class="p">[</span><span class="n">t_asa</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">counter</span><span class="p">[</span><span class="n">t_asa</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">asa</span> <span class="ow">in</span> <span class="n">a2</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]:</span>
+            <span class="n">t_asa</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">asa</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">t_asa</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">counter</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">counter</span><span class="p">[</span><span class="n">t_asa</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">counter</span><span class="p">[</span><span class="n">t_asa</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="c1"># diffs = len([k for k, v in counter.items() if v != 0])</span>
+        <span class="n">sumdiffs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">counter</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+
+        <span class="k">if</span> <span class="n">sumdiffs</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_diff_adsorption_sites</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+
+
+<div class="viewcode-block" id="AdsorptionMetalsComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorptionMetalsComparator">[docs]</a><span class="k">class</span> <span class="nc">AdsorptionMetalsComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the number of adsorbate-metal bonds and returns True if the</span>
+<span class="sd">    number for a1 and a2 differs by less than the supplied parameter</span>
+<span class="sd">    ``same_adsorption_number``</span>
+
+<span class="sd">    Ex:</span>
+<span class="sd">    a1.info[&#39;data&#39;][&#39;adsorbates_bound_to&#39;] = {&#39;Cu&#39;:1, &#39;Ni&#39;:3}</span>
+<span class="sd">    a2.info[&#39;data&#39;][&#39;adsorbates_bound_to&#39;] = {&#39;Cu&#39;:.5, &#39;Ni&#39;:3.5}</span>
+<span class="sd">    will have a difference of .5 in both elements:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">same_adsorption_number</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">same_adsorption_number</span> <span class="o">=</span> <span class="n">same_adsorption_number</span>
+
+<div class="viewcode-block" id="AdsorptionMetalsComparator.looks_like"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorptionMetalsComparator.looks_like">[docs]</a>    <span class="k">def</span> <span class="nf">looks_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;adsorbates_bound_to&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="ow">and</span>
+                     <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">]]):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">diffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">a1</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">a2</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">a1</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">diffs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">same_adsorption_number</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

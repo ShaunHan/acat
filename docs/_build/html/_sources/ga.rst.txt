@@ -10,6 +10,11 @@ Optimize adsorbate coverage patterns
     :show-inheritance:
     :exclude-members: get_all_adsorbate_indices, get_numbers, get_atoms_without_adsorbates
 
+.. automodule:: acat.ga.adsorbate_comparators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 **Example**
 
 All the adsorbate operators can be easily used with other ASE operators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` operator only works for nanoparticles, and it is not recommonded as it is not stable yet.
@@ -91,7 +96,8 @@ The script for a parallel genetic algorithm looks as follows:
                 ReplaceAdsorbate(species, num_muts=5),])
     
     op_selector = OperationSelector(*soclist)
-    
+
+    # Define comparators    
     comp = SequentialComparator([AdsorptionSitesComparator(10),
                                  NNMatComparator(0.2,['Ni', 'Pt'])], 
                                 [0.5, 0.5])

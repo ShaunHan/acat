@@ -488,6 +488,72 @@ that is shorter than the minimum distance for those atom types
 
 </dd></dl>
 
+<span class="target" id="module-acat.ga.adsorbate_comparators"></span><p>Comparator objects relevant to particles with adsorbates.</p>
+<dl class="py function">
+<dt id="acat.ga.adsorbate_comparators.count_ads">
+<code class="sig-prename descclassname">acat.ga.adsorbate_comparators.</code><code class="sig-name descname">count_ads</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#count_ads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.count_ads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Very naive implementation only taking into account
+the symbols. atoms and adsorbate should both be supplied
+as Atoms objects.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.adsorbate_comparators.AdsorbateCountComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_comparators.</code><code class="sig-name descname">AdsorbateCountComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorbateCountComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorbateCountComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compares the number of adsorbates on the particles and
+returns True if the numbers are the same, False otherwise.</p>
+<p>Parameters:</p>
+<p>adsorbate: list or string
+a supplied list of adsorbates or a string if only one adsorbate
+is possible</p>
+<dl class="py method">
+<dt id="acat.ga.adsorbate_comparators.AdsorbateCountComparator.looks_like">
+<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorbateCountComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorbateCountComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does the actual comparison.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.adsorbate_comparators.AdsorptionSitesComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_comparators.</code><code class="sig-name descname">AdsorptionSitesComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_diff_adsorption_sites</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionSitesComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionSitesComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compares the metal atoms in the adsorption sites and returns True
+if less than min_diff_adsorption_sites of the sites with adsorbates
+consist of different atoms.</p>
+<p>Ex:
+a1.info[‘data’][‘adsorbates_site_atoms’] =
+[(‘Cu’,’Ni’),(‘Cu’,’Ni’),(‘Ni’),(‘Ni’)]</p>
+<p>a2.info[‘data’][‘adsorbates_site_atoms’] =
+[(‘Cu’,’Ni’),(‘Ni’,’Ni’, ‘Ni’),(‘Ni’),(‘Ni’)]</p>
+<p>will have a difference of 2:
+(2*(‘Cu’,’Ni’)-1*(‘Cu’,’Ni’)=1, 1*(‘Ni’,’Ni’,’Ni’)=1, 2*(‘Ni’)-2*(‘Ni’)=0)</p>
+<dl class="py method">
+<dt id="acat.ga.adsorbate_comparators.AdsorptionSitesComparator.looks_like">
+<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionSitesComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionSitesComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.adsorbate_comparators.AdsorptionMetalsComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_comparators.</code><code class="sig-name descname">AdsorptionMetalsComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">same_adsorption_number</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionMetalsComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionMetalsComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compares the number of adsorbate-metal bonds and returns True if the
+number for a1 and a2 differs by less than the supplied parameter
+<code class="docutils literal notranslate"><span class="pre">same_adsorption_number</span></code></p>
+<p>Ex:
+a1.info[‘data’][‘adsorbates_bound_to’] = {‘Cu’:1, ‘Ni’:3}
+a2.info[‘data’][‘adsorbates_bound_to’] = {‘Cu’:.5, ‘Ni’:3.5}
+will have a difference of .5 in both elements:</p>
+<dl class="py method">
+<dt id="acat.ga.adsorbate_comparators.AdsorptionMetalsComparator.looks_like">
+<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionMetalsComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionMetalsComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <p><strong>Example</strong></p>
 <p>All the adsorbate operators can be easily used with other ASE operators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> operator only works for nanoparticles, and it is not recommonded as it is not stable yet.</p>
 <p>As an example we will optimize both the adsorbate coverage pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
@@ -564,6 +630,7 @@ that is shorter than the minimum distance for those atom types
 
 <span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
 
+<span class="c1"># Define comparators</span>
 <span class="n">comp</span> <span class="o">=</span> <span class="n">SequentialComparator</span><span class="p">([</span><span class="n">AdsorptionSitesComparator</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
                              <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])],</span>
                             <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
@@ -796,8 +863,8 @@ Overwrite in subclass.</p>
 <span class="target" id="module-acat.ga.symmetric_particle_comparator"></span><p>Comparators meant to be used with symmetric particles</p>
 <dl class="py class">
 <dt id="acat.ga.symmetric_particle_comparator.ShellCompositionComparator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_comparator.</code><code class="sig-name descname">ShellCompositionComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_comparator.html#ShellCompositionComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_comparator.ShellCompositionComparator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.standard_comparators.Comparator</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.symmetric_particle_comparator.</code><code class="sig-name descname">ShellCompositionComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/symmetric_particle_comparator.html#ShellCompositionComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.symmetric_particle_comparator.ShellCompositionComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Compares the elemental compositions of all shells defined
 by the symmetry of the particle. Returns True if the numbers
 are the same, False otherwise.</p>
@@ -809,6 +876,8 @@ obtained by <cite>acat.build.orderings.SymmetricOrderingGenerator</cite>.</p></l
 <li><p><strong>elements</strong> (<em>list of strs</em><em>, </em><em>default None</em>) – The metal elements of the nanoalloy. Only take into account
 the elements specified in this list. Default is to take all
 elements into account.</p></li>
+<li><p><strong>tol</strong> (<em>int</em><em>, </em><em>default 0</em>) – The maximum number of shells with different elements that two
+structures are still considered to be look alike.</p></li>
 </ul>
 </dd>
 </dl>
