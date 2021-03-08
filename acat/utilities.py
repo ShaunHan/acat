@@ -311,7 +311,6 @@ def atoms_too_close(atoms, cutoff=0.5, mic=False):
 
 
 def atoms_too_close_after_addition(atoms, n_added, cutoff=1.5, mic=False): 
-
     """Check if there are atoms that are too close to each other after 
     adding some new atoms.
 

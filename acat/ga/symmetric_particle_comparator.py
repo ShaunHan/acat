@@ -1,8 +1,7 @@
 """Comparators meant to be used with symmetric particles"""
-from ase.ga.standard_comparators import Comparator
 
 
-class ShellCompositionComparator(Comparator):
+class ShellCompositionComparator(object):
     """Compares the elemental compositions of all shells defined 
     by the symmetry of the particle. Returns True if the numbers 
     are the same, False otherwise.
@@ -18,11 +17,16 @@ class ShellCompositionComparator(Comparator):
         the elements specified in this list. Default is to take all 
         elements into account.
 
+    tol : int, default 0
+        The maximum number of shells with different elements that two 
+        structures are still considered to be look alike.
+
     """
 
-    def __init__(self, shells, elements=None):
+    def __init__(self, shells, elements=None, tol=0):
         self.shells = shells
         self.elements = elements
+        self.tol = tol
 
     def looks_like(self, a1, a2):
         """ Return if structure a1 or a2 are similar or not. """
@@ -44,7 +48,6 @@ class ShellCompositionComparator(Comparator):
                 for i in torem:
                     shell.remove(i)
 
-        comp1 = ''.join([a1[s[0]].symbol for s in shells])
-        comp2 = ''.join([a2[s[0]].symbol for s in shells])
+        diff = [s for s in shells if a1[s[0]].symbol != a2[s[0]].symbol]
 
-        return comp1 == comp2
+        return len(diff) <= self.tol
