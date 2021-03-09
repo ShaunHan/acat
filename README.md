@@ -29,7 +29,7 @@ Install the main package:
 
 ```python3 setup.py install --user```
  
-## Acknowledgement
+## Acknowledgements
 
 I would like to highly appreciate the support from BIKE project, where fundings are received from the European Union’s Horizon 2020 Research and Innovation programme under the Marie Skłodowska-Curie Action – International Training Network (MSCA-ITN), grant agreement 813748.
 
