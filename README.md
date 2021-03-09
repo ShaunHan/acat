@@ -33,6 +33,9 @@ Install the main package:
 
 I would like to highly appreciate the support from BIKE project, where fundings are received from the European Union’s Horizon 2020 Research and Innovation programme under the Marie Skłodowska-Curie Action – International Training Network (MSCA-ITN), grant agreement 813748.
 
+![image1](images/eu_logo.png)
+![image2](images/bike_logo.png)
+
 I also want to thank Dr. Steen Lysgaard for the useful scripts and Dr. Alessandro Fortuneli for the useful discussions.
 
 ## Known issues
