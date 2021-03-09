@@ -117,7 +117,7 @@ def get_monometallic_slab_labels(surface):
                 '4fold|sc-cc-t': 13,
                 '6fold|subsurf': 14}
 
-    elif surface == 'fcc311':
+    elif surface in ['fcc311','fcc331']:
         return {'ontop|step': 1,
                 'ontop|terrace': 2,
                 'bridge|step': 3,
@@ -167,23 +167,6 @@ def get_monometallic_slab_labels(surface):
                 'fcc|sc-cc-h': 16,
                 'hcp|sc-cc-h': 17,
                 '6fold|subsurf': 18}
-
-    elif surface == 'fcc331':
-        return {'ontop|step': 1,
-                'ontop|terrace': 2,
-                'bridge|step': 3,
-                'bridge|sc-tc-h': 4,
-                'bridge|tc-cc-h': 5,
-                'bridge|sc-cc-h': 6,
-                'fcc|sc-tc-h': 7,
-                'hcp|sc-tc-h': 8,
-                'fcc|tc-cc-h': 9,
-                'hcp|tc-cc-h': 10,
-                'fcc|sc-cc-h': 11,
-                'hcp|sc-cc-h': 12,
-                '4fold|corner': 13,
-                '5fold|corner': 14,
-                '6fold|subsurf': 15}
 
     elif surface == 'bcc110':
         return {'ontop|terrace': 1,
