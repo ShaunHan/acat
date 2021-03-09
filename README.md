@@ -33,7 +33,7 @@ Install the main package:
 
 I would like to highly appreciate the support from BIKE project, where I received funding from the European Union’s Horizon 2020 Research and Innovation programme under the Marie Skłodowska-Curie Action – International Training Network (MSCA-ITN), grant agreement 813748.
 
-I also want to thank Steen Lysgaard for the useful scripts and Alessandro Fortuneli for the useful discussions.
+I also want to thank Dr. Steen Lysgaard for the useful scripts and Dr. Alessandro Fortuneli for the useful discussions.
 
 ## Known issues
 1. Some functions distinguishes between nanoparticle and surface slabs based on periodic boundary condition (PBC). Therefore, before using the code, it is recommended to **set all directions as non-periodic for nanoparticles and at least one direction periodic for surface slabs, and also add vacuum layers to all non-periodic directions. Note that the half-top half-bottom slab model is not supported by the code. Please make sure the slab is a unity.**
