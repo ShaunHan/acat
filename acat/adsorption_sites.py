@@ -1172,7 +1172,10 @@ class SlabAdsorptionSites(object):
                 geometry = 'terrace'
             else:
                 if sumo <= 8:
-                    geometry = 'step'
+                    if sumo == 8 and self.surface == 'fcc221':
+                        geometry = 'terrace'
+                    else:
+                        geometry = 'step'
                 elif sumo == 9:
                     geometry = 'terrace'
                 elif sumo == 10:
