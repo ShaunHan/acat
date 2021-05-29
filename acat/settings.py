@@ -4,7 +4,7 @@ from ase.build import molecule
 
 
 # Adsorbate elements must be different from catalyst elements
-adsorbate_elements = 'SCHON'
+adsorbate_elements = ['H', 'C', 'N', 'O', 'F', 'S', 'Cl']
 
 # Adsorbate height on different sites
 site_heights = {'ontop': 1.8, 

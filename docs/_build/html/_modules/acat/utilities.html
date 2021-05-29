@@ -638,6 +638,28 @@
     <span class="k">return</span> <span class="n">frag_list</span>        </div>
 
 
+<div class="viewcode-block" id="numbers_from_ratio"><a class="viewcode-back" href="../../utilities.html#acat.utilities.numbers_from_ratio">[docs]</a><span class="k">def</span> <span class="nf">numbers_from_ratio</span><span class="p">(</span><span class="n">sum_numbers</span><span class="p">,</span> <span class="n">ratio</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of atoms for each element from ratio.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sum_numbers : int</span>
+<span class="sd">        The total number of atoms</span>
+
+<span class="sd">    ratio : list</span>
+<span class="sd">        A list of ratio for different elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sum_ratio</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+    <span class="n">totals</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">((</span><span class="n">sum_numbers</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span> <span class="o">//</span> <span class="n">sum_ratio</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ratio</span><span class="p">]</span>
+    <span class="n">residues</span> <span class="o">=</span> <span class="p">[(</span><span class="n">sum_numbers</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span> <span class="o">%</span> <span class="n">sum_ratio</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ratio</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ratio</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">residues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> 
+    <span class="o">*</span> <span class="n">ratio</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">sum_numbers</span><span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">totals</span><span class="p">)]:</span>
+        <span class="n">totals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">totals</span></div>
+
+
 <div class="viewcode-block" id="draw_graph"><a class="viewcode-back" href="../../utilities.html#acat.utilities.draw_graph">[docs]</a><span class="k">def</span> <span class="nf">draw_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="s1">&#39;graph.png&#39;</span><span class="p">):</span>               
     <span class="sd">&quot;&quot;&quot;Draw the graph using matplotlib.pyplot.</span>
 

@@ -147,8 +147,6 @@ class ClusterAdsorbateCoverage(object):
         self.surf_ids = cas.surf_ids
         self.label_dict = cas.label_dict 
         self.hetero_site_list = deepcopy(cas.site_list)
-        self.unique_sites = cas.get_unique_sites(unique_composition=
-                                                 self.composition_effect) 
 
         self.label_list = ['0'] * len(self.hetero_site_list)
         self.populate_occupied_sites()
@@ -426,7 +424,7 @@ class ClusterAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self, fragmentation=True):                                         
+    def get_graph(self, fragmentation=True, subsurf_effect=False):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -436,12 +434,19 @@ class ClusterAdsorbateCoverage(object):
             that multidentate species with different orientations have 
             different graphs.
 
+        subsurf_effect : bool, default False
+            Take subsurface atoms into consideration when genearting graph. 
+
         """
 
         hsl = self.hetero_site_list
         hcm = self.cas.get_connectivity().copy()
-        surfhcm = hcm[self.surf_ids]
-        symbols = self.symbols[self.surf_ids]
+        if subsurf_effect:
+            surf_ids = self.surf_ids + self.cas.get_subsurface()
+        else:
+            surf_ids = self.surf_ids
+        surfhcm = hcm[surf_ids]
+        symbols = self.symbols[surf_ids]
         nrows, ncols = surfhcm.shape       
         newrows, frag_list = [], []
         for st in hsl:
@@ -467,7 +472,7 @@ class ClusterAdsorbateCoverage(object):
                          [(j + nrows, {'symbol': frag_list[j]})
                            for j in range(len(frag_list))])
         # Add edges from surface connectivity matrix
-        shcm = surfhcm[:,self.surf_ids]
+        shcm = surfhcm[:,surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
@@ -537,6 +542,11 @@ class SlabAdsorbateCoverage(object):
         The surface type (crystal structure + Miller indices).
         Required if adsorption_sites is not provided.
 
+    both_sides : bool, default False
+        Whether to consider adsorbate coverage on both top and bottom 
+        sides of the slab. Only works if adsorption_sites is not provided,
+        otherwise consistent with what is specified in adsorption_sites.
+
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
@@ -571,7 +581,7 @@ class SlabAdsorbateCoverage(object):
 
     .. code-block:: python
 
-        {'site': 'bridge', 'surface': 'fcc211', 'geometry': 'tc-cc-h', 
+        {'site': 'bridge', 'surface': 'fcc211', 'morphology': 'tc-cc-h', 
          'position': array([ 2.08423447,  3.82898322, 12.00043756]), 
          'normal': array([-0.33333333,  0.        ,  0.94280904]), 
          'indices': (4, 7), 'composition': 'CuAu', 'subsurf_index': None, 
@@ -585,6 +595,7 @@ class SlabAdsorbateCoverage(object):
     def __init__(self, atoms, 
                  adsorption_sites=None, 
                  surface=None, 
+                 both_sides=False,
                  label_occupied_sites=False,
                  dmax=2.5):
 
@@ -603,6 +614,7 @@ class SlabAdsorbateCoverage(object):
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
+        self.both_sides = both_sides
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
 
@@ -614,12 +626,14 @@ class SlabAdsorbateCoverage(object):
         else:
             sas = SlabAdsorptionSites(atoms, surface, 
                                       allow_6fold=True,
-                                      composition_effect=True)    
+                                      composition_effect=True,
+                                      both_sides=both_sides)    
         self.sas = sas
         self.slab_ids = sas.indices
         self.surface = sas.surface
         self.allow_6fold = sas.allow_6fold
         self.composition_effect = sas.composition_effect
+        self.both_sides = sas.both_sides
 
         self.metals = sas.metals
         if len(self.metals) == 1 and self.composition_effect:
@@ -629,8 +643,6 @@ class SlabAdsorbateCoverage(object):
         self.connectivity_matrix = sas.connectivity_matrix
         self.label_dict = sas.label_dict 
         self.hetero_site_list = deepcopy(sas.site_list)
-        self.unique_sites = sas.get_unique_sites(unique_composition=
-                                                 self.composition_effect) 
 
         self.label_list = ['0'] * len(self.hetero_site_list)
         self.populate_occupied_sites()
@@ -693,7 +705,7 @@ class SlabAdsorbateCoverage(object):
                     conn_x.append(0.)
                 elif overlap > 0:
                     if self.allow_6fold:         
-                        if 'subsurf' in [sti['geometry'], stj['geometry']]: 
+                        if 'subsurf' in [sti['morphology'], stj['morphology']]: 
                             if overlap == 3:
                                 conn_x.append(1.)
                             else:
@@ -772,7 +784,7 @@ class SlabAdsorbateCoverage(object):
                 st['label'] = 0
                 continue
             self.n_occupied += 1
-            if st['geometry'] == 'subsurf':
+            if st['morphology'] == 'subsurf':
                 n_subsurf_occupied += 1
             else:
                 n_surf_occupied += 1
@@ -811,7 +823,7 @@ class SlabAdsorbateCoverage(object):
 
                 if self.label_occupied_sites:
                     if st['label'] is None:
-                        signature = [st['site'], st['geometry']]                     
+                        signature = [st['site'], st['morphology']]                     
                         if self.composition_effect:
                             signature.append(st['composition'])
                         stlab = self.label_dict['|'.join(signature)]
@@ -908,7 +920,7 @@ class SlabAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self, fragmentation=True):                                         
+    def get_graph(self, fragmentation=True, subsurf_effect=False):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -918,12 +930,19 @@ class SlabAdsorbateCoverage(object):
             that multidentate species with different orientations have 
             different graphs.
 
+        subsurf_effect : bool, default False
+            Take subsurface atoms into consideration when genearting graph. 
+
         """
 
         hsl = self.hetero_site_list
         hcm = self.connectivity_matrix.copy()
-        surfhcm = hcm[self.surf_ids]
-        symbols = self.symbols[self.surf_ids]
+        if subsurf_effect:
+            surf_ids = self.surf_ids + self.subsurf_ids
+        else:
+            surf_ids = self.surf_ids
+        surfhcm = hcm[surf_ids]
+        symbols = self.symbols[surf_ids]
         nrows, ncols = surfhcm.shape       
         newrows, frag_list = [], []
         for st in hsl:
@@ -950,7 +969,7 @@ class SlabAdsorbateCoverage(object):
                            for j in range(len(frag_list))])
 
         # Add edges from surface connectivity matrix
-        shcm = surfhcm[:,self.surf_ids]
+        shcm = surfhcm[:,surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
@@ -999,6 +1018,7 @@ class SlabAdsorbateCoverage(object):
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
                              surface=None, 
+                             both_sides=False,
                              label_occupied_sites=False,                             
                              dmax=2.5):
     """A function that enumerates all occupied adsorption sites of
@@ -1020,6 +1040,11 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         If the structure is a periodic surface slab, this is required.
         If the structure is a nanoparticle, the function enumerates
         only the sites on the specified surface.
+
+    both_sides : bool, default False
+        Whether to consider adsorbate coverage on both top and bottom 
+        sides of the slab. Only works if adsorption_sites is not provided,
+        otherwise consistent with what is specified in adsorption_sites.
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -1079,7 +1104,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
 
     else:
         sac = SlabAdsorbateCoverage(atoms, adsorption_sites, surface,
-                                    label_occupied_sites, dmax)
+                                    both_sides, label_occupied_sites, dmax)
         all_sites = sac.hetero_site_list
         occupied_sites = [s for s in all_sites if s['occupied']]
 

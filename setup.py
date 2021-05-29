@@ -13,18 +13,18 @@ if os.path.isfile(requirementPath):
 
 setuptools.setup(
     name="acat", 
-    version="1.0.0",
+    version="1.0.8",
     author="Shuang Han",
     author_email="hanshuangshiren@gmail.com",
-    description="A small example package",
+    description="Alloy Catalysis Automated Toolkit",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/shuanghan/acat",
+    url="https://gitlab.com/asm-dtu/acat",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: Linux",
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+        "Operating System :: POSIX",
     ],
     install_requires=install_requires,
     python_requires='>=3.6',

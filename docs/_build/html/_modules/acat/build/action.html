@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>acat.build.action &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/table_styling.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/acat_favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>acat.build.action</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for acat.build.action</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span><span class="p">,</span> <span class="n">adsorbate_list</span><span class="p">,</span> <span class="n">adsorbate_molecule</span>
+<span class="kn">from</span> <span class="nn">..adsorption_sites</span> <span class="kn">import</span> <span class="n">enumerate_adsorption_sites</span> 
+<span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">,</span> <span class="n">SlabAdsorbateCoverage</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">is_list_or_tuple</span><span class="p">,</span> <span class="n">get_close_atoms</span><span class="p">,</span> <span class="n">get_rodrigues_rotation_matrix</span>   
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">get_angle_between</span><span class="p">,</span> <span class="n">get_rejection_between</span>
+<span class="kn">from</span> <span class="nn">..labels</span> <span class="kn">import</span> <span class="n">get_cluster_signature_from_label</span><span class="p">,</span> <span class="n">get_slab_signature_from_label</span>
+<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span>
+<span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
+<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span><span class="p">,</span> <span class="n">Atom</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<div class="viewcode-block" id="add_adsorbate"><a class="viewcode-back" href="../../../build.html#acat.build.action.add_adsorbate">[docs]</a><span class="k">def</span> <span class="nf">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">morphology</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">subsurf_element</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A general function for adding one adsorbate to the surface.</span>
+<span class="sd">    Note that this function adds one adsorbate to a random site</span>
+<span class="sd">    that meets the specified condition regardless of it is already </span>
+<span class="sd">    occupied or not. The function is generalized for both periodic </span>
+<span class="sd">    and non-periodic systems (distinguished by atoms.pbc).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    adsorbate : str or ase.Atom object or ase.Atoms object</span>
+<span class="sd">        The adsorbate species to be added onto the surface.</span>
+
+<span class="sd">    site : str, default None</span>
+<span class="sd">        The site type that the adsorbate should be added to.</span>
+
+<span class="sd">    surface : str, default None</span>
+<span class="sd">        The surface type (crystal structure + Miller indices)</span>
+<span class="sd">        If the structure is a periodic surface slab, this is required.</span>
+<span class="sd">        If the structure is a nanoparticle, the function enumerates</span>
+<span class="sd">        only the sites on the specified surface.</span>
+
+<span class="sd">    morphology : str, default None</span>
+<span class="sd">        The morphology type that the adsorbate should be added to. </span>
+<span class="sd">        Only available for surface slabs.</span>
+
+<span class="sd">    indices : list or tuple</span>
+<span class="sd">        The indices of the atoms that contribute to the site that</span>
+<span class="sd">        you want to add adsorbate to. This has the highest priority.</span>
+
+<span class="sd">    height : float, default None</span>
+<span class="sd">        The height of the added adsorbate from the surface.</span>
+<span class="sd">        Use the default settings if not specified.</span>
+
+<span class="sd">    composition : str, default None</span>
+<span class="sd">        The elemental of the site that should be added to.</span>
+
+<span class="sd">    orientation : list or numpy.array, default None</span>
+<span class="sd">        The vector that the multidentate adsorbate is aligned to.</span>
+
+<span class="sd">    tilt_angle: float, default 0.</span>
+<span class="sd">        Tilt the adsorbate with an angle (in degress) relative to</span>
+<span class="sd">        the surface normal.</span>
+
+<span class="sd">    subsurf_element : str, default None</span>
+<span class="sd">        The subsurface element of the hcp or 4fold hollow site that </span>
+<span class="sd">        should be added to.</span>
+
+<span class="sd">    both_sides : bool, default False</span>
+<span class="sd">        Whether to consider sites on both top and bottom sides</span>
+<span class="sd">        of the slab. Only relevant for periodic surface slabs.</span>
+
+<span class="sd">    all_sites : list of dicts, default None</span>
+<span class="sd">        The list of all sites. Provide this to make the function</span>
+<span class="sd">        much faster. Useful when the function is called many times.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">composition_effect</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> 
+                             <span class="p">[</span><span class="n">composition</span><span class="p">,</span> <span class="n">subsurf_element</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">composition</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">composition</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">composition</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">scomp</span> <span class="o">=</span> <span class="n">composition</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">comp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;[A-Z][^A-Z]*&#39;</span><span class="p">,</span> <span class="n">composition</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
+                                       <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">comp</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                    <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
+                                           <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]]:</span>
+                        <span class="n">scomp</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scomp</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">all_sites</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">all_sites</span> <span class="o">=</span> <span class="n">enumerate_adsorption_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
+                                               <span class="n">morphology</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> 
+                                               <span class="n">composition_effect</span><span class="p">,</span> 
+                                               <span class="n">both_sides</span><span class="p">)</span>    
+
+    <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> 
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    
+    <span class="k">elif</span> <span class="n">subsurf_element</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> 
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span> <span class="ow">and</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">scomp</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span> <span class="ow">and</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">scomp</span> <span class="ow">and</span>
+                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;subsurf_element&#39;</span><span class="p">]</span>
+                   <span class="o">==</span> <span class="n">subsurf_element</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No such site can be found&#39;</span><span class="p">)</span>            
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="n">site_heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+        <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> 
+                              <span class="n">orientation</span><span class="p">,</span> <span class="n">tilt_angle</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_adsorbate_to_site"><a class="viewcode-back" href="../../../build.html#acat.build.action.add_adsorbate_to_site">[docs]</a><span class="k">def</span> <span class="nf">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                          <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>            
+    <span class="sd">&quot;&quot;&quot;The base function for adding one adsorbate to a site.</span>
+<span class="sd">    Site must include information of &#39;normal&#39; and &#39;position&#39;.</span>
+<span class="sd">    Useful for adding adsorbate to multiple sites or adding </span>
+<span class="sd">    multidentate adsorbates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    adsorbate : str or ase.Atom object or ase.Atoms object</span>
+<span class="sd">        The adsorbate species to be added onto the surface.</span>
+
+<span class="sd">    site : dict </span>
+<span class="sd">        The site that the adsorbate should be added to.</span>
+<span class="sd">        Must contain information of the position and the</span>
+<span class="sd">        normal vector of the site.</span>
+
+<span class="sd">    height : float, default None</span>
+<span class="sd">        The height of the added adsorbate from the surface.</span>
+<span class="sd">        Use the default settings if not specified.</span>
+
+<span class="sd">    orientation : list or numpy.array, default None</span>
+<span class="sd">        The vector that the multidentate adsorbate is aligned to.</span>
+
+<span class="sd">    tilt_angle: float, default None</span>
+<span class="sd">        Tilt the adsorbate with an angle (in degress) relative to</span>
+<span class="sd">        the surface normal.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+ 
+    <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">site_heights</span><span class="p">[</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+
+    <span class="c1"># Make the correct position</span>
+    <span class="n">normal</span> <span class="o">=</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">normal</span> <span class="o">*</span> <span class="n">height</span>
+
+    <span class="c1"># Convert the adsorbate to an Atoms object</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">,</span> <span class="n">Atoms</span><span class="p">):</span>
+        <span class="n">ads</span> <span class="o">=</span> <span class="n">adsorbate</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">,</span> <span class="n">Atom</span><span class="p">):</span>
+        <span class="n">ads</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">([</span><span class="n">adsorbate</span><span class="p">])</span>
+
+    <span class="c1"># Or assume it is a string representing a molecule</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ads</span> <span class="o">=</span> <span class="n">adsorbate_molecule</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ads</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Nothing is added.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> 
+
+    <span class="n">bondpos</span> <span class="o">=</span> <span class="n">ads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>
+    <span class="n">ads</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">-</span><span class="n">bondpos</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span> <span class="k">if</span> <span class="n">adsorbate</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;CH&#39;</span><span class="p">,</span><span class="s1">&#39;NH&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;SH&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="mf">1.</span>
+    <span class="n">ads</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span> <span class="o">-</span> <span class="n">bondpos</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tilt_angle</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+        <span class="n">pvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">ads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">position</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
+        <span class="n">ads</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">,</span> <span class="n">pvec</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">ads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">adsorbate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adsorbate_list</span><span class="p">:</span>
+        <span class="c1"># Always sort the indices the same order as the input symbol.</span>
+        <span class="c1"># This is a naive sorting which might cause H in wrong order.</span>
+        <span class="c1"># Please sort your own adsorbate atoms by reindexing as has</span>
+        <span class="c1"># been done in the adsorbate_molecule function in acat.settings.</span>
+        <span class="n">symout</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">))</span>
+        <span class="n">symin</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ads</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+        <span class="n">newids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">symout</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">symin</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">elt</span><span class="p">)</span>
+            <span class="n">newids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="n">symin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">ads</span> <span class="o">=</span> <span class="n">ads</span><span class="p">[</span><span class="n">newids</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">orientation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">orientation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">orientation</span><span class="p">)</span>
+        <span class="n">oripos</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">position</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ads</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> 
+                       <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">!=</span> <span class="s1">&#39;H&#39;</span><span class="p">),</span> <span class="n">ads</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">get_rejection_between</span><span class="p">(</span><span class="n">oripos</span> <span class="o">-</span> <span class="n">bondpos</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="n">get_rejection_between</span><span class="p">(</span><span class="n">orientation</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">get_angle_between</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span>
+
+        <span class="c1"># Flip the sign of the angle if the result is not the closest</span>
+        <span class="n">rm_p</span> <span class="o">=</span> <span class="n">get_rodrigues_rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">normal</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">rm_n</span> <span class="o">=</span> <span class="n">get_rodrigues_rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">normal</span><span class="p">,</span> <span class="n">angle</span><span class="o">=-</span><span class="n">theta</span><span class="p">)</span>        
+        <span class="n">npos_p</span><span class="p">,</span> <span class="n">npos_n</span> <span class="o">=</span> <span class="n">rm_p</span> <span class="o">@</span> <span class="n">oripos</span><span class="p">,</span> <span class="n">rm_n</span> <span class="o">@</span> <span class="n">oripos</span>
+        <span class="n">nbpos_p</span> <span class="o">=</span> <span class="n">npos_p</span> <span class="o">+</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">bondpos</span>
+        <span class="n">nbpos_n</span> <span class="o">=</span> <span class="n">npos_n</span> <span class="o">+</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">bondpos</span>
+        <span class="n">d_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nbpos_p</span> <span class="o">-</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">orientation</span><span class="p">)</span>
+        <span class="n">d_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nbpos_n</span> <span class="o">-</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">orientation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">d_p</span> <span class="o">&lt;=</span> <span class="n">d_n</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ads</span><span class="p">:</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">rm_p</span> <span class="o">@</span> <span class="n">a</span><span class="o">.</span><span class="n">position</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ads</span><span class="p">:</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">rm_n</span> <span class="o">@</span> <span class="n">a</span><span class="o">.</span><span class="n">position</span>
+
+    <span class="n">ads</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">bondpos</span><span class="p">)</span>
+    <span class="n">atoms</span> <span class="o">+=</span> <span class="n">ads</span></div>
+
+
+<div class="viewcode-block" id="add_adsorbate_to_label"><a class="viewcode-back" href="../../../build.html#acat.build.action.add_adsorbate_to_label">[docs]</a><span class="k">def</span> <span class="nf">add_adsorbate_to_label</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> 
+                           <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                           <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+                           <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                           <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                           <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Same as add_adsorbate function, except that the site type is </span>
+<span class="sd">    represented by a numerical label. The function is generalized for </span>
+<span class="sd">    both periodic and non-periodic systems (distinguished by atoms.pbc).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    adsorbate : str or ase.Atom object or ase.Atoms object</span>
+<span class="sd">        The adsorbate species to be added onto the surface.</span>
+
+<span class="sd">    label : int or str</span>
+<span class="sd">        The label of the site that the adsorbate should be added to.</span>
+
+<span class="sd">    surface : str, default None</span>
+<span class="sd">        The surface type (crystal structure + Miller indices)</span>
+<span class="sd">        If the structure is a periodic surface slab, this is required.</span>
+<span class="sd">        If the structure is a nanoparticle, the function enumerates</span>
+<span class="sd">        only the sites on the specified surface.</span>
+
+<span class="sd">    height : float, default None</span>
+<span class="sd">        The height of the added adsorbate from the surface.</span>
+<span class="sd">        Use the default settings if not specified.</span>
+
+<span class="sd">    orientation : list or numpy.array, default None</span>
+<span class="sd">        The vector that the multidentate adsorbate is aligned to.</span>
+
+<span class="sd">    tilt_angle: float, default 0.</span>
+<span class="sd">        Tilt the adsorbate with an angle (in degress) relative to</span>
+<span class="sd">        the surface normal.</span>
+
+<span class="sd">    composition_effect : bool, default False</span>
+<span class="sd">        Whether the label is defined in bimetallic labels or not.</span>
+
+<span class="sd">    both_sides : bool, default False</span>
+<span class="sd">        Whether to consider sites on both top and bottom sides</span>
+<span class="sd">        of the slab. Only relevant for periodic surface slabs.</span>
+
+<span class="sd">    all_sites : list of dicts, default None</span>
+<span class="sd">        The list of all sites. Provide this to make the function</span>
+<span class="sd">        much faster. Useful when the function is called many times.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">composition_effect</span><span class="p">:</span>
+        <span class="n">slab</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[[</span><span class="n">a</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span>
+                      <span class="ow">not</span> <span class="ow">in</span> <span class="n">adsorbate_elements</span><span class="p">]]</span>
+        <span class="n">metals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">slab</span><span class="o">.</span><span class="n">symbols</span><span class="p">)),</span>
+                        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">metals</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">get_slab_signature_from_label</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span>
+                                                  <span class="n">composition_effect</span><span class="p">,</span>
+                                                  <span class="n">metals</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">get_cluster_signature_from_label</span><span class="p">(</span><span class="n">label</span><span class="p">,</span>
+                                                     <span class="n">composition_effect</span><span class="p">,</span>
+                                                     <span class="n">metals</span><span class="p">)</span>
+    <span class="n">sigs</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+    <span class="n">morphology</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">composition_effect</span><span class="p">:</span>
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+            <span class="n">site</span><span class="p">,</span> <span class="n">morphology</span> <span class="o">=</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">site</span><span class="p">,</span> <span class="n">surface</span> <span class="o">=</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+            <span class="n">site</span><span class="p">,</span> <span class="n">morphology</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">site</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> 
+                  <span class="n">surface</span><span class="p">,</span> <span class="n">morphology</span><span class="p">,</span> 
+                  <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+                  <span class="n">composition</span><span class="o">=</span><span class="n">composition</span><span class="p">,</span> 
+                  <span class="n">orientation</span><span class="o">=</span><span class="n">orientation</span><span class="p">,</span> 
+                  <span class="n">both_sides</span><span class="o">=</span><span class="n">both_sides</span><span class="p">,</span>
+                  <span class="n">all_sites</span><span class="o">=</span><span class="n">all_sites</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="remove_adsorbate_from_site"><a class="viewcode-back" href="../../../build.html#acat.build.action.remove_adsorbate_from_site">[docs]</a><span class="k">def</span> <span class="nf">remove_adsorbate_from_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">remove_fragment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The base function for removing one adsorbate from an</span>
+<span class="sd">    occupied site. The site must include information of </span>
+<span class="sd">    &#39;adsorbate_indices&#39; or &#39;fragment_indices&#39;. Note that if</span>
+<span class="sd">    you want to remove adsorbates from multiple sites, call</span>
+<span class="sd">    this function multiple times will return the wrong result.</span>
+<span class="sd">    Please use remove_adsorbates_from_sites instead.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    site : dict </span>
+<span class="sd">        The site that the adsorbate should be removed from.</span>
+<span class="sd">        Must contain information of the adsorbate indices.</span>
+
+<span class="sd">    remove_fragment : bool, default False</span>
+<span class="sd">        Remove the fragment of a multidentate adsorbate instead </span>
+<span class="sd">        of the whole adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">remove_fragment</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">])</span>
+    <span class="k">del</span> <span class="n">atoms</span><span class="p">[</span><span class="n">si</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="remove_adsorbates_from_sites"><a class="viewcode-back" href="../../../build.html#acat.build.action.remove_adsorbates_from_sites">[docs]</a><span class="k">def</span> <span class="nf">remove_adsorbates_from_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="p">,</span> <span class="n">remove_fragments</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The base function for removing multiple adsorbates from</span>
+<span class="sd">    an occupied site. The sites must include information of </span>
+<span class="sd">    &#39;adsorbate_indices&#39; or &#39;fragment_indices&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    sites : list of dicts </span>
+<span class="sd">        The site that the adsorbate should be removed from.</span>
+<span class="sd">        Must contain information of the adsorbate indices.</span>
+
+<span class="sd">    remove_fragments : bool, default False</span>
+<span class="sd">        Remove the fragment of a multidentate adsorbate instead </span>
+<span class="sd">        of the whole adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">remove_fragments</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]]</span>
+    <span class="k">del</span> <span class="n">atoms</span><span class="p">[</span><span class="n">si</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="remove_adsorbates_too_close"><a class="viewcode-back" href="../../../build.html#acat.build.action.remove_adsorbates_too_close">[docs]</a><span class="k">def</span> <span class="nf">remove_adsorbates_too_close</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_coverage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                                <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find adsorbates that are too close, remove one set of them.</span>
+<span class="sd">    The function is intended to remove atoms that are unphysically </span>
+<span class="sd">    close. Please do not use a min_adsorbate_distace larger than 2.</span>
+<span class="sd">    The function is generalized for both periodic and non-periodic </span>
+<span class="sd">    systems (distinguished by atoms.pbc).</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        The nanoparticle or surface slab onto which the adsorbates are</span>
+<span class="sd">        added. Accept any ase.Atoms object. No need to be built-in.</span>
+
+<span class="sd">    adsorbate_coverage : acat.adsorbate_coverage.ClusterAdsorbateCoverage \</span>
+<span class="sd">        object or acat.adsorbate_coverage.SlabAdsorbateCoverage object, \</span>
+<span class="sd">        default None</span>
+<span class="sd">        The built-in adsorbate coverage class.</span>
+
+<span class="sd">    surface : str, default None</span>
+<span class="sd">        The surface type (crystal structure + Miller indices). </span>
+<span class="sd">        If the structure is a periodic surface slab, this is required. </span>
+<span class="sd">        If the structure is a nanoparticle, the function only add </span>
+<span class="sd">        adsorbates to the sites on the specified surface. </span>
+
+<span class="sd">    min_adsorbate_distance : float, default 0.</span>
+<span class="sd">        The minimum distance between two atoms that is not considered to</span>
+<span class="sd">        be to close. This distance has to be small.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">adsorbate_coverage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sac</span> <span class="o">=</span> <span class="n">adsorbate_coverage</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">)</span>                  
+    <span class="n">dups</span> <span class="o">=</span> <span class="n">get_close_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="n">min_adsorbate_distance</span><span class="p">,</span>
+                           <span class="n">mic</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">dups</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    
+    <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+    <span class="c1"># Make sure it&#39;s not the bond length within a fragment being too close</span>
+    <span class="n">bond_rows</span><span class="p">,</span> <span class="n">frag_id_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+            <span class="n">frag_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">])</span>
+            <span class="n">frag_id_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frag_ids</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">dups</span> <span class="o">==</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">frag_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">w</span><span class="p">:</span>
+                <span class="n">bond_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">dups</span> <span class="o">=</span> <span class="n">dups</span><span class="p">[[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dups</span><span class="p">))</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bond_rows</span><span class="p">]]</span>
+    <span class="n">del_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dups</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">rm_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">lst</span> <span class="ow">in</span> <span class="n">frag_id_list</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> 
+              <span class="n">del_ids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">lst</span><span class="p">))]</span>
+    <span class="n">rm_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">rm_ids</span><span class="p">))</span>
+
+    <span class="k">del</span> <span class="n">atoms</span><span class="p">[</span><span class="n">rm_ids</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
