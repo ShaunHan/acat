@@ -112,7 +112,7 @@ class StochasticPatternGenerator(object):
         stochastically but for all images systematically, e.g. generating
         10 stochastic overlayer patterns for each image:
 
-        >>> from acat.build.patterns import StochasticPatternGenerator as SPG
+        >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
         >>> for atoms in images:
         ...    spg = SPG(atoms, ..., append_trajectory=True)
         ...    spg.run(num_gen = 10)
