@@ -1,5 +1,7 @@
-"""Procreation operators meant to be used with symmetric particles."""
+"""Procreation operators meant to be used in symmetry-constrained
+genetic algorithm (SCGA) for alloy particles."""
 from ase.ga.offspring_creator import OffspringCreator
+from collections import defaultdict
 import random
 
 
@@ -15,7 +17,7 @@ class Mutation(OffspringCreator):
 
 class SymmetricSubstitute(Mutation):
     """Substitute all the atoms in a shell with a different metal 
-    element.
+    element. The elemental composition cannot be fixed.
 
     Parameters
     ----------
@@ -30,10 +32,11 @@ class SymmetricSubstitute(Mutation):
 
     num_muts : int, default 1
         The number of times to perform this operation.
+
     """
 
     def __init__(self, shells, 
-                 elements=None, 
+                 elements=None,
                  num_muts=1):
         Mutation.__init__(self, num_muts=num_muts)
 
@@ -85,7 +88,8 @@ class SymmetricSubstitute(Mutation):
 
 
 class SymmetricPermutation(Mutation):
-    """Permutes the elements in two random shells.
+    """Permutes the elements in two random shells. The elemental 
+    composition can be fixed.
 
     Parameters
     ----------
@@ -98,18 +102,25 @@ class SymmetricPermutation(Mutation):
         the elements specified in this list. Default is to take all 
         elements into account.
 
+    keep_composition : bool, defulat False
+        Whether the elemental composition should be the same as in
+        the parents.
+
     num_muts : int, default 1
         The number of times to perform this operation.
+
     """
 
     def __init__(self, shells,
-                 elements=None, 
+                 elements=None,
+                 keep_composition=False, 
                  num_muts=1):
         Mutation.__init__(self, num_muts=num_muts)
 
         assert len(elements) >= 2
         self.descriptor = 'SymmetricPermutation'
         self.elements = elements
+        self.keep_composition = keep_composition
         self.shells = shells
 
     def get_new_individual(self, parents):
@@ -122,7 +133,8 @@ class SymmetricPermutation(Mutation):
         indi.info['data']['parents'] = [f.info['confid']]
 
         for _ in range(self.num_muts):
-            SymmetricPermutation.mutate(f, self.shells, self.elements)
+            SymmetricPermutation.mutate(f, self.shells, self.elements,
+                                        self.keep_composition)
 
         for atom in f:
             indi.append(atom)
@@ -131,7 +143,7 @@ class SymmetricPermutation(Mutation):
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
 
     @classmethod
-    def mutate(cls, atoms, shells, elements=None):
+    def mutate(cls, atoms, shells, elements=None, keep_composition=False):
         """Do the actual permutation."""
 
         if elements is None:
@@ -149,12 +161,34 @@ class SymmetricPermutation(Mutation):
                 for i in torem:
                     shell.remove(i)
 
-        i1 = random.randint(0, len(shells) - 1)
-        i2 = random.randint(0, len(shells) - 1)
-        mut_shell1 = shells[i1]
+        if keep_composition:
+            dd = defaultdict(list)
+            for si, shell in enumerate(shells):
+                dd[len(shell)].append(si)
+            items = list(dd.items())
+            random.shuffle(items)
+            mut_sis = None
+            for k, v in items:
+                if len(v) > 1:
+                    mut_sis = v
+                    break
+            if mut_sis is None:
+                return
+            random.shuffle(mut_sis)
+            i1 = mut_sis[0]
+            mut_shell1 = shells[i1]           
+            options = [i for i in mut_sis[1:] if atoms[mut_shell1[0]].symbol 
+                       != atoms[shells[i][0]].symbol]
 
-        while atoms[mut_shell1[0]].symbol == atoms[shells[i2][0]].symbol:
-            i2 = random.randint(0, len(shells) - 1)
+        else:
+            i1 = random.randint(0, len(shells) - 1)
+            mut_shell1 = shells[i1]
+            options = [i for i in range(0, len(shells)) if atoms[mut_shell1[0]].symbol 
+                       != atoms[shells[i][0]].symbol]
+
+        if not options:
+            return
+        i2 = random.choice(options)
         mut_shell2 = shells[i2]
         atoms.symbols[mut_shell1+mut_shell2] = len(mut_shell1) * atoms[
         mut_shell2[0]].symbol + len(mut_shell2) * atoms[mut_shell1[0]].symbol
@@ -171,7 +205,8 @@ class Crossover(OffspringCreator):
 
 class SymmetricCrossover(Crossover):
     """Merge the elemental distributions in two half shells from 
-    different particles together.
+    different particles together. The elemental composition can be 
+    fixed.
 
     Parameters
     ----------
@@ -184,11 +219,17 @@ class SymmetricCrossover(Crossover):
         the elements specified in this list. Default is to take all 
         elements into account.
 
+    keep_composition : bool, defulat False
+        Whether the elemental composition should be the same as in
+        the parents.
+
     """
-    def __init__(self, shells, elements=None):
+
+    def __init__(self, shells, elements=None, keep_composition=False):
         Crossover.__init__(self)
         self.shells = shells
         self.elements = elements
+        self.keep_composition = keep_composition
         self.descriptor = 'SymmetricCrossover'
         
     def get_new_individual(self, parents):
@@ -212,10 +253,25 @@ class SymmetricCrossover(Crossover):
                     shell.remove(i)
 
         random.shuffle(shells)
-        mshells = shells[len(shells)//2:]
-        mids = [i for shell in mshells for i in shell]
-        indi.symbols[mids] = m.symbols[mids]
+        if self.keep_composition:
+            divisors = list(range(2, len(shells)+1))
+            random.shuffle(divisors)
+            mids = None
+            for divisor in divisors: 
+                mshells = shells[len(shells)//divisor:]
+                tmpmids = [i for shell in mshells for i in shell] 
+                if sorted(indi.symbols[tmpmids]) == sorted(m.symbols[tmpmids]):
+                    mids = tmpmids
+                    break
+            if mids is None:
+                m = f.copy()
 
+        else:
+            mshells = shells[len(shells)//2:]
+            mids = [i for shell in mshells for i in shell]
+
+        for i in mids:
+            indi[i].symbol = m[i].symbol
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'

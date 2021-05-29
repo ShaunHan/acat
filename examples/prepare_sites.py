@@ -1,4 +1,4 @@
-from asac.adsorption_sites import *
+from acat.adsorption_sites import SlabAdsorptionSites
 from ase.io import read, write
 import pickle
 

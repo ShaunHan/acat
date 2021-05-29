@@ -476,6 +476,28 @@ def string_fragmentation(adsorbate):
     return frag_list        
 
 
+def numbers_from_ratio(sum_numbers, ratio):
+    """Return the number of atoms for each element from ratio.
+
+    Parameters
+    ----------
+    sum_numbers : int
+        The total number of atoms
+
+    ratio : list
+        A list of ratio for different elements
+    """
+
+    sum_ratio = sum(ratio)
+    totals = [int((sum_numbers * r) // sum_ratio) for r in ratio]
+    residues = [(sum_numbers * r) % sum_ratio for r in ratio]
+    for i in sorted(range(len(ratio)), key=lambda i: residues[i] 
+    * ratio[i], reverse=True)[:sum_numbers-sum(totals)]:
+        totals[i] += 1
+
+    return totals
+
+
 def draw_graph(G, savefig='graph.png'):               
     """Draw the graph using matplotlib.pyplot.
 
