@@ -646,7 +646,7 @@ RandomOrderingGenerator class
         >>> from ase.build import fcc111
         >>> from ase.io import read
         >>> from ase.visualize import view
-        >>> atoms = fcc111('Ni', (4,4,4), vacuum=5.)
+        >>> atoms = fcc111('Ni', (4, 4, 4), vacuum=5.)
         >>> atoms.center()
         >>> rog = ROG(atoms, elements=['Pt', 'Au'],
         ...           composition={'Pt': 0.5, 'Au': 0.5})
