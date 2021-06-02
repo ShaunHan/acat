@@ -549,8 +549,8 @@ SymmetricClusterOrderingGenerator class
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', length=8, cutoff=3)
-        >>> sog = SCOG(atoms, elements=['Ni', 'Pt'], symmetry='spherical')
-        >>> sog.run(max_gen=100, verbose=True)
+        >>> scog = SCOG(atoms, elements=['Ni', 'Pt'], symmetry='spherical')
+        >>> scog.run(max_gen=100, verbose=True)
         >>> images = read('orderings.traj', index=':') 
         >>> view(images)
 
@@ -572,10 +572,10 @@ SymmetricClusterOrderingGenerator class
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', 7, 2)
-        >>> sog = SCOG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'],
+        >>> scog = SCOG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'],
         ...           symmetry='mirror_circular',
         ...           composition={'Ni': 0.4, 'Cu': 0.3, 'Pt': 0.2, 'Au': 0.1})
-        >>> sog.run(max_gen=50, verbose=True)
+        >>> scog.run(max_gen=50, verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
 
@@ -596,8 +596,8 @@ SymmetricClusterOrderingGenerator class
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', 12, 5)
-        >>> sog = SCOG(atoms, elements=['Ni', 'Pt'], symmetry='concentric')
-        >>> groups = sog.get_groups()
+        >>> scog = SCOG(atoms, elements=['Ni', 'Pt'], symmetry='concentric')
+        >>> groups = scog.get_groups()
         >>> images = [atoms[g] for g in groups]
         >>> view(images)
 
