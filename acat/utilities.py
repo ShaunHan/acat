@@ -50,29 +50,19 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
         return {0: []}
     cell = atoms.cell
     positions = atoms.positions
-    
     nums = set(atoms.numbers)
     pairs = product(nums, nums)
-    res = np.asarray(list(permutations(np.asarray(range(natoms)),2)))    
-    indices1, indices2 = res[:,0], res[:,1]
-    p1, p2 = positions[indices1], positions[indices2]
-
-    if mic:
-        _, distances = find_mic(p2 - p1, cell, pbc=True)
-    else:
-        distances = np.linalg.norm(p2 - p1, axis=1)
-    ds = np.insert(distances, np.arange(0, distances.size, natoms), 0.)
-
     if not radius:
-        cr_dict = {(i, j): (covalent_radii[i]+covalent_radii[j]) for i, j in pairs}
+        cr_dict = {(i, j): (covalent_radii[i] + covalent_radii[j]) for i, j in pairs}
     
+    ds = atoms.get_all_distances(mic=mic)
     conn = {k: [] for k in range(natoms)}
     for atomi in atoms:
         for atomj in atoms:
             i, j = atomi.index, atomj.index
             if i != j:
                 if not (different_species & (atomi.symbol == atomj.symbol)):
-                    d = ds[i*natoms:(i+1)*natoms][j]
+                    d = ds[i,j]
                     crij = 2 * radius if radius else cr_dict[(atomi.number, atomj.number)] 
 
                     if neighbor_number == 1 or span:
@@ -115,7 +105,7 @@ def get_connectivity_matrix(neighborlist):
 
 
 def get_mic(p1, p2, cell, pbc=[1,1,0], 
-            max_cell_multiples=1e5, 
+            max_cell_multiple=1e5, 
             return_squared_distance=False): 
     """A highly efficient function for getting all vectors from p1
     to p2. Also able to calculate the squared distance using the 
@@ -138,7 +128,7 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
     pbc : numpy.array or list, default [1, 1, 0]
         Whether cell is periodic in each direction.
 
-    max_cell_multiples : int, default 1e5
+    max_cell_multiple : int, default 1e5
         A large number to account for the maximum repetitions of each 
         of the lattice vectors. The minimum number of repetitions is
         hence calculated by the algorithm using the intersection of a 
@@ -168,14 +158,14 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
     min_dr_sq = dr @ dr
     min_length = math.sqrt(min_dr_sq)
     a_max = math.ceil(min_length / vol * b_cross_c_len)
-    a_max = min(a_max, max_cell_multiples)
+    a_max = min(a_max, max_cell_multiple)
     b_max = math.ceil(min_length / vol * a_cross_c_len)
-    b_max = min(b_max, max_cell_multiples)
+    b_max = min(b_max, max_cell_multiple)
     if not pbc[2]:
         c_max = 0
     else:
         c_max = math.ceil(min_length / vol * a_cross_b_len)
-        c_max = min(c_max, max_cell_multiples)
+        c_max = min(c_max, max_cell_multiple)
 
     min_dr = dr
     for i in range(-a_max, a_max + 1):
@@ -240,6 +230,44 @@ def expand_cell(atoms, cutoff=None, padding=None):
     offsets = offsets.reshape(ncell, 3)
 
     return index, coords, offsets
+
+
+def get_max_delta_sum_path(nodes):
+
+    delta_sum = -10000
+    res_nodes = []
+    for i in range(len(nodes)):
+        new_nodes = nodes[i:] + nodes[:i]
+        ds = sum([new_nodes[j+1] - new_nodes[j] 
+                  for j in range(len(nodes)-1)])
+        if ds > delta_sum:
+            delta_sum = ds
+            res_nodes = new_nodes 
+        if -ds > delta_sum:
+            delta_sum = -ds
+            res_nodes = new_nodes[::-1]
+ 
+    return res_nodes
+
+
+def bipartitions(shells, total):
+    n = len(shells)
+    for k in range(n + 1):
+        for combo in combinations(range(n), k):
+            if sum(len(shells[i]) for i in combo) == total:
+                set_combo = set(combo)
+                yield sorted(shells[i] for i in combo), sorted(
+                shells[i] for i in range(n) if i not in set_combo)
+       
+                                                                       
+def partitions_into_totals(shells, totals):
+    assert totals
+    if len(totals) == 1:
+        yield [shells]
+    else:
+        for first, remaining_shells in bipartitions(shells, totals[0]):
+            for rest in partitions_into_totals(remaining_shells, totals[1:]):
+                yield [first] + rest
 
 
 def get_close_atoms(atoms, cutoff=0.5, mic=False, delete=False):

@@ -17,7 +17,7 @@ Optimize adsorbate overlayer pattern
 
 **Example**
 
-All the adsorbate operators can be easily used with other ASE operators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` operator only works for nanoparticles, and it is not recommonded as it is not stable yet.
+All the adsorbate operators and comparators can be easily used with other ASE operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` operator only works for nanoparticles, and it is not recommonded as it is not stable yet.
 
 As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
 
@@ -224,19 +224,19 @@ The script for a parallel genetic algorithm looks as follows:
 Symmetry-constrained genetic algorithm for nanoalloys
 -----------------------------------------------------
 
-.. automodule:: acat.ga.symmetric_particle_operators
+.. automodule:: acat.ga.group_operators
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: acat.ga.symmetric_particle_comparators
+.. automodule:: acat.ga.group_comparators
     :members:
     :undoc-members:
     :show-inheritance:
 
 **Example**
 
-All the symmetric particle operators can be easily used with other ASE operators.
+All the group operators and comparators can be easily used with other ASE operators and comparators. All operators can be used for both non-periodic nanoparticles and periodic surface slabs.
 
 As an example we will find the convex hull of ternary NixPtyAu405-x-y truncated octahedral nanoalloys using the ASAP EMT calculator. **Note that we must first align the symmetry axis of interest to the z direction.** Here we want to study the 3-fold mirror circular symmetry around the C3 axis of the particle.
 
@@ -244,12 +244,12 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
 
 .. code-block:: python
 
-    from acat.build.ordering import SymmetricOrderingGenerator as SOG
-    from acat.ga.symmetric_particle_operators import SymmetricSubstitute
-    from acat.ga.symmetric_particle_operators import SymmetricPermutation
-    from acat.ga.symmetric_particle_operators import SymmetricCrossover
-    from acat.ga.symmetric_particle_comparators import ShellSizeComparator
-    from acat.ga.symmetric_particle_comparators import ShellCompositionComparator
+    from acat.build.ordering import SymmetricClusterOrderingGenerator as SCOG
+    from acat.ga.group_operators import GroupSubstitute
+    from acat.ga.group_operators import GroupPermutation
+    from acat.ga.group_operators import GroupCrossover
+    from acat.ga.group_comparators import GroupSizeComparator
+    from acat.ga.group_comparators import GroupCompositionComparator
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
     from ase.ga.offspring_creator import OperationSelector
@@ -274,12 +274,12 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     particle.center(vacuum=5.)                                              
 
     # Generate 100 truncated ocatahedral NixPtyAu405-x-y nanoalloys with
-    # mirror circular symmetry. Get the shells at the same time.
-    sog = SOG(particle, elements=['Ni', 'Pt', 'Au'],
-              symmetry='mirror_circular',
-              trajectory='starting_generation.traj')
-    sog.run(max_gen=pop_size, mode='stochastic', verbose=True)
-    shells = sog.get_shells()
+    # mirror circular symmetry. Get the groups at the same time.
+    scog = SCOG(particle, elements=['Ni', 'Pt', 'Au'],
+                symmetry='mirror_circular',
+                trajectory='starting_generation.traj')
+    scog.run(max_gen=pop_size, mode='stochastic', verbose=True)
+    groups = scog.get_groups()
     images = read('starting_generation.traj', index=':')
     
     # Instantiate the db
@@ -297,14 +297,14 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     
     # Define operators
     soclist = ([2, 2, 3], 
-               [SymmetricSubstitute(shells, elements=['Ni', 'Pt', 'Au'], num_muts=3),
-                SymmetricPermutation(shells, elements=['Ni', 'Pt', 'Au'], num_muts=1),                              
-                SymmetricCrossover(shells, elements=['Ni', 'Pt', 'Au']),])
+               [GroupSubstitute(groups, elements=['Ni', 'Pt', 'Au'], num_muts=3),
+                GroupPermutation(groups, elements=['Ni', 'Pt', 'Au'], num_muts=1),                              
+                GroupCrossover(groups, elements=['Ni', 'Pt', 'Au']),])
     
     op_selector = OperationSelector(*soclist)
     
     # Define comparators
-    comp = SequentialComparator([ShellSizeComparator(shells, ['Ni', 'Pt', 'Au']),
+    comp = SequentialComparator([GroupSizeComparator(groups, ['Ni', 'Pt', 'Au']),
                                  NNMatComparator(0.2, ['Ni', 'Pt', 'Au'])],
                                 [0.5, 0.5])
     

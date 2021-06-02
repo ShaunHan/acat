@@ -519,60 +519,60 @@ random_coverage_pattern function
 
     .. image:: ../images/random_coverage_pattern_3.png
 
-Generate chemical orderings
----------------------------
+Generate alloy chemical orderings
+---------------------------------
 
 .. automodule:: acat.build.ordering
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: SymmetricOrderingGenerator, RandomOrderingGenerator
+    :exclude-members: SymmetricClusterOrderingGenerator, RandomOrderingGenerator
 
-SymmetricOrderingGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SymmetricClusterOrderingGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autoclass:: SymmetricOrderingGenerator
+    .. autoclass:: SymmetricClusterOrderingGenerator
 
         .. automethod:: get_sorted_indices
 
-        .. automethod:: get_shells
+        .. automethod:: get_groups
 
         .. automethod:: run
 
     **Example**
 
-    To generate 100 symmetric chemical orderings of a truncated
-    octahedral NiPt nanoalloy with spherical symmetry:
+    To generate 100 symmetric chemical orderings for truncated
+    octahedral NiPt nanoalloys with spherical symmetry:
 
-        >>> from acat.build.ordering import SymmetricOrderingGenerator as SOG
+        >>> from acat.build.ordering import SymmetricClusterOrderingGenerator as SCOG
         >>> from ase.cluster import Octahedron
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', length=8, cutoff=3)
-        >>> sog = SOG(atoms, elements=['Ni', 'Pt'], symmetry='spherical')
+        >>> sog = SCOG(atoms, elements=['Ni', 'Pt'], symmetry='spherical')
         >>> sog.run(max_gen=100, verbose=True)
         >>> images = read('orderings.traj', index=':') 
         >>> view(images)
 
     Output:
 
-        | 10 layers classified
+        | 10 groups classified
         | 100 symmetric chemical orderings generated 
 
-    .. image:: ../images/SymmetricOrderingGenerator1.gif
+    .. image:: ../images/SymmetricClusterOrderingGenerator1.gif
        :scale: 60 %
        :align: center
                
-    To generate 50 symmetric chemical orderings of a quaternary
-    truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloy with 
+    To generate 50 symmetric chemical orderings for quaternary
+    truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloys with 
     mirror circular symmetry:
 
-        >>> from acat.build.ordering import SymmetricOrderingGenerator as SOG
+        >>> from acat.build.ordering import SymmetricClusterOrderingGenerator as SCOG
         >>> from ase.cluster import Octahedron
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', 7, 2)
-        >>> sog = SOG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'],
+        >>> sog = SCOG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'],
         ...           symmetry='mirror_circular',
         ...           composition={'Ni': 0.4, 'Cu': 0.3, 'Pt': 0.2, 'Au': 0.1})
         >>> sog.run(max_gen=50, verbose=True)
@@ -581,28 +581,89 @@ SymmetricOrderingGenerator class
 
     Output:
 
-        | 25 layers classified
+        | 25 groups classified
         | 50 symmetric chemical orderings generated
 
-    .. image:: ../images/SymmetricOrderingGenerator2.gif
+    .. image:: ../images/SymmetricClusterOrderingGenerator2.gif
        :scale: 60 %
        :align: center
 
-    Sometimes it is also useful to get the structure of each shell. For instance,
-    to visualize the conventional shells of a truncated octahedral nanoparticle:
+    Sometimes it is also useful to get the structure of each group. 
+    For instance, to visualize the concentric shells of a truncated 
+    octahedral nanoparticle:
 
-        >>> from acat.build.ordering import SymmetricOrderingGenerator as SOG
+        >>> from acat.build.ordering import SymmetricClusterOrderingGenerator as SCOG
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', 12, 5)
-        >>> sog = SOG(atoms, elements=['Ni', 'Pt'], symmetry='conventional')
-        >>> shells = sog.get_shells()
-        >>> images = [atoms[s] for s in shells]
+        >>> sog = SCOG(atoms, elements=['Ni', 'Pt'], symmetry='concentric')
+        >>> groups = sog.get_groups()
+        >>> images = [atoms[g] for g in groups]
         >>> view(images)
 
     Output:
 
-    .. image:: ../images/SymmetricOrderingGenerator3.gif
+    .. image:: ../images/SymmetricClusterOrderingGenerator3.gif
+       :scale: 60 %
+       :align: center
+
+OrderedSlabOrderingGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. autoclass:: OrderedSlabOrderingGenerator
+
+        .. automethod:: get_groups
+
+        .. automethod:: run
+
+    **Example**
+
+    To stochastically generate 50 ordered chemical orderings for
+    ternary NixPtyAu1-x-y fcc111 surface slabs:
+
+        >>> from acat.build.ordering import OrderedSlabOrderingGenerator as OSOG 
+        >>> from ase.build import fcc111
+        >>> from ase.io import read
+        >>> from ase.visualize import view
+        >>> atoms = fcc111('Ni', (6, 6, 4), vacuum=5.)
+        >>> atoms.center()
+        >>> osog = OSOG(atoms, elements=['Ni', 'Pt', 'Au'],
+        ...             reducing_size=(3, 3)) 
+        >>> osog.run(max_gen=50, mode='stochastic', verbose=True)
+        >>> images = read('orderings.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+        | 16 groups classified
+        | 50 ordered chemical orderings generated 
+
+    .. image:: ../images/OrderedSlabOrderingGenerator1.gif
+       :scale: 60 %
+       :align: center
+               
+    To generate 50 ordered chemical orderings for Ni0.75Pt0.25 
+    fcc110 surface slabs:
+
+        >>> from acat.build.ordering import OrderedSlabOrderingGenerator as OSOG 
+        >>> from ase.build import fcc110
+        >>> from ase.io import read
+        >>> from ase.visualize import view
+        >>> atoms = fcc110('Ni', (4, 4, 4), vacuum=5.)
+        >>> atoms.center()
+        >>> osog = OSOG(atoms, elements=['Ni', 'Pt'],
+        ...             composition={'Ni': 0.75, 'Pt': 0.25},
+        ...             reducing_size=(2, 2)) 
+        >>> osog.run(max_gen=50, verbose=True)
+        >>> images = read('orderings.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+        | 16 groups classified
+        | 50 ordered chemical orderings generated
+
+    .. image:: ../images/OrderedSlabOrderingGenerator2.gif
        :scale: 60 %
        :align: center
 
@@ -619,8 +680,8 @@ RandomOrderingGenerator class
 
     **Example**
 
-    To generate 50 random chemical orderings of a icosahedral Ni0.5Pt0.2Au0.3
-    nanoalloy:
+    To generate 50 random chemical orderings for icosahedral 
+    Ni0.5Pt0.2Au0.3 nanoalloys:
 
         >>> from acat.build.ordering import RandomOrderingGenerator as ROG
         >>> from ase.cluster import Icosahedron
@@ -639,8 +700,8 @@ RandomOrderingGenerator class
        :scale: 60 %
        :align: center
 
-    To generate 50 random chemical orderings of a Pt0.5Au0.5 fcc111 surface
-    slab:
+    To generate 50 random chemical orderings for Pt0.5Au0.5 
+    fcc111 surface slabs:
 
         >>> from acat.build.ordering import RandomOrderingGenerator as ROG 
         >>> from ase.build import fcc111
@@ -657,5 +718,5 @@ RandomOrderingGenerator class
     Output:
 
     .. image:: ../images/RandomOrderingGenerator2.gif
-       :scale: 70 %
+       :scale: 60 %
        :align: center
