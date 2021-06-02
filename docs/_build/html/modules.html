@@ -219,12 +219,12 @@ Accept any ase.Atoms object. No need to be built-in.</p></li>
 underneath fcc hollow sites.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
 compositions as different sites. It is recommended to
-set composition=False for monometallics. Currently only
-support composition identification of bimetallics.</p></li>
+set composition=False for monometallics.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
+otherwise use the monometallic labels. Currently only
+support labelling of monometallics and bimetallics.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -505,19 +505,19 @@ is set to True.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a periodic surface slab with at
 least 3 layers (e.g. all surface atoms make up one layer).
 Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>surface</strong> (<em>str</em>) – The surface type (crystal structure + Miller indices)</p></li>
+<li><p><strong>surface</strong> (<em>str</em>) – The surface type (crystal structure + Miller indices).</p></li>
 <li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
 underneath fcc hollow sites.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
 compositions as different sites. It is recommended to
-set composition=False for monometallics. Currently only
-support composition identification of bimetallics.</p></li>
+set composition=False for monometallics.</p></li>
 <li><p><strong>both_sides</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites on both top and bottom sides
 of the slab.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
+otherwise use the monometallic labels. Current only
+support labelling of monometallics and bimetallics.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -560,7 +560,7 @@ is not satisfying. The default 0.5 is usually good enough.</p></li>
 </div>
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.populate_site_list">
-<code class="sig-name descname">populate_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">allow_obtuse</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">5.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.populate_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">populate_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">allow_obtuse</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">_bot_side</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.populate_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find all ontop, bridge and hollow sites (3-fold and 4-fold)
 given an input slab based on Delaunay triangulation of the
 surface atoms in a supercell and collect in a site list.</p>
@@ -768,14 +768,14 @@ local surface morphology. Only available for surface slabs.</p></li>
 underneath fcc hollow sites.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
 compositions as different sites. It is recommended to
-set composition=False for monometallics. Currently only
-support composition identification of bimetallics.</p></li>
+set composition=False for monometallics.</p></li>
 <li><p><strong>both_sides</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites on both top and bottom sides
 of the slab. Only relevant for periodic surface slabs.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
+otherwise use the monometallic labels. Currently only
+support labelling of monometallics and bimetallics.</p></li>
 </ul>
 </dd>
 </dl>
@@ -841,12 +841,12 @@ Accept any ase.Atoms object. No need to be built-in.</p></li>
 underneath fcc hollow sites.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
 compositions as different sites. It is recommended to
-set composition=False for monometallics. Currently only
-support composition identification of bimetallics.</p></li>
+set composition=False for monometallics.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
+otherwise use the monometallic labels. Currently only
+support labelling of monometallics and bimetallics.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -975,19 +975,19 @@ is set to True.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a periodic surface slab with at
 least 3 layers (e.g. all surface atoms make up one layer).
 Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>surface</strong> (<em>str</em>) – The surface type (crystal structure + Miller indices)</p></li>
+<li><p><strong>surface</strong> (<em>str</em>) – The surface type (crystal structure + Miller indices).</p></li>
 <li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
 underneath fcc hollow sites.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
 compositions as different sites. It is recommended to
-set composition=False for monometallics. Currently only
-support composition identification of bimetallics.</p></li>
+set composition=False for monometallics.</p></li>
 <li><p><strong>both_sides</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites on both top and bottom sides
 of the slab.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
+otherwise use the monometallic labels. Current only
+support labelling of monometallics and bimetallics.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -1103,14 +1103,14 @@ local surface morphology. Only available for surface slabs.</p></li>
 underneath fcc hollow sites.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
 compositions as different sites. It is recommended to
-set composition=False for monometallics. Currently only
-support composition identification of bimetallics.</p></li>
+set composition=False for monometallics.</p></li>
 <li><p><strong>both_sides</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites on both top and bottom sides
 of the slab. Only relevant for periodic surface slabs.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
+otherwise use the monometallic labels. Currently only
+support labelling of monometallics and bimetallics.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1179,7 +1179,10 @@ No need to be built-in.</p></li>
 <cite>ClusterAdsorptionSites</cite> object if not specified.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occpied site. Since the site labelling
+currently only supports monometallics and bimetallics, the
+numerical part will all be 0 if there are more than 2 metal
+components.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1359,7 +1362,10 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occpied site. Since the site labelling
+currently only supports monometallics and bimetallics, the
+numerical part will all be 0 if there are more than 2 metal
+components.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1515,7 +1521,10 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occpied site. Since the site labelling
+currently only supports monometallics and bimetallics, the
+numerical part will all be 0 if there are more than 2 metal
+components.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1592,7 +1601,10 @@ No need to be built-in.</p></li>
 <cite>ClusterAdsorptionSites</cite> object if not specified.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occpied site. Since the site labelling
+currently only supports monometallics and bimetallics, the
+numerical part will all be 0 if there are more than 2 metal
+components.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1679,7 +1691,10 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occpied site. Since the site labelling
+currently only supports monometallics and bimetallics, the
+numerical part will all be 0 if there are more than 2 metal
+components.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1743,7 +1758,10 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occpied site. Since the site labelling
+currently only supports monometallics and bimetallics, the
+numerical part will all be 0 if there are more than 2 metal
+components.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>

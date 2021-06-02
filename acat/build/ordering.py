@@ -1,4 +1,5 @@
-from acat.utilities import numbers_from_ratio
+from ..utilities import bipartitions, partitions_into_totals
+from ..utilities import numbers_from_ratio, is_list_or_tuple
 from ase.geometry import get_distances
 from ase.io import Trajectory, read, write
 from asap3.analysis import FullCNA 
@@ -6,17 +7,18 @@ from asap3 import EMT as asapEMT
 from asap3.Internal.BuiltinPotentials import Gupta
 from collections import defaultdict
 from itertools import product, combinations
+from networkx.algorithms.components.connected import connected_components
+import networkx as nx
 import numpy as np
 import random
 import math
 
 
-class SymmetricOrderingGenerator(object):
-    """`SymmetricOrderingGenerator` is a class for generating 
-    symmetric chemical orderings for a nanoalloy.
-    As for now only support clusters without fixing the composition, 
-    but there is no limitation of the number of metal components. 
-    Please align the z direction to the symmetry axis of the cluster.
+class SymmetricClusterOrderingGenerator(object):
+    """`SymmetricClusterOrderingGenerator` is a class for generating 
+    symmetric chemical orderings for a **nanoalloy**. There is no 
+    limitation of the number of metal components. Please always align 
+    the z direction to the symmetry axis of the nanocluster.
  
     Parameters
     ----------
@@ -31,57 +33,57 @@ class SymmetricOrderingGenerator(object):
     symmetry : str, default 'spherical'
         Support 9 symmetries: 
 
-        **'spherical'**: centrosymmetry (shells defined by the distances 
+        **'spherical'**: centrosymmetry (groups defined by the distances 
         to the geometric center);
 
-        **'cylindrical'**: cylindrical symmetry around z axis (shells 
+        **'cylindrical'**: cylindrical symmetry around z axis (groups 
         defined by the distances to the z axis);
 
-        **'planar'**: planar symmetry around z axis (shells defined by 
+        **'planar'**: planar symmetry around z axis (groups defined by 
         the z coordinates), common for phase-separated nanoalloys;
 
         **'mirror_planar'**: mirror planar symmetry around both
-        z and xy plane (shells defined by the absolute z coordinate), 
+        z and xy plane (groups defined by the absolute z coordinate), 
         high symmetry subset of 'planar';
-        'circular' = ring symmetry around z axis (shells defined by
+        'circular' = ring symmetry around z axis (groups defined by
         both z coordinate and distance to z axis);
 
         **'mirror_circular'**: mirror ring symmetry around both
-        z and xy plane (shells defined by both absolute z coordinate 
+        z and xy plane (groups defined by both absolute z coordinate 
         and distance to z axis);
 
-        **'chemical'**: symmetry w.r.t chemical environment (shells 
+        **'chemical'**: symmetry w.r.t chemical environment (groups 
         defined by the atomic energies given by a Gupta potential)
 
-        **'geometrical'**: symmetry w.r.t geometrical environment (shells 
+        **'geometrical'**: symmetry w.r.t geometrical environment (groups 
         defined by vertex / edge / fcc111 / fcc100 / bulk identified
         by CNA analysis);
 
-        **'conventional'**: conventional definition of shells (surface /
-        subsurface, subsubsurface, ..., core).
+        **'concentric'**: conventional definition of the concentric 
+        shells (surface / subsurface, subsubsurface, ..., core).
 
     cutoff : float, default 1.0
-        Maximum thickness (in Angstrom) of a single shell. The thickness
+        Maximum thickness (in Angstrom) of a single group. The thickness
         is calculated as the difference between the "distances" of the 
-        closest-to-center atoms in two neighbor shells. Note that the
+        closest-to-center atoms in two neighbor groups. Note that the
         criterion of "distance" depends on the symmetry. This parameter 
         works differently if the symmetry is 'chemical', 'geometrical' or 
-        'conventional'. For 'chemical' it is defined as the maximum atomic
-        energy difference (in eV) of a single shell predicted by a Gupta
-        potential. For 'geometrical' and 'conventional' it is defined as 
+        'concentric'. For 'chemical' it is defined as the maximum atomic
+        energy difference (in eV) of a single group predicted by a Gupta
+        potential. For 'geometrical' and 'concentric' it is defined as 
         the cutoff radius (in Angstrom) for CNA, and a reasonable cutoff 
         based on the lattice constant of the material will automatically 
         be used if cutoff <= 1. Use a larger cutoff if the structure is 
         distorted. 
 
     secondary_symmetry : str, default None
-        Add a secondary symmetry check to define shells hierarchically. 
-        For example, even if two atoms are classifed in the same shell
+        Add a secondary symmetry check to define groups hierarchically. 
+        For example, even if two atoms are classifed in the same group
         defined by the primary symmetry, they can still end up in 
-        different shells if they fall into two different shells defined 
+        different groups if they fall into two different groups defined 
         by the secondary symmetry. Support 7 symmetries: 'spherical',
         'cylindrical', 'planar', 'mirror_planar', 'chemical', 'geometrical' 
-        and 'conventional'. Note that secondary symmetry has the same 
+        and 'concentric'. Note that secondary symmetry has the same 
         importance as the primary symmetry, so you can set either of the 
         two symmetries of interest as the secondary symmetry. Useful for 
         combining symmetries of different types (e.g. circular + chemical) 
@@ -90,15 +92,12 @@ class SymmetricOrderingGenerator(object):
     secondary_cutoff : float, default 1.0
         Same as cutoff, except that it is for the secondary symmetry.
 
-    composition : dict, None
+    composition : dict, default None
         Generate symmetric orderings only at a certain composition.
         The dictionary contains the metal elements as keys and their 
         concentrations as values. Generate orderings at all compositions 
         if not specified. Note that the computational cost scales badly 
-        with the number of shells for a fixed-composition search.
-
-    shell_threshold : int, default 20
-        Number of shells to switch to stochastic mode automatically.
+        with the number of groups for a fixed-composition search.
 
     trajectory : str, default 'orderings.traj'
         The name of the output ase trajectory file.
@@ -114,7 +113,6 @@ class SymmetricOrderingGenerator(object):
                  secondary_symmetry=None,
                  secondary_cutoff=1.,
                  composition=None,
-                 shell_threshold=20,
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
@@ -134,29 +132,28 @@ class SymmetricOrderingGenerator(object):
             nums = numbers_from_ratio(len(self.atoms), vs)
             self.num_dict = {ks[i]: nums[i] for i in range(len(ks))}
 
-        self.shell_threshold = shell_threshold
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
         self.append_trajectory = append_trajectory
 
-        self.shells = self.get_shells()
+        self.groups = self.get_groups()
 
     def get_sorted_indices(self, symmetry):
         """Returns the indices sorted by the metric that defines different 
-        shells, together with the corresponding vlues, given a specific 
+        groups, together with the corresponding vlues, given a specific 
         symmetry. Returns the indices sorted by geometrical environment if 
         symmetry='geometrical'. Returns the indices sorted by surface, 
-        subsurface, subsubsurface, ..., core if symmetry='conventional'.
+        subsurface, subsubsurface, ..., core if symmetry='concentric'.
 
         Parameters
         ----------
         symmetry : str
             Support 7 symmetries: spherical, cylindrical, planar, 
-            mirror_planar, chemical, geometrical, conventional.
+            mirror_planar, chemical, geometrical, concentric.
 
         """
 
-        atoms = self.atoms.copy()
+        atoms = self.atoms
         atoms.center()
         geo_mid = [(atoms.cell/2.)[0][0], (atoms.cell/2.)[1][1], 
                    (atoms.cell/2.)[2][2]]
@@ -198,10 +195,10 @@ class SymmetricOrderingGenerator(object):
                     d['bulk'].append(i)
             return list(d.values()), None
 
-        elif symmetry == 'conventional':
-            if self.symmetry == 'conventional':
+        elif symmetry == 'concentric':
+            if self.symmetry == 'concentric':
                 rCut = None if self.cutoff <= 1. else self.cutoff
-            elif self.secondary_symmetry == 'conventional':
+            elif self.secondary_symmetry == 'concentric':
                 rCut = None if self.secondary_cutoff <= 1. else self.secondary_cutoff
 
             def view1D(a, b): # a, b are arrays
@@ -227,17 +224,17 @@ class SymmetricOrderingGenerator(object):
                         surf_ids.append(i)
                     else:
                         bulk_ids.append(i)
-                shell_ids = list(argwhere_nd_searchsorted(atoms.positions, 
+                group_ids = list(argwhere_nd_searchsorted(atoms.positions, 
                                  a.positions[surf_ids])[0])
-                conv_shells.append(shell_ids)
+                conv_groups.append(group_ids)
                 if not bulk_ids:
                     return 
                 get_surf_ids(a[bulk_ids])
 
-            conv_shells = []
+            conv_groups = []
             atoms.center(vacuum=5.)
             get_surf_ids(atoms)
-            return conv_shells, None
+            return conv_groups, None
 
         else:
             raise NotImplementedError("Symmetry '{}' is not supported".format(symmetry))
@@ -245,9 +242,9 @@ class SymmetricOrderingGenerator(object):
         sorted_indices = np.argsort(np.ravel(dists))
         return sorted_indices, dists[sorted_indices]    
     
-    def get_shells(self):
-        """Get the shells (a list of lists of atom indices) that divided 
-        by the symmetry."""
+    def get_groups(self):
+        """Get the groups (a list of lists of atom indices) of all
+        symmetry-equivalent atoms."""
 
         if self.symmetry == 'circular':
             symmetry = 'planar'
@@ -257,65 +254,65 @@ class SymmetricOrderingGenerator(object):
             symmetry = self.symmetry
         indices, dists = self.get_sorted_indices(symmetry=symmetry) 
 
-        if self.symmetry in ['geometrical', 'conventional']:
-            shells = indices
+        if self.symmetry in ['geometrical', 'concentric']:
+            groups = indices
         else:
-            shells = []
+            groups = []
             old_dist = -10.
             for i, dist in zip(indices, dists):
                 if abs(dist - old_dist) > self.cutoff:
-                    shells.append([i])
+                    groups.append([i])
                     old_dist = dist
                 else:
-                    shells[-1].append(i)
+                    groups[-1].append(i)
 
         if self.symmetry in ['circular', 'mirror_circular']:
             indices0, dists0 = self.get_sorted_indices(symmetry='cylindrical')
-            shells0 = []
+            groups0 = []
             old_dist0 = -10.
             for j, dist0 in zip(indices0, dists0):
                 if abs(dist0 - old_dist0) > self.cutoff:
-                    shells0.append([j])
+                    groups0.append([j])
                     old_dist0 = dist0
                 else:
-                    shells0[-1].append(j)
+                    groups0[-1].append(j)
 
             res = []
-            for shell in shells:
+            for group in groups:
                 res0 = []
-                for shell0 in shells0:
-                    match = [i for i in shell if i in shell0]
+                for group0 in groups0:
+                    match = [i for i in group if i in group0]
                     if match:
                         res0.append(match)
                 res += res0
-            shells = res
+            groups = res
 
         if self.secondary_symmetry is not None:
             indices2, dists2 = self.get_sorted_indices(symmetry=
                                                        self.secondary_symmetry)
-            if self.secondary_symmetry in ['geometrical', 'conventional']:
-                shells2 = indices2
+            if self.secondary_symmetry in ['geometrical', 'concentric']:
+                groups2 = indices2
             else:
-                shells2 = []
+                groups2 = []
                 old_dist2 = -10.
                 for j, dist2 in zip(indices2, dists2):
                     if abs(dist2 - old_dist2) > self.secondary_cutoff:
-                        shells2.append([j])
+                        groups2.append([j])
                         old_dist2 = dist2
                     else:
-                        shells2[-1].append(j)
+                        groups2[-1].append(j)
 
             res = []
-            for shell in shells:
+            for group in groups:
                 res2 = []
-                for shell2 in shells2:
-                    match = [i for i in shell if i in shell2]
+                for group2 in groups2:
+                    match = [i for i in group if i in group2]
                     if match:
                         res2.append(match)
                 res += res2
-            shells = res
+            groups = res
  
-        return shells
+        return groups
 
     def run(self, max_gen=None, mode='systematic', verbose=False):
         """Run the chemical ordering generator.
@@ -327,52 +324,41 @@ class SymmetricOrderingGenerator(object):
             all symetric patterns if not specified. 
 
         mode : str, default 'systematic'
-            Mode 'systematic' = enumerate all possible chemical orderings.
-            Mode 'stochastic' = sample chemical orderings stochastically.
-            Stocahstic mode is recommended when there are many shells.
+            **'systematic'**: enumerate all possible unique chemical 
+            orderings. Recommended when there are not many groups. Switch
+            to stochastic mode automatically if the number of groups is
+            more than 20. This mode is the only option when the 
+            composition is fixed.
+
+            **'stochastic'**: sample chemical orderings stochastically.
+            Duplicate structures can be generated. Recommended when there 
+            are many groups. Switch to systematic mode automatically if 
+            the composition is fixed.
 
         verbose : bool, default False 
-            Whether to print out information about number of shells and
+            Whether to print out information about number of groups and
             number of generated structures.
 
         """
 
         traj_mode = 'a' if self.append_trajectory else 'w'
         traj = Trajectory(self.trajectory, mode=traj_mode)
-        atoms = self.atoms
-        shells = self.shells
-        nshells = len(shells)
+        atoms = self.atoms.copy()
+        groups = self.groups
+        ngroups = len(groups)
         n_write = 0
         if verbose:
-            print('{} shells classified'.format(nshells))
+            print('{} groups classified'.format(ngroups))
 
         if self.composition is not None:
-            def bipartitions(shells, total):
-                n = len(shells)
-                for k in range(n + 1):
-                    for combo in combinations(range(n), k):
-                        if sum(len(shells[i]) for i in combo) == total:
-                            set_combo = set(combo)
-                            yield sorted(shells[i] for i in combo), sorted(
-                            shells[i] for i in range(n) if i not in set_combo)
-
-            def partitions_into_totals(shells, totals):
-                assert totals
-                if len(totals) == 1:
-                    yield [shells]
-                else:
-                    for first, remaining_shells in bipartitions(shells, totals[0]):
-                        for rest in partitions_into_totals(remaining_shells, totals[1:]):
-                            yield [first] + rest
-
             keys = list(self.num_dict.keys())
             totals = list(self.num_dict.values())
             if max_gen is None:
                 max_gen = -1             
  
-            for part in partitions_into_totals(shells, totals):
+            for part in partitions_into_totals(groups, totals):
                 for j in range(len(totals)):
-                    ids = [i for shell in part[j] for i in shell] 
+                    ids = [i for group in part[j] for i in group] 
                     atoms.symbols[ids] = len(ids) * keys[j]
                 traj.write(atoms)
                 n_write += 1
@@ -380,20 +366,20 @@ class SymmetricOrderingGenerator(object):
                     break
 
         else: 
-            # When the number of shells is too large (> 20), systematic enumeration 
+            # When the number of groups is too large (> 20), systematic enumeration 
             # is not feasible. Stochastic sampling is the only option
             if mode == 'systematic':
-                if nshells > self.shell_threshold:
+                if ngroups > 20:
                     if verbose:
-                        print('{} shells is infeasible for systematic'.format(nshells), 
+                        print('{} groups is infeasible for systematic'.format(ngroups), 
                               'generator. Use stochastic generator instead')
                     mode = 'stochastic'
                 else:    
-                    combos = list(product(self.elements, repeat=nshells))
+                    combos = list(product(self.elements, repeat=ngroups))
                     random.shuffle(combos)
                     for combo in combos:
                         for j, spec in enumerate(combo):
-                            atoms.symbols[shells[j]] = spec
+                            atoms.symbols[groups[j]] = spec
                         traj.write(atoms)
                         n_write += 1
                         if max_gen is not None:
@@ -402,15 +388,15 @@ class SymmetricOrderingGenerator(object):
  
             if mode == 'stochastic':
                 combos = set()
-                too_few = (2 ** nshells * 0.95 <= max_gen)
+                too_few = (2 ** ngroups * 0.95 <= max_gen)
                 if too_few and verbose:
-                    print('Too few shells. The generated images are not all unique.')
+                    print('Too few groups. The generated images are not all unique.')
                 while True:
-                    combo = tuple(np.random.choice(self.elements, size=nshells))
+                    combo = tuple(np.random.choice(self.elements, size=ngroups))
                     if combo not in combos or too_few: 
                         combos.add(combo)
                         for j, spec in enumerate(combo):
-                            atoms.symbols[shells[j]] = spec
+                            atoms.symbols[groups[j]] = spec
                         traj.write(atoms)
                         n_write += 1
                         if max_gen is not None:
@@ -418,6 +404,214 @@ class SymmetricOrderingGenerator(object):
                                 break
         if verbose:
             print('{} symmetric chemical orderings generated'.format(n_write))
+
+
+class OrderedSlabOrderingGenerator(object):
+
+    """`OrderedSlabOrderingGenerator` is a class for generating 
+    ordered chemical orderings for a **alloy surface slab**. 
+    There is no limitation of the number of metal components.
+ 
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+        The surface slab to use as a template to generate ordered 
+        chemical orderings. Accept any ase.Atoms object. No need 
+        to be built-in.
+
+    elements : list of strs 
+        The metal elements of the alloy catalyst.
+
+    reducing_size : list of ints or tuple of ints, default (2, 2)
+        The multiples that groups the symmetry-equivalent atoms in 
+        the x and y directions. The x or y length of the cell must 
+        be this multiple of the distance between each pair of 
+        symmetry-equivalent atoms. Larger reducing size generates 
+        less structures.
+
+    composition : dict, default None
+        Generate ordered orderings only at a certain composition. 
+        The dictionary contains the metal elements as keys and their 
+        concentrations as values. Generate orderings at all 
+        compositions if not specified. Note that the computational 
+        cost scales badly with the number of groups for a 
+        fixed-composition search.
+
+    dtol : float, default 0.01
+        The distance tolerance (in Angstrom) when comparing with 
+        (cell length / multiple). Use a larger value if the structure 
+        is distorted.
+
+    ztol : float, default 0.1
+        The tolerance (in Angstrom) when comparing z values. Use a 
+        larger ztol if the structure is distorted.
+
+    trajectory : str, default 'orderings.traj'
+        The name of the output ase trajectory file.
+
+    append_trajectory : bool, default False
+        Whether to append structures to the existing trajectory. 
+
+    """
+
+    def __init__(self, atoms, elements,
+                 reducing_size=(2, 2),
+                 composition=None,
+                 dtol=0.01,
+                 ztol=0.1,
+                 trajectory='orderings.traj',
+                 append_trajectory=False):
+
+        self.atoms = atoms
+        self.elements = elements
+
+        assert (is_list_or_tuple(reducing_size)) and (len(reducing_size) == 2)
+        self.reducing_size = reducing_size
+        self.dtol = dtol
+        self.ztol = ztol
+
+        self.composition = composition
+        if self.composition is not None:
+            ks = list(self.composition.keys())
+            assert set(ks) == set(self.elements)
+            vs = list(self.composition.values())
+            nums = numbers_from_ratio(len(self.atoms), vs)
+            self.num_dict = {ks[i]: nums[i] for i in range(len(ks))}
+
+        if isinstance(trajectory, str):
+            self.trajectory = trajectory                        
+        self.append_trajectory = append_trajectory
+
+        self.groups = self.get_groups()
+
+    def get_groups(self):
+        """Get the groups (a list of lists of atom indices) of all
+        symmetry-equivalent atoms."""
+
+        atoms = self.atoms
+        ds = atoms.get_all_distances(mic=True)
+        cell = atoms.cell
+        z_positions = atoms.positions[:,2]
+        x_cell = np.linalg.norm(cell[0])
+        y_cell = np.linalg.norm(cell[1])
+
+        ref_x_dist = x_cell / self.reducing_size[0]
+        ref_y_dist = y_cell / self.reducing_size[1]
+
+        x_pairs = np.column_stack(np.where(abs(ds - ref_x_dist) < self.dtol))
+        y_pairs = np.column_stack(np.where(abs(ds - ref_y_dist) < self.dtol))
+        pairs = x_pairs.tolist() + y_pairs.tolist()
+        pairs = [p for p in pairs if abs(z_positions[p[0]] - 
+                 z_positions[p[1]]) < self.ztol]
+
+        def to_edges(lst):
+            it = iter(lst)
+            last = next(it) 
+            for current in it:
+                yield last, current
+                last = current    
+
+        G = nx.Graph()
+        for p in pairs:
+            # each sublist is a bunch of nodes
+            G.add_nodes_from(p)
+            # it also imlies a number of edges:
+            G.add_edges_from(to_edges(p))
+
+        groups = [list(cc) for cc in list(connected_components(G))]
+
+        return groups
+
+    def run(self, max_gen=None, mode='systematic', verbose=False):
+        """Run the chemical ordering generator.
+
+        Parameters
+        ----------
+        max_gen : int, default None
+            Maximum number of chemical orderings to generate. Enumerate
+            all symetric patterns if not specified. 
+
+        mode : str, default 'systematic'
+            **'systematic'**: enumerate all possible unique chemical 
+            orderings. Recommended when there are not many groups. Switch
+            to stochastic mode automatically if the number of groups is
+            more than 20. This mode is the only option when the 
+            composition is fixed.
+
+            **'stochastic'**: sample chemical orderings stochastically.
+            Duplicate structures can be generated. Recommended when there 
+            are many groups. Switch to systematic mode automatically if 
+            the composition is fixed.
+
+        verbose : bool, default False 
+            Whether to print out information about number of groups and
+            number of generated structures.
+
+        """
+
+        traj_mode = 'a' if self.append_trajectory else 'w'
+        traj = Trajectory(self.trajectory, mode=traj_mode)
+        atoms = self.atoms.copy()
+        groups = self.groups
+        ngroups = len(groups)
+        n_write = 0
+        if verbose:
+            print('{} groups classified'.format(ngroups))
+
+        if self.composition is not None:
+            keys = list(self.num_dict.keys())
+            totals = list(self.num_dict.values())
+            if max_gen is None:
+                max_gen = -1             
+ 
+            for part in partitions_into_totals(groups, totals):
+                for j in range(len(totals)):
+                    ids = [i for group in part[j] for i in group] 
+                    atoms.symbols[ids] = len(ids) * keys[j]
+                traj.write(atoms)
+                n_write += 1
+                if n_write == max_gen:
+                    break
+
+        else: 
+            # When the number of groups is too large (> 20), systematic enumeration 
+            # is not feasible. Stochastic sampling is the only option
+            if mode == 'systematic':
+                if ngroups > 20:
+                    if verbose:
+                        print('{} groups is infeasible for systematic'.format(ngroups), 
+                              'generator. Use stochastic generator instead')
+                    mode = 'stochastic'
+                else:    
+                    combos = list(product(self.elements, repeat=ngroups))
+                    random.shuffle(combos)
+                    for combo in combos:
+                        for j, spec in enumerate(combo):
+                            atoms.symbols[groups[j]] = spec
+                        traj.write(atoms)
+                        n_write += 1
+                        if max_gen is not None:
+                            if n_write == max_gen:
+                                break
+ 
+            if mode == 'stochastic':
+                combos = set()
+                too_few = (2 ** ngroups * 0.95 <= max_gen)
+                if too_few and verbose:
+                    print('Too few groups. The generated images are not all unique.')
+                while True:
+                    combo = tuple(np.random.choice(self.elements, size=ngroups))
+                    if combo not in combos or too_few: 
+                        combos.add(combo)
+                        for j, spec in enumerate(combo):
+                            atoms.symbols[groups[j]] = spec
+                        traj.write(atoms)
+                        n_write += 1
+                        if max_gen is not None:
+                            if n_write == max_gen:
+                                break
+        if verbose:
+            print('{} ordered chemical orderings generated'.format(n_write))
 
 
 class RandomOrderingGenerator(object):
@@ -436,13 +630,13 @@ class RandomOrderingGenerator(object):
     elements : list of strs 
         The metal elements of the alloy catalyst.
 
-    composition : dict, None
+    composition : dict, default None
         Generate random orderings only at a certain composition.
         The dictionary contains the metal elements as keys and 
         their concentrations as values. Generate orderings at all 
         compositions if not specified.
 
-    trajectory : str, default 'patterns.traj'
+    trajectory : str, default 'orderings.traj'
         The name of the output ase trajectory file.
 
     append_trajectory : bool, default False

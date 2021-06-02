@@ -110,8 +110,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#random-coverage-pattern-function">random_coverage_pattern function</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-acat.build.ordering">Generate chemical orderings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#symmetricorderinggenerator-class">SymmetricOrderingGenerator class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-acat.build.ordering">Generate alloy chemical orderings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#symmetricclusterorderinggenerator-class">SymmetricClusterOrderingGenerator class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#orderedslaborderinggenerator-class">OrderedSlabOrderingGenerator class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#randomorderinggenerator-class">RandomOrderingGenerator class</a></li>
 </ul>
 </li>
@@ -1072,18 +1073,87 @@ minimum adsorbate distance of 2 Angstrom:</p>
 </div>
 </div>
 <div class="section" id="module-acat.build.ordering">
-<span id="generate-chemical-orderings"></span><h2>Generate chemical orderings<a class="headerlink" href="#module-acat.build.ordering" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="symmetricorderinggenerator-class">
-<h3>SymmetricOrderingGenerator class<a class="headerlink" href="#symmetricorderinggenerator-class" title="Permalink to this headline">¶</a></h3>
+<span id="generate-alloy-chemical-orderings"></span><h2>Generate alloy chemical orderings<a class="headerlink" href="#module-acat.build.ordering" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="acat.build.ordering.OrderedSlabOrderingGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">OrderedSlabOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">reducing_size</span><span class="o">=</span><span class="default_value">2, 2</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">ztol</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#OrderedSlabOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.OrderedSlabOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p><cite>OrderedSlabOrderingGenerator</cite> is a class for generating
+ordered chemical orderings for a <strong>alloy surface slab</strong>.
+There is no limitation of the number of metal components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The surface slab to use as a template to generate ordered
+chemical orderings. Accept any ase.Atoms object. No need
+to be built-in.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
+<li><p><strong>reducing_size</strong> (<em>list of ints</em><em> or </em><em>tuple of ints</em><em>, </em><em>default</em><em> (</em><em>2</em><em>, </em><em>2</em><em>)</em>) – The multiples that groups the symmetry-equivalent atoms in
+the x and y directions. The x or y length of the cell must
+be this multiple of the distance between each pair of
+symmetry-equivalent atoms. Larger reducing size generates
+less structures.</p></li>
+<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – Generate ordered orderings only at a certain composition.
+The dictionary contains the metal elements as keys and their
+concentrations as values. Generate orderings at all
+compositions if not specified. Note that the computational
+cost scales badly with the number of groups for a
+fixed-composition search.</p></li>
+<li><p><strong>dtol</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The distance tolerance (in Angstrom) when comparing with
+(cell length / multiple). Use a larger value if the structure
+is distorted.</p></li>
+<li><p><strong>ztol</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – The tolerance (in Angstrom) when comparing z values. Use a
+larger ztol if the structure is distorted.</p></li>
+<li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'orderings.traj'</em>) – The name of the output ase trajectory file.</p></li>
+<li><p><strong>append_trajectory</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to append structures to the existing trajectory.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.build.ordering.OrderedSlabOrderingGenerator.get_groups">
+<code class="sig-name descname">get_groups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#OrderedSlabOrderingGenerator.get_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.OrderedSlabOrderingGenerator.get_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the groups (a list of lists of atom indices) of all
+symmetry-equivalent atoms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.build.ordering.OrderedSlabOrderingGenerator.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#OrderedSlabOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.OrderedSlabOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the chemical ordering generator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_gen</strong> (<em>int</em><em>, </em><em>default None</em>) – Maximum number of chemical orderings to generate. Enumerate
+all symetric patterns if not specified.</p></li>
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>default 'systematic'</em>) – <p><strong>‘systematic’</strong>: enumerate all possible unique chemical
+orderings. Recommended when there are not many groups. Switch
+to stochastic mode automatically if the number of groups is
+more than 20. This mode is the only option when the
+composition is fixed.</p>
+<p><strong>’stochastic’</strong>: sample chemical orderings stochastically.
+Duplicate structures can be generated. Recommended when there
+are many groups. Switch to systematic mode automatically if
+the composition is fixed.</p>
+</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
+number of generated structures.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="symmetricclusterorderinggenerator-class">
+<h3>SymmetricClusterOrderingGenerator class<a class="headerlink" href="#symmetricclusterorderinggenerator-class" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.ordering.SymmetricOrderingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">SymmetricOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'spherical'</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">secondary_symmetry</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secondary_cutoff</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shell_threshold</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricOrderingGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p><cite>SymmetricOrderingGenerator</cite> is a class for generating
-symmetric chemical orderings for a nanoalloy.
-As for now only support clusters without fixing the composition,
-but there is no limitation of the number of metal components.
-Please align the z direction to the symmetry axis of the cluster.</p>
+<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">SymmetricClusterOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'spherical'</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">secondary_symmetry</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secondary_cutoff</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>SymmetricClusterOrderingGenerator</cite> is a class for generating
+symmetric chemical orderings for a <strong>nanoalloy</strong>. There is no
+limitation of the number of metal components. Please always align
+the z direction to the symmetry axis of the nanocluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1092,99 +1162,105 @@ chemical orderings. Accept any ase.Atoms object. No need to be
 built-in.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the nanoalloy.</p></li>
 <li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'spherical'</em>) – <p>Support 9 symmetries:</p>
-<p><strong>’spherical’</strong>: centrosymmetry (shells defined by the distances
+<p><strong>’spherical’</strong>: centrosymmetry (groups defined by the distances
 to the geometric center);</p>
-<p><strong>’cylindrical’</strong>: cylindrical symmetry around z axis (shells
+<p><strong>’cylindrical’</strong>: cylindrical symmetry around z axis (groups
 defined by the distances to the z axis);</p>
-<p><strong>’planar’</strong>: planar symmetry around z axis (shells defined by
+<p><strong>’planar’</strong>: planar symmetry around z axis (groups defined by
 the z coordinates), common for phase-separated nanoalloys;</p>
 <p><strong>’mirror_planar’</strong>: mirror planar symmetry around both
-z and xy plane (shells defined by the absolute z coordinate),
+z and xy plane (groups defined by the absolute z coordinate),
 high symmetry subset of ‘planar’;
-‘circular’ = ring symmetry around z axis (shells defined by
+‘circular’ = ring symmetry around z axis (groups defined by
 both z coordinate and distance to z axis);</p>
 <p><strong>’mirror_circular’</strong>: mirror ring symmetry around both
-z and xy plane (shells defined by both absolute z coordinate
+z and xy plane (groups defined by both absolute z coordinate
 and distance to z axis);</p>
-<p><strong>’chemical’</strong>: symmetry w.r.t chemical environment (shells
+<p><strong>’chemical’</strong>: symmetry w.r.t chemical environment (groups
 defined by the atomic energies given by a Gupta potential)</p>
-<p><strong>’geometrical’</strong>: symmetry w.r.t geometrical environment (shells
+<p><strong>’geometrical’</strong>: symmetry w.r.t geometrical environment (groups
 defined by vertex / edge / fcc111 / fcc100 / bulk identified
 by CNA analysis);</p>
-<p><strong>’conventional’</strong>: conventional definition of shells (surface /
-subsurface, subsubsurface, …, core).</p>
+<p><strong>’concentric’</strong>: conventional definition of the concentric
+shells (surface / subsurface, subsubsurface, …, core).</p>
 </p></li>
-<li><p><strong>cutoff</strong> (<em>float</em><em>, </em><em>default 1.0</em>) – Maximum thickness (in Angstrom) of a single shell. The thickness
+<li><p><strong>cutoff</strong> (<em>float</em><em>, </em><em>default 1.0</em>) – Maximum thickness (in Angstrom) of a single group. The thickness
 is calculated as the difference between the “distances” of the
-closest-to-center atoms in two neighbor shells. Note that the
+closest-to-center atoms in two neighbor groups. Note that the
 criterion of “distance” depends on the symmetry. This parameter
 works differently if the symmetry is ‘chemical’, ‘geometrical’ or
-‘conventional’. For ‘chemical’ it is defined as the maximum atomic
-energy difference (in eV) of a single shell predicted by a Gupta
-potential. For ‘geometrical’ and ‘conventional’ it is defined as
+‘concentric’. For ‘chemical’ it is defined as the maximum atomic
+energy difference (in eV) of a single group predicted by a Gupta
+potential. For ‘geometrical’ and ‘concentric’ it is defined as
 the cutoff radius (in Angstrom) for CNA, and a reasonable cutoff
 based on the lattice constant of the material will automatically
 be used if cutoff &lt;= 1. Use a larger cutoff if the structure is
 distorted.</p></li>
-<li><p><strong>secondary_symmetry</strong> (<em>str</em><em>, </em><em>default None</em>) – Add a secondary symmetry check to define shells hierarchically.
-For example, even if two atoms are classifed in the same shell
+<li><p><strong>secondary_symmetry</strong> (<em>str</em><em>, </em><em>default None</em>) – Add a secondary symmetry check to define groups hierarchically.
+For example, even if two atoms are classifed in the same group
 defined by the primary symmetry, they can still end up in
-different shells if they fall into two different shells defined
+different groups if they fall into two different groups defined
 by the secondary symmetry. Support 7 symmetries: ‘spherical’,
 ‘cylindrical’, ‘planar’, ‘mirror_planar’, ‘chemical’, ‘geometrical’
-and ‘conventional’. Note that secondary symmetry has the same
+and ‘concentric’. Note that secondary symmetry has the same
 importance as the primary symmetry, so you can set either of the
 two symmetries of interest as the secondary symmetry. Useful for
 combining symmetries of different types (e.g. circular + chemical)
 or combining symmetries with different cutoffs.</p></li>
 <li><p><strong>secondary_cutoff</strong> (<em>float</em><em>, </em><em>default 1.0</em>) – Same as cutoff, except that it is for the secondary symmetry.</p></li>
-<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>None</em>) – Generate symmetric orderings only at a certain composition.
+<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – Generate symmetric orderings only at a certain composition.
 The dictionary contains the metal elements as keys and their
 concentrations as values. Generate orderings at all compositions
 if not specified. Note that the computational cost scales badly
-with the number of shells for a fixed-composition search.</p></li>
-<li><p><strong>shell_threshold</strong> (<em>int</em><em>, </em><em>default 20</em>) – Number of shells to switch to stochastic mode automatically.</p></li>
+with the number of groups for a fixed-composition search.</p></li>
 <li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'orderings.traj'</em>) – The name of the output ase trajectory file.</p></li>
 <li><p><strong>append_trajectory</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to append structures to the existing trajectory.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricOrderingGenerator.get_sorted_indices">
-<code class="sig-name descname">get_sorted_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symmetry</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricOrderingGenerator.get_sorted_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricOrderingGenerator.get_sorted_indices" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices">
+<code class="sig-name descname">get_sorted_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symmetry</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.get_sorted_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the indices sorted by the metric that defines different
-shells, together with the corresponding vlues, given a specific
+groups, together with the corresponding vlues, given a specific
 symmetry. Returns the indices sorted by geometrical environment if
 symmetry=’geometrical’. Returns the indices sorted by surface,
-subsurface, subsubsurface, …, core if symmetry=’conventional’.</p>
+subsurface, subsubsurface, …, core if symmetry=’concentric’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>symmetry</strong> (<em>str</em>) – Support 7 symmetries: spherical, cylindrical, planar,
-mirror_planar, chemical, geometrical, conventional.</p>
+mirror_planar, chemical, geometrical, concentric.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricOrderingGenerator.get_shells">
-<code class="sig-name descname">get_shells</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricOrderingGenerator.get_shells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricOrderingGenerator.get_shells" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the shells (a list of lists of atom indices) that divided
-by the symmetry.</p>
+<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups">
+<code class="sig-name descname">get_groups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.get_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the groups (a list of lists of atom indices) of all
+symmetry-equivalent atoms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>max_gen</strong> (<em>int</em><em>, </em><em>default None</em>) – Maximum number of chemical orderings to generate. Enumerate
 all symetric patterns if not specified.</p></li>
-<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>default 'systematic'</em>) – Mode ‘systematic’ = enumerate all possible chemical orderings.
-Mode ‘stochastic’ = sample chemical orderings stochastically.
-Stocahstic mode is recommended when there are many shells.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of shells and
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>default 'systematic'</em>) – <p><strong>‘systematic’</strong>: enumerate all possible unique chemical
+orderings. Recommended when there are not many groups. Switch
+to stochastic mode automatically if the number of groups is
+more than 20. This mode is the only option when the
+composition is fixed.</p>
+<p><strong>’stochastic’</strong>: sample chemical orderings stochastically.
+Duplicate structures can be generated. Recommended when there
+are many groups. Switch to systematic mode automatically if
+the composition is fixed.</p>
+</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
 </dd>
@@ -1194,14 +1270,14 @@ number of generated structures.</p></li>
 </dd></dl>
 
 <p><strong>Example</strong></p>
-<p>To generate 100 symmetric chemical orderings of a truncated
-octahedral NiPt nanoalloy with spherical symmetry:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
+<p>To generate 100 symmetric chemical orderings for truncated
+octahedral NiPt nanoalloys with spherical symmetry:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricClusterOrderingGenerator</span> <span class="k">as</span> <span class="n">SCOG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
@@ -1210,20 +1286,20 @@ octahedral NiPt nanoalloy with spherical symmetry:</p>
 <p>Output:</p>
 <blockquote>
 <div><div class="line-block">
-<div class="line">10 layers classified</div>
+<div class="line">10 groups classified</div>
 <div class="line">100 symmetric chemical orderings generated</div>
 </div>
 </div></blockquote>
-<a class="reference internal image-reference" href="_images/SymmetricOrderingGenerator1.gif"><img alt="_images/SymmetricOrderingGenerator1.gif" class="align-center" src="_images/SymmetricOrderingGenerator1.gif" style="width: 208.2px; height: 208.2px;" /></a>
-<p>To generate 50 symmetric chemical orderings of a quaternary
-truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloy with
+<a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator1.gif"><img alt="_images/SymmetricClusterOrderingGenerator1.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator1.gif" style="width: 208.2px; height: 208.2px;" /></a>
+<p>To generate 50 symmetric chemical orderings for quaternary
+truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloys with
 mirror circular symmetry:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricClusterOrderingGenerator</span> <span class="k">as</span> <span class="n">SCOG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1234,25 +1310,148 @@ mirror circular symmetry:</p>
 <p>Output:</p>
 <blockquote>
 <div><div class="line-block">
-<div class="line">25 layers classified</div>
+<div class="line">25 groups classified</div>
 <div class="line">50 symmetric chemical orderings generated</div>
 </div>
 </div></blockquote>
-<a class="reference internal image-reference" href="_images/SymmetricOrderingGenerator2.gif"><img alt="_images/SymmetricOrderingGenerator2.gif" class="align-center" src="_images/SymmetricOrderingGenerator2.gif" style="width: 211.2px; height: 211.2px;" /></a>
-<p>Sometimes it is also useful to get the structure of each shell. For instance,
-to visualize the conventional shells of a truncated octahedral nanoparticle:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricOrderingGenerator</span> <span class="k">as</span> <span class="n">SOG</span>
+<a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator2.gif"><img alt="_images/SymmetricClusterOrderingGenerator2.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator2.gif" style="width: 211.2px; height: 211.2px;" /></a>
+<p>Sometimes it is also useful to get the structure of each group.
+For instance, to visualize the concentric shells of a truncated
+octahedral nanoparticle:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricClusterOrderingGenerator</span> <span class="k">as</span> <span class="n">SCOG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;conventional&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">shells</span> <span class="o">=</span> <span class="n">sog</span><span class="o">.</span><span class="n">get_shells</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">atoms</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sog</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;concentric&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">groups</span> <span class="o">=</span> <span class="n">sog</span><span class="o">.</span><span class="n">get_groups</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">atoms</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<a class="reference internal image-reference" href="_images/SymmetricOrderingGenerator3.gif"><img alt="_images/SymmetricOrderingGenerator3.gif" class="align-center" src="_images/SymmetricOrderingGenerator3.gif" style="width: 189.0px; height: 189.0px;" /></a>
+<a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator3.gif"><img alt="_images/SymmetricClusterOrderingGenerator3.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator3.gif" style="width: 189.0px; height: 189.0px;" /></a>
+</div></blockquote>
+</div>
+<div class="section" id="orderedslaborderinggenerator-class">
+<h3>OrderedSlabOrderingGenerator class<a class="headerlink" href="#orderedslaborderinggenerator-class" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py class">
+<dt id="id0">
+<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">OrderedSlabOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">reducing_size</span><span class="o">=</span><span class="default_value">2, 2</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">ztol</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#OrderedSlabOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>OrderedSlabOrderingGenerator</cite> is a class for generating
+ordered chemical orderings for a <strong>alloy surface slab</strong>.
+There is no limitation of the number of metal components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The surface slab to use as a template to generate ordered
+chemical orderings. Accept any ase.Atoms object. No need
+to be built-in.</p></li>
+<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
+<li><p><strong>reducing_size</strong> (<em>list of ints</em><em> or </em><em>tuple of ints</em><em>, </em><em>default</em><em> (</em><em>2</em><em>, </em><em>2</em><em>)</em>) – The multiples that groups the symmetry-equivalent atoms in
+the x and y directions. The x or y length of the cell must
+be this multiple of the distance between each pair of
+symmetry-equivalent atoms. Larger reducing size generates
+less structures.</p></li>
+<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – Generate ordered orderings only at a certain composition.
+The dictionary contains the metal elements as keys and their
+concentrations as values. Generate orderings at all
+compositions if not specified. Note that the computational
+cost scales badly with the number of groups for a
+fixed-composition search.</p></li>
+<li><p><strong>dtol</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The distance tolerance (in Angstrom) when comparing with
+(cell length / multiple). Use a larger value if the structure
+is distorted.</p></li>
+<li><p><strong>ztol</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – The tolerance (in Angstrom) when comparing z values. Use a
+larger ztol if the structure is distorted.</p></li>
+<li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'orderings.traj'</em>) – The name of the output ase trajectory file.</p></li>
+<li><p><strong>append_trajectory</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to append structures to the existing trajectory.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="id1">
+<code class="sig-name descname">get_groups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#OrderedSlabOrderingGenerator.get_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the groups (a list of lists of atom indices) of all
+symmetry-equivalent atoms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id2">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#OrderedSlabOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the chemical ordering generator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_gen</strong> (<em>int</em><em>, </em><em>default None</em>) – Maximum number of chemical orderings to generate. Enumerate
+all symetric patterns if not specified.</p></li>
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>default 'systematic'</em>) – <p><strong>‘systematic’</strong>: enumerate all possible unique chemical
+orderings. Recommended when there are not many groups. Switch
+to stochastic mode automatically if the number of groups is
+more than 20. This mode is the only option when the
+composition is fixed.</p>
+<p><strong>’stochastic’</strong>: sample chemical orderings stochastically.
+Duplicate structures can be generated. Recommended when there
+are many groups. Switch to systematic mode automatically if
+the composition is fixed.</p>
+</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
+number of generated structures.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>Example</strong></p>
+<p>To stochastically generate 50 ordered chemical orderings for
+ternary NixPtyAu1-x-y fcc111 surface slabs:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">OrderedSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">OSOG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc111</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">osog</span> <span class="o">=</span> <span class="n">OSOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="n">reducing_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">osog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">16 groups classified</div>
+<div class="line">50 ordered chemical orderings generated</div>
+</div>
+</div></blockquote>
+<a class="reference internal image-reference" href="_images/OrderedSlabOrderingGenerator1.gif"><img alt="_images/OrderedSlabOrderingGenerator1.gif" class="align-center" src="_images/OrderedSlabOrderingGenerator1.gif" style="width: 384.0px; height: 288.0px;" /></a>
+<p>To generate 50 ordered chemical orderings for Ni0.75Pt0.25
+fcc110 surface slabs:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">OrderedSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">OSOG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc110</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc110</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">osog</span> <span class="o">=</span> <span class="n">OSOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="n">reducing_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">osog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">16 groups classified</div>
+<div class="line">50 ordered chemical orderings generated</div>
+</div>
+</div></blockquote>
+<a class="reference internal image-reference" href="_images/OrderedSlabOrderingGenerator2.gif"><img alt="_images/OrderedSlabOrderingGenerator2.gif" class="align-center" src="_images/OrderedSlabOrderingGenerator2.gif" style="width: 384.0px; height: 288.0px;" /></a>
 </div></blockquote>
 </div>
 <div class="section" id="randomorderinggenerator-class">
@@ -1272,11 +1471,11 @@ there is no limitation of the number of metal components.</p>
 generate random chemical orderings. Accept any ase.Atoms
 object. No need to be built-in.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
-<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>None</em>) – Generate random orderings only at a certain composition.
+<li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – Generate random orderings only at a certain composition.
 The dictionary contains the metal elements as keys and
 their concentrations as values. Generate orderings at all
 compositions if not specified.</p></li>
-<li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'patterns.traj'</em>) – The name of the output ase trajectory file.</p></li>
+<li><p><strong>trajectory</strong> (<em>str</em><em>, </em><em>default 'orderings.traj'</em>) – The name of the output ase trajectory file.</p></li>
 <li><p><strong>append_trajectory</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to append structures to the existing trajectory.</p></li>
 </ul>
 </dd>
@@ -1310,8 +1509,8 @@ chunk.</p>
 </dd></dl>
 
 <p><strong>Example</strong></p>
-<p>To generate 50 random chemical orderings of a icosahedral Ni0.5Pt0.2Au0.3
-nanoalloy:</p>
+<p>To generate 50 random chemical orderings for icosahedral
+Ni0.5Pt0.2Au0.3 nanoalloys:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
@@ -1326,8 +1525,8 @@ nanoalloy:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/RandomOrderingGenerator1.gif"><img alt="_images/RandomOrderingGenerator1.gif" class="align-center" src="_images/RandomOrderingGenerator1.gif" style="width: 192.6px; height: 193.79999999999998px;" /></a>
-<p>To generate 50 random chemical orderings of a Pt0.5Au0.5 fcc111 surface
-slab:</p>
+<p>To generate 50 random chemical orderings for Pt0.5Au0.5
+fcc111 surface slabs:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
@@ -1342,7 +1541,7 @@ slab:</p>
 </pre></div>
 </div>
 <p>Output:</p>
-<a class="reference internal image-reference" href="_images/RandomOrderingGenerator2.gif"><img alt="_images/RandomOrderingGenerator2.gif" class="align-center" src="_images/RandomOrderingGenerator2.gif" style="width: 448.0px; height: 336.0px;" /></a>
+<a class="reference internal image-reference" href="_images/RandomOrderingGenerator2.gif"><img alt="_images/RandomOrderingGenerator2.gif" class="align-center" src="_images/RandomOrderingGenerator2.gif" style="width: 384.0px; height: 288.0px;" /></a>
 </div></blockquote>
 </div>
 </div>

@@ -203,7 +203,7 @@ atom index and values of their neighbor atom indices.</p>
 
 <dl class="py function">
 <dt id="acat.utilities.get_mic">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_mic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">[1, 1, 0]</span></em>, <em class="sig-param"><span class="n">max_cell_multiples</span><span class="o">=</span><span class="default_value">100000.0</span></em>, <em class="sig-param"><span class="n">return_squared_distance</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_mic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_mic" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_mic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">[1, 1, 0]</span></em>, <em class="sig-param"><span class="n">max_cell_multiple</span><span class="o">=</span><span class="default_value">100000.0</span></em>, <em class="sig-param"><span class="n">return_squared_distance</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_mic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_mic" title="Permalink to this definition">¶</a></dt>
 <dd><p>A highly efficient function for getting all vectors from p1
 to p2. Also able to calculate the squared distance using the
 minimum image convention (mic). This function is useful when you
@@ -217,7 +217,7 @@ array of vectors all at a time (useful for e.g. neighborlist).</p>
 <li><p><strong>p2</strong> (<em>numpy.array</em>) – The 3D Cartesian coordinate of the position 2.</p></li>
 <li><p><strong>cell</strong> (<em>numpy.array</em>) – The 3D parallel epipedal unit cell.</p></li>
 <li><p><strong>pbc</strong> (<em>numpy.array</em><em> or </em><em>list</em><em>, </em><em>default</em><em> [</em><em>1</em><em>, </em><em>1</em><em>, </em><em>0</em><em>]</em>) – Whether cell is periodic in each direction.</p></li>
-<li><p><strong>max_cell_multiples</strong> (<em>int</em><em>, </em><em>default 1e5</em>) – A large number to account for the maximum repetitions of each
+<li><p><strong>max_cell_multiple</strong> (<em>int</em><em>, </em><em>default 1e5</em>) – A large number to account for the maximum repetitions of each
 of the lattice vectors. The minimum number of repetitions is
 hence calculated by the algorithm using the intersection of a
 sphere and the unit cell.</p></li>
@@ -227,6 +227,21 @@ mic vector.</p></li>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py function">
+<dt id="acat.utilities.get_max_delta_sum_path">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_max_delta_sum_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_max_delta_sum_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_max_delta_sum_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="acat.utilities.bipartitions">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">bipartitions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">total</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#bipartitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.bipartitions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="acat.utilities.partitions_into_totals">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">partitions_into_totals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shells</span></em>, <em class="sig-param"><span class="n">totals</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#partitions_into_totals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.partitions_into_totals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="acat.utilities.get_close_atoms">

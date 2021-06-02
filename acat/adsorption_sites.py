@@ -1,9 +1,10 @@
 from .settings import adsorbate_elements, site_heights
-from .utilities import is_list_or_tuple, expand_cell, get_mic  
+from .utilities import expand_cell, get_mic 
+from .utilities import is_list_or_tuple, get_max_delta_sum_path  
 from .utilities import neighbor_shell_list, get_connectivity_matrix
 from .labels import get_monometallic_cluster_labels, get_bimetallic_cluster_labels
 from .labels import get_monometallic_slab_labels, get_bimetallic_slab_labels
-from ase.data import reference_states, atomic_numbers
+from ase.data import reference_states, atomic_numbers, chemical_symbols
 from ase.geometry import find_mic
 from ase.optimize import BFGS, FIRE
 from ase import Atoms
@@ -67,14 +68,14 @@ class ClusterAdsorptionSites(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics. Currently only
-        support composition identification of bimetallics.
+        set composition=False for monometallics.
 
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
         Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels.
+        otherwise use the monometallic labels. Currently only
+        support labelling of monometallics and bimetallics.
 
     proxy_metal : str, default None
         The code is parameterized for pure transition metals.
@@ -142,11 +143,10 @@ class ClusterAdsorptionSites(object):
         self.positions = atoms.positions
         self.symbols = atoms.symbols
         self.numbers = atoms.numbers
-        self.indices = [a.index for a in self.atoms] 
+        self.indices = list(range(len(self.atoms)))
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.proxy_metal = proxy_metal
-        self.label_sites = label_sites
         self.tol = tol
         
         self.ref_atoms = self.mapping(atoms)
@@ -154,12 +154,20 @@ class ClusterAdsorptionSites(object):
         self.pbc = atoms.pbc
         self.metals = sorted(list(set(atoms.symbols)), 
                              key=lambda x: atomic_numbers[x])
-        if self.composition_effect:
-            if len(self.metals) == 1:
-                self.metals *= 2
-            self.label_dict = get_bimetallic_cluster_labels(self.metals)
-        else: 
-            self.label_dict = get_monometallic_cluster_labels()
+        if label_sites:
+            assert len(self.metals) in [1, 2], \
+            'only support labelling of monometallics and bimetallics'
+        self.label_sites = label_sites
+
+        if len(self.metals) > 2:
+            self.label_dict = {}
+        else:
+            if self.composition_effect:
+                if len(self.metals) == 1:
+                    self.metals *= 2
+                self.label_dict = get_bimetallic_cluster_labels(self.metals)
+            else: 
+                self.label_dict = get_monometallic_cluster_labels()
 
         self.fullCNA = {}
         self.make_fullCNA()
@@ -240,7 +248,7 @@ class ClusterAdsorptionSites(object):
                                 metals = self.metals
                                 if len(metals) == 1:
                                     composition = 3*metals[0]
-                                else:
+                                elif len(metals) == 2:
                                     ma, mb = metals[0], metals[1]
                                     symbols = [self.symbols[i] for i in si]
                                     nma = symbols.count(ma)
@@ -252,6 +260,10 @@ class ClusterAdsorptionSites(object):
                                         composition = 2*ma + mb
                                     elif nma == 3:
                                         composition = 3*ma
+                                else:
+                                    nodes = list(self.numbers[list(si)])
+                                    path = get_max_delta_sum_path(nodes)
+                                    composition = ''.join([chemical_symbols[z] for z in path])
                                 site.update({'composition': composition})   
 
                             if this_site == 'hcp':
@@ -293,7 +305,7 @@ class ClusterAdsorptionSites(object):
                                                 metals = self.metals 
                                                 if len(metals) == 1:
                                                     composition = 4*metals[0]
-                                                else:
+                                                elif len(metals) == 2:
                                                     ma, mb = metals[0], metals[1]
                                                     symbols = [self.symbols[i] for i in si]
                                                     nma = symbols.count(ma)
@@ -313,6 +325,14 @@ class ClusterAdsorptionSites(object):
                                                         composition = 3*ma + mb
                                                     elif nma == 4:
                                                         composition = 4*ma
+                                                else:
+                                                    opp = max(list(si[1:]), key=lambda x:
+                                                              np.linalg.norm(self.positions[x]
+                                                              - self.positions[si[0]]))
+                                                    nni = [i for i in si[1:] if i != opp]
+                                                    nodes = list(self.numbers[[si[0], nni[0], opp, nni[1]]])
+                                                    path = get_max_delta_sum_path(nodes)
+                                                    composition = ''.join([chemical_symbols[z] for z in path])
                                                 site.update({'composition': composition})    
 
                                             new_pos = pos - normal * self.r * (2./3)**(.5)
@@ -369,7 +389,7 @@ class ClusterAdsorptionSites(object):
                         comp = site['composition']
                         if len(metals) == 1:
                             composition = ''.join([comp, 3*metals[0]])
-                        else: 
+                        elif len(metals) == 2: 
                             ma, mb = metals[0], metals[1]
                             subsyms = [self.symbols[subi] for subi in subsi]
                             nma = subsyms.count(ma)
@@ -391,6 +411,13 @@ class ClusterAdsorptionSites(object):
                                     composition = ''.join([comp, mb + 2*ma])
                             elif nma == 3:
                                 composition = ''.join([comp, 3*ma])
+                        else:
+                            endsym = re.findall('[A-Z][^A-Z]*', comp)[-1]
+                            subpos = [self.positions[i] for i in si if 
+                                      self.symbols[i] == endsym][0]
+                            nodes = list(self.numbers[sorted(subsi, key=get_squared_distance)])
+                            path = get_max_delta_sum_path(nodes)
+                            composition = comp + ''.join([chemical_symbols[z] for z in path])
                         site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si) 
@@ -1020,7 +1047,7 @@ class SlabAdsorptionSites(object):
         Accept any ase.Atoms object. No need to be built-in.
 
     surface : str
-        The surface type (crystal structure + Miller indices)
+        The surface type (crystal structure + Miller indices).
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
@@ -1029,8 +1056,7 @@ class SlabAdsorptionSites(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics. Currently only
-        support composition identification of bimetallics.
+        set composition=False for monometallics.        
 
     both_sides : bool, default False
         Whether to consider sites on both top and bottom sides
@@ -1040,7 +1066,8 @@ class SlabAdsorptionSites(object):
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
         Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels.
+        otherwise use the monometallic labels. Current only 
+        support labelling of monometallics and bimetallics.
 
     proxy_metal : str, default None
         The code is parameterized for pure transition metals.
@@ -1111,7 +1138,7 @@ class SlabAdsorptionSites(object):
         self.positions = atoms.positions 
         self.symbols = atoms.symbols
         self.numbers = atoms.numbers
-        self.indices = [a.index for a in self.atoms] 
+        self.indices = list(range(len(self.atoms)))
         self.surface = surface
         self.proxy_metal = proxy_metal
 
@@ -1123,14 +1150,21 @@ class SlabAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.both_sides = both_sides
+
+        if label_sites:
+            assert len(self.metals) in [1, 2], \
+            'only support labelling of monometallics and bimetallics'
         self.label_sites = label_sites
 
-        if self.composition_effect:
-            if len(self.metals) == 1:
-                self.metals *= 2
-            self.label_dict = get_bimetallic_slab_labels(self.surface, self.metals)
+        if len(self.metals) > 2:
+            self.label_dict = {}
         else:
-            self.label_dict = get_monometallic_slab_labels(self.surface)    
+            if self.composition_effect:
+                if len(self.metals) == 1:
+                    self.metals *= 2
+                self.label_dict = get_bimetallic_slab_labels(self.surface, self.metals)
+            else:
+                self.label_dict = get_monometallic_slab_labels(self.surface)    
         self.tol = tol 
 
         self.make_neighbor_list(neighbor_number=1) 
@@ -1145,7 +1179,7 @@ class SlabAdsorptionSites(object):
         if self.label_sites:
             self.get_labels()
         
-    def populate_site_list(self, allow_obtuse=True, cutoff=5.):        
+    def populate_site_list(self, allow_obtuse=True, cutoff=5., _bot_side=False):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
         given an input slab based on Delaunay triangulation of the 
         surface atoms in a supercell and collect in a site list.
@@ -1157,7 +1191,7 @@ class SlabAdsorptionSites(object):
             Delaunay triangulation.
 
         cutoff : float, default 5.
-            Radius of maximum atomic bond distance to consider. 
+            Radius of maximum atomic bond distance to consider.
 
         """
  
@@ -1197,12 +1231,12 @@ class SlabAdsorptionSites(object):
                         morphology = 'terrace'
 
             si = (s,)
-            site = self.new_site()
+            site = self.new_site() 
             site.update({'site': 'ontop',
                          'surface': self.surface,
                          'morphology': morphology,
                          'position': self.positions[s],
-                         'indices': si})
+                         'indices': si})            
             if self.surface in ['fcc110','bcc211','hcp10m10h'] and morphology == 'terrace':
                 site.update({'extra': np.where(occurence==1)[0]})
             if self.composition_effect:
@@ -1226,9 +1260,14 @@ class SlabAdsorptionSites(object):
         if self.surface == 'bcc210':
             sorted_steps = sorted([i for i in stepids], key=lambda x: self.positions[x,2])
             for j, stpi in enumerate(sorted_steps):
-                if j < len(sorted_steps) / 2:
-                    stepids.remove(stpi)
-                    terraceids.add(stpi)
+                if j < len(sorted_steps) / 2: 
+                    if not _bot_side:
+                        stepids.remove(stpi)
+                        terraceids.add(stpi)
+                else:
+                    if _bot_side:
+                        stepids.remove(stpi)
+                        terraceids.add(stpi)
             for st in sl:
                 if st['morphology'] == 'step' and st['indices'][0] in terraceids:
                     st['morphology'] = 'terrace'
@@ -1250,7 +1289,7 @@ class SlabAdsorptionSites(object):
                         metals = self.metals
                         if len(metals) == 1:
                             composition = 4*metals[0]
-                        else: 
+                        elif len(metals) == 2: 
                             ma, mb = metals[0], metals[1]                       
                             symbols = [self.symbols[i] for i in extraids]
                             nma = symbols.count(ma)
@@ -1274,6 +1313,14 @@ class SlabAdsorptionSites(object):
                                 composition = 3*ma + mb
                             elif nma == 4:
                                 composition = 4*ma
+                        else:
+                            opp = max(list(extraids[1:]), key=lambda x:
+                                      get_mic(self.positions[x], self.positions[extraids[0]],
+                                              self.cell, return_squared_distance=True))
+                            nni = [i for i in extraids[1:] if i != opp]
+                            nodes = list(self.numbers[[extraids[0], nni[0], opp, nni[1]]])
+                            path = get_max_delta_sum_path(nodes)
+                            composition = ''.join([chemical_symbols[z] for z in path])
                         st['composition'] += '-{}'.format(composition) 
                     st['indices'] = tuple(sorted(list(si)+ extraids))
                     del st['extra']
@@ -1283,7 +1330,7 @@ class SlabAdsorptionSites(object):
         ext_surf_coords = ext_coords[extended_top]
         meansurfz = np.average(self.positions[self.surf_ids][:,2], 0)
         dh = abs(meansurfz - np.average(self.positions[self.subsurf_ids][:,2], 0))
-#        surf_screen = np.where(abs(surf_coords[:,2] - meansurfz) < 5.)
+#        surf_screen = np.where(abs(ext_surf_coords[:,2] - meansurfz) < 5.)
 #        ext_surf_coords = ext_surf_coords[surf_screen]
         dt = scipy.spatial.Delaunay(ext_surf_coords[:,:2])
         neighbors = dt.neighbors
@@ -1700,7 +1747,7 @@ class SlabAdsorptionSites(object):
                             metals = self.metals
                             if len(metals) == 1:
                                 composition = 4*metals[0]
-                            else:
+                            elif len(metals) == 2:
                                 ma, mb = metals[0], metals[1]
                                 symbols = [self.symbols[i] for i in fold4ids]
                                 nma = symbols.count(ma)
@@ -1722,8 +1769,7 @@ class SlabAdsorptionSites(object):
                                             else:
                                                 composition = ma + 2*mb + ma           
                                     else:
-                                        opposite = np.where(
-                                                   cm[si[1:],si[0]]==0)[0]
+                                        opposite = np.where(cm[si[1:],si[0]]==0)[0]
                                         opp = si[1+opposite[0]]         
                                         if self.symbols[opp] == self.symbols[fold4ids[0]]:
                                             composition = ma + mb + ma + mb 
@@ -1733,6 +1779,20 @@ class SlabAdsorptionSites(object):
                                     composition = 3*ma + mb
                                 elif nma == 4:
                                     composition = 4*ma
+                            else:
+                                if this_site == '5fold':
+                                    opp = max(list(fold4ids[1:]), key=lambda x:
+                                              get_mic(self.positions[x], self.positions[fold4ids[0]],
+                                                      self.cell, return_squared_distance=True))
+                                    nni = [i for i in fold4ids[1:] if i != opp]
+                                    nodes = list(self.numbers[[fold4ids[0], nni[0], opp, nni[1]]])
+                                else:
+                                    opposite = np.where(cm[si[1:],si[0]]==0)[0]
+                                    opp = si[1+opposite[0]] 
+                                    nni = [i for i in si[1:] if i != opp]
+                                    nodes = list(self.numbers[[si[0], nni[0], opp, nni[1]]])
+                                path = get_max_delta_sum_path(nodes)
+                                composition = ''.join([chemical_symbols[z] for z in path])
                             site.update({'composition': composition})
                             if this_site == '5fold':                   
                                 site['composition'] = '{}-'.format(
@@ -1832,7 +1892,7 @@ class SlabAdsorptionSites(object):
                         metals = self.metals                            
                         if len(metals) == 1:
                             composition = 3*metals[0]
-                        else:
+                        elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
                             symbols = [self.symbols[i] for i in si]
                             nma = symbols.count(ma)
@@ -1844,6 +1904,10 @@ class SlabAdsorptionSites(object):
                                 composition = 2*ma + mb
                             elif nma == 3:
                                 composition = 3*ma
+                        else:
+                            nodes = list(self.numbers[list(si)])
+                            path = get_max_delta_sum_path(nodes)
+                            composition = ''.join([chemical_symbols[z] for z in path])
                         site.update({'composition': composition})   
 
                     if this_site == 'hcp':
@@ -1930,7 +1994,7 @@ class SlabAdsorptionSites(object):
                         metals = self.metals
                         if len(metals) == 1:
                             composition = 4*metals[0] 
-                        else:
+                        elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
                             symbols = [self.symbols[i] for i in si]
                             nma = symbols.count(ma)
@@ -1962,6 +2026,20 @@ class SlabAdsorptionSites(object):
                                 composition = 3*ma + mb
                             elif nma == 4:
                                 composition = 4*ma
+                        else:
+                            if this_site == '5fold':
+                                opp = max(list(fold4ids[1:]), key=lambda x:
+                                          get_mic(self.positions[x], self.positions[fold4ids[0]],
+                                                  self.cell, return_squared_distance=True))
+                                nni = [i for i in fold4ids[1:] if i != opp]
+                                nodes = list(self.numbers[[fold4ids[0], nni[0], opp, nni[1]]])
+                            else:
+                                opposite = np.where(cm[si[1:],si[0]]==0)[0]
+                                opp = si[1+opposite[0]] 
+                                nni = [i for i in si[1:] if i != opp]
+                                nodes = list(self.numbers[[si[0], nni[0], opp, nni[1]]])
+                            path = get_max_delta_sum_path(nodes)
+                            composition = ''.join([chemical_symbols[z] for z in path])
                         site.update({'composition': composition})
                         if this_site == '5fold':
                             site['composition'] = '{}-'.format(
@@ -2112,7 +2190,7 @@ class SlabAdsorptionSites(object):
                         metals = self.metals 
                         if len(metals) == 1:
                             comp = 3*metals[0]
-                        else:
+                        elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
                             symbols = [self.symbols[i] for i in newsi]
                             nma = symbols.count(ma)
@@ -2123,12 +2201,20 @@ class SlabAdsorptionSites(object):
                             elif nma == 2:
                                 comp = 2*ma + mb
                             elif nma == 3:
-                                comp = 3*ma  
+                                comp = 3*ma
+                        else:
+                            nodes = list(self.numbers[list(si)])
+                            path = get_max_delta_sum_path(nodes)
+                            comp = ''.join([chemical_symbols[z] for z in path]) 
                     else:
                         comp = site['composition']
+
+                    def get_squared_distance(x):
+                        return get_mic(self.positions[x], subpos, 
+                                       self.cell, return_squared_distance=True) 
                     if len(metals) == 1:
                         composition = ''.join([comp, 3*metals[0]])
-                    else: 
+                    elif len(metals) == 2: 
                         ma, mb = metals[0], metals[1]
                         subsyms = [self.symbols[subi] for subi in subsi]
                         nma = subsyms.count(ma)
@@ -2137,9 +2223,6 @@ class SlabAdsorptionSites(object):
                         elif nma == 1:
                             ia = subsi[subsyms.index(ma)]
                             subpos = self.positions[ia]
-                            def get_squared_distance(x):
-                                return get_mic(self.positions[x], subpos, 
-                                               self.cell, return_squared_distance=True)
                             if self.symbols[max(si, key=get_squared_distance)] == ma:
                                 composition = ''.join([comp, 2*mb + ma])
                             else:
@@ -2147,15 +2230,19 @@ class SlabAdsorptionSites(object):
                         elif nma == 2:
                             ib = subsi[subsyms.index(mb)]
                             subpos = self.positions[ib]
-                            def get_squared_distance(x):
-                                return get_mic(self.positions[x], subpos, 
-                                               self.cell, return_squared_distance=True)
                             if self.symbols[max(si, key=get_squared_distance)] == mb:
                                 composition = ''.join([comp, 2*ma + mb])
                             else:
                                 composition = ''.join([comp, mb + 2*ma])
                         elif nma == 3:
                             composition = ''.join([comp, 3*ma])
+                    else:                        
+                        endsym = re.findall('[A-Z][^A-Z]*', comp)[-1]
+                        subpos = [self.positions[i] for i in si if 
+                                  self.symbols[i] == endsym][0]
+                        nodes = list(self.numbers[sorted(subsi, key=get_squared_distance)])
+                        path = get_max_delta_sum_path(nodes)
+                        composition = comp + ''.join([chemical_symbols[z] for z in path])
                     site.update({'composition': composition})
                 sl.append(site)
                 usi.add(si)
@@ -2172,13 +2259,16 @@ class SlabAdsorptionSites(object):
         self.delta_positions = self.atoms.positions - self.ref_atoms.positions
         self.surf_ids, self.subsurf_ids = self.get_termination()
         self.site_list = []
-        self.populate_site_list()
+        self.populate_site_list(_bot_side=True)
         self.surf_ids = top_surf_ids + self.surf_ids
         self.subsurf_ids = top_subsurf_ids + self.subsurf_ids
         for st in self.site_list:
-            if st['site'] != 'ontop':
-                st['position'] *= [1,1,-1]
             st['normal'] *= [1,1,-1]
+            if self.surface in ['fcc110','bcc211','hcp10m10h'] \
+            and st['site'] == '5fold':
+                continue
+            elif st['site'] != 'ontop':                
+                st['position'] *= [1,1,-1]                
         self.site_list = top_site_list + self.site_list
         self.atoms.positions *= [1,1,-1]
         self.ref_atoms.positions *= [1,1,-1]
@@ -2351,7 +2441,7 @@ class SlabAdsorptionSites(object):
     def get_connectivity(self):                                      
         """Get the connection matrix."""
 
-        return get_connectivity_matrix(self.nblist)                   
+        return get_connectivity_matrix(self.nblist)
 
     def get_termination(self, side='top'):
         """Return the indices of surface and subsurface atoms. This 
@@ -2370,8 +2460,7 @@ class SlabAdsorptionSites(object):
         cm = self.connectivity_matrix.copy()                               
         np.fill_diagonal(cm, 0)
         indices = self.indices 
-
-        coord = np.count_nonzero(cm[indices,:][:,indices], axis=1)
+        coord = np.count_nonzero(cm, axis=1)
         allsurf = []
         bulk = []
         max_coord = np.max(coord)
@@ -2411,7 +2500,7 @@ class SlabAdsorptionSites(object):
         subsurf = list(np.unique(subsurf))
 
         return sorted(surf), sorted(subsurf)
-
+ 
     def get_two_vectors(self, indices):
         p1 = self.positions[indices[1]]
         p2 = self.positions[indices[2]]
@@ -2627,8 +2716,7 @@ def enumerate_adsorption_sites(atoms, surface=None,
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics. Currently only
-        support composition identification of bimetallics.   
+        set composition=False for monometallics.
 
     both_sides : bool, default False
         Whether to consider sites on both top and bottom sides
@@ -2638,7 +2726,8 @@ def enumerate_adsorption_sites(atoms, surface=None,
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
         Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels.
+        otherwise use the monometallic labels. Currently only
+        support labelling of monometallics and bimetallics.
 
     Example
     -------

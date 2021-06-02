@@ -1792,6 +1792,8 @@ def ordered_coverage_pattern(atoms, adsorbate,
     
     """
 
+    assert coverage in [0.25, 0.5, 0.75, 1.], 'coverage not supported' 
+
     if True not in atoms.pbc:                            
         if surface is None:
             surface = ['fcc100', 'fcc111']        

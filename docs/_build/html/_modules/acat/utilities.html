@@ -212,29 +212,19 @@
         <span class="k">return</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[]}</span>
     <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
     <span class="n">positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span>
-    
     <span class="n">nums</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">numbers</span><span class="p">)</span>
     <span class="n">pairs</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">nums</span><span class="p">)</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">permutations</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)),</span><span class="mi">2</span><span class="p">)))</span>    
-    <span class="n">indices1</span><span class="p">,</span> <span class="n">indices2</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">indices1</span><span class="p">],</span> <span class="n">positions</span><span class="p">[</span><span class="n">indices2</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="n">mic</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">distances</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">distances</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">natoms</span><span class="p">),</span> <span class="mf">0.</span><span class="p">)</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="n">radius</span><span class="p">:</span>
-        <span class="n">cr_dict</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span> <span class="p">(</span><span class="n">covalent_radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">covalent_radii</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">}</span>
+        <span class="n">cr_dict</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span> <span class="p">(</span><span class="n">covalent_radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">covalent_radii</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">}</span>
     
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_all_distances</span><span class="p">(</span><span class="n">mic</span><span class="o">=</span><span class="n">mic</span><span class="p">)</span>
     <span class="n">conn</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">)}</span>
     <span class="k">for</span> <span class="n">atomi</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">atomj</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
             <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">atomi</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">atomj</span><span class="o">.</span><span class="n">index</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">different_species</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">atomi</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">atomj</span><span class="o">.</span><span class="n">symbol</span><span class="p">)):</span>
-                    <span class="n">d</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">natoms</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">natoms</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">d</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
                     <span class="n">crij</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius</span> <span class="k">if</span> <span class="n">radius</span> <span class="k">else</span> <span class="n">cr_dict</span><span class="p">[(</span><span class="n">atomi</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">atomj</span><span class="o">.</span><span class="n">number</span><span class="p">)]</span> 
 
                     <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">span</span><span class="p">:</span>
@@ -277,7 +267,7 @@
 
 
 <div class="viewcode-block" id="get_mic"><a class="viewcode-back" href="../../utilities.html#acat.utilities.get_mic">[docs]</a><span class="k">def</span> <span class="nf">get_mic</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> 
-            <span class="n">max_cell_multiples</span><span class="o">=</span><span class="mf">1e5</span><span class="p">,</span> 
+            <span class="n">max_cell_multiple</span><span class="o">=</span><span class="mf">1e5</span><span class="p">,</span> 
             <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span> 
     <span class="sd">&quot;&quot;&quot;A highly efficient function for getting all vectors from p1</span>
 <span class="sd">    to p2. Also able to calculate the squared distance using the </span>
@@ -300,7 +290,7 @@
 <span class="sd">    pbc : numpy.array or list, default [1, 1, 0]</span>
 <span class="sd">        Whether cell is periodic in each direction.</span>
 
-<span class="sd">    max_cell_multiples : int, default 1e5</span>
+<span class="sd">    max_cell_multiple : int, default 1e5</span>
 <span class="sd">        A large number to account for the maximum repetitions of each </span>
 <span class="sd">        of the lattice vectors. The minimum number of repetitions is</span>
 <span class="sd">        hence calculated by the algorithm using the intersection of a </span>
@@ -330,14 +320,14 @@
     <span class="n">min_dr_sq</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">@</span> <span class="n">dr</span>
     <span class="n">min_length</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">min_dr_sq</span><span class="p">)</span>
     <span class="n">a_max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_length</span> <span class="o">/</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">b_cross_c_len</span><span class="p">)</span>
-    <span class="n">a_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">a_max</span><span class="p">,</span> <span class="n">max_cell_multiples</span><span class="p">)</span>
+    <span class="n">a_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">a_max</span><span class="p">,</span> <span class="n">max_cell_multiple</span><span class="p">)</span>
     <span class="n">b_max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_length</span> <span class="o">/</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">a_cross_c_len</span><span class="p">)</span>
-    <span class="n">b_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">b_max</span><span class="p">,</span> <span class="n">max_cell_multiples</span><span class="p">)</span>
+    <span class="n">b_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">b_max</span><span class="p">,</span> <span class="n">max_cell_multiple</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pbc</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
         <span class="n">c_max</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">c_max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">min_length</span> <span class="o">/</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">a_cross_b_len</span><span class="p">)</span>
-        <span class="n">c_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">c_max</span><span class="p">,</span> <span class="n">max_cell_multiples</span><span class="p">)</span>
+        <span class="n">c_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">c_max</span><span class="p">,</span> <span class="n">max_cell_multiple</span><span class="p">)</span>
 
     <span class="n">min_dr</span> <span class="o">=</span> <span class="n">dr</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">a_max</span><span class="p">,</span> <span class="n">a_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
@@ -373,7 +363,7 @@
                            <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
                            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
                            <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
-<div class="viewcode-block" id="get_close_atoms"><a class="viewcode-back" href="../../utilities.html#acat.utilities.get_close_atoms">[docs]</a>                           <span class="o">@</span> <span class="n">cell</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<div class="viewcode-block" id="get_max_delta_sum_path"><a class="viewcode-back" href="../../utilities.html#acat.utilities.get_max_delta_sum_path">[docs]</a>                           <span class="o">@</span> <span class="n">cell</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
@@ -404,7 +394,45 @@
     <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">offsets</span>
 
 
-<span class="k">def</span> <span class="nf">get_close_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_max_delta_sum_path</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+
+    <span class="n">delta_sum</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10000</span>
+    <span class="n">res_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)):</span>
+        <span class="n">new_nodes</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span> <span class="o">+</span> <span class="n">nodes</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">new_nodes</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">new_nodes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> 
+                  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="n">ds</span> <span class="o">&gt;</span> <span class="n">delta_sum</span><span class="p">:</span>
+            <span class="n">delta_sum</span> <span class="o">=</span> <span class="n">ds</span>
+            <span class="n">res_nodes</span> <span class="o">=</span> <span class="n">new_nodes</span> 
+        <span class="k">if</span> <span class="o">-</span><span class="n">ds</span> <span class="o">&gt;</span> <span class="n">delta_sum</span><span class="p">:</span>
+            <span class="n">delta_sum</span> <span class="o">=</span> <span class="o">-</span><span class="n">ds</span>
+            <span class="n">res_nodes</span> <span class="o">=</span> <span class="n">new_nodes</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+ 
+    <span class="k">return</span> <span class="n">res_nodes</span></div>
+
+
+<div class="viewcode-block" id="bipartitions"><a class="viewcode-back" href="../../utilities.html#acat.utilities.bipartitions">[docs]</a><span class="k">def</span> <span class="nf">bipartitions</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">total</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo</span><span class="p">)</span> <span class="o">==</span> <span class="n">total</span><span class="p">:</span>
+                <span class="n">set_combo</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">combo</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo</span><span class="p">),</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">set_combo</span><span class="p">)</span></div>
+       
+                                                                       
+<div class="viewcode-block" id="partitions_into_totals"><a class="viewcode-back" href="../../utilities.html#acat.utilities.partitions_into_totals">[docs]</a><span class="k">def</span> <span class="nf">partitions_into_totals</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">totals</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">totals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="p">[</span><span class="n">shells</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">remaining_shells</span> <span class="ow">in</span> <span class="n">bipartitions</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">rest</span> <span class="ow">in</span> <span class="n">partitions_into_totals</span><span class="p">(</span><span class="n">remaining_shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+                <span class="k">yield</span> <span class="p">[</span><span class="n">first</span><span class="p">]</span> <span class="o">+</span> <span class="n">rest</span></div>
+
+
+<div class="viewcode-block" id="get_close_atoms"><a class="viewcode-back" href="../../utilities.html#acat.utilities.get_close_atoms">[docs]</a><span class="k">def</span> <span class="nf">get_close_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get a list of close atoms and delete one set of them if requested.</span>
 <span class="sd">    Identify all atoms that lie within the cutoff radius of each other.</span>
 

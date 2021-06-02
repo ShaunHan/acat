@@ -240,7 +240,6 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
                            composition_effect=False,
                            both_sides=False,
                            all_sites=None):
-
     """Same as add_adsorbate function, except that the site type is 
     represented by a numerical label. The function is generalized for 
     both periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -291,6 +290,8 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
                       not in adsorbate_elements]]
         metals = sorted(list(set(slab.symbols)),
                         key=lambda x: atomic_numbers[x])
+        assert len(metals) in [1, 2], \
+        'only support labelling of monometallics and bimetallics'
     else:
         metals = None
 
