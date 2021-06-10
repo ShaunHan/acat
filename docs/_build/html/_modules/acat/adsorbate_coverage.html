@@ -221,10 +221,7 @@
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
 <span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
-<span class="sd">        label that represents the occpied site. Since the site labelling</span>
-<span class="sd">        currently only supports monometallics and bimetallics, the </span>
-<span class="sd">        numerical part will all be 0 if there are more than 2 metal</span>
-<span class="sd">        components.</span>
+<span class="sd">        label that represents the occpied site.</span>
 
 <span class="sd">    dmax : float, default 2.5</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
@@ -491,16 +488,13 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">monodentate_adsorbate_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">adssym</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="n">stlab</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]]</span> 
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
+                            <span class="n">signature</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">])</span>
+                        <span class="n">stlab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">signature</span><span class="p">)]</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]]</span> 
-                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
-                                <span class="n">signature</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">])</span>
-                            <span class="n">stlab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">signature</span><span class="p">)]</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">stlab</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>                         
+                        <span class="n">stlab</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>                         
                     <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stlab</span><span class="p">)</span> <span class="o">+</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
                     <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
                     <span class="n">ll</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
@@ -718,10 +712,7 @@
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
 <span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
-<span class="sd">        label that represents the occpied site. Since the site labelling</span>
-<span class="sd">        currently only supports monometallics and bimetallics, the </span>
-<span class="sd">        numerical part will all be 0 if there are more than 2 metal </span>
-<span class="sd">        components.</span>
+<span class="sd">        label that represents the occpied site.</span>
 
 <span class="sd">    dmax : float, default 2.5</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
@@ -993,16 +984,13 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">monodentate_adsorbate_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">adssym</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="n">stlab</span> <span class="o">=</span> <span class="mi">0</span> 
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;morphology&#39;</span><span class="p">]]</span>                     
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
+                            <span class="n">signature</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">])</span>
+                        <span class="n">stlab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">signature</span><span class="p">)]</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;morphology&#39;</span><span class="p">]]</span>                     
-                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
-                                <span class="n">signature</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">])</span>
-                            <span class="n">stlab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">signature</span><span class="p">)]</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">stlab</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+                        <span class="n">stlab</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
                     <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stlab</span><span class="p">)</span> <span class="o">+</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
                     <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
                     <span class="n">ll</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
@@ -1223,10 +1211,7 @@
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
 <span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
-<span class="sd">        label that represents the occpied site. Since the site labelling</span>
-<span class="sd">        currently only supports monometallics and bimetallics, the </span>
-<span class="sd">        numerical part will all be 0 if there are more than 2 metal </span>
-<span class="sd">        components.</span>
+<span class="sd">        label that represents the occpied site.</span>
 
 <span class="sd">    dmax : float, default 2.5</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>

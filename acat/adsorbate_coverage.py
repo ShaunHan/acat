@@ -59,10 +59,7 @@ class ClusterAdsorbateCoverage(object):
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
-        label that represents the occpied site. Since the site labelling
-        currently only supports monometallics and bimetallics, the 
-        numerical part will all be 0 if there are more than 2 metal
-        components.
+        label that represents the occpied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between the site and the 
@@ -329,16 +326,13 @@ class ClusterAdsorbateCoverage(object):
                     self.monodentate_adsorbate_list.append(adssym)
 
                 if self.label_occupied_sites:
-                    if len(self.metals) > 2:
-                        stlab = 0
+                    if st['label'] is None:
+                        signature = [st['site'], st['surface']] 
+                        if self.composition_effect:
+                            signature.append(st['composition'])
+                        stlab = self.label_dict['|'.join(signature)]
                     else:
-                        if st['label'] is None:
-                            signature = [st['site'], st['surface']] 
-                            if self.composition_effect:
-                                signature.append(st['composition'])
-                            stlab = self.label_dict['|'.join(signature)]
-                        else:
-                            stlab = st['label']                         
+                        stlab = st['label']                         
                     label = str(stlab) + st['fragment']
                     st['label'] = label
                     ll[j] = label
@@ -556,10 +550,7 @@ class SlabAdsorbateCoverage(object):
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
-        label that represents the occpied site. Since the site labelling
-        currently only supports monometallics and bimetallics, the 
-        numerical part will all be 0 if there are more than 2 metal 
-        components.
+        label that represents the occpied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between the site and the 
@@ -831,16 +822,13 @@ class SlabAdsorbateCoverage(object):
                     self.monodentate_adsorbate_list.append(adssym)
 
                 if self.label_occupied_sites:
-                    if len(self.metals) > 2:
-                        stlab = 0 
+                    if st['label'] is None:
+                        signature = [st['site'], st['morphology']]                     
+                        if self.composition_effect:
+                            signature.append(st['composition'])
+                        stlab = self.label_dict['|'.join(signature)]
                     else:
-                        if st['label'] is None:
-                            signature = [st['site'], st['morphology']]                     
-                            if self.composition_effect:
-                                signature.append(st['composition'])
-                            stlab = self.label_dict['|'.join(signature)]
-                        else:
-                            stlab = st['label']
+                        stlab = st['label']
                     label = str(stlab) + st['fragment']
                     st['label'] = label
                     ll[j] = label
@@ -1061,10 +1049,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
-        label that represents the occpied site. Since the site labelling
-        currently only supports monometallics and bimetallics, the 
-        numerical part will all be 0 if there are more than 2 metal 
-        components.
+        label that represents the occpied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between the site and the 
