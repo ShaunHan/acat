@@ -17,7 +17,7 @@ Optimize adsorbate overlayer pattern
 
 **Example**
 
-All the adsorbate operators and comparators can be easily used with other ASE operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` operator only works for nanoparticles, and it is not recommonded as it is not stable yet.
+All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
 
 As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
 
@@ -25,15 +25,17 @@ The script for a parallel genetic algorithm looks as follows:
 
 .. code-block:: python
    
-    from acat.settings import adsorbate_elements                                                         
+    from acat.settings import adsorbate_elements
+    from acat.adsorption_sites import ClusterAdsorptionSites
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.ordering import RandomOrderingGenerator as ROG
     from acat.build.overlayer import random_coverage_pattern
-    from acat.ga.adsorbate_operators import AddAdsorbate, RemoveAdsorbate 
-    from acat.ga.adsorbate_operators import MoveAdsorbate, ReplaceAdsorbate 
-    from acat.ga.adsorbate_operators import CutSpliceCrossoverWithAdsorbates
-    from ase.ga.particle_mutations import RandomPermutation, COM2surfPermutation
-    from ase.ga.particle_mutations import Rich2poorPermutation, Poor2richPermutation
+    from acat.ga.adsorbate_operators import AddAdsorbate, RemoveAdsorbate
+    from acat.ga.adsorbate_operators import MoveAdsorbate, ReplaceAdsorbate
+    from acat.ga.adsorbate_operators import SimpleCutSpliceCrossoverWithAdsorbates
+    # Import particle_mutations from acat instead of ase to get the indexing-preserved version
+    from acat.ga.particle_mutations import RandomPermutation, COM2surfPermutation
+    from acat.ga.particle_mutations import Rich2poorPermutation, Poor2richPermutation
     from acat.ga.adsorbate_comparators import AdsorptionSitesComparator
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
@@ -49,19 +51,20 @@ The script for a parallel genetic algorithm looks as follows:
     from collections import defaultdict
     from random import choices, uniform
     from multiprocessing import Pool
+    import time
     import os
     
     # Define population
-    # Recommand to choose a number that is a multiple of the number of cpu
+    # Recommend to choose a number that is a multiple of the number of cpu
     pop_size = 50
     
     # Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings
     particle = Icosahedron('Ni', noshells=4)
     particle.center(vacuum=5.)
-    rog = ROG(particle, elements=['Ni', 'Pt'], 
+    rog = ROG(particle, elements=['Ni', 'Pt'],
               composition={'Ni': 0.75, 'Pt': 0.25},
               trajectory='starting_generation.traj')
-    rog.run(n_gen=pop_size)
+    rog.run(num_gen=pop_size)
     
     # Generate random coverage on each nanoparticle
     species=['H', 'C', 'O', 'OH', 'CO', 'CH', 'CH2', 'CH3']
@@ -72,6 +75,9 @@ The script for a parallel genetic algorithm looks as follows:
         pattern = random_coverage_pattern(atoms, adsorbate_species=species,
                                           min_adsorbate_distance=dmin)
         patterns.append(pattern)
+    
+    # Get the adsorption sites. Composition does not matter in GA
+    sas = ClusterAdsorptionSites(particle, composition_effect=False)
     
     # Instantiate the db
     db_name = 'ridge_Ni110Pt37_ads.db'
@@ -87,20 +93,21 @@ The script for a parallel genetic algorithm looks as follows:
     db = DataConnection(db_name)
     
     # Define operators
-    soclist = ([1, 1, 2, 1, 1, 1, 1], 
+    soclist = ([1, 1, 2, 1, 1, 1, 1, 2],
                [Rich2poorPermutation(elements=['Ni', 'Pt'], num_muts=5),
-                Poor2richPermutation(elements=['Ni', 'Pt'], num_muts=5),                              
-                RandomPermutation(num_muts=5),
-                AddAdsorbate(species, num_muts=5),
-                RemoveAdsorbate(species, num_muts=5),
-                MoveAdsorbate(species, num_muts=5),
-                ReplaceAdsorbate(species, num_muts=5),])
-    
+                Poor2richPermutation(elements=['Ni', 'Pt'], num_muts=5),
+                RandomPermutation(elements=['Ni', 'Pt'], num_muts=5),
+                AddAdsorbate(species, adsorption_sites=sas, num_muts=5),
+                RemoveAdsorbate(species, adsorption_sites=sas, num_muts=5),
+                MoveAdsorbate(species, adsorption_sites=sas, num_muts=5),
+                ReplaceAdsorbate(species, adsorption_sites=sas, num_muts=5),
+                SimpleCutSpliceCrossoverWithAdsorbates(species, keep_composition=True,
+                                                       adsorption_sites=sas),])
     op_selector = OperationSelector(*soclist)
-
-    # Define comparators    
+    
+    # Define comparators
     comp = SequentialComparator([AdsorptionSitesComparator(10),
-                                 NNMatComparator(0.2, ['Ni', 'Pt'])], 
+                                 NNMatComparator(0.2, ['Ni', 'Pt'])],
                                 [0.5, 0.5])
     
     def get_ads(atoms):
@@ -117,7 +124,7 @@ The script for a parallel genetic algorithm looks as follows:
         return adsorbates
     
     def vf(atoms):
-        """Returns the descriptor that distinguishes candidates in the 
+        """Returns the descriptor that distinguishes candidates in the
         niched population."""
     
         return len(get_ads(atoms))
@@ -131,9 +138,9 @@ The script for a parallel genetic algorithm looks as follows:
                                 logfile='log.txt')
     
     # Normal fitness ranking regardless of coverage
-    #pop = Population(data_connection=db, 
-    #                 population_size=pop_size, 
-    #                 comparator=comp, 
+    #pop = Population(data_connection=db,
+    #                 population_size=pop_size,
+    #                 comparator=comp,
     #                 logfile='log.txt')
     
     # Set convergence criteria
@@ -143,12 +150,13 @@ The script for a parallel genetic algorithm looks as follows:
     chem_pots = {'CH4': -24.039, 'H2O': -14.169, 'H2': -6.989}
     
     # Define the relax function
-    def relax(atoms, single_point=False):    
-        atoms.center(vacuum=5.)   
+    def relax(atoms, single_point=False):
+        atoms.center(vacuum=5.)
         atoms.calc = EMT()
         if not single_point:
             opt = BFGS(atoms, logfile=None)
             opt.run(fmax=0.1)
+        time.sleep(1) # Add delay to avoid stack overflow (only for testing)
     
         Epot = atoms.get_potential_energy()
         num_H = len([s for s in atoms.symbols if s == 'H'])
@@ -169,16 +177,16 @@ The script for a parallel genetic algorithm looks as follows:
             atoms.info['data'] = {}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
-        relax(atoms, single_point=True) # Single point for simplification
+        relax(atoms, single_point=True) # Single point only for testing
         db.add_relaxed_step(atoms)
     
     # Create a multiprocessing Pool
     pool = Pool(os.cpu_count())
     # Perform relaxations in parallel. Especially
-    # useful when running GA on large nanoparticles  
-    pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
+    # useful when running GA on large nanoparticles
+    pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
     pop.update()
-
+    
     # Number of generations
     num_gens = 1000
     
@@ -188,7 +196,7 @@ The script for a parallel genetic algorithm looks as follows:
         # Check if converged
         if cc.converged():
             print('Converged')
-            break             
+            break
         print('Creating and evaluating generation {0}'.format(gen_num + i))
     
         def procreation(x):
@@ -199,14 +207,14 @@ The script for a parallel genetic algorithm looks as follows:
             parents = [p1, p2]
             # Pure or bare nanoparticles are not considered
             if len(set(p1.numbers)) < 3:
-                continue 
+                return
             offspring, desc = op.get_new_individual(parents)
             # An operator could return None if an offspring cannot be formed
             # by the chosen parents
             if offspring is None:
-                continue
+                return
             nncomp = offspring.get_chemical_formula(mode='hill')
-            print('Relaxing ' + nncomp)        
+            print('Relaxing ' + nncomp)
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
             relax(offspring, single_point=True) # Single point for simplification
@@ -216,7 +224,7 @@ The script for a parallel genetic algorithm looks as follows:
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially useful when
         # using adsorbate operators which requires site identification
-        pool.map(procreation, range(pop_size))  
+        pool.map(procreation, range(pop_size))
     
         # update the population to allow new candidates to enter
         pop.update()
@@ -236,7 +244,7 @@ Symmetry-constrained genetic algorithm for nanoalloys
 
 **Example**
 
-All the group operators and comparators can be easily used with other ASE operators and comparators. All operators can be used for both non-periodic nanoparticles and periodic surface slabs.
+All the group operators and comparators can be easily used with other indexing-preserved operators and comparators. All operators can be used for both non-periodic nanoparticles and periodic surface slabs.
 
 As an example we will find the convex hull of ternary NixPtyAu405-x-y truncated octahedral nanoalloys using the ASAP EMT calculator. **Note that we must first align the symmetry axis of interest to the z direction.** Here we want to study the 3-fold mirror circular symmetry around the C3 axis of the particle.
 
@@ -264,7 +272,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     import os
     
     # Define population. 
-    # Recommand to choose a number that is a multiple of the number of cpu
+    # Recommend to choose a number that is a multiple of the number of cpu
     pop_size = 100
     
     # Build and rotate the particle so that C3 axis is aligned to z direction

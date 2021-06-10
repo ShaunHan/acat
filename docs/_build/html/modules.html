@@ -93,17 +93,17 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Base modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#adsorption-sites">Adsorption sites</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#clusteradsorptionsites-class">ClusterAdsorptionSites class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#group-sites-by-facet-function">group_sites_by_facet function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#slabadsorptionsites-class">SlabAdsorptionSites class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#get-adsorption-site-function">get_adsorption_site function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#enumerate-adsorption-sites-function">enumerate_adsorption_sites function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-clusteradsorptionsites-class">The ClusterAdsorptionSites class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-group-sites-by-facet-function">The group_sites_by_facet function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-slabadsorptionsites-class">The SlabAdsorptionSites class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-get-adsorption-site-function">The get_adsorption_site function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-enumerate-adsorption-sites-function">The enumerate_adsorption_sites function</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.adsorbate_coverage">Adsorbate coverage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#clusteradsorbatecoverage-class">ClusterAdsorbateCoverage class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#slabadsorbatecoverage-class">SlabAdsorbateCoverage class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#enumerate-occupied-sites-function">enumerate_occupied_sites function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-clusteradsorbatecoverage-class">The ClusterAdsorbateCoverage class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-slabadsorbatecoverage-class">The SlabAdsorbateCoverage class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-enumerate-occupied-sites-function">The enumerate_occupied_sites function</a></li>
 </ul>
 </li>
 </ul>
@@ -223,8 +223,7 @@ set composition=False for monometallics.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels. Currently only
-support labelling of monometallics and bimetallics.</p></li>
+otherwise use the monometallic labels.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -516,8 +515,7 @@ of the slab.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels. Current only
-support labelling of monometallics and bimetallics.</p></li>
+otherwise use the monometallic labels.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -774,8 +772,7 @@ of the slab. Only relevant for periodic surface slabs.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels. Currently only
-support labelling of monometallics and bimetallics.</p></li>
+otherwise use the monometallic labels.</p></li>
 </ul>
 </dd>
 </dl>
@@ -804,8 +801,8 @@ of a Marks decahedral nanoparticle:</p>
 </div>
 </dd></dl>
 
-<div class="section" id="clusteradsorptionsites-class">
-<h3>ClusterAdsorptionSites class<a class="headerlink" href="#clusteradsorptionsites-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-clusteradsorptionsites-class">
+<h3>The ClusterAdsorptionSites class<a class="headerlink" href="#the-clusteradsorptionsites-class" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py class">
 <dt id="id0">
@@ -845,8 +842,7 @@ set composition=False for monometallics.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels. Currently only
-support labelling of monometallics and bimetallics.</p></li>
+otherwise use the monometallic labels.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -890,8 +886,8 @@ Au should be good for larger nanoparticles.</p></li>
 
 </div></blockquote>
 </div>
-<div class="section" id="group-sites-by-facet-function">
-<h3>group_sites_by_facet function<a class="headerlink" href="#group-sites-by-facet-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-group-sites-by-facet-function">
+<h3>The group_sites_by_facet function<a class="headerlink" href="#the-group-sites-by-facet-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
 <dt id="id1">
@@ -934,8 +930,8 @@ icosahedral nanoparticle by its 20 geometrical facets:</p>
 
 </div></blockquote>
 </div>
-<div class="section" id="slabadsorptionsites-class">
-<h3>SlabAdsorptionSites class<a class="headerlink" href="#slabadsorptionsites-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-slabadsorptionsites-class">
+<h3>The SlabAdsorptionSites class<a class="headerlink" href="#the-slabadsorptionsites-class" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py class">
 <dt id="id2">
@@ -986,8 +982,7 @@ of the slab.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels. Current only
-support labelling of monometallics and bimetallics.</p></li>
+otherwise use the monometallic labels.</p></li>
 <li><p><strong>proxy_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized for pure transition metals.
 The generalization of the code is achieved by mapping all
 input atoms to a proxy transition metal that is supported
@@ -1032,8 +1027,8 @@ is not satisfying. The default 0.5 is usually good enough.</p></li>
 
 </div></blockquote>
 </div>
-<div class="section" id="get-adsorption-site-function">
-<h3>get_adsorption_site function<a class="headerlink" href="#get-adsorption-site-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-get-adsorption-site-function">
+<h3>The get_adsorption_site function<a class="headerlink" href="#the-get-adsorption-site-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
 <dt id="id3">
@@ -1080,8 +1075,8 @@ together with the site.</p></li>
 
 </div></blockquote>
 </div>
-<div class="section" id="enumerate-adsorption-sites-function">
-<h3>enumerate_adsorption_sites function<a class="headerlink" href="#enumerate-adsorption-sites-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-enumerate-adsorption-sites-function">
+<h3>The enumerate_adsorption_sites function<a class="headerlink" href="#the-enumerate-adsorption-sites-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
 <dt id="id4">
@@ -1109,8 +1104,7 @@ of the slab. Only relevant for periodic surface slabs.</p></li>
 <li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
 Labels for different sites are listed in acat.labels.
 Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels. Currently only
-support labelling of monometallics and bimetallics.</p></li>
+otherwise use the monometallic labels.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1179,10 +1173,7 @@ No need to be built-in.</p></li>
 <cite>ClusterAdsorptionSites</cite> object if not specified.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site. Since the site labelling
-currently only supports monometallics and bimetallics, the
-numerical part will all be 0 if there are more than 2 metal
-components.</p></li>
+label that represents the occpied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1362,10 +1353,7 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site. Since the site labelling
-currently only supports monometallics and bimetallics, the
-numerical part will all be 0 if there are more than 2 metal
-components.</p></li>
+label that represents the occpied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1521,10 +1509,7 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site. Since the site labelling
-currently only supports monometallics and bimetallics, the
-numerical part will all be 0 if there are more than 2 metal
-components.</p></li>
+label that represents the occpied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1564,8 +1549,8 @@ octahedral nanoparticle:</p>
 </div>
 </dd></dl>
 
-<div class="section" id="clusteradsorbatecoverage-class">
-<h3>ClusterAdsorbateCoverage class<a class="headerlink" href="#clusteradsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-clusteradsorbatecoverage-class">
+<h3>The ClusterAdsorbateCoverage class<a class="headerlink" href="#the-clusteradsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py class">
 <dt id="id5">
@@ -1601,10 +1586,7 @@ No need to be built-in.</p></li>
 <cite>ClusterAdsorptionSites</cite> object if not specified.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site. Since the site labelling
-currently only supports monometallics and bimetallics, the
-numerical part will all be 0 if there are more than 2 metal
-components.</p></li>
+label that represents the occpied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1648,8 +1630,8 @@ bonding atom  that should be considered as an adsorbate.</p></li>
 
 </div></blockquote>
 </div>
-<div class="section" id="slabadsorbatecoverage-class">
-<h3>SlabAdsorbateCoverage class<a class="headerlink" href="#slabadsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-slabadsorbatecoverage-class">
+<h3>The SlabAdsorbateCoverage class<a class="headerlink" href="#the-slabadsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py class">
 <dt id="id6">
@@ -1691,10 +1673,7 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site. Since the site labelling
-currently only supports monometallics and bimetallics, the
-numerical part will all be 0 if there are more than 2 metal
-components.</p></li>
+label that represents the occpied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>
@@ -1735,8 +1714,8 @@ bonding atom  that should be considered as an adsorbate.</p></li>
 
 </div></blockquote>
 </div>
-<div class="section" id="enumerate-occupied-sites-function">
-<h3>enumerate_occupied_sites function<a class="headerlink" href="#enumerate-occupied-sites-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-enumerate-occupied-sites-function">
+<h3>The enumerate_occupied_sites function<a class="headerlink" href="#the-enumerate-occupied-sites-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
 <dt id="id7">
@@ -1758,10 +1737,7 @@ sides of the slab. Only works if adsorption_sites is not provided,
 otherwise consistent with what is specified in adsorption_sites.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site. Since the site labelling
-currently only supports monometallics and bimetallics, the
-numerical part will all be 0 if there are more than 2 metal
-components.</p></li>
+label that represents the occpied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between the site and the
 bonding atom  that should be considered as an adsorbate.</p></li>
 </ul>

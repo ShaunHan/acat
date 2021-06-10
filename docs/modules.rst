@@ -12,28 +12,28 @@ All symmetry-inequivalent adsorption sites supported by ACAT can be found in :do
    :show-inheritance:
    :exclude-members: get_labels, new_site, get_two_vectors, is_eq, get_angle, make_fullCNA, get_site_dict, set_first_neighbor_distance_from_rdf, get_surface_designation, make_neighbor_list
 
-ClusterAdsorptionSites class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ClusterAdsorptionSites class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: ClusterAdsorptionSites 
 
-group_sites_by_facet function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The group_sites_by_facet function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: group_sites_by_facet
 
-SlabAdsorptionSites class
-~~~~~~~~~~~~~~~~~~~~~~~~~
+The SlabAdsorptionSites class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: SlabAdsorptionSites
 
-get_adsorption_site function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The get_adsorption_site function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: get_adsorption_site
 
-enumerate_adsorption_sites function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The enumerate_adsorption_sites function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: enumerate_adsorption_sites
 
@@ -46,17 +46,17 @@ Adsorbate coverage
    :show-inheritance:
    :exclude-members: identify_adsorbates, make_ads_neighbor_list  
 
-ClusterAdsorbateCoverage class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ClusterAdsorbateCoverage class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: ClusterAdsorbateCoverage
 
-SlabAdsorbateCoverage class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The SlabAdsorbateCoverage class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: SlabAdsorbateCoverage
 
-enumerate_occupied_sites function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The enumerate_occupied_sites function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: enumerate_occupied_sites

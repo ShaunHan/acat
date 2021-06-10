@@ -422,12 +422,13 @@ class OrderedSlabOrderingGenerator(object):
     elements : list of strs 
         The metal elements of the alloy catalyst.
 
-    reducing_size : list of ints or tuple of ints, default (2, 2)
-        The multiples that groups the symmetry-equivalent atoms in 
-        the x and y directions. The x or y length of the cell must 
-        be this multiple of the distance between each pair of 
-        symmetry-equivalent atoms. Larger reducing size generates 
-        less structures.
+    repeating_size : list of ints or tuple of ints, default (2, 2)
+        The multiples that describe the size of the repeating pattern
+        on the surface. Symmetry-equivalent atoms are grouped by 
+        the multiples in the x and y directions. The x or y length of 
+        the cell must be this multiple of the distance between each 
+        pair of symmetry-equivalent atoms. Larger reducing size 
+        generates fewer structures.
 
     composition : dict, default None
         Generate ordered orderings only at a certain composition. 
@@ -455,7 +456,7 @@ class OrderedSlabOrderingGenerator(object):
     """
 
     def __init__(self, atoms, elements,
-                 reducing_size=(2, 2),
+                 repeating_size=(2, 2),
                  composition=None,
                  dtol=0.01,
                  ztol=0.1,
@@ -465,8 +466,8 @@ class OrderedSlabOrderingGenerator(object):
         self.atoms = atoms
         self.elements = elements
 
-        assert (is_list_or_tuple(reducing_size)) and (len(reducing_size) == 2)
-        self.reducing_size = reducing_size
+        assert (is_list_or_tuple(repeating_size)) and (len(repeating_size) == 2)
+        self.repeating_size = repeating_size
         self.dtol = dtol
         self.ztol = ztol
 
@@ -495,8 +496,8 @@ class OrderedSlabOrderingGenerator(object):
         x_cell = np.linalg.norm(cell[0])
         y_cell = np.linalg.norm(cell[1])
 
-        ref_x_dist = x_cell / self.reducing_size[0]
-        ref_y_dist = y_cell / self.reducing_size[1]
+        ref_x_dist = x_cell / self.repeating_size[0]
+        ref_y_dist = y_cell / self.repeating_size[1]
 
         x_pairs = np.column_stack(np.where(abs(ds - ref_x_dist) < self.dtol))
         y_pairs = np.column_stack(np.where(abs(ds - ref_y_dist) < self.dtol))

@@ -5,6 +5,7 @@ from ..utilities import is_list_or_tuple, atoms_too_close_after_addition
 from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
 from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from ..build.action import add_adsorbate_to_site, remove_adsorbate_from_site
+from ..build.action import remove_adsorbates_from_sites
 from ase.ga.offspring_creator import OffspringCreator
 from ase.formula import Formula
 from ase import Atoms, Atom
@@ -250,6 +251,12 @@ class AddAdsorbate(AdsorbateOperator):
         The radius of the sphere inside which no other adsorbates 
         should be found.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        genetic algorithm. Make sure all the operators used with this
+        operator preserve the indexing of the atoms.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices).
         Only required if the structure is a periodic surface slab.
@@ -257,12 +264,6 @@ class AddAdsorbate(AdsorbateOperator):
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
-
-    composition_effect : bool, default True
-        Whether to consider sites with different elemental compositions 
-        as different sites. It is recommended to set composition=False 
-        for monometallics. Since GA is commonly used for bimetallics, 
-        the default is set to True.
 
     site_preference : str, defualt None
         The site type that has higher priority to attach adsorbates.
@@ -287,9 +288,9 @@ class AddAdsorbate(AdsorbateOperator):
     def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
+                 adsorption_sites=None,
                  surface=None,
                  allow_6fold=False,
-                 composition_effect=True,
                  site_preference=None,
                  surface_preference=None,
                  tilt_angle=None,
@@ -301,9 +302,9 @@ class AddAdsorbate(AdsorbateOperator):
 
         self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.allow_6fold = allow_6fold
-        self.composition_effect = composition_effect
         self.site_preference = site_preference
         self.surface_preference = surface_preference
         
@@ -323,13 +324,21 @@ class AddAdsorbate(AdsorbateOperator):
             indi.append(atom)
 
         if True in indi.pbc:
-            sas = SlabAdsorptionSites(indi, self.surface,
-                                      self.allow_6fold,
-                                      self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = SlabAdsorptionSites(indi, self.surface,
+                                          self.allow_6fold, 
+                                          composition_effect=False)
             sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
         else:
-            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                         self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                             composition_effect=False)
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
@@ -380,6 +389,12 @@ class RemoveAdsorbate(AdsorbateOperator):
     adsorbate_species : str or list of strs 
         One or a list of adsorbate species to be removed from the surface.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        genetic algorithm. Make sure all the operators used with this
+        operator preserve the indexing of the atoms.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices).
         Only required if the structure is a periodic surface slab.
@@ -387,12 +402,6 @@ class RemoveAdsorbate(AdsorbateOperator):
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites underneath 
         fcc hollow sites.
-
-    composition_effect : bool, default True
-        Whether to consider sites with different elemental compositions as
-        different sites. It is recommended to set composition=False for 
-        monometallics. Since GA is commonly used for bimetallics, the 
-        default is set to True.
 
     site_preference : str, defualt None
         The site type that has higher priority to attach adsorbates.
@@ -415,9 +424,9 @@ class RemoveAdsorbate(AdsorbateOperator):
     """
 
     def __init__(self, adsorbate_species,
+                 adsorption_sites=None,
                  surface=None,
                  allow_6fold=False,
-                 composition_effect=True,
                  site_preference=None,
                  surface_preference=None,
                  num_muts=1,
@@ -426,9 +435,9 @@ class RemoveAdsorbate(AdsorbateOperator):
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
 
+        self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.allow_6fold = allow_6fold
-        self.composition_effect = composition_effect        
         self.site_preference = site_preference
         self.surface_preference = surface_preference
 
@@ -446,13 +455,21 @@ class RemoveAdsorbate(AdsorbateOperator):
             indi.append(atom)
 
         if True in indi.pbc:
-            sas = SlabAdsorptionSites(indi, self.surface,
-                                      self.allow_6fold,
-                                      self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = SlabAdsorptionSites(indi, self.surface,
+                                          self.allow_6fold, 
+                                          composition_effect=False)
             sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
         else:
-            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                         self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                             composition_effect=False)
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
@@ -509,6 +526,12 @@ class MoveAdsorbate(AdsorbateOperator):
         The radius of the sphere inside which no other adsorbates 
         should be found.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        genetic algorithm. Make sure all the operators used with this
+        operator preserve the indexing of the atoms.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices).
         Only required if the structure is a periodic surface slab.
@@ -516,12 +539,6 @@ class MoveAdsorbate(AdsorbateOperator):
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
-
-    composition_effect : bool, default True
-        Whether to consider sites with different elemental compositions 
-        as different sites. It is recommended to set composition=False 
-        for monometallics. Since GA is commonly used for bimetallics, 
-        the default is set to True.
 
     site_preference_from : str, defualt None
         The site type that has higher priority to detach adsorbates.
@@ -553,9 +570,9 @@ class MoveAdsorbate(AdsorbateOperator):
     def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
+                 adsorption_sites=None,
                  surface=None,
                  allow_6fold=False,
-                 composition_effect=True,
                  site_preference_from=None,
                  surface_preference_from=None,
                  site_preference_to=None,
@@ -569,9 +586,9 @@ class MoveAdsorbate(AdsorbateOperator):
 
         self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.allow_6fold = allow_6fold               
-        self.composition_effect = composition_effect
         self.site_preference_from = site_preference_from
         self.surface_preference_from = surface_preference_from
         self.site_preference_to = site_preference_to
@@ -592,13 +609,21 @@ class MoveAdsorbate(AdsorbateOperator):
             indi.append(atom)
 
         if True in indi.pbc:
-            sas = SlabAdsorptionSites(indi, self.surface,
-                                      self.allow_6fold,
-                                      self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = SlabAdsorptionSites(indi, self.surface,
+                                          self.allow_6fold, 
+                                          composition_effect=False)
             sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
         else:
-            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                         self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                             composition_effect=False)
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
@@ -675,6 +700,12 @@ class ReplaceAdsorbate(AdsorbateOperator):
         The radius of the sphere inside which no other adsorbates 
         should be found.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        genetic algorithm. Make sure all the operators used with this
+        operator preserve the indexing of the atoms.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices).
         Only required if the structure is a periodic surface slab.
@@ -682,12 +713,6 @@ class ReplaceAdsorbate(AdsorbateOperator):
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
-
-    composition_effect : bool, default True
-        Whether to consider sites with different elemental compositions 
-        as different sites. It is recommended to set composition=False 
-        for monometallics. Since GA is commonly used for bimetallics, 
-        the default is set to True.
 
     site_preference_from : str, defualt None
         The site type that has higher priority to replace adsorbates.
@@ -712,9 +737,9 @@ class ReplaceAdsorbate(AdsorbateOperator):
     def __init__(self, adsorbate_species,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
+                 adsorption_sites=None,
                  surface=None,
                  allow_6fold=False,
-                 composition_effect=True,
                  site_preference_from=None,
                  surface_preference_from=None,
                  tilt_angle=None,
@@ -726,9 +751,9 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
         self.heights = heights
         self.min_adsorbate_distance = min_adsorbate_distance
+        self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.allow_6fold = allow_6fold               
-        self.composition_effect = composition_effect
         self.site_preference_from = site_preference_from
         self.surface_preference_from = surface_preference_from
 
@@ -747,13 +772,21 @@ class ReplaceAdsorbate(AdsorbateOperator):
             indi.append(atom)
 
         if True in indi.pbc:
-            sas = SlabAdsorptionSites(indi, self.surface,
-                                      self.allow_6fold,
-                                      self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = SlabAdsorptionSites(indi, self.surface,
+                                          self.allow_6fold, 
+                                          composition_effect=False)
             sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
         else:
-            sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                         self.composition_effect)
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                             composition_effect=False)
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
@@ -805,6 +838,8 @@ class ReplaceAdsorbate(AdsorbateOperator):
 class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     """Crossover that cuts two particles with adsorbates through a plane 
     in space and merges two halfes from different particles together.
+    The indexing of the atoms is not preserved. Please only use this
+    operator if the particle is allowed to change shape.
 
     It keeps the correct composition by randomly assigning elements in
     the new particle. If some of the atoms in the two particle halves
@@ -824,6 +859,11 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         Dictionary of minimum distance between atomic numbers.
         e.g. {(28,29): 1.5}
     
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
     keep_composition : bool, default True
         Should the composition be the same as in the parents.
 
@@ -838,12 +878,6 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
 
-    composition_effect : bool, default True
-        Whether to consider sites with different elemental compositions 
-        as different sites. It is recommended to set composition=False 
-        for monometallics. Since GA is commonly used for bimetallics, 
-        the default is set to True.
-    
     rotate_vectors : list, default None
         A list of vectors that the part of the structure that is cut
         is able to rotate around, the size of rotation is set in
@@ -861,26 +895,26 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     """
 
     def __init__(self, adsorbate_species, blmin, 
+                 heights=site_heights,
                  keep_composition=True,
                  fix_coverage=False, 
                  min_adsorbate_distance=2.,
                  allow_6fold=False, 
-                 composition_effect=True,
                  rotate_vectors=None, 
                  rotate_angles=None,
                  dmax=2.5):
 
         AdsorbateOperator.__init__(self, adsorbate_species)
+        self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
+
         self.blmin = blmin
+        self.heights = heights
         self.keep_composition = keep_composition
         self.fix_coverage = fix_coverage
         self.min_adsorbate_distance = min_adsorbate_distance
         self.allow_6fold = allow_6fold              
-        self.composition_effect = composition_effect
         self.rvecs = rotate_vectors
         self.rangs = rotate_angles
-        self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
-        
         self.min_inputs = 2
         self.dmax = dmax
         
@@ -1050,7 +1084,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             indi.append(atom)
 
         pcas = ClusterAdsorptionSites(indi, self.allow_6fold, 
-                                      self.composition_effect)
+                                      composition_effect=False)
         pcac = ClusterAdsorbateCoverage(indi, pcas, dmax=self.dmax)
         pads_sites = pcac.hetero_site_list       
 
@@ -1064,14 +1098,14 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                 adsorbate_ids.update(adsi)
                 si = st['indices']
                 adsi_dict[si] = {}
-                adsi_dict[si]['height'] = st['bond_length']
+                adsi_dict[si]['height'] = self.heights[st['site']]
                 adsi_dict[si]['adsorbate'] = st['adsorbate']
                 adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']
 
         indi = pcas.atoms                
         indi.positions = pcas.ref_atoms.positions
-        cas = ClusterAdsorptionSites(indi, self.allow_6fold,         
-                                     self.composition_effect)
+        cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                     composition_effect=False)
 
         nori = len(indi) 
         for st in cas.site_list:
@@ -1092,7 +1126,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         if len(indi) == nori:
             st = random.choice(cas.site_list)
             ads_spec = random.choice(self.adsorbate_species)
-            add_adsorbate_to_site(indi, ads_spec, site=st)
+            add_adsorbate_to_site(indi, ads_spec, site=st, 
+                                  height=self.heights[st['site']])
 
         cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
         ads_sites = cac.hetero_site_list
@@ -1151,3 +1186,236 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                 min_dist = self.blmin[tuple(sorted((an[i], an[j + i])))]
                 if d < min_dist:
                     yield atoms[i].position - atoms[j + i].position, min_dist
+
+
+class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
+    """Crossover that divides two particles through a plane in space and
+    merges the symbols of two halves from different particles with 
+    adosrbates together. The indexing of the atoms is preserved. Please 
+    only use this operator with other operators that also preserves the 
+    indexing.
+
+    It keeps the correct composition by randomly assigning elements in
+    the new particle.
+
+    Parameters
+    ----------
+    adsorbate_species : str or list of strs 
+        One or a list of adsorbate species to be added to the surface.
+
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
+    keep_composition : bool, default True
+        Boolean that signifies if the composition should be the same 
+        as in the parents.
+
+    fix_coverage : bool, default False 
+        Should the adsorbate coverage be the same as in the parents.
+
+    min_adsorbate_distance : float, default 2.
+        The radius of the sphere inside which no other adsorbates 
+        should be found.
+
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        genetic algorithm. Make sure all the operators used with this
+        operator preserve the indexing of the atoms.
+
+    allow_6fold : bool, default False
+        Whether to allow the adsorption on 6-fold subsurf sites 
+        underneath fcc hollow sites.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    """
+
+    def __init__(self, adsorbate_species,
+                 heights=site_heights,
+                 keep_composition=True,
+                 fix_coverage=False, 
+                 min_adsorbate_distance=2.,
+                 adsorption_sites=None, 
+                 allow_6fold=False, 
+                 dmax=2.5):
+
+        AdsorbateOperator.__init__(self, adsorbate_species)
+        self.descriptor = 'SimpleCutSpliceCrossoverWithAdsorbates'
+
+        self.heights = heights
+        self.keep_composition = keep_composition
+        self.fix_coverage = fix_coverage
+        self.min_adsorbate_distance = min_adsorbate_distance
+        self.adsorption_sites = adsorption_sites
+        self.allow_6fold = allow_6fold              
+        self.min_inputs = 2
+        self.dmax = dmax
+        
+    def get_new_individual(self, parents):
+        f, m = parents        
+        indi = f.copy()
+
+        theta = random.random() * 2 * np.pi  # 0,2pi
+        phi = random.random() * np.pi  # 0,pi
+        e = np.array((np.sin(phi) * np.cos(theta),
+                      np.sin(theta) * np.sin(phi),
+                      np.cos(phi)))
+        eps = 0.0001
+        
+        f.translate(-f.get_center_of_mass())
+        m.translate(-m.get_center_of_mass())
+        
+        # Get the signed distance to the cutting plane
+        # We want one side from f and the other side from m
+        mids, fids, rmids = [], [], []
+        for i, x in enumerate(f.get_positions()):
+            if np.dot(x, e) > 0:
+                if f[i].symbol in adsorbate_elements:
+                    rmids.append(i)
+                else:
+                    mids.append(i)
+            else:
+                if f[i].symbol not in adsorbate_elements:
+                    fids.append(i)
+
+        # Change half of f symbols to the half of m symbols
+        for i in mids:
+            indi[i].symbol = m[i].symbol
+
+        # Check that the correct composition is employed
+        if self.keep_composition:
+            opt_sm = sorted([a.number for a in f if a.symbol 
+                             not in adsorbate_elements])
+            tmpf_numbers = list(indi.numbers[fids])
+            tmpm_numbers = list(indi.numbers[mids])
+            cur_sm = sorted(tmpf_numbers + tmpm_numbers)
+            # correct_by: dictionary that specifies how many
+            # of the atom_numbers should be removed (a negative number)
+            # or added (a positive number)
+            correct_by = dict([(j, opt_sm.count(j)) for j in set(opt_sm)])
+            for n in cur_sm:
+                correct_by[n] -= 1
+            correct_ids = random.choice([fids, mids])
+            to_add, to_rem = [], []
+            for num, amount in correct_by.items():
+                if amount > 0:
+                    to_add.extend([num] * amount)
+                elif amount < 0:
+                    to_rem.extend([num] * abs(amount))
+            for add, rem in zip(to_add, to_rem):
+                tbc = [i for i in correct_ids if indi[i].number == rem]
+                if len(tbc) == 0:
+                    pass
+                ai = random.choice(tbc)
+                indi[ai].number = add
+
+        # Place adsorbates from half of m and remove adsorbates from
+        # half of f
+        if self.adsorption_sites is not None:
+            cas = self.adsorption_sites
+            cas.update(indi)
+        else:
+            cas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                         composition_effect=False)
+        fcac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        fhsl = fcac.hetero_site_list
+        mcac = ClusterAdsorbateCoverage(m, cas, dmax=self.dmax)
+        mhsl = mcac.hetero_site_list
+
+        rmset = set(rmids)
+        rmsites = []
+        for st in fhsl:
+            if st['occupied']:
+                if not set(st['adsorbate_indices']).isdisjoint(rmset):
+                    rmsites.append(st)
+        remove_adsorbates_from_sites(indi, sites=rmsites) 
+
+        mset = set(mids)
+        adsi_dict = {}
+        adsorbate_ids = set()      
+        for st in mhsl:
+            if st['occupied']:
+                si = st['indices']
+                if set(si).issubset(mset):
+                    adsi = st['adsorbate_indices']
+                    if set(adsi).issubset(adsorbate_ids):
+                        continue
+                    adsorbate_ids.update(adsi)
+                    si = st['indices']
+                    adsi_dict[si] = {}
+                    adsi_dict[si]['height'] = self.heights[st['site']]
+                    adsi_dict[si]['adsorbate'] = st['adsorbate']
+                    adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']        
+
+        nori = len(indi) 
+        for st in cas.site_list:
+            si = st['indices']
+            if si in adsi_dict:
+                adsorbate = adsi_dict[si]['adsorbate']
+                height = adsi_dict[si]['height']    
+                add_adsorbate_to_site(indi, adsorbate, st, height)
+
+                # Make sure no adsorbates too close to each other 
+                # after each adsorbate addition
+                nads = len(adsi_dict[si]['adsorbate_indices'])
+                if atoms_too_close_after_addition(indi, nads,
+                self.min_adsorbate_distance, mic=False):
+                    indi = indi[:-nads]                               
+
+        # Add adsorbate if no adsorbate is present
+        if len(indi) == nori:
+            st = random.choice(cas.site_list)
+            ads_spec = random.choice(self.adsorbate_species)
+            add_adsorbate_to_site(indi, ads_spec, site=st, 
+                                  height=self.heights[st['site']])
+
+        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        ads_sites = cac.hetero_site_list
+
+        if self.fix_coverage:
+            # Remove or add adsorbates as needed
+            adsorbates_in_child = self.get_all_adsorbate_indices(indi)
+            diff = len(adsorbates_in_child) - adsorbates_in_parents
+            if diff < 0:
+                # Add adsorbates
+                for _ in range(abs(diff)):
+                    self.add_adsorbate(indi, ads_sites, site_heights,
+                                       self.adsorbate_species,
+                                       self.min_adsorbate_distance)
+                cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+
+            elif diff > 0:
+                # Remove adsorbates
+                tbr = random.sample(adsorbates_in_child, diff)  # to be removed
+                for adsorbate_indices in sorted(tbr, reverse=True):
+                    for i in adsorbate_indices[::-1]:
+                        indi.pop(i)                
+                cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+
+        indi = self.initialize_individual(f, indi)
+        indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
+        indi.info['data']['operation'] = 'crossover'
+        indi.info['data']['adsorbates'] = cac.get_adsorbates()
+        parent_message = ':Parents {0} {1}'.format(f.info['confid'],
+                                                   m.info['confid'])
+        return (self.finalize_individual(indi),
+                self.descriptor + parent_message)
+
+    def get_numbers(self, atoms):
+        """Returns the atomic numbers of the atoms object
+        without adsorbates"""
+        ac = atoms.copy()
+        del ac[[a.index for a in ac
+                if a.symbol in adsorbate_elements]]
+        return ac.numbers
+
+    def get_atoms_without_adsorbates(self, atoms):
+        ac = atoms.copy()
+        del ac[[a.index for a in ac
+                if a.symbol in adsorbate_elements]]
+        return ac

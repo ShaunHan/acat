@@ -10,8 +10,8 @@ Operate adsorbate
     :show-inheritance:
     :exclude-members: add_adsorbate, add_adsorbate_to_site, add_adsorbate_to_label, remove_adsorbate_from_site, remove_adsorbates_from_sites, remove_adsorbates_too_close
 
-add_adsorbate function
-~~~~~~~~~~~~~~~~~~~~~~
+The add_adsorbate function
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: add_adsorbate
                
@@ -37,8 +37,8 @@ add_adsorbate function
        :scale: 70 %
        :align: center
 
-add_adsorbate_to_site function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The add_adsorbate_to_site function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: add_adsorbate_to_site
 
@@ -64,7 +64,7 @@ add_adsorbate_to_site function
        :align: center
 
     To add a bidentate CH3OH to the (54, 57, 58) site on a Pt fcc111 
-    surface slab and rotate the orientation to a neighbor site:
+    surface slab and rotate to the orientation of a neighbor site:
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorption_sites import get_adsorption_site
@@ -91,8 +91,8 @@ add_adsorbate_to_site function
        :scale: 70 %
        :align: center
 
-add_adsorbate_to_label function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The add_adsorbate_to_label function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: add_adsorbate_to_label
 
@@ -119,8 +119,8 @@ add_adsorbate_to_label function
        :scale: 70 %
        :align: center
 
-remove_adsorbate_from_site function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The remove_adsorbate_from_site function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: remove_adsorbate_from_site
 
@@ -150,8 +150,8 @@ remove_adsorbate_from_site function
     .. image:: ../images/remove_adsorbate_from_site.png
        :scale: 60 %
 
-remove_adsorbates_from_sites function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The remove_adsorbates_from_sites function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: remove_adsorbates_from_sites
 
@@ -183,8 +183,8 @@ remove_adsorbates_from_sites function
     .. image:: ../images/remove_adsorbates_from_sites.png
        :scale: 60 %
 
-remove_adsorbates_too_close function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The remove_adsorbates_too_close function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: remove_adsorbates_too_close
 
@@ -217,8 +217,8 @@ Generate adsorbate overlayer patterns
     :show-inheritance:
     :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, ordered_coverage_pattern, full_coverage_pattern, random_coverage_pattern
 
-StochasticPatternGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The StochasticPatternGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: StochasticPatternGenerator
 
@@ -227,9 +227,10 @@ StochasticPatternGenerator class
     **Example**
 
     The following example illustrates how to generate 100 stochastic
-    adsorbate overlayer patterns with CO, OH, CH3 and CHO, based on 
-    10 Pt fcc111 surface slabs with random C and O coverages, where 
-    CH3 is forbidden to be added to ontop and bridge sites:
+    adsorbate overlayer patterns with one more adsorbate chosen from 
+    CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface slabs with 
+    random C and O coverages, where CH3 is forbidden to be added to 
+    ontop and bridge sites:
 
         >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
         >>> from acat.build.overlayer import random_coverage_pattern
@@ -302,8 +303,38 @@ StochasticPatternGenerator class
        :scale: 60 %
        :align: center
 
-SystematicPatternGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    The following example illustrates how to generate 20 stochastic
+    adsorbate overlayer patterns with 5 adsorbates chosen from CO, OH 
+    and N, on 10 quaternary cuboctahedral nanoalloys with random 
+    chemical orderings. The minimum adsorbate distance is set to 3 
+    Angstrom and duplicate patterns are allowed (very unlikely for 
+    nanoparticles):
+
+        >>> from acat.adsorption_sites import ClusterAdsorptionSites
+        >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.ordering import RandomOrderingGenerator as ROG
+        >>> from ase.cluster import Octahedron
+        >>> from ase.io import read
+        >>> from ase.visualize import view
+        >>> atoms = Octahedron('Ni', length=5, cutoff=2)
+        >>> atoms.center(vacuum=5.)
+        >>> rog = ROG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'])
+        >>> rog.run(num_gen=10)
+        >>> particles = read('orderings.traj', index=':')
+        >>> spg = SPG(particles, adsorbate_species=['CO','OH','N'],
+        ...           min_adsorbate_distance=3.,
+        ...           composition_effect=True)
+        >>> spg.run(num_gen=20, action='add', num_act=5, unique=False)
+        >>> images = read('patterns.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+    .. image:: ../images/StochasticPatternGenerator3.gif
+
+
+The SystematicPatternGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: SystematicPatternGenerator
 
@@ -339,7 +370,7 @@ SystematicPatternGenerator class
     .. image:: ../images/SystematicPatternGenerator1.gif
 
     The following example illustrates how to enumerate all unique coverage
-    paterns consists of 3 adsorbates choosen from C, N and O on a bimetallic 
+    patterns consists of 3 adsorbates chosen from C, N and O on a bimetallic 
     bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom 
     (here only generate a maximum of 100 unique patterns):
 
@@ -370,8 +401,8 @@ SystematicPatternGenerator class
        :scale: 40 %
        :align: center
  
-ordered_coverage_pattern function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ordered_coverage_pattern function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: ordered_coverage_pattern
 
@@ -408,8 +439,8 @@ ordered_coverage_pattern function
 
     .. image:: ../images/ordered_coverage_pattern_2.png
 
-full_coverage_pattern function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The full_coverage_pattern function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: full_coverage_pattern
 
@@ -444,8 +475,8 @@ full_coverage_pattern function
 
     .. image:: ../images/full_coverage_pattern_2.png
 
-random_coverage_pattern function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The random_coverage_pattern function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: random_coverage_pattern
 
@@ -528,8 +559,8 @@ Generate alloy chemical orderings
     :show-inheritance:
     :exclude-members: SymmetricClusterOrderingGenerator, RandomOrderingGenerator
 
-SymmetricClusterOrderingGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The SymmetricClusterOrderingGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: SymmetricClusterOrderingGenerator
 
@@ -607,8 +638,8 @@ SymmetricClusterOrderingGenerator class
        :scale: 60 %
        :align: center
 
-OrderedSlabOrderingGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The OrderedSlabOrderingGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: OrderedSlabOrderingGenerator
 
@@ -628,7 +659,7 @@ OrderedSlabOrderingGenerator class
         >>> atoms = fcc111('Ni', (6, 6, 4), vacuum=5.)
         >>> atoms.center()
         >>> osog = OSOG(atoms, elements=['Ni', 'Pt', 'Au'],
-        ...             reducing_size=(3, 3)) 
+        ...             repeating_size=(3, 3)) 
         >>> osog.run(max_gen=50, mode='stochastic', verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
@@ -653,7 +684,7 @@ OrderedSlabOrderingGenerator class
         >>> atoms.center()
         >>> osog = OSOG(atoms, elements=['Ni', 'Pt'],
         ...             composition={'Ni': 0.75, 'Pt': 0.25},
-        ...             reducing_size=(2, 2)) 
+        ...             repeating_size=(2, 2)) 
         >>> osog.run(max_gen=50, verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
@@ -667,8 +698,8 @@ OrderedSlabOrderingGenerator class
        :scale: 60 %
        :align: center
 
-RandomOrderingGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The RandomOrderingGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: RandomOrderingGenerator       
 

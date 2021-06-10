@@ -1,3 +1,5 @@
+from itertools import product 
+
 # Use this label dictionary when site compostion is 
 # not considered. Useful for monometallic clusters.
 def get_monometallic_cluster_labels():
@@ -11,7 +13,7 @@ def get_monometallic_cluster_labels():
             'fcc|fcc111': 8,
             'hcp|fcc111': 9,
             '4fold|fcc100': 10,
-            '6fold|fcc111': 11}
+            '6fold|subsurf': 11}
 
 
 # Use this label dictionary when site compostion is 
@@ -50,30 +52,62 @@ def get_bimetallic_cluster_labels(metals):
             '4fold|fcc100|{}{}{}{}'.format(ma,mb,ma,mb): 29, 
             '4fold|fcc100|{}{}{}{}'.format(ma,mb,mb,mb): 30,
             '4fold|fcc100|{}{}{}{}'.format(mb,mb,mb,mb): 31,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 32,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 33,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 34,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 35,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 36,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 37,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 38,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 39,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 40,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 41,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 42,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 43,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 44,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 45,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 46,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 47,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 48,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 49,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 50,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 51,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 52,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 53,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 54,
-            '6fold|fcc111|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 55}
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,ma): 32,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,ma,mb): 33,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,ma,ma): 34,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,ma,mb,mb): 35,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,ma): 36,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,ma,mb,mb,mb): 37,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,ma): 38,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,ma,mb): 39,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,ma,ma): 40,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,ma,mb,mb): 41,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,ma): 42,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,ma,mb,mb,mb,mb): 43,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,ma): 44,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,ma,mb): 45,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,ma,ma): 46,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,ma,mb,mb): 47,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,ma): 48,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(ma,mb,mb,mb,mb,mb): 49,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,ma): 50,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,ma,mb): 51,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,ma,ma): 52,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,ma,mb,mb): 53,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,ma): 54,
+            '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 55}
+
+
+# Use this label dictionary when site compostion is 
+# considered. Useful for clusters with arbitrary number
+# of components.
+def get_multimetallic_cluster_labels(metals): 
+    relations = {'ontop': ['vertex','edge','fcc111','fcc100'],
+                 'bridge': ['edge','fcc111','fcc100'],
+                 'fcc': ['fcc111'],
+                 'hcp': ['fcc111'],
+                 '4fold': ['fcc100'],
+                 '6fold': ['subsurf']}
+    d = {}
+    count = 0 
+    for k, vs in relations.items():
+        if k == 'ontop':
+            n = 1
+        elif k == 'bridge':
+            n = 2
+        elif k in ['fcc','hcp']:
+            n = 3
+        elif k == '4fold':
+            n = 4
+        elif k == '6fold':
+            n = 6
+        for v in vs:
+            for p in product(metals, repeat=n):
+                comp = ''.join(p)
+                count += 1
+                d['{0}|{1}|{2}'.format(k, v, comp)] = count    
+                
+    return d
 
 
 # Use this label dictionary when site compostion is 
@@ -161,17 +195,17 @@ def get_monometallic_slab_labels(surface):
                 'fcc|terrace': 10,
                 'fcc|sc-tc-h': 11,
                 'fcc|tc-cc-h': 12,
-                'hcp|terrace': 13,
-                'hcp|sc-tc-h': 14, 
-                'hcp|tc-cc-h': 15,
-                'fcc|sc-cc-h': 16,
+                'fcc|sc-cc-h': 13,
+                'hcp|terrace': 14,
+                'hcp|sc-tc-h': 15, 
+                'hcp|tc-cc-h': 16,
                 'hcp|sc-cc-h': 17,
                 '6fold|subsurf': 18}
 
     elif surface == 'bcc110':
         return {'ontop|terrace': 1,
-                'longbridge|terrace': 2,
-                'shortbridge|terrace': 3,
+                'shortbridge|terrace': 2,
+                'longbridge|terrace': 3,
                 '3fold|terrace': 4}
               
     elif surface == 'bcc111':           
@@ -979,19 +1013,163 @@ def get_bimetallic_slab_labels(surface, metals):
                 '6fold|subsurf|{}{}{}{}{}{}'.format(mb,mb,mb,mb,mb,mb): 70}
 
 
-def get_cluster_signature_from_label(label, composition_effect=False, metals=None):
+# Use this label dictionary when site compostion is 
+# considered. Useful for slabs with arbitrary number
+# of components.
+def get_multimetallic_slab_labels(surface, metals): 
+    if surface in ['fcc111','hcp0001']:
+        relations = {'ontop': ['terrace'],
+                     'bridge': ['terrace'],
+                     'fcc': ['terrace'],
+                     'hcp': ['terrace'],
+                     '6fold': ['subsurf']}
+
+    elif surface in ['fcc100','bcc100']:
+        relations = {'ontop': ['terrace'],
+                     'bridge': ['terrace'],
+                     '4fold': ['terrace']}
+
+    elif surface in ['fcc110','hcp10m10h']:
+        relations = {'ontop': ['step'], 
+                     'bridge': ['step','sc-tc-h'],
+                     'fcc': ['sc-tc-h'],
+                     'hcp': ['sc-tc-h'],
+                     '4fold': ['terrace'],
+                     '5fold': ['terrace'],
+                     '6fold': ['subsurf']}
+
+    elif surface == 'fcc211':
+        relations = {'ontop': ['step','terrace','corner'],
+                     'bridge': ['step','terrace','corner','sc-tc-h','tc-cc-h','sc-cc-t'],
+                     'fcc': ['sc-tc-h','tc-cc-h'],
+                     'hcp': ['sc-tc-h','tc-cc-h'],
+                     '4fold': ['sc-cc-t'],
+                     '6fold': ['subsurf']}
+
+    elif surface in ['fcc311','fcc331']:
+        relations = {'ontop': ['step','terrace'],
+                     'bridge': ['step','terrace','sc-tc-h','sc-tc-t'],
+                     'fcc': ['sc-tc-h'],
+                     'hcp': ['sc-tc-h'],
+                     '4fold': ['sc-tc-t'],
+                     '6fold': ['subsurf']}
+
+    elif surface == 'fcc322':
+        relations = {'ontop': ['step','terrace','corner'],
+                     'bridge': ['step','terrace','corner','sc-tc-h','tc-cc-h','sc-cc-t'],
+                     'fcc': ['terrace','sc-tc-h','tc-cc-h'],
+                     'hcp': ['terrace','sc-tc-h','tc-cc-h'],
+                     '4fold': ['sc-cc-t'],
+                     '6fold': ['subsurf']}
+
+    elif surface in ['fcc221','fcc332']:
+        relations = {'ontop': ['step','terrace','corner'],
+                     'bridge': ['step','terrace','corner','sc-tc-h','tc-cc-h','sc-cc-h'],
+                     'fcc': ['terrace','sc-tc-h','tc-cc-h'],
+                     'hcp': ['terrace','sc-tc-h','tc-cc-h'],
+                     '6fold': ['subsurf']}
+
+    elif surface == 'bcc110':
+        relations = {'ontop': ['terrace'],
+                     'shortbridge': ['terrace'],
+                     'longbridge': ['terrace'],
+                     '3fold': ['terrace']}
+
+    elif surface == 'bcc111':
+        relations = {'ontop': ['step','terrace','corner'],
+                     'shortbridge': ['sc-tc-o','tc-cc-o'],
+                     'longbridge': ['sc-cc-o'],
+                     '3fold': ['sc-tc-cc-o']}
+
+    elif surface == 'bcc210':
+        relations = {'ontop': ['step','terrace','corner'],
+                     'bridge': ['step','terrace','corner','sc-tc-o','tc-cc-o','sc-cc-t'],
+                     '3fold': ['sc-tc-o','tc-cc-o'],
+                     '4fold': ['sc-cc-t']}
+
+    elif surface == 'bcc211':
+        relations = {'ontop': ['step'], 
+                     'bridge': ['step','sc-tc-o'],
+                     '3fold': ['sc-tc-o'],
+                     '4fold': ['terrace'],
+                     '5fold': ['terrace']}
+
+    elif surface == 'bcc310':
+        relations = {'ontop': ['step','terrace'],
+                     'bridge': ['step','terrace','sc-tc-o','sc-tc-t'],
+                     '3fold': ['sc-tc-o'],
+                     '4fold': ['sc-tc-t']}
+
+    elif surface == 'hcp10m10t':
+        relations = {'ontop': ['step','terrace'],
+                     'bridge': ['step','terrace','sc-tc-t'],
+                     '5fold': ['subsurf']}
+
+    elif surface == 'hcp10m11':
+        relations = {'ontop': ['step','terrace'],
+                     'bridge': ['step','terrace','sc-tc-h'],
+                     'fcc': ['sc-tc-h'],
+                     'hcp': ['sc-tc-h'],
+                     '4fold': ['subsurf'],
+                     '5fold': ['subsurf'],
+                     '6fold': ['subsurf']}
+
+    elif surface == 'hcp10m12':
+        relations = {'ontop': ['step','terrace','corner'],
+                     'bridge': ['step','terrace','corner','sc-tc-h','tc-cc-t','sc-cc-h'],
+                     'fcc': ['sc-tc-h','sc-cc-h'],
+                     'hcp': ['sc-tc-h','sc-cc-h'],
+                     '4fold': ['tc-cc-t'],
+                     '6fold': ['subsurf']}
+
+    d = {}
+    count = 0 
+    for k, vs in relations.items():
+        if k == 'ontop':
+            n = 1
+        elif k in ['bridge','shortbridge','longbridge']:
+            n = 2
+        elif k in ['fcc','hcp','3fold']:
+            n = 3
+        elif k == '4fold':
+            n = 4
+        elif k == '5fold':
+            n = 5
+        elif k == '6fold':
+            n = 6
+        for v in vs:
+            for p in product(metals, repeat=n):
+                if k == '5fold':
+                    comp = str(p[0]) + '-' + ''.join(p[1:])
+                elif k == '4fold' and surface in ['fcc110','hcp10m10h','bcc211','hcp10m11']:
+                    comp = ''.join(p[:2]) + '-' + ''.join(p[2:])
+                else: 
+                    comp = ''.join(p)
+                count += 1
+                d['{0}|{1}|{2}'.format(k, v, comp)] = count 
+                
+    return d
+
+
+def get_cluster_signature_from_label(label, composition_effect=False, metals=[]):
     if not composition_effect:
         label_dict = get_monometallic_cluster_labels()
     else:
-        label_dict = get_bimetallic_cluster_labels(metals)
+        if len(metals) <= 2:
+            label_dict = get_bimetallic_cluster_labels(metals)
+        else:
+            label_dict = get_multimetallic_cluser_labels(metals)
 
     return list(label_dict.keys())[list(label_dict.values()).index(int(label))]
 
 
-def get_slab_signature_from_label(label, surface, composition_effect=False, metals=None):
+def get_slab_signature_from_label(label, surface, composition_effect=False, metals=[]):
     if not composition_effect:
         label_dict = get_monometallic_slab_labels(surface)
     else:
-        label_dict = get_bimetallic_slab_labels(surface, metals)
+        if len(metals) <= 2:
+            label_dict = get_bimetallic_slab_labels(surface, metals)
+        else:
+            label_dict = get_multimetallic_slab_labels(surface, metals)
 
     return list(label_dict.keys())[list(label_dict.values()).index(int(label))]

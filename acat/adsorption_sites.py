@@ -2,8 +2,9 @@ from .settings import adsorbate_elements, site_heights
 from .utilities import expand_cell, get_mic 
 from .utilities import is_list_or_tuple, get_max_delta_sum_path  
 from .utilities import neighbor_shell_list, get_connectivity_matrix
-from .labels import get_monometallic_cluster_labels, get_bimetallic_cluster_labels
-from .labels import get_monometallic_slab_labels, get_bimetallic_slab_labels
+from .labels import get_monometallic_cluster_labels, get_monometallic_slab_labels
+from .labels import get_bimetallic_cluster_labels, get_bimetallic_slab_labels
+from .labels import get_multimetallic_cluster_labels, get_multimetallic_slab_labels
 from ase.data import reference_states, atomic_numbers, chemical_symbols
 from ase.geometry import find_mic
 from ase.optimize import BFGS, FIRE
@@ -74,8 +75,7 @@ class ClusterAdsorptionSites(object):
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
         Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels. Currently only
-        support labelling of monometallics and bimetallics.
+        otherwise use the monometallic labels.
 
     proxy_metal : str, default None
         The code is parameterized for pure transition metals.
@@ -154,20 +154,17 @@ class ClusterAdsorptionSites(object):
         self.pbc = atoms.pbc
         self.metals = sorted(list(set(atoms.symbols)), 
                              key=lambda x: atomic_numbers[x])
-        if label_sites:
-            assert len(self.metals) in [1, 2], \
-            'only support labelling of monometallics and bimetallics'
         self.label_sites = label_sites
 
-        if len(self.metals) > 2:
-            self.label_dict = {}
-        else:
-            if self.composition_effect:
+        if self.composition_effect:
+            if len(self.metals) <= 2:
                 if len(self.metals) == 1:
-                    self.metals *= 2
+                    self.metals *= 2                
                 self.label_dict = get_bimetallic_cluster_labels(self.metals)
-            else: 
-                self.label_dict = get_monometallic_cluster_labels()
+            else:
+                self.label_dict = get_multimetallic_cluster_labels(self.metals)
+        else: 
+            self.label_dict = get_monometallic_cluster_labels()
 
         self.fullCNA = {}
         self.make_fullCNA()
@@ -1066,8 +1063,7 @@ class SlabAdsorptionSites(object):
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
         Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels. Current only 
-        support labelling of monometallics and bimetallics.
+        otherwise use the monometallic labels.
 
     proxy_metal : str, default None
         The code is parameterized for pure transition metals.
@@ -1150,21 +1146,17 @@ class SlabAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.both_sides = both_sides
-
-        if label_sites:
-            assert len(self.metals) in [1, 2], \
-            'only support labelling of monometallics and bimetallics'
         self.label_sites = label_sites
 
-        if len(self.metals) > 2:
-            self.label_dict = {}
-        else:
-            if self.composition_effect:
+        if self.composition_effect:
+            if len(self.metals) <= 2:
                 if len(self.metals) == 1:
                     self.metals *= 2
                 self.label_dict = get_bimetallic_slab_labels(self.surface, self.metals)
             else:
-                self.label_dict = get_monometallic_slab_labels(self.surface)    
+                self.label_dict = get_multimetallic_slab_labels(self.surface, self.metals)
+        else:
+            self.label_dict = get_monometallic_slab_labels(self.surface)    
         self.tol = tol 
 
         self.make_neighbor_list(neighbor_number=1) 
@@ -2726,8 +2718,7 @@ def enumerate_adsorption_sites(atoms, surface=None,
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
         Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels. Currently only
-        support labelling of monometallics and bimetallics.
+        otherwise use the monometallic labels.
 
     Example
     -------
