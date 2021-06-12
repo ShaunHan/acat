@@ -96,8 +96,7 @@ class SymmetricClusterOrderingGenerator(object):
         Generate symmetric orderings only at a certain composition.
         The dictionary contains the metal elements as keys and their 
         concentrations as values. Generate orderings at all compositions 
-        if not specified. Note that the computational cost scales badly 
-        with the number of groups for a fixed-composition search.
+        if not specified. 
 
     trajectory : str, default 'orderings.traj'
         The name of the output ase trajectory file.
@@ -128,10 +127,7 @@ class SymmetricClusterOrderingGenerator(object):
         if self.composition is not None:
             ks = list(self.composition.keys())
             assert set(ks) == set(self.elements)
-            vs = list(self.composition.values())
-            nums = numbers_from_ratio(len(self.atoms), vs)
-            self.num_dict = {ks[i]: nums[i] for i in range(len(ks))}
-
+        
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
         self.append_trajectory = append_trajectory
@@ -314,26 +310,34 @@ class SymmetricClusterOrderingGenerator(object):
  
         return groups
 
-    def run(self, max_gen=None, mode='systematic', verbose=False):
+    def run(self, max_gen=None, mode='systematic', eps=0.01, verbose=False):
         """Run the chemical ordering generator.
 
         Parameters
         ----------
         max_gen : int, default None
-            Maximum number of chemical orderings to generate. Enumerate
-            all symetric patterns if not specified. 
+            Maximum number of chemical orderings to generate. Running
+            forever (until exhaustive for systematic search) if not 
+            specified. 
 
         mode : str, default 'systematic'
             **'systematic'**: enumerate all possible unique chemical 
             orderings. Recommended when there are not many groups. Switch
             to stochastic mode automatically if the number of groups is
-            more than 20. This mode is the only option when the 
-            composition is fixed.
+            more than 20 (30 if composition is fixed since there are much
+            fewer structures).
 
             **'stochastic'**: sample chemical orderings stochastically.
             Duplicate structures can be generated. Recommended when there 
-            are many groups. Switch to systematic mode automatically if 
-            the composition is fixed.
+            are many groups. A greedy algorithm is employed if the 
+            composition is fixed, which might result in slightly different
+            compositions. This can be controled by eps.
+
+        eps : float, default 0.01
+            The tolerance of the concentration for each element. Only 
+            relevant for generating fixed-composition symmetric nanoalloys 
+            using 'stochastic' mode. Set to 0 if you want the exact
+            composition accurate to one atom.
 
         verbose : bool, default False 
             Whether to print out information about number of groups and
@@ -348,22 +352,83 @@ class SymmetricClusterOrderingGenerator(object):
         ngroups = len(groups)
         n_write = 0
         if verbose:
-            print('{} groups classified'.format(ngroups))
+            print('{} symmetry-equivalent groups classified'.format(ngroups))
 
         if self.composition is not None:
-            keys = list(self.num_dict.keys())
-            totals = list(self.num_dict.values())
-            if max_gen is None:
-                max_gen = -1             
- 
-            for part in partitions_into_totals(groups, totals):
-                for j in range(len(totals)):
-                    ids = [i for group in part[j] for i in group] 
-                    atoms.symbols[ids] = len(ids) * keys[j]
-                traj.write(atoms)
-                n_write += 1
-                if n_write == max_gen:
-                    break
+            natoms = len(atoms)
+            keys = list(self.composition.keys())
+            ratios = list(self.composition.values())
+
+            if mode == 'systematic':
+                if ngroups > 30:
+                    if verbose:
+                        print('{} groups is infeasible for systematic'.format(ngroups), 
+                              'generator. Use stochastic generator instead')
+                    mode = 'stochastic'
+
+                else:
+                    totals = numbers_from_ratio(natoms, ratios) 
+                    if max_gen is None:
+                        max_gen = -1               
+
+                    for part in partitions_into_totals(groups, totals):
+                        for j in range(len(totals)):
+                            ids = [i for group in part[j] for i in group] 
+                            atoms.symbols[ids] = len(ids) * keys[j]
+                        traj.write(atoms)
+                        n_write += 1
+                        if n_write == max_gen:
+                            break
+
+            if mode == 'stochastic':
+                if max_gen is None:
+                    max_gen = math.inf
+                nele = len(ratios)
+                sor = sum(ratios)
+
+                while n_write < max_gen:
+                    # get a new random permutation
+                    lst = groups.copy()
+                    random.shuffle(lst)
+                    partition = []                    
+                    # starting index (in the permutation) of the current sublist
+                    lo = 0
+                    # permutation partial sum
+                    s = 0
+                    # index of sublist we are currently generating (i.e. what ratio we are on)
+                    k = 0
+                    # ratio partial sum
+                    rs = ratios[k]
+                    
+                    for i in range(ngroups):
+                        s += len(lst[i])
+                        
+                        # if ratio of permutation partial sum exceeds ratio of ratio partial sum,
+                        # the current sublist is "complete"
+                        if s / natoms >= rs / sor:
+                            partition.append(lst[lo:i+1])
+                            # start creating new sublist from next element
+                            lo = i + 1
+                            k += 1
+                            if k == nele:
+                                # done with partition
+                                # remaining elements will always all be zeroes 
+                                partition[-1].extend(lst[i+1:])
+                                break
+                            rs += ratios[k]
+                    
+                    # continue if there is any empty subset
+                    if len(partition) != nele:
+                        continue
+                    partition = [[i for p in part for i in p] for part in partition]
+
+                    if all(math.isclose(ratios[i] / sor, len(part) / natoms, abs_tol=eps) 
+                    for (i, part) in enumerate(partition)):
+                        for j in range(nele):
+                            ids = partition[j]
+                            atoms.symbols[ids] = len(ids) * keys[j]
+                        traj.write(atoms)
+                        n_write += 1
 
         else: 
             # When the number of groups is too large (> 20), systematic enumeration 
@@ -390,7 +455,7 @@ class SymmetricClusterOrderingGenerator(object):
                 combos = set()
                 too_few = (2 ** ngroups * 0.95 <= max_gen)
                 if too_few and verbose:
-                    print('Too few groups. The generated images are not all unique.')
+                    print('Too few groups. Will generate duplicate images.')
                 while True:
                     combo = tuple(np.random.choice(self.elements, size=ngroups))
                     if combo not in combos or too_few: 
@@ -434,9 +499,7 @@ class OrderedSlabOrderingGenerator(object):
         Generate ordered orderings only at a certain composition. 
         The dictionary contains the metal elements as keys and their 
         concentrations as values. Generate orderings at all 
-        compositions if not specified. Note that the computational 
-        cost scales badly with the number of groups for a 
-        fixed-composition search.
+        compositions if not specified. 
 
     dtol : float, default 0.01
         The distance tolerance (in Angstrom) when comparing with 
@@ -475,9 +538,6 @@ class OrderedSlabOrderingGenerator(object):
         if self.composition is not None:
             ks = list(self.composition.keys())
             assert set(ks) == set(self.elements)
-            vs = list(self.composition.values())
-            nums = numbers_from_ratio(len(self.atoms), vs)
-            self.num_dict = {ks[i]: nums[i] for i in range(len(ks))}
 
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
@@ -523,26 +583,34 @@ class OrderedSlabOrderingGenerator(object):
 
         return groups
 
-    def run(self, max_gen=None, mode='systematic', verbose=False):
+    def run(self, max_gen=None, mode='systematic', eps=0.01, verbose=False):
         """Run the chemical ordering generator.
 
         Parameters
         ----------
         max_gen : int, default None
-            Maximum number of chemical orderings to generate. Enumerate
-            all symetric patterns if not specified. 
+            Maximum number of chemical orderings to generate. Running
+            forever (until exhaustive for systematic search) if not 
+            specified. 
 
         mode : str, default 'systematic'
             **'systematic'**: enumerate all possible unique chemical 
             orderings. Recommended when there are not many groups. Switch
             to stochastic mode automatically if the number of groups is
-            more than 20. This mode is the only option when the 
-            composition is fixed.
+            more than 20 (30 if composition is fixed since there are much
+            fewer structures).
 
             **'stochastic'**: sample chemical orderings stochastically.
             Duplicate structures can be generated. Recommended when there 
-            are many groups. Switch to systematic mode automatically if 
-            the composition is fixed.
+            are many groups. A greedy algorithm is employed if the 
+            composition is fixed, which might result in slightly different
+            compositions. This can be controled by eps.
+
+        eps : float, default 0.01
+            The tolerance of the concentration for each element. Only 
+            relevant for generating fixed-composition symmetric nanoalloys 
+            using 'stochastic' mode. Set to 0 if you want the exact
+            composition accurate to one atom.
 
         verbose : bool, default False 
             Whether to print out information about number of groups and
@@ -557,22 +625,82 @@ class OrderedSlabOrderingGenerator(object):
         ngroups = len(groups)
         n_write = 0
         if verbose:
-            print('{} groups classified'.format(ngroups))
+            print('{} symmetry-equivalent groups classified'.format(ngroups))
 
         if self.composition is not None:
-            keys = list(self.num_dict.keys())
-            totals = list(self.num_dict.values())
-            if max_gen is None:
-                max_gen = -1             
- 
-            for part in partitions_into_totals(groups, totals):
-                for j in range(len(totals)):
-                    ids = [i for group in part[j] for i in group] 
-                    atoms.symbols[ids] = len(ids) * keys[j]
-                traj.write(atoms)
-                n_write += 1
-                if n_write == max_gen:
-                    break
+            natoms = len(atoms)
+            keys = list(self.composition.keys())
+            ratios = list(self.composition.values())
+
+            if mode == 'systematic':
+                if ngroups > 30:
+                    if verbose:
+                        print('{} groups is infeasible for systematic'.format(ngroups), 
+                              'generator. Use stochastic generator instead')
+                    mode = 'stochastic'
+                else:
+                    totals = numbers_from_ratio(natoms, ratios)
+                    if max_gen is None:
+                        max_gen = -1             
+   
+                    for part in partitions_into_totals(groups, totals):
+                        for j in range(len(totals)):
+                            ids = [i for group in part[j] for i in group] 
+                            atoms.symbols[ids] = len(ids) * keys[j]
+                        traj.write(atoms)
+                        n_write += 1
+                        if n_write == max_gen:
+                            break
+
+            if mode == 'stochastic':
+                if max_gen is None:
+                    max_gen = math.inf
+                nele = len(ratios)
+                sor = sum(ratios)
+
+                while n_write < max_gen:
+                    # get a new random permutation
+                    lst = groups.copy()
+                    random.shuffle(lst)
+                    partition = []                    
+                    # starting index (in the permutation) of the current sublist
+                    lo = 0
+                    # permutation partial sum
+                    s = 0
+                    # index of sublist we are currently generating (i.e. what ratio we are on)
+                    k = 0
+                    # ratio partial sum
+                    rs = ratios[k]
+                    
+                    for i in range(ngroups):
+                        s += len(lst[i])
+                        
+                        # if ratio of permutation partial sum exceeds ratio of ratio partial sum,
+                        # the current sublist is "complete"
+                        if s / natoms >= rs / sor:
+                            partition.append(lst[lo:i+1])
+                            # start creating new sublist from next element
+                            lo = i + 1
+                            k += 1
+                            if k == nele:
+                                # done with partition
+                                # remaining elements will always all be zeroes 
+                                partition[-1].extend(lst[i+1:])
+                                break
+                            rs += ratios[k]
+                    
+                    # continue if there is any empty subset
+                    if len(partition) != nele:
+                        continue
+                    partition = [[i for p in part for i in p] for part in partition]
+
+                    if all(math.isclose(ratios[i] / sor, len(part) / natoms, abs_tol=eps) 
+                    for (i, part) in enumerate(partition)):
+                        for j in range(nele):
+                            ids = partition[j]
+                            atoms.symbols[ids] = len(ids) * keys[j]
+                        traj.write(atoms)
+                        n_write += 1
 
         else: 
             # When the number of groups is too large (> 20), systematic enumeration 
@@ -599,7 +727,7 @@ class OrderedSlabOrderingGenerator(object):
                 combos = set()
                 too_few = (2 ** ngroups * 0.95 <= max_gen)
                 if too_few and verbose:
-                    print('Too few groups. The generated images are not all unique.')
+                    print('Too few groups. Will generate duplicate images.')
                 while True:
                     combo = tuple(np.random.choice(self.elements, size=ngroups))
                     if combo not in combos or too_few: 

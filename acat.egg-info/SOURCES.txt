@@ -71,6 +71,7 @@ docs/_build/html/_images/RandomOrderingGenerator1.gif
 docs/_build/html/_images/RandomOrderingGenerator2.gif
 docs/_build/html/_images/StochasticPatternGenerator1.gif
 docs/_build/html/_images/StochasticPatternGenerator2.gif
+docs/_build/html/_images/StochasticPatternGenerator3.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator1.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator2.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator3.gif
@@ -206,6 +207,7 @@ images/RandomOrderingGenerator1.gif
 images/RandomOrderingGenerator2.gif
 images/StochasticPatternGenerator1.gif
 images/StochasticPatternGenerator2.gif
+images/StochasticPatternGenerator3.gif
 images/SymmetricClusterOrderingGenerator1.gif
 images/SymmetricClusterOrderingGenerator2.gif
 images/SymmetricClusterOrderingGenerator3.gif

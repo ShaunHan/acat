@@ -678,7 +678,7 @@ class StochasticPatternGenerator(object):
             if not specified.
 
         unique : bool, default True 
-            Whether to discard duplicate patterns based on isomorphism.
+            Whether to discard duplicate patterns based on graph isomorphism.
 
         subsurf_effect : bool, default False
             Take subsurface atoms into consideration when checking uniqueness. 
@@ -1633,7 +1633,7 @@ class SystematicPatternGenerator(object):
             more than one adsorbates at a time.
 
         unique : bool, default True 
-            Whether to discard duplicate patterns based on isomorphism.
+            Whether to discard duplicate patterns based on graph isomorphism.
 
         subsurf_effect : bool, default False
             Take subsurface atoms into consideration when checking uniqueness. 
