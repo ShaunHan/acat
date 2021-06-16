@@ -432,7 +432,7 @@ The ordered_coverage_pattern function
 
     **Example2**
 
-    To add a 0.75 ML CO overlayer pattern on a fcc111 surface slab:
+    To add a 0.5 ML CO overlayer pattern on a fcc111 surface slab:
 
         >>> from acat.build.overlayer import ordered_coverage_pattern
         >>> from ase.build import fcc111
