@@ -1,6 +1,7 @@
 """Procreation operators meant to be used in symmetry-constrained
 genetic algorithm (SCGA)."""
 from ase.ga.offspring_creator import OffspringCreator
+from itertools import tee, product, filterfalse
 from collections import defaultdict
 import random
 
@@ -124,8 +125,8 @@ class GroupPermutation(Mutation):
         self.groups = groups
 
     def get_new_individual(self, parents):
-        f = parents[0].copy()
 
+        f = parents[0].copy()
         diffatoms = len(set(f.numbers))
         assert diffatoms > 1, 'Permutations with one atomic type is not valid'
 
@@ -134,7 +135,7 @@ class GroupPermutation(Mutation):
 
         for _ in range(self.num_muts):
             GroupPermutation.mutate(f, self.groups, self.elements,
-                                        self.keep_composition)
+                                    self.keep_composition)
 
         for atom in f:
             indi.append(atom)
@@ -163,21 +164,21 @@ class GroupPermutation(Mutation):
 
         if keep_composition:
             dd = defaultdict(list)
-            for si, group in enumerate(groups):
-                dd[len(group)].append(si)
+            for gi, group in enumerate(groups):
+                dd[len(group)].append(gi)
             items = list(dd.items())
             random.shuffle(items)
-            mut_sis = None
+            mut_gis = None
             for k, v in items:
                 if len(v) > 1:
-                    mut_sis = v
+                    mut_gis = v
                     break
-            if mut_sis is None:
+            if mut_gis is None:
                 return
-            random.shuffle(mut_sis)
-            i1 = mut_sis[0]
+            random.shuffle(mut_gis)
+            i1 = mut_gis[0]
             mut_group1 = groups[i1]           
-            options = [i for i in mut_sis[1:] if atoms[mut_group1[0]].symbol 
+            options = [i for i in mut_gis[1:] if atoms[mut_group1[0]].symbol 
                        != atoms[groups[i][0]].symbol]
 
         else:
@@ -233,8 +234,8 @@ class GroupCrossover(Crossover):
         self.descriptor = 'GroupCrossover'
         
     def get_new_individual(self, parents):
-        f, m = parents
 
+        f, m = parents
         indi = f.copy()
         groups = self.groups.copy()
         if self.elements is None:
@@ -251,20 +252,37 @@ class GroupCrossover(Crossover):
                         torem.append(i)
                 for i in torem:
                     group.remove(i)
-
         random.shuffle(groups)
+
         if self.keep_composition:
-            divisors = list(range(2, len(groups)+1))
-            random.shuffle(divisors)
-            mids = None
-            for divisor in divisors: 
-                mgroups = groups[len(groups)//divisor:]
-                tmpmids = [i for group in mgroups for i in group] 
-                if sorted(indi.symbols[tmpmids]) == sorted(m.symbols[tmpmids]):
-                    mids = tmpmids
-                    break
-            if mids is None:
-                m = f.copy()
+
+            def fix_composition_swaps(groups1, groups2):
+                indices = sorted([i for j in groups1 for i in j])                                
+                zipped = list(map(list, zip(groups1, groups2)))
+                gids = [i for i, (groups1, groups2) in enumerate(zipped) 
+                        if groups1 != groups2]
+
+                # If solution not found in 1000 iterations, we say there
+                # is no possible solution at all
+                gids_list = []
+                for j in range(1000):        
+                    random.shuffle(gids)
+                    if gids in gids_list:
+                        continue
+                    gids_list.append(gids.copy())
+
+                    for n, i in enumerate(gids):
+                        zipped[i].reverse()
+                        if indices == sorted(idx for groups1, _ in zipped 
+                        for idx in groups1):
+                            return gids[:n+1]
+                    zipped = list(map(list, zip(groups1, groups2)))
+                return []
+
+            fsyms = [list(f.symbols[g]) for g in groups]
+            msyms = [list(m.symbols[g]) for g in groups]
+            swap_ids = fix_composition_swaps(fsyms, msyms)
+            mids = [i for j in swap_ids for i in groups[j]] 
 
         else:
             mgroups = groups[len(groups)//2:]
@@ -272,6 +290,7 @@ class GroupCrossover(Crossover):
 
         for i in mids:
             indi[i].symbol = m[i].symbol
+
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'

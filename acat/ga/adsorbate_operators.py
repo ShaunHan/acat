@@ -1142,15 +1142,13 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                     self.add_adsorbate(indi, ads_sites, site_heights,
                                        self.adsorbate_species,
                                        self.min_adsorbate_distance)
-                cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
-
             elif diff > 0:
                 # Remove adsorbates
                 tbr = random.sample(adsorbates_in_child, diff)  # to be removed
                 for adsorbate_indices in sorted(tbr, reverse=True):
                     for i in adsorbate_indices[::-1]:
                         indi.pop(i)                
-                cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+            cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
 
         indi.info['data']['adsorbates'] = cac.get_adsorbates()
 
@@ -1259,6 +1257,10 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     def get_new_individual(self, parents):
         f, m = parents        
         indi = f.copy()
+
+        if self.fix_coverage:
+            # Count number of adsorbates
+            adsorbates_in_parents = len(self.get_all_adsorbate_indices(f))
 
         theta = random.random() * 2 * np.pi  # 0,2pi
         phi = random.random() * np.pi  # 0,pi
@@ -1387,15 +1389,13 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                     self.add_adsorbate(indi, ads_sites, site_heights,
                                        self.adsorbate_species,
                                        self.min_adsorbate_distance)
-                cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
-
             elif diff > 0:
                 # Remove adsorbates
                 tbr = random.sample(adsorbates_in_child, diff)  # to be removed
                 for adsorbate_indices in sorted(tbr, reverse=True):
                     for i in adsorbate_indices[::-1]:
                         indi.pop(i)                
-                cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+            cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
 
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 

@@ -593,7 +593,7 @@ will have a difference of .5 in both elements:</p>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>All the adsorbate operators and comparators can be easily used with other operators and comparators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> and <code class="docutils literal notranslate"><span class="pre">SimpleCutSpliceCrossoverWithAdsorbates</span></code> operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.</p>
 <p>As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
 <p>The script for a parallel genetic algorithm looks as follows:</p>
@@ -789,7 +789,216 @@ will have a difference of .5 in both elements:</p>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
             <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point for simplification</span>
+        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+
+    <span class="c1"># Create a multiprocessing Pool</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+    <span class="c1"># Perform procreations in parallel. Especially useful when</span>
+    <span class="c1"># using adsorbate operators which requires site identification</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+
+    <span class="c1"># update the population to allow new candidates to enter</span>
+    <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Example2</strong></p>
+<p>If we want to study the same system but fix the adsorbate coverage to be exactly 20 adsorbates, we should only use <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">SimpleCutSpliceCrossoverWithAdsorbates</span></code> operators with same particle operators. Remember to set fix_coverage to True in <code class="docutils literal notranslate"><span class="pre">SimpleCutSpliceCrossoverWithAdsorbates</span></code>.</p>
+<p>The script for a fixed-coverage parallel genetic algorithm now looks as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
+<span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
+<span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
+<span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
+<span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">StochasticPatternGenerator</span> <span class="k">as</span> <span class="n">SPG</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_operators</span> <span class="kn">import</span> <span class="n">AddAdsorbate</span><span class="p">,</span> <span class="n">RemoveAdsorbate</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_operators</span> <span class="kn">import</span> <span class="n">MoveAdsorbate</span><span class="p">,</span> <span class="n">ReplaceAdsorbate</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_operators</span> <span class="kn">import</span> <span class="n">SimpleCutSpliceCrossoverWithAdsorbates</span>
+<span class="c1"># Import particle_mutations from acat instead of ase to get the indexing-preserved version</span>
+<span class="kn">from</span> <span class="nn">acat.ga.particle_mutations</span> <span class="kn">import</span> <span class="n">RandomPermutation</span><span class="p">,</span> <span class="n">COM2surfPermutation</span>
+<span class="kn">from</span> <span class="nn">acat.ga.particle_mutations</span> <span class="kn">import</span> <span class="n">Rich2poorPermutation</span><span class="p">,</span> <span class="n">Poor2richPermutation</span>
+<span class="kn">from</span> <span class="nn">acat.ga.adsorbate_comparators</span> <span class="kn">import</span> <span class="n">AdsorptionSitesComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.particle_comparator</span> <span class="kn">import</span> <span class="n">NNMatComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.standard_comparators</span> <span class="kn">import</span> <span class="n">SequentialComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OperationSelector</span>
+<span class="kn">from</span> <span class="nn">ase.ga.population</span> <span class="kn">import</span> <span class="n">Population</span><span class="p">,</span> <span class="n">RankFitnessPopulation</span>
+<span class="kn">from</span> <span class="nn">ase.ga.convergence</span> <span class="kn">import</span> <span class="n">GenerationRepetitionConvergence</span>
+<span class="kn">from</span> <span class="nn">ase.ga.utilities</span> <span class="kn">import</span> <span class="n">closest_distances_generator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.data</span> <span class="kn">import</span> <span class="n">DataConnection</span><span class="p">,</span> <span class="n">PrepareDB</span>
+<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
+<span class="kn">from</span> <span class="nn">ase.calculators.emt</span> <span class="kn">import</span> <span class="n">EMT</span>
+<span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choices</span><span class="p">,</span> <span class="n">uniform</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c1"># Define population</span>
+<span class="c1"># Recommand to choose a number that is a multiple of the number of cpu</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">50</span>
+
+<span class="c1"># Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+          <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">)</span>
+<span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="c1"># Generate random coverage patterns of 20 adsorbates on nanoparticles</span>
+<span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;CH&#39;</span><span class="p">,</span> <span class="s1">&#39;CH2&#39;</span><span class="p">,</span> <span class="s1">&#39;CH3&#39;</span><span class="p">]</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="n">num_ads</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># Number of adsorbates, fix at this coverage throughout GA</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_ads</span><span class="p">):</span> <span class="c1"># This will take quite some time</span>
+    <span class="n">spg</span> <span class="o">=</span> <span class="n">SPG</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">],</span>
+              <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span>
+              <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">spg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">)</span>
+<span class="n">patterns</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+<span class="c1"># Get the adsorption sites. Composition does not matter in GA</span>
+<span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Instantiate the db</span>
+<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;ridge_Ni110Pt37_ads.db&#39;</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">PrepareDB</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+
+<span class="c1"># Connect to the db</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">DataConnection</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+
+<span class="c1"># Define operators</span>
+<span class="n">soclist</span> <span class="o">=</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+           <span class="p">[</span><span class="n">Rich2poorPermutation</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">Poor2richPermutation</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">RandomPermutation</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">MoveAdsorbate</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">ReplaceAdsorbate</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+            <span class="n">SimpleCutSpliceCrossoverWithAdsorbates</span><span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">keep_composition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                   <span class="n">fix_coverage</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                   <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">),])</span>
+<span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
+
+<span class="c1"># Define comparators</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">SequentialComparator</span><span class="p">([</span><span class="n">AdsorptionSitesComparator</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+                             <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">])],</span>
+                            <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">get_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of adsorbate names and corresponding indices.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s1">&#39;adsorbates&#39;</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">adsorbates</span>
+
+<span class="k">def</span> <span class="nf">vf</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the descriptor that distinguishes candidates in the</span>
+<span class="sd">    niched population.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span>
+
+<span class="c1"># Give fittest candidates at different coverages equal fitness</span>
+<span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                            <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
+                            <span class="n">comparator</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
+                            <span class="n">variable_function</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                            <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Normal fitness ranking regardless of coverage</span>
+<span class="c1">#pop = Population(data_connection=db,</span>
+<span class="c1">#                 population_size=pop_size,</span>
+<span class="c1">#                 comparator=comp,</span>
+<span class="c1">#                 logfile=&#39;log.txt&#39;)</span>
+
+<span class="c1"># Set convergence criteria</span>
+<span class="n">cc</span> <span class="o">=</span> <span class="n">GenerationRepetitionConvergence</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Calculate chemical potentials</span>
+<span class="n">chem_pots</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;CH4&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">24.039</span><span class="p">,</span> <span class="s1">&#39;H2O&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">14.169</span><span class="p">,</span> <span class="s1">&#39;H2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">6.989</span><span class="p">}</span>
+
+<span class="c1"># Define the relax function</span>
+<span class="k">def</span> <span class="nf">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">EMT</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">single_point</span><span class="p">:</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">BFGS</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># Add delay to avoid stack overflow (just for testing)</span>
+
+    <span class="n">Epot</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span>
+    <span class="n">num_H</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span><span class="p">])</span>
+    <span class="n">num_C</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">])</span>
+    <span class="n">num_O</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;O&#39;</span><span class="p">])</span>
+    <span class="n">mutot</span> <span class="o">=</span> <span class="n">num_C</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;CH4&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">num_O</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;H2O&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">num_H</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">num_C</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">num_O</span><span class="p">)</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;H2&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">-</span> <span class="n">mutot</span>
+
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
+
+    <span class="k">return</span> <span class="n">atoms</span>
+
+<span class="c1"># Relax starting generation</span>
+<span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+    <span class="n">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_step</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+<span class="c1"># Create a multiprocessing Pool</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+<span class="c1"># Perform relaxations in parallel. Especially</span>
+<span class="c1"># useful when running GA on large nanoparticles</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">relax_an_unrelaxed_candidate</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">get_all_unrelaxed_candidates</span><span class="p">())</span>
+<span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+<span class="c1"># Number of generations</span>
+<span class="n">num_gens</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># Below is the iterative part of the algorithm</span>
+<span class="n">gen_num</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_generation_number</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_gens</span><span class="p">):</span>
+    <span class="c1"># Check if converged</span>
+    <span class="k">if</span> <span class="n">cc</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converged&#39;</span><span class="p">)</span>
+        <span class="k">break</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating and evaluating generation </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_num</span> <span class="o">+</span> <span class="n">i</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="c1"># Select an operator and use it</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
+        <span class="c1"># Select parents for a new candidate</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
+        <span class="c1"># Pure or bare nanoparticles are not considered</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">offspring</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_new_individual</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+        <span class="c1"># An operator could return None if an offspring cannot be formed</span>
+        <span class="c1"># by the chosen parents</span>
+        <span class="k">if</span> <span class="n">offspring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
         <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
     <span class="c1"># Create a multiprocessing Pool</span>
@@ -977,7 +1186,7 @@ structures are still considered to be look alike.</p></li>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>All the group operators and comparators can be easily used with other indexing-preserved operators and comparators. All operators can be used for both non-periodic nanoparticles and periodic surface slabs.</p>
 <p>As an example we will find the convex hull of ternary NixPtyAu405-x-y truncated octahedral nanoalloys using the ASAP EMT calculator. <strong>Note that we must first align the symmetry axis of interest to the z direction.</strong> Here we want to study the 3-fold mirror circular symmetry around the C3 axis of the particle.</p>
 <p>The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as follows:</p>
@@ -1037,7 +1246,210 @@ structures are still considered to be look alike.</p></li>
            <span class="p">[</span><span class="n">GroupSubstitute</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
             <span class="n">GroupPermutation</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
             <span class="n">GroupCrossover</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">]),])</span>
+<span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
 
+<span class="c1"># Define comparators</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">SequentialComparator</span><span class="p">([</span><span class="n">GroupSizeComparator</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">]),</span>
+                             <span class="n">NNMatComparator</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">])],</span>
+                            <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">vf</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the descriptor that distinguishes candidates in the</span>
+<span class="sd">    niched population.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+
+<span class="c1"># Give fittest candidates at different compositions equal fitness.</span>
+<span class="c1"># Use this to find global minima at each composition</span>
+<span class="n">pop</span> <span class="o">=</span> <span class="n">RankFitnessPopulation</span><span class="p">(</span><span class="n">data_connection</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                            <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">,</span>
+                            <span class="n">comparator</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span>
+                            <span class="n">variable_function</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                            <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">logfile</span><span class="o">=</span><span class="s1">&#39;log.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Normal fitness ranking irrespective of coverage.</span>
+<span class="c1"># Use this to find global minimum irrespective of composition</span>
+<span class="c1">#pop = Population(data_connection=db,</span>
+<span class="c1">#                 population_size=pop_size,</span>
+<span class="c1">#                 comparator=comp,</span>
+<span class="c1">#                 logfile=&#39;log.txt&#39;)</span>
+
+<span class="c1"># Set convergence criteria</span>
+<span class="n">cc</span> <span class="o">=</span> <span class="n">GenerationRepetitionConvergence</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Calculate the relaxed energies for pure Ni405, Pt405 and Au405</span>
+<span class="n">pure_pots</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">147.532</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span>  <span class="mf">86.892</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">63.566</span><span class="p">}</span>
+
+<span class="c1"># Define the relax function</span>
+<span class="k">def</span> <span class="nf">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">asapEMT</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">single_point</span><span class="p">:</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">BFGS</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">Epot</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energy</span><span class="p">()</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
+
+    <span class="c1"># There is a known issue of asapEMT in GA. You can either detach</span>
+    <span class="c1"># the calculator or re-assign to a SinglePointCalculator</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Calculate mixing energy</span>
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">syms</span><span class="p">):</span>
+        <span class="n">Epot</span> <span class="o">-=</span> <span class="p">(</span><span class="n">pure_pots</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span> <span class="o">*</span> <span class="n">syms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Epot</span>
+
+    <span class="k">return</span> <span class="n">atoms</span>
+
+<span class="c1"># Relax starting generation</span>
+<span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+    <span class="n">relax</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_step</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+<span class="c1"># Create a multiprocessing Pool</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+<span class="c1"># Perform relaxations in parallel. Especially</span>
+<span class="c1"># useful when running GA on large nanoparticles</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">relax_an_unrelaxed_candidate</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">get_all_unrelaxed_candidates</span><span class="p">())</span>
+<span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+<span class="c1"># Number of generations</span>
+<span class="n">num_gens</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># Below is the iterative part of the algorithm</span>
+<span class="n">gen_num</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_generation_number</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_gens</span><span class="p">):</span>
+    <span class="c1"># Check if converged</span>
+    <span class="k">if</span> <span class="n">cc</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Converged&#39;</span><span class="p">)</span>
+        <span class="k">break</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating and evaluating generation </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_num</span> <span class="o">+</span> <span class="n">i</span><span class="p">))</span>
+
+    <span class="c1"># Performing procreations in parallel</span>
+    <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="c1"># Select an operator and use it</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
+        <span class="c1"># Select parents for a new candidate</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">get_two_candidates</span><span class="p">()</span>
+        <span class="c1"># Pure and binary candidates are not considered</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">]</span>
+        <span class="n">offspring</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_new_individual</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+        <span class="c1"># An operator could return None if an offspring cannot be formed</span>
+        <span class="c1"># by the chosen parents</span>
+        <span class="k">if</span> <span class="n">offspring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+
+    <span class="c1"># Create a multiprocessing Pool</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+    <span class="c1"># Perform procreations in parallel. Especially</span>
+    <span class="c1"># useful when running GA on large nanoparticles</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+
+    <span class="c1"># update the population to allow new candidates to enter</span>
+    <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Example2</strong></p>
+<p>If we want to study the same system but target 3 compositions: Ni0.5Pt0.25Au0.25, Ni0.25Pt0.5Au0.25 and Ni0.25Pt0.25Au0.5, we should not use <code class="docutils literal notranslate"><span class="pre">GroupSubstitute</span></code> operator and set keep_composition to True in <code class="docutils literal notranslate"><span class="pre">GroupPermutation</span></code> and <code class="docutils literal notranslate"><span class="pre">GroupCrossover</span></code> operators. The tolerance of the intitial compositions can be controlled by the eps parameter in <code class="docutils literal notranslate"><span class="pre">SymmetricClusterOrderingGenerator.run</span></code>.</p>
+<p>The script for a fixed-composition parallel genetic algorithm now looks as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricClusterOrderingGenerator</span> <span class="k">as</span> <span class="n">SCOG</span>
+<span class="kn">from</span> <span class="nn">acat.ga.group_operators</span> <span class="kn">import</span> <span class="n">GroupSubstitute</span>
+<span class="kn">from</span> <span class="nn">acat.ga.group_operators</span> <span class="kn">import</span> <span class="n">GroupPermutation</span>
+<span class="kn">from</span> <span class="nn">acat.ga.group_operators</span> <span class="kn">import</span> <span class="n">GroupCrossover</span>
+<span class="kn">from</span> <span class="nn">acat.ga.group_comparators</span> <span class="kn">import</span> <span class="n">GroupSizeComparator</span>
+<span class="kn">from</span> <span class="nn">acat.ga.group_comparators</span> <span class="kn">import</span> <span class="n">GroupCompositionComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.particle_comparator</span> <span class="kn">import</span> <span class="n">NNMatComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.standard_comparators</span> <span class="kn">import</span> <span class="n">SequentialComparator</span>
+<span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OperationSelector</span>
+<span class="kn">from</span> <span class="nn">ase.ga.population</span> <span class="kn">import</span> <span class="n">Population</span><span class="p">,</span> <span class="n">RankFitnessPopulation</span>
+<span class="kn">from</span> <span class="nn">ase.ga.convergence</span> <span class="kn">import</span> <span class="n">GenerationRepetitionConvergence</span>
+<span class="kn">from</span> <span class="nn">ase.ga.data</span> <span class="kn">import</span> <span class="n">DataConnection</span><span class="p">,</span> <span class="n">PrepareDB</span>
+<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
+<span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span>
+<span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c1"># Define population.</span>
+<span class="c1"># Recommend to choose a number that is a multiple of the number of cpu</span>
+<span class="n">pop_size</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="c1"># Build and rotate the particle so that C3 axis is aligned to z direction</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="o">-</span><span class="mf">35.29</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+
+<span class="c1"># Generate 100 truncated ocatahedral NixPtyAu405-x-y nanoalloys with</span>
+<span class="c1"># mirror circular symmetry and concentrations of {x=0.5, y=0.25},</span>
+<span class="c1"># {x=0.25, y=0.5} and {x=y=0.25}. The concentrations are allowed to</span>
+<span class="c1"># vary by a range of 2*eps=0.1. Get the groups at the same time.</span>
+<span class="n">scog1</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+             <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
+             <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+             <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
+             <span class="n">secondary_cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+             <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">)</span>
+<span class="n">groups</span> <span class="o">=</span> <span class="n">scog1</span><span class="o">.</span><span class="n">get_groups</span><span class="p">()</span>
+<span class="n">scog1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">scog2</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+             <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
+             <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+             <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
+             <span class="n">secondary_cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+             <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span>
+             <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">scog2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">scog3</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">particle</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
+             <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
+             <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+             <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
+             <span class="n">secondary_cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+             <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span>
+             <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">scog3</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+<span class="c1"># Instantiate the db</span>
+<span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;ridge_mirror_circular_NiPtAu_TO405_C3.db&#39;</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">PrepareDB</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">population_size</span><span class="o">=</span><span class="n">pop_size</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+
+<span class="c1"># Connect to the db</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">DataConnection</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+
+<span class="c1"># Define operators, now set keep_composition=True</span>
+<span class="c1"># GroupSubstitute cannot keep the composition so it&#39;s not used</span>
+<span class="n">soclist</span> <span class="o">=</span> <span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+           <span class="p">[</span><span class="n">GroupPermutation</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
+                             <span class="n">keep_composition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">GroupCrossover</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
+                           <span class="n">keep_composition</span><span class="o">=</span><span class="kc">True</span><span class="p">),])</span>
 <span class="n">op_selector</span> <span class="o">=</span> <span class="n">OperationSelector</span><span class="p">(</span><span class="o">*</span><span class="n">soclist</span><span class="p">)</span>
 
 <span class="c1"># Define comparators</span>

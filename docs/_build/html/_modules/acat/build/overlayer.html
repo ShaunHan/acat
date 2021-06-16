@@ -832,7 +832,14 @@
 
 <span class="sd">        num_act : int, default 1</span>
 <span class="sd">            Number of times performed for each action. Useful for operating</span>
-<span class="sd">            more than one adsorbates at a time.</span>
+<span class="sd">            more than one adsorbates at a time. This becomes extremely slow</span>
+<span class="sd">            when adding many adsorbates to generate high coverage patterns. </span>
+<span class="sd">            The recommended ways to generate high coverage patterns are:</span>
+<span class="sd">            1) adding one adsorbate at a time from low to high coverage if </span>
+<span class="sd">            you want to control the exact number of adsorbates;</span>
+<span class="sd">            2) use `acat.build.overlayer.random_coverage_pattern` if you want</span>
+<span class="sd">            to control the minimum adsorbate distance. This is the fastest</span>
+<span class="sd">            way, but the number of adsorbates is not guaranteed to be fixed.</span>
 
 <span class="sd">        action_probabilities : dict, default None</span>
 <span class="sd">            A dictionary that contains keys of each action and values of the </span>
@@ -1792,7 +1799,11 @@
 
 <span class="sd">        num_act : int, default 1</span>
 <span class="sd">            Number of times performed for the action. Useful for operating</span>
-<span class="sd">            more than one adsorbates at a time.</span>
+<span class="sd">            more than one adsorbates at a time. This becomes extremely slow</span>
+<span class="sd">            when adding many adsorbates to generate high coverage patterns. </span>
+<span class="sd">            The recommended way to generate high coverage patterns is to add </span>
+<span class="sd">            one adsorbate at a time from low to high coverage if you want to </span>
+<span class="sd">            control the exact number of adsorbates.</span>
 
 <span class="sd">        unique : bool, default True </span>
 <span class="sd">            Whether to discard duplicate patterns based on graph isomorphism.</span>
@@ -2412,6 +2423,7 @@
     <span class="sd">&quot;&quot;&quot;A function for generating random overlayer patterns with a </span>
 <span class="sd">    minimum distance constraint. The function is generalized for both </span>
 <span class="sd">    periodic and non-periodic systems (distinguished by atoms.pbc).</span>
+<span class="sd">    Especially useful for generating high coverage patterns.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

@@ -336,8 +336,10 @@ class SymmetricClusterOrderingGenerator(object):
         eps : float, default 0.01
             The tolerance of the concentration for each element. Only 
             relevant for generating fixed-composition symmetric nanoalloys 
-            using 'stochastic' mode. Set to 0 if you want the exact
-            composition accurate to one atom.
+            using 'stochastic' mode. Set to a small value, e.g. 0.005, if 
+            you want the exact composition accurate to one atom. Please
+            use a larger eps if the concentrations you specified in
+            compositions are not accurate enough.
 
         verbose : bool, default False 
             Whether to print out information about number of groups and
@@ -609,8 +611,10 @@ class OrderedSlabOrderingGenerator(object):
         eps : float, default 0.01
             The tolerance of the concentration for each element. Only 
             relevant for generating fixed-composition symmetric nanoalloys 
-            using 'stochastic' mode. Set to 0 if you want the exact
-            composition accurate to one atom.
+            using 'stochastic' mode. Set to a small value, e.g. 0.005, if 
+            you want the exact composition accurate to one atom. Please
+            use a larger eps if the concentrations you specified in
+            compositions are not accurate enough.
 
         verbose : bool, default False 
             Whether to print out information about number of groups and

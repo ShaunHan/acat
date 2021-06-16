@@ -281,7 +281,7 @@ the surface normal.</p></li>
 </dl>
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To add CO to all fcc sites of an icosahedral nanoparticle:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
@@ -298,6 +298,7 @@ the surface normal.</p></li>
 </div>
 <p>Output:</p>
 <img alt="_images/add_adsorbate_to_site_1.png" class="align-center" src="_images/add_adsorbate_to_site_1.png" />
+<p><strong>Example2</strong></p>
 <p>To add a bidentate CH3OH to the (54, 57, 58) site on a Pt fcc111
 surface slab and rotate to the orientation of a neighbor site:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
@@ -403,7 +404,7 @@ of the whole adsorbate.</p></li>
 </dl>
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To remove a CO molecule from a fcc111 surface slab with one
 CO and one OH:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
@@ -614,7 +615,14 @@ stochastically but for all images systematically, e.g. generating
 <li><p><strong>action</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default 'add'</em>) – Action(s) to perform. If a list of actions is provided, select
 actions from the list randomly or with probabilities.</p></li>
 <li><p><strong>num_act</strong> (<em>int</em><em>, </em><em>default 1</em>) – Number of times performed for each action. Useful for operating
-more than one adsorbates at a time.</p></li>
+more than one adsorbates at a time. This becomes extremely slow
+when adding many adsorbates to generate high coverage patterns.
+The recommended ways to generate high coverage patterns are:
+1) adding one adsorbate at a time from low to high coverage if
+you want to control the exact number of adsorbates;
+2) use <cite>acat.build.overlayer.random_coverage_pattern</cite> if you want
+to control the minimum adsorbate distance. This is the fastest
+way, but the number of adsorbates is not guaranteed to be fixed.</p></li>
 <li><p><strong>action_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each action and values of the
 corresponding probabilities. Select actions with equal probability
 if not specified.</p></li>
@@ -628,7 +636,7 @@ Could be important for surfaces like fcc100.</p></li>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>The following example illustrates how to generate 100 stochastic
 adsorbate overlayer patterns with one more adsorbate chosen from
 CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface slabs with
@@ -662,6 +670,7 @@ ontop and bridge sites:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/StochasticPatternGenerator1.gif"><img alt="_images/StochasticPatternGenerator1.gif" class="align-center" src="_images/StochasticPatternGenerator1.gif" style="width: 300.0px; height: 193.79999999999998px;" /></a>
+<p><strong>Example2</strong></p>
 <p>The following example illustrates how to generate 20 unique coverage
 patterns, each adding 4 adsorbates (randomly chosen from H, OH and
 H2O) onto a fcc100 Ni2Cu surface slab on both top and bottom
@@ -697,6 +706,7 @@ minimum adsorbate distance of 2.5 Angstrom:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/StochasticPatternGenerator2.gif"><img alt="_images/StochasticPatternGenerator2.gif" class="align-center" src="_images/StochasticPatternGenerator2.gif" style="width: 288.0px; height: 384.0px;" /></a>
+<p><strong>Example3</strong></p>
 <p>The following example illustrates how to generate 20 stochastic
 adsorbate overlayer patterns with 5 adsorbates chosen from CO, OH
 and N, on 10 quaternary cuboctahedral nanoalloys with random
@@ -800,7 +810,11 @@ graph isomorphism for the existing structures in the trajectory.</p></li>
 all possible patterns if not specified.</p></li>
 <li><p><strong>action</strong> (<em>str</em><em>, </em><em>defualt 'add'</em>) – Action to perform.</p></li>
 <li><p><strong>num_act</strong> (<em>int</em><em>, </em><em>default 1</em>) – Number of times performed for the action. Useful for operating
-more than one adsorbates at a time.</p></li>
+more than one adsorbates at a time. This becomes extremely slow
+when adding many adsorbates to generate high coverage patterns.
+The recommended way to generate high coverage patterns is to add
+one adsorbate at a time from low to high coverage if you want to
+control the exact number of adsorbates.</p></li>
 <li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to discard duplicate patterns based on graph isomorphism.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Take subsurface atoms into consideration when checking uniqueness.
 Could be important for surfaces like fcc100.</p></li>
@@ -811,7 +825,7 @@ Could be important for surfaces like fcc100.</p></li>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>The following example illustrates how to add CO to all unique sites on
 a cuboctahedral bimetallic nanoparticle with a minimum adsorbate
 distance of 2 Angstrom:</p>
@@ -837,6 +851,7 @@ distance of 2 Angstrom:</p>
 </div>
 <p>Output:</p>
 <img alt="_images/SystematicPatternGenerator1.gif" src="_images/SystematicPatternGenerator1.gif" />
+<p><strong>Example2</strong></p>
 <p>The following example illustrates how to enumerate all unique coverage
 patterns consists of 3 adsorbates chosen from C, N and O on a bimetallic
 bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom
@@ -909,7 +924,7 @@ Only relvevant for periodic surface slabs.</p></li>
 </dl>
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To add a 0.5 ML CO overlayer pattern on a cuboctahedron:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">ordered_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
@@ -923,6 +938,7 @@ Only relvevant for periodic surface slabs.</p></li>
 </div>
 <p>Output:</p>
 <img alt="_images/ordered_coverage_pattern_1.png" src="_images/ordered_coverage_pattern_1.png" />
+<p><strong>Example2</strong></p>
 <p>To add a 0.75 ML CO overlayer pattern on a fcc111 surface slab:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">ordered_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
@@ -971,7 +987,7 @@ Only relvevant for periodic surface slabs.</p></li>
 </dl>
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To add CO to all hcp sites on a icosahedron:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">full_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
@@ -984,6 +1000,7 @@ Only relvevant for periodic surface slabs.</p></li>
 </div>
 <p>Output:</p>
 <img alt="_images/full_coverage_pattern_1.png" src="_images/full_coverage_pattern_1.png" />
+<p><strong>Example2</strong></p>
 <p>To add CO to all 3fold sites on a bcc110 surface slab:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">full_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">bcc110</span>
@@ -1007,7 +1024,8 @@ Only relvevant for periodic surface slabs.</p></li>
 <code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">random_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#random_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.random_coverage_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function for generating random overlayer patterns with a
 minimum distance constraint. The function is generalized for both
-periodic and non-periodic systems (distinguished by atoms.pbc).</p>
+periodic and non-periodic systems (distinguished by atoms.pbc).
+Especially useful for generating high coverage patterns.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1034,7 +1052,7 @@ Only relvevant for periodic surface slabs.</p></li>
 </dl>
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To add CO randomly onto a cuboctahedron with a minimum adsorbate
 distance of 5 Angstrom:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
@@ -1049,6 +1067,7 @@ distance of 5 Angstrom:</p>
 </div>
 <p>Output:</p>
 <img alt="_images/random_coverage_pattern_1.png" src="_images/random_coverage_pattern_1.png" />
+<p><strong>Example2</strong></p>
 <p>To add C, N, O randomly onto a hcp0001 surface slab with probabilities
 of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 2 Angstrom:</p>
@@ -1068,6 +1087,7 @@ of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 </div>
 <p>Output:</p>
 <img alt="_images/random_coverage_pattern_2.png" src="_images/random_coverage_pattern_2.png" />
+<p><strong>Example3</strong></p>
 <p>To add H, OH and H2O randomly onto a fcc100 Ni2Cu surface slab on both top
 and bottom interfaces ( <a class="reference download internal" download="" href="_downloads/d4db2def8832c660c65d58623887badd/water_bulk.xyz"><code class="xref download docutils literal notranslate"><span class="pre">bulk</span> <span class="pre">water</span></code></a>
 in between) with probabilities of 0.25, 0.25, 0.5, respectively, and a
@@ -1166,8 +1186,10 @@ compositions. This can be controled by eps.</p>
 </p></li>
 <li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element. Only
 relevant for generating fixed-composition symmetric nanoalloys
-using ‘stochastic’ mode. Set to 0 if you want the exact
-composition accurate to one atom.</p></li>
+using ‘stochastic’ mode. Set to a small value, e.g. 0.005, if
+you want the exact composition accurate to one atom. Please
+use a larger eps if the concentrations you specified in
+compositions are not accurate enough.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1296,8 +1318,10 @@ compositions. This can be controled by eps.</p>
 </p></li>
 <li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element. Only
 relevant for generating fixed-composition symmetric nanoalloys
-using ‘stochastic’ mode. Set to 0 if you want the exact
-composition accurate to one atom.</p></li>
+using ‘stochastic’ mode. Set to a small value, e.g. 0.005, if
+you want the exact composition accurate to one atom. Please
+use a larger eps if the concentrations you specified in
+compositions are not accurate enough.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1307,7 +1331,7 @@ number of generated structures.</p></li>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To generate 100 symmetric chemical orderings for truncated
 octahedral NiPt nanoalloys with spherical symmetry:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricClusterOrderingGenerator</span> <span class="k">as</span> <span class="n">SCOG</span>
@@ -1329,6 +1353,7 @@ octahedral NiPt nanoalloys with spherical symmetry:</p>
 </div>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator1.gif"><img alt="_images/SymmetricClusterOrderingGenerator1.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator1.gif" style="width: 208.2px; height: 208.2px;" /></a>
+<p><strong>Example2</strong></p>
 <p>To systematically generate 50 symmetric chemical orderings for
 quaternary truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloys
 with mirror circular symmetry:</p>
@@ -1338,8 +1363,8 @@ with mirror circular symmetry:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scog</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
-<span class="gp">... </span>          <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
+<span class="gp">... </span>            <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;systematic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
@@ -1353,6 +1378,7 @@ with mirror circular symmetry:</p>
 </div>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator2.gif"><img alt="_images/SymmetricClusterOrderingGenerator2.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator2.gif" style="width: 211.2px; height: 211.2px;" /></a>
+<p><strong>Example3</strong></p>
 <p>To stochastically generate 50 symmetric chemical orderings for
 quaternary truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloys
 with mirror circular symmetry:</p>
@@ -1362,8 +1388,8 @@ with mirror circular symmetry:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scog</span> <span class="o">=</span> <span class="n">SCOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
-<span class="gp">... </span>          <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
+<span class="gp">... </span>            <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
@@ -1377,6 +1403,7 @@ with mirror circular symmetry:</p>
 </div>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator3.gif"><img alt="_images/SymmetricClusterOrderingGenerator3.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator3.gif" style="width: 384.0px; height: 288.0px;" /></a>
+<p><strong>Example4</strong></p>
 <p>Sometimes it is also useful to get the structure of each group.
 For instance, to visualize the concentric shells of a truncated
 octahedral nanoparticle:</p>
@@ -1460,8 +1487,10 @@ compositions. This can be controled by eps.</p>
 </p></li>
 <li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element. Only
 relevant for generating fixed-composition symmetric nanoalloys
-using ‘stochastic’ mode. Set to 0 if you want the exact
-composition accurate to one atom.</p></li>
+using ‘stochastic’ mode. Set to a small value, e.g. 0.005, if
+you want the exact composition accurate to one atom. Please
+use a larger eps if the concentrations you specified in
+compositions are not accurate enough.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1471,7 +1500,7 @@ number of generated structures.</p></li>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To stochastically generate 50 ordered chemical orderings for
 ternary NixPtyAu1-x-y fcc111 surface slabs:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">OrderedSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">OSOG</span>
@@ -1495,6 +1524,7 @@ ternary NixPtyAu1-x-y fcc111 surface slabs:</p>
 </div>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/OrderedSlabOrderingGenerator1.gif"><img alt="_images/OrderedSlabOrderingGenerator1.gif" class="align-center" src="_images/OrderedSlabOrderingGenerator1.gif" style="width: 384.0px; height: 288.0px;" /></a>
+<p><strong>Example2</strong></p>
 <p>To systematically generate 50 ordered chemical orderings for
 Ni0.75Pt0.25 fcc110 surface slabs:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">OrderedSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">OSOG</span>
@@ -1519,6 +1549,7 @@ Ni0.75Pt0.25 fcc110 surface slabs:</p>
 </div>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/OrderedSlabOrderingGenerator2.gif"><img alt="_images/OrderedSlabOrderingGenerator2.gif" class="align-center" src="_images/OrderedSlabOrderingGenerator2.gif" style="width: 384.0px; height: 288.0px;" /></a>
+<p><strong>Example3</strong></p>
 <p>To stochastically generate 50 ordered chemical orderings for
 Ni0.75Pt0.25 fcc110 surface slabs:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">OrderedSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">OSOG</span>
@@ -1599,7 +1630,7 @@ chunk.</p>
 
 </dd></dl>
 
-<p><strong>Example</strong></p>
+<p><strong>Example1</strong></p>
 <p>To generate 50 random chemical orderings for icosahedral
 Ni0.5Pt0.2Au0.3 nanoalloys:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
@@ -1616,6 +1647,7 @@ Ni0.5Pt0.2Au0.3 nanoalloys:</p>
 </div>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/RandomOrderingGenerator1.gif"><img alt="_images/RandomOrderingGenerator1.gif" class="align-center" src="_images/RandomOrderingGenerator1.gif" style="width: 192.6px; height: 193.79999999999998px;" /></a>
+<p><strong>Example2</strong></p>
 <p>To generate 50 random chemical orderings for Pt0.5Au0.5
 fcc111 surface slabs:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>

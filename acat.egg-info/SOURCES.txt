@@ -67,6 +67,7 @@ docs/_build/html/_downloads/2323b5636c7c7624f7124ca37b2d01b9/table_of_adsorption
 docs/_build/html/_downloads/d4db2def8832c660c65d58623887badd/water_bulk.xyz
 docs/_build/html/_images/OrderedSlabOrderingGenerator1.gif
 docs/_build/html/_images/OrderedSlabOrderingGenerator2.gif
+docs/_build/html/_images/OrderedSlabOrderingGenerator3.gif
 docs/_build/html/_images/RandomOrderingGenerator1.gif
 docs/_build/html/_images/RandomOrderingGenerator2.gif
 docs/_build/html/_images/StochasticPatternGenerator1.gif
@@ -75,6 +76,7 @@ docs/_build/html/_images/StochasticPatternGenerator3.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator1.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator2.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator3.gif
+docs/_build/html/_images/SymmetricClusterOrderingGenerator4.gif
 docs/_build/html/_images/SystematicPatternGenerator1.gif
 docs/_build/html/_images/SystematicPatternGenerator2.gif
 docs/_build/html/_images/add_adsorbate.png
@@ -203,6 +205,7 @@ examples/prepare_sites.py
 images/.gitkeep
 images/OrderedSlabOrderingGenerator1.gif
 images/OrderedSlabOrderingGenerator2.gif
+images/OrderedSlabOrderingGenerator3.gif
 images/RandomOrderingGenerator1.gif
 images/RandomOrderingGenerator2.gif
 images/StochasticPatternGenerator1.gif
@@ -211,6 +214,7 @@ images/StochasticPatternGenerator3.gif
 images/SymmetricClusterOrderingGenerator1.gif
 images/SymmetricClusterOrderingGenerator2.gif
 images/SymmetricClusterOrderingGenerator3.gif
+images/SymmetricClusterOrderingGenerator4.gif
 images/SystematicPatternGenerator1.gif
 images/SystematicPatternGenerator2.gif
 images/add_adsorbate.png
