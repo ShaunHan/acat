@@ -670,7 +670,14 @@ class StochasticPatternGenerator(object):
 
         num_act : int, default 1
             Number of times performed for each action. Useful for operating
-            more than one adsorbates at a time.
+            more than one adsorbates at a time. This becomes extremely slow
+            when adding many adsorbates to generate high coverage patterns. 
+            The recommended ways to generate high coverage patterns are:
+            1) adding one adsorbate at a time from low to high coverage if 
+            you want to control the exact number of adsorbates;
+            2) use `acat.build.overlayer.random_coverage_pattern` if you want
+            to control the minimum adsorbate distance. This is the fastest
+            way, but the number of adsorbates is not guaranteed to be fixed.
 
         action_probabilities : dict, default None
             A dictionary that contains keys of each action and values of the 
@@ -1630,7 +1637,11 @@ class SystematicPatternGenerator(object):
 
         num_act : int, default 1
             Number of times performed for the action. Useful for operating
-            more than one adsorbates at a time.
+            more than one adsorbates at a time. This becomes extremely slow
+            when adding many adsorbates to generate high coverage patterns. 
+            The recommended way to generate high coverage patterns is to add 
+            one adsorbate at a time from low to high coverage if you want to 
+            control the exact number of adsorbates.
 
         unique : bool, default True 
             Whether to discard duplicate patterns based on graph isomorphism.
@@ -2250,6 +2261,7 @@ def random_coverage_pattern(atoms, adsorbate_species,
     """A function for generating random overlayer patterns with a 
     minimum distance constraint. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
+    Especially useful for generating high coverage patterns.
 
     Parameters
     ----------

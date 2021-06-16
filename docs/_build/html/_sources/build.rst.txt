@@ -42,7 +42,7 @@ The add_adsorbate_to_site function
 
     .. autofunction:: add_adsorbate_to_site
 
-    **Example**
+    **Example1**
 
     To add CO to all fcc sites of an icosahedral nanoparticle:
 
@@ -62,6 +62,8 @@ The add_adsorbate_to_site function
 
     .. image:: ../images/add_adsorbate_to_site_1.png
        :align: center
+
+    **Example2**
 
     To add a bidentate CH3OH to the (54, 57, 58) site on a Pt fcc111 
     surface slab and rotate to the orientation of a neighbor site:
@@ -124,7 +126,7 @@ The remove_adsorbate_from_site function
 
     .. autofunction:: remove_adsorbate_from_site
 
-    **Example**
+    **Example1**
 
     To remove a CO molecule from a fcc111 surface slab with one 
     CO and one OH:
@@ -224,7 +226,7 @@ The StochasticPatternGenerator class
 
         .. automethod:: run
 
-    **Example**
+    **Example1**
 
     The following example illustrates how to generate 100 stochastic
     adsorbate overlayer patterns with one more adsorbate chosen from 
@@ -263,6 +265,7 @@ The StochasticPatternGenerator class
        :scale: 60 %
        :align: center
 
+    **Example2**
 
     The following example illustrates how to generate 20 unique coverage 
     patterns, each adding 4 adsorbates (randomly chosen from H, OH and 
@@ -303,6 +306,8 @@ The StochasticPatternGenerator class
        :scale: 60 %
        :align: center
 
+    **Example3**
+
     The following example illustrates how to generate 20 stochastic
     adsorbate overlayer patterns with 5 adsorbates chosen from CO, OH 
     and N, on 10 quaternary cuboctahedral nanoalloys with random 
@@ -340,7 +345,7 @@ The SystematicPatternGenerator class
 
         .. automethod:: run
 
-    **Example**
+    **Example1**
 
     The following example illustrates how to add CO to all unique sites on 
     a cuboctahedral bimetallic nanoparticle with a minimum adsorbate
@@ -368,6 +373,8 @@ The SystematicPatternGenerator class
     Output:
 
     .. image:: ../images/SystematicPatternGenerator1.gif
+
+    **Example2**
 
     The following example illustrates how to enumerate all unique coverage
     patterns consists of 3 adsorbates chosen from C, N and O on a bimetallic 
@@ -406,7 +413,7 @@ The ordered_coverage_pattern function
 
     .. autofunction:: ordered_coverage_pattern
 
-    **Example**
+    **Example1**
 
     To add a 0.5 ML CO overlayer pattern on a cuboctahedron:
 
@@ -422,6 +429,8 @@ The ordered_coverage_pattern function
     Output:
 
     .. image:: ../images/ordered_coverage_pattern_1.png
+
+    **Example2**
 
     To add a 0.75 ML CO overlayer pattern on a fcc111 surface slab:
 
@@ -444,7 +453,7 @@ The full_coverage_pattern function
 
     .. autofunction:: full_coverage_pattern
 
-    **Example**
+    **Example1**
 
     To add CO to all hcp sites on a icosahedron:
 
@@ -459,6 +468,8 @@ The full_coverage_pattern function
     Output:
 
     .. image:: ../images/full_coverage_pattern_1.png
+
+    **Example2**
 
     To add CO to all 3fold sites on a bcc110 surface slab:
 
@@ -480,7 +491,7 @@ The random_coverage_pattern function
 
     .. autofunction:: random_coverage_pattern
 
-    **Example**
+    **Example1**
 
     To add CO randomly onto a cuboctahedron with a minimum adsorbate 
     distance of 5 Angstrom:
@@ -497,6 +508,8 @@ The random_coverage_pattern function
     Output:
 
     .. image:: ../images/random_coverage_pattern_1.png
+
+    **Example2**
 
     To add C, N, O randomly onto a hcp0001 surface slab with probabilities 
     of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
@@ -518,6 +531,8 @@ The random_coverage_pattern function
     Output:
 
     .. image:: ../images/random_coverage_pattern_2.png
+
+    **Example3**
 
     To add H, OH and H2O randomly onto a fcc100 Ni2Cu surface slab on both top 
     and bottom interfaces ( :download:`bulk water <../tests/water_bulk.xyz>` 
@@ -570,7 +585,7 @@ The SymmetricClusterOrderingGenerator class
 
         .. automethod:: run
 
-    **Example**
+    **Example1**
 
     To generate 100 symmetric chemical orderings for truncated
     octahedral NiPt nanoalloys with spherical symmetry:
@@ -593,6 +608,8 @@ The SymmetricClusterOrderingGenerator class
     .. image:: ../images/SymmetricClusterOrderingGenerator1.gif
        :scale: 60 %
        :align: center
+
+    **Example2**
                
     To systematically generate 50 symmetric chemical orderings for 
     quaternary truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloys 
@@ -604,8 +621,8 @@ The SymmetricClusterOrderingGenerator class
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', 7, 2)
         >>> scog = SCOG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'],
-        ...           symmetry='mirror_circular',
-        ...           composition={'Ni': 0.4, 'Cu': 0.3, 'Pt': 0.2, 'Au': 0.1})
+        ...             symmetry='mirror_circular',
+        ...             composition={'Ni': 0.4, 'Cu': 0.3, 'Pt': 0.2, 'Au': 0.1})
         >>> scog.run(max_gen=50, mode='systematic', verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
@@ -619,6 +636,8 @@ The SymmetricClusterOrderingGenerator class
        :scale: 60 %
        :align: center
 
+    **Example3**
+
     To stochastically generate 50 symmetric chemical orderings for 
     quaternary truncated octahedral Ni0.4Cu0.3Pt0.2Au0.1 nanoalloys 
     with mirror circular symmetry:
@@ -629,8 +648,8 @@ The SymmetricClusterOrderingGenerator class
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', 7, 2)
         >>> scog = SCOG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'],
-        ...           symmetry='mirror_circular',
-        ...           composition={'Ni': 0.4, 'Cu': 0.3, 'Pt': 0.2, 'Au': 0.1})
+        ...             symmetry='mirror_circular',
+        ...             composition={'Ni': 0.4, 'Cu': 0.3, 'Pt': 0.2, 'Au': 0.1})
         >>> scog.run(max_gen=50, mode='stochastic', verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
@@ -643,6 +662,8 @@ The SymmetricClusterOrderingGenerator class
     .. image:: ../images/SymmetricClusterOrderingGenerator3.gif
        :scale: 60 %
        :align: center
+
+    **Example4**
 
     Sometimes it is also useful to get the structure of each group. 
     For instance, to visualize the concentric shells of a truncated 
@@ -672,7 +693,7 @@ The OrderedSlabOrderingGenerator class
 
         .. automethod:: run
 
-    **Example**
+    **Example1**
 
     To stochastically generate 50 ordered chemical orderings for
     ternary NixPtyAu1-x-y fcc111 surface slabs:
@@ -697,6 +718,8 @@ The OrderedSlabOrderingGenerator class
     .. image:: ../images/OrderedSlabOrderingGenerator1.gif
        :scale: 60 %
        :align: center
+
+    **Example2**
                
     To systematically generate 50 ordered chemical orderings for 
     Ni0.75Pt0.25 fcc110 surface slabs:
@@ -722,6 +745,8 @@ The OrderedSlabOrderingGenerator class
     .. image:: ../images/OrderedSlabOrderingGenerator2.gif
        :scale: 60 %
        :align: center
+
+    **Example3**
 
     To stochastically generate 50 ordered chemical orderings for 
     Ni0.75Pt0.25 fcc110 surface slabs:
@@ -759,7 +784,7 @@ The RandomOrderingGenerator class
 
         .. automethod:: run
 
-    **Example**
+    **Example1**
 
     To generate 50 random chemical orderings for icosahedral 
     Ni0.5Pt0.2Au0.3 nanoalloys:
@@ -780,6 +805,8 @@ The RandomOrderingGenerator class
     .. image:: ../images/RandomOrderingGenerator1.gif
        :scale: 60 %
        :align: center
+
+    **Example2**
 
     To generate 50 random chemical orderings for Pt0.5Au0.5 
     fcc111 surface slabs:
