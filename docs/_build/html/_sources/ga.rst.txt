@@ -42,7 +42,7 @@ The script for a parallel genetic algorithm looks as follows:
     from ase.ga.offspring_creator import OperationSelector
     from ase.ga.population import Population, RankFitnessPopulation
     from ase.ga.convergence import GenerationRepetitionConvergence
-    from ase.ga.utilities import closest_distances_generator
+    from ase.ga.utilities import closest_distances_generator, get_nnmat
     from ase.ga.data import DataConnection, PrepareDB
     from ase.io import read, write
     from ase.cluster import Icosahedron
@@ -165,10 +165,11 @@ The script for a parallel genetic algorithm looks as follows:
         mutot = num_C * chem_pots['CH4'] + num_O * chem_pots['H2O'] + (
                 num_H - 4 * num_C - 2 * num_O) * chem_pots['H2'] / 2
         f = Epot - mutot
-    
+
         atoms.info['key_value_pairs']['raw_score'] = -f
-        atoms.info['key_value_pairs']['potential_energy'] = Epot
-    
+        atoms.info['key_value_pairs']['potential_energy'] = Epot 
+        atoms.info['data']['nnmat'] = get_nnmat(atoms)
+
         return atoms
     
     # Relax starting generation
@@ -254,7 +255,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     from ase.ga.offspring_creator import OperationSelector
     from ase.ga.population import Population, RankFitnessPopulation
     from ase.ga.convergence import GenerationRepetitionConvergence
-    from ase.ga.utilities import closest_distances_generator
+    from ase.ga.utilities import closest_distances_generator, get_nnmat
     from ase.ga.data import DataConnection, PrepareDB
     from ase.io import read, write
     from ase.cluster import Icosahedron
@@ -381,6 +382,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     
         atoms.info['key_value_pairs']['raw_score'] = -f
         atoms.info['key_value_pairs']['potential_energy'] = Epot
+        atoms.info['data']['nnmat'] = get_nnmat(atoms)
     
         return atoms
     
@@ -477,6 +479,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     from ase.ga.population import Population, RankFitnessPopulation
     from ase.ga.convergence import GenerationRepetitionConvergence
     from ase.ga.data import DataConnection, PrepareDB
+    from ase.ga.utilities import get_nnmat
     from ase.io import read, write
     from ase.cluster import Octahedron
     from ase.optimize import BFGS
@@ -574,6 +577,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         for a in set(syms):
             Epot -= (pure_pots[a] / len(atoms)) * syms.count(a)
         atoms.info['key_value_pairs']['raw_score'] = -Epot
+        atoms.info['data']['nnmat'] = get_nnmat(atoms)
     
         return atoms
 
@@ -656,6 +660,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
     from ase.ga.population import Population, RankFitnessPopulation
     from ase.ga.convergence import GenerationRepetitionConvergence
     from ase.ga.data import DataConnection, PrepareDB
+    from ase.ga.utilities import get_nnmat
     from ase.io import read, write
     from ase.cluster import Octahedron
     from ase.optimize import BFGS
@@ -782,6 +787,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
         for a in set(syms):
             Epot -= (pure_pots[a] / len(atoms)) * syms.count(a)
         atoms.info['key_value_pairs']['raw_score'] = -Epot
+        atoms.info['data']['nnmat'] = get_nnmat(atoms)
     
         return atoms
 
