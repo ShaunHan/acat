@@ -576,9 +576,7 @@ class OrderedSlabOrderingGenerator(object):
 
         G = nx.Graph()
         for p in pairs:
-            # each sublist is a bunch of nodes
             G.add_nodes_from(p)
-            # it also imlies a number of edges:
             G.add_edges_from(to_edges(p))
 
         groups = [list(cc) for cc in list(connected_components(G))]
