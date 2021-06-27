@@ -903,7 +903,6 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                  rotate_vectors=None, 
                  rotate_angles=None,
                  dmax=2.5):
-
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
 
@@ -1241,7 +1240,6 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                  adsorption_sites=None, 
                  allow_6fold=False, 
                  dmax=2.5):
-
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'SimpleCutSpliceCrossoverWithAdsorbates'
 

@@ -72,7 +72,7 @@ class StochasticPatternGenerator(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics.
+        set composition_effect=False for monometallics.
 
     both_sides : bool, default False
         Whether to add adsorbate to both top and bottom sides of the slab.
@@ -688,8 +688,8 @@ class StochasticPatternGenerator(object):
             Whether to discard duplicate patterns based on graph isomorphism.
 
         subsurf_effect : bool, default False
-            Take subsurface atoms into consideration when checking uniqueness. 
-            Could be important for surfaces like fcc100.
+            Whether to take subsurface atoms into consideration when checking 
+            uniqueness. Could be important for surfaces like fcc100.
 
         """
  
@@ -811,10 +811,10 @@ class StochasticPatternGenerator(object):
                 continue
 
             labs = nsac.get_occupied_labels(fragmentation=self.fragmentation)
-            if self.unique:
-                G = nsac.get_graph(fragmentation=self.fragmentation,
-                                   subsurf_effect=self.subsurf_effect)
+            if self.unique: 
                 if labs in self.labels_list: 
+                    G = nsac.get_graph(fragmentation=self.fragmentation,
+                                       subsurf_effect=self.subsurf_effect)
                     if self.graph_list:
                         # Skip duplicates based on isomorphism 
                         nm = iso.categorical_node_match('symbol', 'X')
@@ -836,9 +836,9 @@ class StochasticPatternGenerator(object):
                                 self.logfile.write('Duplicate found by isomorphism. '
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
-                            continue            
-                self.labels_list.append(labs)
-                self.graph_list.append(G)
+                            continue
+                    self.graph_list.append(G)   
+                self.labels_list.append(labs)                
 
             if self.logfile is not None:
                 self.logfile.write('Succeed! Pattern generated: {}\n\n'.format(labs))
@@ -899,7 +899,7 @@ class SystematicPatternGenerator(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics.
+        set composition_effect=False for monometallics.
 
     both_sides : bool, default False
         Whether to add adsorbate to both top and bottom sides of the slab.
@@ -1143,9 +1143,9 @@ class SystematicPatternGenerator(object):
 
                     labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
                     if self.unique:                                        
-                        G = nsac.get_graph(fragmentation=self.enumerate_orientations,
-                                           subsurf_effect=self.subsurf_effect)
                         if labs in self.labels_list: 
+                            G = nsac.get_graph(fragmentation=self.enumerate_orientations,
+                                               subsurf_effect=self.subsurf_effect)
                             if self.graph_list:
                                 # Skip duplicates based on isomorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
@@ -1163,8 +1163,8 @@ class SystematicPatternGenerator(object):
                                     self.n_duplicate += 1
                                     continue
 
+                            self.graph_list.append(G)                                       
                         self.labels_list.append(labs)
-                        self.graph_list.append(G)                                       
 
                     if self.logfile is not None:                                
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
@@ -1236,9 +1236,9 @@ class SystematicPatternGenerator(object):
 
             labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
             if self.unique:                                        
-                G = nsac.get_graph(fragmentation=self.enumerate_orientations,
-                                   subsurf_effect=self.subsurf_effect)
                 if labs in self.labels_list: 
+                    G = nsac.get_graph(fragmentation=self.enumerate_orientations,
+                                       subsurf_effect=self.subsurf_effect)
                     if self.graph_list:
                         # Skip duplicates based on isomorphism 
                         potential_graphs = [g for i, g in enumerate(self.graph_list)
@@ -1248,8 +1248,9 @@ class SystematicPatternGenerator(object):
                         nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
                             self.n_duplicate += 1
                             continue            
+
+                    self.graph_list.append(G)                                       
                 self.labels_list.append(labs)
-                self.graph_list.append(G)                                       
 
             if self.logfile is not None:                                
                 self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
@@ -1412,9 +1413,9 @@ class SystematicPatternGenerator(object):
       
                     labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
                     if self.unique:                                        
-                        G = nsac.get_graph(fragmentation=self.enumerate_orientations,
-                                           subsurf_effect=self.subsurf_effect)
                         if labs in self.labels_list: 
+                            G = nsac.get_graph(fragmentation=self.enumerate_orientations,
+                                               subsurf_effect=self.subsurf_effect)
                             if self.graph_list:
                                 # Skip duplicates based on isomorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
@@ -1424,8 +1425,9 @@ class SystematicPatternGenerator(object):
                                 nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
                                     self.n_duplicate += 1
                                     continue            
+
+                            self.graph_list.append(G)                                       
                         self.labels_list.append(labs)
-                        self.graph_list.append(G)                                       
                                                                                              
                     if self.logfile is not None:                                
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
@@ -1589,9 +1591,9 @@ class SystematicPatternGenerator(object):
       
                     labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)                                                   
                     if self.unique:                                        
-                        G = nsac.get_graph(fragmentation=self.enumerate_orientations,
-                                           subsurf_effect=self.subsurf_effect)
                         if labs in self.labels_list: 
+                            G = nsac.get_graph(fragmentation=self.enumerate_orientations,
+                                               subsurf_effect=self.subsurf_effect)
                             if self.graph_list:
                                 # Skip duplicates based on isomorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
@@ -1601,8 +1603,9 @@ class SystematicPatternGenerator(object):
                                 nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
                                     self.n_duplicate += 1
                                     continue            
+
+                            self.graph_list.append(G)                                       
                         self.labels_list.append(labs)
-                        self.graph_list.append(G)                                       
                                                                                              
                     if self.logfile is not None:                                
                         self.logfile.write('Succeed! Pattern {} '.format(self.n_write)
@@ -1647,8 +1650,8 @@ class SystematicPatternGenerator(object):
             Whether to discard duplicate patterns based on graph isomorphism.
 
         subsurf_effect : bool, default False
-            Take subsurface atoms into consideration when checking uniqueness. 
-            Could be important for surfaces like fcc100.
+            Whether to take subsurface atoms into consideration when checking 
+            uniqueness. Could be important for surfaces like fcc100.
 
         """
 
@@ -1750,8 +1753,9 @@ class SystematicPatternGenerator(object):
                 self.logfile.flush()
 
 
-def ordered_coverage_pattern(atoms, adsorbate, 
+def ordered_coverage_pattern(atoms, adsorbate_species, 
                              coverage=1., 
+                             species_probabilities=None,
                              surface=None, 
                              height=None, 
                              min_adsorbate_distance=0.,
@@ -1766,9 +1770,8 @@ def ordered_coverage_pattern(atoms, adsorbate,
         The nanoparticle or surface slab onto which the adsorbates are
         added. Accept any ase.Atoms object. No need to be built-in.
 
-    adsorbate : str or ase.Atom object or ase.Atoms object
-        The adsorbate species to be added onto the surface. 
-        For now only support adding one type of adsorbate species.
+    adsorbate_species : str or list of strs 
+        A list of adsorbate species to be added to the surface.
 
     coverage : float, default 1. 
         The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
@@ -1781,6 +1784,10 @@ def ordered_coverage_pattern(atoms, adsorbate,
         since the surface area can be too small to encompass the 
         overlayer pattern properly. We expect this function to work 
         well on large nanoparticles and surface slabs.                  
+
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of adding onto the surface.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices).
@@ -1804,6 +1811,12 @@ def ordered_coverage_pattern(atoms, adsorbate,
     """
 
     assert coverage in [0.25, 0.5, 0.75, 1.], 'coverage not supported' 
+
+    adsorbate_species = adsorbate_species if is_list_or_tuple(                                     
+                        adsorbate_species) else [adsorbate_species]
+    if species_probabilities is not None:
+        assert len(species_probabilities.keys()) == len(adsorbate_species)
+        probability_list = [species_probabilities[a] for a in adsorbate_species]
 
     if True not in atoms.pbc:                            
         if surface is None:
@@ -1839,7 +1852,7 @@ def ordered_coverage_pattern(atoms, adsorbate,
                     grouped_sites = group_sites_by_facet(atoms, fcc_sites, site_list)
                 else:
                     grouped_sites = {'pbc_sites': fcc_sites}
- 
+
                 for sites in grouped_sites.values():
                     if sites:
                         sites_to_delete = [sites[0]]
@@ -2167,8 +2180,17 @@ def ordered_coverage_pattern(atoms, adsorbate,
                         final_sites.append(esite)
 
     natoms = len(atoms)
-    nads = len(list(Formula(adsorbate)))
+    nads_dict = {ads: len(list(Formula(ads))) for ads in adsorbate_species}
+
     for site in final_sites:
+        # Select adsorbate with probability 
+        if not species_probabilities:
+            adsorbate = random.choice(adsorbate_species)
+        else: 
+            adsorbate = random.choices(k=1, population=adsorbate_species,
+                                       weights=probability_list)[0]        
+        nads = nads_dict[adsorbate] 
+
         if height is None:
             height = site_heights[site['site']]
 
@@ -2181,7 +2203,8 @@ def ordered_coverage_pattern(atoms, adsorbate,
     return atoms
 
 
-def full_coverage_pattern(atoms, adsorbate, site, 
+def full_coverage_pattern(atoms, adsorbate_species, site, 
+                          species_probabilities=None,
                           surface=None,
                           height=None, 
                           min_adsorbate_distance=0.,
@@ -2196,12 +2219,15 @@ def full_coverage_pattern(atoms, adsorbate, site,
         The nanoparticle or surface slab onto which the adsorbates are
         added. Accept any ase.Atoms object. No need to be built-in.
 
-    adsorbate : str or ase.Atom object or ase.Atoms object
-        The adsorbate species to be added onto the surface.
-        For now only support adding one type of adsorbate species.
+    adsorbate_species : str or list of strs 
+        A list of adsorbate species to be added to the surface.
 
     site : str
         The site type that the adsorbates should be added to.
+
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of adding onto the surface.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices). 
@@ -2223,6 +2249,12 @@ def full_coverage_pattern(atoms, adsorbate, site,
     
     """
 
+    adsorbate_species = adsorbate_species if is_list_or_tuple(
+                        adsorbate_species) else [adsorbate_species]
+    if species_probabilities is not None:
+        assert len(species_probabilities.keys()) == len(adsorbate_species)
+        probability_list = [species_probabilities[a] for a in adsorbate_species]               
+
     if True not in atoms.pbc:                                 
         if surface is None:
             surface = ['fcc100', 'fcc111']        
@@ -2233,12 +2265,21 @@ def full_coverage_pattern(atoms, adsorbate, site,
                                   allow_6fold=True,
                                   both_sides=both_sides)
         site_list = sas.site_list
+
     if not isinstance(surface, list):
         surface = [surface] 
-
     natoms = len(atoms)
-    nads = len(list(Formula(adsorbate)))
+    nads_dict = {ads: len(list(Formula(ads))) for ads in adsorbate_species}
+
     for st in site_list:
+        # Select adsorbate with probability 
+        if not species_probabilities:
+            adsorbate = random.choice(adsorbate_species)
+        else: 
+            adsorbate = random.choices(k=1, population=adsorbate_species,
+                                       weights=probability_list)[0]        
+        nads = nads_dict[adsorbate] 
+
         if st['site'] == site and st['surface'] in surface:
             if height is None:
                 height = site_heights[st['site']]

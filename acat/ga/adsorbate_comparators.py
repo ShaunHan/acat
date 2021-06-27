@@ -1,7 +1,6 @@
 """Comparator objects relevant to particles with adsorbates."""
 from ase import Atoms
 
-
 def count_ads(atoms, adsorbate):
     """Very naive implementation only taking into account
     the symbols. atoms and adsorbate should both be supplied
@@ -127,4 +126,88 @@ class AdsorptionMetalsComparator(object):
         for d in diffs:
             if abs(d) < self.same_adsorption_number:
                 return True
+        return False
+
+
+class AdsorptionGraphComparator(object):
+    """Compares the graph of adsorbate overlayer + surface atoms and 
+    returns True if they are isomorphic with node matches. Before
+    checking graph isomorphism, a cheap label match is used to reject
+    graphs that are impossible to be isomorphic.
+
+    Parameters:
+
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object
+        Provide the acat built-in adsorption sites class to accelerate the 
+        pattern generation. Make sure all the structures have the same 
+        atom indexing. 
+
+    composition_effect : bool, default True
+        Whether to consider sites with different elemental compositions as 
+        different sites. It is recommended to set composition_effet=False 
+        for monometallics.
+    
+    subsurf_effect : bool, default False
+        Whether to take subsurface atoms into consideration when checking 
+        uniqueness. Could be important for surfaces like fcc100.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    fragmentation : bool, default True
+        Whether to cut multidentate species into fragments. This ensures 
+        that multidentate species with different orientations are
+        considered as different overlayer patterns.
+
+    """
+
+    def __init__(self, adsorption_sites,  
+                 composition_effect=True,
+                 subsurf_effect=False, 
+                 dmax=2.5, 
+                 fragmentation=True):
+        from ..adsorbate_coverage import ClusterAdsorbateCoverage
+        from ..adsorbate_coverage import SlabAdsorbateCoverage
+        import networkx.algorithms.isomorphism as iso
+        import networkx as nx
+
+        self.adsorption_sites = adsorption_sites
+        self.composition_effect = composition_effect
+        self.subsurf_effect = subsurf_effect
+        self.dmax = dmax
+        self.fragmentation = fragmentation
+
+    def looks_like(self, a1, a2):
+        sas = self.adsorption_sites        
+
+        if hasattr(sas, 'surface'):
+            sas.update(a1, update_composition=self.composition_effect)
+            sac1 = SlabAdsorbateCoverage(a1, sas, dmax=self.dmax,
+                                         label_occupied_sites=True) 
+            sas.update(a2, update_composition=self.composition_effect)
+            sac2 = SlabAdsorbateCoverage(a2, sas, dmax=self.dmax,
+                                         label_occupied_sites=True) 
+        else:
+            sas.update(a1, update_composition=self.composition_effect)
+            sac1 = ClusterAdsorbateCoverage(a1, sas, dmax=self.dmax, 
+                                            label_occupied_sites=True)
+            sas.update(a2, update_composition=self.composition_effect)
+            sac2 = ClusterAdsorbateCoverage(a2, sas, dmax=self.dmax, 
+                                            label_occupied_sites=True)
+        labs1 = sac1.get_occupied_labels(fragmentation=self.fragmentation)
+        labs2 = sac2.get_occupied_labels(fragmentation=self.fragmentation)       
+
+        if labs1 == labs2: 
+            G1 = sac1.get_graph(fragmentation=self.fragmentation,
+                                subsurf_effect=self.subsurf_effect)
+            G2 = sac2.get_graph(fragmentation=self.fragmentation,
+                                subsurf_effect=self.subsurf_effect)
+            # Skip duplicates based on isomorphism 
+            nm = iso.categorical_node_match('symbol', 'X')
+
+            if nx.isomorphism.is_isomorphic(G1, G2, node_match=nm):
+                return True
+
         return False

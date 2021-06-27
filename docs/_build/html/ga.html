@@ -593,6 +593,42 @@ will have a difference of .5 in both elements:</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt id="acat.ga.adsorbate_comparators.AdsorptionGraphComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_comparators.</code><code class="sig-name descname">AdsorptionGraphComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorption_sites</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionGraphComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionGraphComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compares the graph of adsorbate overlayer + surface atoms and
+returns True if they are isomorphic with node matches. Before
+checking graph isomorphism, a cheap label match is used to reject
+graphs that are impossible to be isomorphic.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>adsorption_sites<span class="classifier">acat.adsorption_sites.ClusterAdsorptionSites object         or acat.adsorption_sites.SlabAdsorptionSites object</span></dt><dd><p>Provide the acat built-in adsorption sites class to accelerate the
+pattern generation. Make sure all the structures have the same
+atom indexing.</p>
+</dd>
+<dt>composition_effect<span class="classifier">bool, default True</span></dt><dd><p>Whether to consider sites with different elemental compositions as
+different sites. It is recommended to set composition_effet=False
+for monometallics.</p>
+</dd>
+<dt>subsurf_effect<span class="classifier">bool, default False</span></dt><dd><p>Whether to take subsurface atoms into consideration when checking
+uniqueness. Could be important for surfaces like fcc100.</p>
+</dd>
+<dt>dmax<span class="classifier">float, default 2.5</span></dt><dd><p>The maximum bond length (in Angstrom) between the site and the
+bonding atom  that should be considered as an adsorbate.</p>
+</dd>
+<dt>fragmentation<span class="classifier">bool, default True</span></dt><dd><p>Whether to cut multidentate species into fragments. This ensures
+that multidentate species with different orientations are
+considered as different overlayer patterns.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.adsorbate_comparators.AdsorptionGraphComparator.looks_like">
+<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionGraphComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionGraphComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <p><strong>Example1</strong></p>
 <p>All the adsorbate operators and comparators can be easily used with other operators and comparators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code> and <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> and <code class="docutils literal notranslate"><span class="pre">SimpleCutSpliceCrossoverWithAdsorbates</span></code> operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.</p>
 <p>As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
@@ -740,6 +776,8 @@ will have a difference of .5 in both elements:</p>
 
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
+
+    <span class="c1"># Parallelize nnmat calculations to accelerate NNMatComparator</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nnmat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_nnmat</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">atoms</span>
@@ -950,6 +988,8 @@ will have a difference of .5 in both elements:</p>
 
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
+
+    <span class="c1"># Parallelize nnmat calculations to accelerate NNMatComparator</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nnmat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_nnmat</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">atoms</span>
@@ -1302,6 +1342,8 @@ structures are still considered to be look alike.</p></li>
     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">syms</span><span class="p">):</span>
         <span class="n">Epot</span> <span class="o">-=</span> <span class="p">(</span><span class="n">pure_pots</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span> <span class="o">*</span> <span class="n">syms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Epot</span>
+
+    <span class="c1"># Parallelize nnmat calculations to accelerate NNMatComparator</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nnmat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_nnmat</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">atoms</span>
@@ -1508,6 +1550,8 @@ structures are still considered to be look alike.</p></li>
     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">syms</span><span class="p">):</span>
         <span class="n">Epot</span> <span class="o">-=</span> <span class="p">(</span><span class="n">pure_pots</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">))</span> <span class="o">*</span> <span class="n">syms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">Epot</span>
+
+    <span class="c1"># Parallelize nnmat calculations to accelerate NNMatComparator</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nnmat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_nnmat</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">atoms</span>

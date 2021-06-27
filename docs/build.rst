@@ -422,7 +422,7 @@ The ordered_coverage_pattern function
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = ordered_coverage_pattern(atoms, adsorbate='CO', 
+        >>> pattern = ordered_coverage_pattern(atoms, adsorbate_species='CO', 
         ...                                    coverage=0.5)
         >>> view(pattern)
 
@@ -439,9 +439,8 @@ The ordered_coverage_pattern function
         >>> from ase.visualize import view
         >>> atoms = fcc111('Cu', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = ordered_coverage_pattern(atoms, adsorbate='CO',
-        ...                                    coverage=0.5, 
-        ...                                    surface='fcc111')
+        >>> pattern = ordered_coverage_pattern(atoms, adsorbate_species='CO',
+        ...                                    coverage=0.5, surface='fcc111')
         >>> view(pattern)
 
     Output:
@@ -462,7 +461,8 @@ The full_coverage_pattern function
         >>> from ase.visualize import view
         >>> atoms = Icosahedron('Au', noshells=5)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = full_coverage_pattern(atoms, adsorbate='CO', site='hcp')
+        >>> pattern = full_coverage_pattern(atoms, adsorbate_species='CO', 
+        ...                                 site='hcp')
         >>> view(pattern)
 
     Output:
@@ -478,7 +478,7 @@ The full_coverage_pattern function
         >>> from ase.visualize import view
         >>> atoms = bcc110('Mo', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = full_coverage_pattern(atoms, adsorbate='CO',
+        >>> pattern = full_coverage_pattern(atoms, adsorbate_species='CO',
         ...                                 surface='bcc110', site='3fold')
         >>> view(pattern)
 
