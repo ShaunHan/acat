@@ -163,7 +163,6 @@
 <span></span><span class="sd">&quot;&quot;&quot;Comparator objects relevant to particles with adsorbates.&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
 
-
 <div class="viewcode-block" id="count_ads"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.count_ads">[docs]</a><span class="k">def</span> <span class="nf">count_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Very naive implementation only taking into account</span>
 <span class="sd">    the symbols. atoms and adsorbate should both be supplied</span>
@@ -289,6 +288,90 @@
         <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">diffs</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">same_adsorption_number</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+
+
+<div class="viewcode-block" id="AdsorptionGraphComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorptionGraphComparator">[docs]</a><span class="k">class</span> <span class="nc">AdsorptionGraphComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the graph of adsorbate overlayer + surface atoms and </span>
+<span class="sd">    returns True if they are isomorphic with node matches. Before</span>
+<span class="sd">    checking graph isomorphism, a cheap label match is used to reject</span>
+<span class="sd">    graphs that are impossible to be isomorphic.</span>
+
+<span class="sd">    Parameters:</span>
+
+<span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \</span>
+<span class="sd">        or acat.adsorption_sites.SlabAdsorptionSites object</span>
+<span class="sd">        Provide the acat built-in adsorption sites class to accelerate the </span>
+<span class="sd">        pattern generation. Make sure all the structures have the same </span>
+<span class="sd">        atom indexing. </span>
+
+<span class="sd">    composition_effect : bool, default True</span>
+<span class="sd">        Whether to consider sites with different elemental compositions as </span>
+<span class="sd">        different sites. It is recommended to set composition_effet=False </span>
+<span class="sd">        for monometallics.</span>
+<span class="sd">    </span>
+<span class="sd">    subsurf_effect : bool, default False</span>
+<span class="sd">        Whether to take subsurface atoms into consideration when checking </span>
+<span class="sd">        uniqueness. Could be important for surfaces like fcc100.</span>
+
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
+<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+
+<span class="sd">    fragmentation : bool, default True</span>
+<span class="sd">        Whether to cut multidentate species into fragments. This ensures </span>
+<span class="sd">        that multidentate species with different orientations are</span>
+<span class="sd">        considered as different overlayer patterns.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span>  
+                 <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> 
+                 <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
+        <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
+        <span class="kn">import</span> <span class="nn">networkx.algorithms.isomorphism</span> <span class="k">as</span> <span class="nn">iso</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">composition_effect</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span> <span class="o">=</span> <span class="n">subsurf_effect</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span> <span class="o">=</span> <span class="n">fragmentation</span>
+
+<div class="viewcode-block" id="AdsorptionGraphComparator.looks_like"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.AdsorptionGraphComparator.looks_like">[docs]</a>    <span class="k">def</span> <span class="nf">looks_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">):</span>
+        <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>        
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sas</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">):</span>
+            <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">)</span>
+            <span class="n">sac1</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">,</span>
+                                         <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+            <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a2</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">)</span>
+            <span class="n">sac2</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">a2</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">,</span>
+                                         <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">)</span>
+            <span class="n">sac1</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">,</span> 
+                                            <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a2</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">)</span>
+            <span class="n">sac2</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">a2</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">,</span> 
+                                            <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">labs1</span> <span class="o">=</span> <span class="n">sac1</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">)</span>
+        <span class="n">labs2</span> <span class="o">=</span> <span class="n">sac2</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">)</span>       
+
+        <span class="k">if</span> <span class="n">labs1</span> <span class="o">==</span> <span class="n">labs2</span><span class="p">:</span> 
+            <span class="n">G1</span> <span class="o">=</span> <span class="n">sac1</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">,</span>
+                                <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
+            <span class="n">G2</span> <span class="o">=</span> <span class="n">sac2</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">,</span>
+                                <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
+            <span class="c1"># Skip duplicates based on isomorphism </span>
+            <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
         <span class="k">return</span> <span class="kc">False</span></div></div>
 </pre></div>
 

@@ -69,7 +69,7 @@ class ClusterAdsorptionSites(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics.
+        set composition_effect=False for monometallics.
 
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
@@ -1053,7 +1053,7 @@ class SlabAdsorptionSites(object):
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics.        
+        set composition_effect=False for monometallics.        
 
     both_sides : bool, default False
         Whether to consider sites on both top and bottom sides
@@ -2708,7 +2708,7 @@ def enumerate_adsorption_sites(atoms, surface=None,
     composition_effect : bool, default False
         Whether to consider sites with different elemental 
         compositions as different sites. It is recommended to 
-        set composition=False for monometallics.
+        set composition_effect=False for monometallics.
 
     both_sides : bool, default False
         Whether to consider sites on both top and bottom sides

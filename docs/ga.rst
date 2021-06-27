@@ -168,6 +168,8 @@ The script for a parallel genetic algorithm looks as follows:
 
         atoms.info['key_value_pairs']['raw_score'] = -f
         atoms.info['key_value_pairs']['potential_energy'] = Epot 
+
+        # Parallelize nnmat calculations to accelerate NNMatComparator
         atoms.info['data']['nnmat'] = get_nnmat(atoms)
 
         return atoms
@@ -382,6 +384,8 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     
         atoms.info['key_value_pairs']['raw_score'] = -f
         atoms.info['key_value_pairs']['potential_energy'] = Epot
+
+        # Parallelize nnmat calculations to accelerate NNMatComparator
         atoms.info['data']['nnmat'] = get_nnmat(atoms)
     
         return atoms
@@ -577,6 +581,8 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         for a in set(syms):
             Epot -= (pure_pots[a] / len(atoms)) * syms.count(a)
         atoms.info['key_value_pairs']['raw_score'] = -Epot
+
+        # Parallelize nnmat calculations to accelerate NNMatComparator
         atoms.info['data']['nnmat'] = get_nnmat(atoms)
     
         return atoms
@@ -787,6 +793,8 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
         for a in set(syms):
             Epot -= (pure_pots[a] / len(atoms)) * syms.count(a)
         atoms.info['key_value_pairs']['raw_score'] = -Epot
+
+        # Parallelize nnmat calculations to accelerate NNMatComparator
         atoms.info['data']['nnmat'] = get_nnmat(atoms)
     
         return atoms

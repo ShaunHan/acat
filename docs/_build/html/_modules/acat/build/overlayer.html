@@ -234,7 +234,7 @@
 <span class="sd">    composition_effect : bool, default False</span>
 <span class="sd">        Whether to consider sites with different elemental </span>
 <span class="sd">        compositions as different sites. It is recommended to </span>
-<span class="sd">        set composition=False for monometallics.</span>
+<span class="sd">        set composition_effect=False for monometallics.</span>
 
 <span class="sd">    both_sides : bool, default False</span>
 <span class="sd">        Whether to add adsorbate to both top and bottom sides of the slab.</span>
@@ -850,8 +850,8 @@
 <span class="sd">            Whether to discard duplicate patterns based on graph isomorphism.</span>
 
 <span class="sd">        subsurf_effect : bool, default False</span>
-<span class="sd">            Take subsurface atoms into consideration when checking uniqueness. </span>
-<span class="sd">            Could be important for surfaces like fcc100.</span>
+<span class="sd">            Whether to take subsurface atoms into consideration when checking </span>
+<span class="sd">            uniqueness. Could be important for surfaces like fcc100.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
  
@@ -973,10 +973,10 @@
                 <span class="k">continue</span>
 
             <span class="n">labs</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>
-                <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">,</span>
-                                   <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span> 
                 <span class="k">if</span> <span class="n">labs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">:</span> 
+                    <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">,</span>
+                                       <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">:</span>
                         <span class="c1"># Skip duplicates based on isomorphism </span>
                         <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
@@ -998,9 +998,9 @@
                                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Duplicate found by isomorphism. &#39;</span>
                                                    <span class="o">+</span> <span class="s1">&#39;Discarded!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-                            <span class="k">continue</span>            
-                <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+                            <span class="k">continue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>   
+                <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>                
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Succeed! Pattern generated: </span><span class="si">{}</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">labs</span><span class="p">))</span>
@@ -1061,7 +1061,7 @@
 <span class="sd">    composition_effect : bool, default False</span>
 <span class="sd">        Whether to consider sites with different elemental </span>
 <span class="sd">        compositions as different sites. It is recommended to </span>
-<span class="sd">        set composition=False for monometallics.</span>
+<span class="sd">        set composition_effect=False for monometallics.</span>
 
 <span class="sd">    both_sides : bool, default False</span>
 <span class="sd">        Whether to add adsorbate to both top and bottom sides of the slab.</span>
@@ -1305,9 +1305,9 @@
 
                     <span class="n">labs</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>                                        
-                        <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
-                                           <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">labs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">:</span> 
+                            <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
+                                               <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">:</span>
                                 <span class="c1"># Skip duplicates based on isomorphism </span>
                                 <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
@@ -1325,8 +1325,8 @@
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>
 
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
                         <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
 
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                
                         <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Succeed! Pattern </span><span class="si">{}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_write</span><span class="p">)</span>
@@ -1398,9 +1398,9 @@
 
             <span class="n">labs</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>                                        
-                <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
-                                   <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">labs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">:</span> 
+                    <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
+                                       <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">:</span>
                         <span class="c1"># Skip duplicates based on isomorphism </span>
                         <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
@@ -1410,8 +1410,9 @@
                         <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="k">continue</span>            
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
                 <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                
                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Succeed! Pattern </span><span class="si">{}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_write</span><span class="p">)</span>
@@ -1574,9 +1575,9 @@
       
                     <span class="n">labs</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>                                        
-                        <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
-                                           <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">labs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">:</span> 
+                            <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
+                                               <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">:</span>
                                 <span class="c1"># Skip duplicates based on isomorphism </span>
                                 <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
@@ -1586,8 +1587,9 @@
                                 <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>            
+
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
                         <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
                                                                                              
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                
                         <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Succeed! Pattern </span><span class="si">{}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_write</span><span class="p">)</span>
@@ -1751,9 +1753,9 @@
       
                     <span class="n">labs</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">)</span>                                                   
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>                                        
-                        <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
-                                           <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">labs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">:</span> 
+                            <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">enumerate_orientations</span><span class="p">,</span>
+                                               <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">:</span>
                                 <span class="c1"># Skip duplicates based on isomorphism </span>
                                 <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
@@ -1763,8 +1765,9 @@
                                 <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>            
+
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
                         <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>                                       
                                                                                              
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                
                         <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Succeed! Pattern </span><span class="si">{}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_write</span><span class="p">)</span>
@@ -1809,8 +1812,8 @@
 <span class="sd">            Whether to discard duplicate patterns based on graph isomorphism.</span>
 
 <span class="sd">        subsurf_effect : bool, default False</span>
-<span class="sd">            Take subsurface atoms into consideration when checking uniqueness. </span>
-<span class="sd">            Could be important for surfaces like fcc100.</span>
+<span class="sd">            Whether to take subsurface atoms into consideration when checking </span>
+<span class="sd">            uniqueness. Could be important for surfaces like fcc100.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1912,8 +1915,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="ordered_coverage_pattern"><a class="viewcode-back" href="../../../build.html#acat.build.overlayer.ordered_coverage_pattern">[docs]</a><span class="k">def</span> <span class="nf">ordered_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> 
+<div class="viewcode-block" id="ordered_coverage_pattern"><a class="viewcode-back" href="../../../build.html#acat.build.overlayer.ordered_coverage_pattern">[docs]</a><span class="k">def</span> <span class="nf">ordered_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span> 
                              <span class="n">coverage</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> 
+                             <span class="n">species_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                              <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                              <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                              <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
@@ -1928,9 +1932,8 @@
 <span class="sd">        The nanoparticle or surface slab onto which the adsorbates are</span>
 <span class="sd">        added. Accept any ase.Atoms object. No need to be built-in.</span>
 
-<span class="sd">    adsorbate : str or ase.Atom object or ase.Atoms object</span>
-<span class="sd">        The adsorbate species to be added onto the surface. </span>
-<span class="sd">        For now only support adding one type of adsorbate species.</span>
+<span class="sd">    adsorbate_species : str or list of strs </span>
+<span class="sd">        A list of adsorbate species to be added to the surface.</span>
 
 <span class="sd">    coverage : float, default 1. </span>
 <span class="sd">        The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). </span>
@@ -1943,6 +1946,10 @@
 <span class="sd">        since the surface area can be too small to encompass the </span>
 <span class="sd">        overlayer pattern properly. We expect this function to work </span>
 <span class="sd">        well on large nanoparticles and surface slabs.                  </span>
+
+<span class="sd">    species_probabilities : dict, default None</span>
+<span class="sd">        A dictionary that contains keys of each adsorbate species and </span>
+<span class="sd">        values of their probabilities of adding onto the surface.</span>
 
 <span class="sd">    surface : str, default None</span>
 <span class="sd">        The surface type (crystal structure + Miller indices).</span>
@@ -1966,6 +1973,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">assert</span> <span class="n">coverage</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="s1">&#39;coverage not supported&#39;</span> 
+
+    <span class="n">adsorbate_species</span> <span class="o">=</span> <span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span>                                     
+                        <span class="n">adsorbate_species</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">adsorbate_species</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">species_probabilities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_probabilities</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">adsorbate_species</span><span class="p">)</span>
+        <span class="n">probability_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">species_probabilities</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">adsorbate_species</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>                            
         <span class="k">if</span> <span class="n">surface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2001,7 +2014,7 @@
                     <span class="n">grouped_sites</span> <span class="o">=</span> <span class="n">group_sites_by_facet</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">fcc_sites</span><span class="p">,</span> <span class="n">site_list</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">grouped_sites</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pbc_sites&#39;</span><span class="p">:</span> <span class="n">fcc_sites</span><span class="p">}</span>
- 
+
                 <span class="k">for</span> <span class="n">sites</span> <span class="ow">in</span> <span class="n">grouped_sites</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">sites</span><span class="p">:</span>
                         <span class="n">sites_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="n">sites</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
@@ -2329,8 +2342,17 @@
                         <span class="n">final_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">esite</span><span class="p">)</span>
 
     <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-    <span class="n">nads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)))</span>
+    <span class="n">nads_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">ads</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">ads</span><span class="p">)))</span> <span class="k">for</span> <span class="n">ads</span> <span class="ow">in</span> <span class="n">adsorbate_species</span><span class="p">}</span>
+
     <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">final_sites</span><span class="p">:</span>
+        <span class="c1"># Select adsorbate with probability </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">species_probabilities</span><span class="p">:</span>
+            <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">adsorbate_species</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="n">adsorbate_species</span><span class="p">,</span>
+                                       <span class="n">weights</span><span class="o">=</span><span class="n">probability_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        
+        <span class="n">nads</span> <span class="o">=</span> <span class="n">nads_dict</span><span class="p">[</span><span class="n">adsorbate</span><span class="p">]</span> 
+
         <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">height</span> <span class="o">=</span> <span class="n">site_heights</span><span class="p">[</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
 
@@ -2343,7 +2365,8 @@
     <span class="k">return</span> <span class="n">atoms</span></div>
 
 
-<div class="viewcode-block" id="full_coverage_pattern"><a class="viewcode-back" href="../../../build.html#acat.build.overlayer.full_coverage_pattern">[docs]</a><span class="k">def</span> <span class="nf">full_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> 
+<div class="viewcode-block" id="full_coverage_pattern"><a class="viewcode-back" href="../../../build.html#acat.build.overlayer.full_coverage_pattern">[docs]</a><span class="k">def</span> <span class="nf">full_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> 
+                          <span class="n">species_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                           <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                           <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                           <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
@@ -2358,12 +2381,15 @@
 <span class="sd">        The nanoparticle or surface slab onto which the adsorbates are</span>
 <span class="sd">        added. Accept any ase.Atoms object. No need to be built-in.</span>
 
-<span class="sd">    adsorbate : str or ase.Atom object or ase.Atoms object</span>
-<span class="sd">        The adsorbate species to be added onto the surface.</span>
-<span class="sd">        For now only support adding one type of adsorbate species.</span>
+<span class="sd">    adsorbate_species : str or list of strs </span>
+<span class="sd">        A list of adsorbate species to be added to the surface.</span>
 
 <span class="sd">    site : str</span>
 <span class="sd">        The site type that the adsorbates should be added to.</span>
+
+<span class="sd">    species_probabilities : dict, default None</span>
+<span class="sd">        A dictionary that contains keys of each adsorbate species and </span>
+<span class="sd">        values of their probabilities of adding onto the surface.</span>
 
 <span class="sd">    surface : str, default None</span>
 <span class="sd">        The surface type (crystal structure + Miller indices). </span>
@@ -2385,6 +2411,12 @@
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">adsorbate_species</span> <span class="o">=</span> <span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span>
+                        <span class="n">adsorbate_species</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">adsorbate_species</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">species_probabilities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_probabilities</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">adsorbate_species</span><span class="p">)</span>
+        <span class="n">probability_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">species_probabilities</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">adsorbate_species</span><span class="p">]</span>               
+
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>                                 
         <span class="k">if</span> <span class="n">surface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">surface</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">]</span>        
@@ -2395,12 +2427,21 @@
                                   <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                   <span class="n">both_sides</span><span class="o">=</span><span class="n">both_sides</span><span class="p">)</span>
         <span class="n">site_list</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">site_list</span>
+
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">surface</span> <span class="o">=</span> <span class="p">[</span><span class="n">surface</span><span class="p">]</span> 
-
     <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-    <span class="n">nads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)))</span>
+    <span class="n">nads_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">ads</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Formula</span><span class="p">(</span><span class="n">ads</span><span class="p">)))</span> <span class="k">for</span> <span class="n">ads</span> <span class="ow">in</span> <span class="n">adsorbate_species</span><span class="p">}</span>
+
     <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">site_list</span><span class="p">:</span>
+        <span class="c1"># Select adsorbate with probability </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">species_probabilities</span><span class="p">:</span>
+            <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">adsorbate_species</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="n">adsorbate_species</span><span class="p">,</span>
+                                       <span class="n">weights</span><span class="o">=</span><span class="n">probability_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>        
+        <span class="n">nads</span> <span class="o">=</span> <span class="n">nads_dict</span><span class="p">[</span><span class="n">adsorbate</span><span class="p">]</span> 
+
         <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">surface</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="n">site_heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
