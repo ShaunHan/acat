@@ -309,8 +309,8 @@ The StochasticPatternGenerator class
     **Example3**
 
     The following example illustrates how to generate 20 stochastic
-    adsorbate overlayer patterns with 5 adsorbates chosen from CO, OH 
-    and N, on 10 quaternary cuboctahedral nanoalloys with random 
+    adsorbate overlayer patterns with 5 adsorbates: 1 CO, 2 OH and 
+    2 N, on 10 quaternary cuboctahedral nanoalloys with random 
     chemical orderings. The minimum adsorbate distance is set to 3 
     Angstrom and duplicate patterns are allowed (very unlikely for 
     nanoparticles):
@@ -329,7 +329,9 @@ The StochasticPatternGenerator class
         >>> spg = SPG(particles, adsorbate_species=['CO','OH','N'],
         ...           min_adsorbate_distance=3.,
         ...           composition_effect=True)
-        >>> spg.run(num_gen=20, action='add', num_act=5, unique=False)
+        >>> spg.run(num_gen=20, action='add', num_act=5, 
+        ...         add_species_composition={'CO': 1, 'OH': 2, 'N': 2}, 
+        ...         unique=False)
         >>> images = read('patterns.traj', index=':')
         >>> view(images)
 
@@ -377,7 +379,7 @@ The SystematicPatternGenerator class
     **Example2**
 
     The following example illustrates how to enumerate all unique coverage
-    patterns consists of 3 adsorbates chosen from C, N and O on a bimetallic 
+    patterns consists of 3 adsorbates: 1 C, 1 N and 1 O on a bimetallic 
     bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom 
     (here only generate a maximum of 100 unique patterns):
 
@@ -398,7 +400,8 @@ The SystematicPatternGenerator class
         ...           adsorption_sites=sas,
         ...           surface='bcc111',
         ...           composition_effect=True)
-        >>> spg.run(max_gen_per_image=100, action='add', num_act=3)
+        >>> spg.run(max_gen_per_image=100, action='add', num_act=3,
+        ...         add_species_composition={'C': 1, 'N': 1, 'O': 1}) 
         >>> images = read('patterns.traj', index=':')
         >>> view(images)
 

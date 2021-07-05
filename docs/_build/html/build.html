@@ -606,7 +606,7 @@ stochastically but for all images systematically, e.g. generating
 </dl>
 <dl class="py method">
 <dt id="acat.build.overlayer.StochasticPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">action_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#StochasticPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.StochasticPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">action_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#StochasticPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.StochasticPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -614,6 +614,9 @@ stochastically but for all images systematically, e.g. generating
 <li><p><strong>num_gen</strong> (<em>int</em>) – Number of patterns to generate.</p></li>
 <li><p><strong>action</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default 'add'</em>) – Action(s) to perform. If a list of actions is provided, select
 actions from the list randomly or with probabilities.</p></li>
+<li><p><strong>action_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each action and values of the
+corresponding probabilities. Select actions with equal probability
+if not specified.</p></li>
 <li><p><strong>num_act</strong> (<em>int</em><em>, </em><em>default 1</em>) – Number of times performed for each action. Useful for operating
 more than one adsorbates at a time. This becomes extremely slow
 when adding many adsorbates to generate high coverage patterns.
@@ -623,9 +626,10 @@ you want to control the exact number of adsorbates;
 2) use <cite>acat.build.overlayer.random_coverage_pattern</cite> if you want
 to control the minimum adsorbate distance. This is the fastest
 way, but the number of adsorbates is not guaranteed to be fixed.</p></li>
-<li><p><strong>action_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each action and values of the
-corresponding probabilities. Select actions with equal probability
-if not specified.</p></li>
+<li><p><strong>add_species_composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
+values of the species composition to be added onto the surface.
+Adding adsorbate species according to species_probabilities if
+not specified. Please only use this if the action is ‘add’.</p></li>
 <li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to discard duplicate patterns based on graph isomorphism.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to take subsurface atoms into consideration when checking
 uniqueness. Could be important for surfaces like fcc100.</p></li>
@@ -708,8 +712,8 @@ minimum adsorbate distance of 2.5 Angstrom:</p>
 <a class="reference internal image-reference" href="_images/StochasticPatternGenerator2.gif"><img alt="_images/StochasticPatternGenerator2.gif" class="align-center" src="_images/StochasticPatternGenerator2.gif" style="width: 288.0px; height: 384.0px;" /></a>
 <p><strong>Example3</strong></p>
 <p>The following example illustrates how to generate 20 stochastic
-adsorbate overlayer patterns with 5 adsorbates chosen from CO, OH
-and N, on 10 quaternary cuboctahedral nanoalloys with random
+adsorbate overlayer patterns with 5 adsorbates: 1 CO, 2 OH and
+2 N, on 10 quaternary cuboctahedral nanoalloys with random
 chemical orderings. The minimum adsorbate distance is set to 3
 Angstrom and duplicate patterns are allowed (very unlikely for
 nanoparticles):</p>
@@ -727,7 +731,9 @@ nanoparticles):</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span> <span class="o">=</span> <span class="n">SPG</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">add_species_composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;CO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
@@ -801,7 +807,7 @@ graph isomorphism for the existing structures in the trajectory.</p></li>
 </dl>
 <dl class="py method">
 <dt id="acat.build.overlayer.SystematicPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen_per_image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#SystematicPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.SystematicPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen_per_image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#SystematicPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.SystematicPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -815,6 +821,10 @@ when adding many adsorbates to generate high coverage patterns.
 The recommended way to generate high coverage patterns is to add
 one adsorbate at a time from low to high coverage if you want to
 control the exact number of adsorbates.</p></li>
+<li><p><strong>add_species_composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
+values of the species composition to be added onto the surface.
+Adding all possible adsorbate species if not specified. Please
+only use this if the action is ‘add’.</p></li>
 <li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to discard duplicate patterns based on graph isomorphism.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to take subsurface atoms into consideration when checking
 uniqueness. Could be important for surfaces like fcc100.</p></li>
@@ -853,7 +863,7 @@ distance of 2 Angstrom:</p>
 <img alt="_images/SystematicPatternGenerator1.gif" src="_images/SystematicPatternGenerator1.gif" />
 <p><strong>Example2</strong></p>
 <p>The following example illustrates how to enumerate all unique coverage
-patterns consists of 3 adsorbates chosen from C, N and O on a bimetallic
+patterns consists of 3 adsorbates: 1 C, 1 N and 1 O on a bimetallic
 bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom
 (here only generate a maximum of 100 unique patterns):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">SystematicPatternGenerator</span> <span class="k">as</span> <span class="n">SPG</span>
@@ -873,7 +883,8 @@ bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom
 <span class="gp">... </span>          <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;bcc111&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen_per_image</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen_per_image</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">add_species_composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
@@ -1186,12 +1197,13 @@ are many groups. A greedy algorithm is employed if the
 composition is fixed, which might result in slightly different
 compositions. This can be controled by eps.</p>
 </p></li>
-<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element. Only
-relevant for generating fixed-composition symmetric nanoalloys
-using ‘stochastic’ mode. Set to a small value, e.g. 0.005, if
-you want the exact composition accurate to one atom. Please
-use a larger eps if the concentrations you specified in
-compositions are not accurate enough.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element (the target
+concentration range is [c-eps, c+eps]). Only relevant for
+generating fixed-composition symmetric nanoalloys using
+‘stochastic’ mode. Set to a small value, e.g. 0.005, if you
+want the exact composition accurate to one atom. Please use a
+larger eps if the concentrations you specified in compositions
+are not accurate enough.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1318,12 +1330,13 @@ are many groups. A greedy algorithm is employed if the
 composition is fixed, which might result in slightly different
 compositions. This can be controled by eps.</p>
 </p></li>
-<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element. Only
-relevant for generating fixed-composition symmetric nanoalloys
-using ‘stochastic’ mode. Set to a small value, e.g. 0.005, if
-you want the exact composition accurate to one atom. Please
-use a larger eps if the concentrations you specified in
-compositions are not accurate enough.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element (the target
+concentration range is [c-eps, c+eps]). Only relevant for
+generating fixed-composition symmetric nanoalloys using
+‘stochastic’ mode. Set to a small value, e.g. 0.005, if you
+want the exact composition accurate to one atom. Please use a
+larger eps if the concentrations you specified in compositions
+are not accurate enough.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1487,12 +1500,13 @@ are many groups. A greedy algorithm is employed if the
 composition is fixed, which might result in slightly different
 compositions. This can be controled by eps.</p>
 </p></li>
-<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element. Only
-relevant for generating fixed-composition symmetric nanoalloys
-using ‘stochastic’ mode. Set to a small value, e.g. 0.005, if
-you want the exact composition accurate to one atom. Please
-use a larger eps if the concentrations you specified in
-compositions are not accurate enough.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default 0.01</em>) – The tolerance of the concentration for each element (the target
+concentration range is [c-eps, c+eps]). Only relevant for
+generating fixed-composition symmetric nanoalloys using
+‘stochastic’ mode. Set to a small value, e.g. 0.005, if you
+want the exact composition accurate to one atom. Please use a
+larger eps if the concentrations you specified in compositions
+are not accurate enough.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>

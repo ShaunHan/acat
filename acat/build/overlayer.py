@@ -3,7 +3,8 @@ from ..settings import monodentate_adsorbate_list, multidentate_adsorbate_list
 from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
 from ..adsorption_sites import group_sites_by_facet
 from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
-from ..utilities import is_list_or_tuple, get_mic, atoms_too_close_after_addition 
+from ..utilities import get_mic, atoms_too_close_after_addition 
+from ..utilities import is_list_or_tuple, numbers_from_ratio
 from ..labels import get_cluster_signature_from_label, get_slab_signature_from_label
 from .action import add_adsorbate_to_site, remove_adsorbate_from_site 
 from ase.io import read, write, Trajectory
@@ -234,11 +235,15 @@ class StochasticPatternGenerator(object):
             neighbor_site_indices = [v for v in nbstids if v not in selfids]            
                                                                                              
         # Select adsorbate with probability 
-        if not self.species_probabilities:
-            adsorbate = random.choice(self.adsorbate_species)
-        else: 
-            adsorbate = random.choices(k=1, population=self.adsorbate_species,
-                                       weights=self.species_probability_list)[0]    
+        if self.add_species_composition is not None:
+            adsorbate = self.adsorbates_to_add.pop(random.randint(0, len(
+                                                   self.adsorbates_to_add)-1))
+        else:
+            if not self.species_probabilities:
+                adsorbate = random.choice(self.adsorbate_species)
+            else: 
+                adsorbate = random.choices(k=1, population=self.adsorbate_species,
+                                           weights=self.species_probability_list)[0]    
                                                                                              
         # Only add one adsorabte to a site at least 2 shells 
         # away from currently occupied sites
@@ -653,8 +658,9 @@ class StochasticPatternGenerator(object):
  
     def run(self, num_gen, 
             action='add', 
-            num_act=1,
             action_probabilities=None,
+            num_act=1,
+            add_species_composition=None,
             unique=True,
             subsurf_effect=False):
         """Run the pattern generator.
@@ -668,6 +674,11 @@ class StochasticPatternGenerator(object):
             Action(s) to perform. If a list of actions is provided, select
             actions from the list randomly or with probabilities.
 
+        action_probabilities : dict, default None
+            A dictionary that contains keys of each action and values of the 
+            corresponding probabilities. Select actions with equal probability 
+            if not specified.
+
         num_act : int, default 1
             Number of times performed for each action. Useful for operating
             more than one adsorbates at a time. This becomes extremely slow
@@ -679,10 +690,11 @@ class StochasticPatternGenerator(object):
             to control the minimum adsorbate distance. This is the fastest
             way, but the number of adsorbates is not guaranteed to be fixed.
 
-        action_probabilities : dict, default None
-            A dictionary that contains keys of each action and values of the 
-            corresponding probabilities. Select actions with equal probability 
-            if not specified.
+        add_species_composition : dict, default None
+            A dictionary that contains keys of each adsorbate species and 
+            values of the species composition to be added onto the surface.
+            Adding adsorbate species according to species_probabilities if 
+            not specified. Please only use this if the action is 'add'.
 
         unique : bool, default True 
             Whether to discard duplicate patterns based on graph isomorphism.
@@ -696,12 +708,17 @@ class StochasticPatternGenerator(object):
         mode = 'a' if self.append_trajectory else 'w'
         self.traj = Trajectory(self.trajectory, mode=mode)
         actions = action if is_list_or_tuple(action) else [action]
-        self.num_act = num_act
         if action_probabilities is not None:
             all_action_probabilities = [action_probabilities[a] for a in actions]
-        
-        self.labels_list, self.graph_list = [], []
+        self.num_act = num_act
+        if add_species_composition is not None:
+            ks = list(add_species_composition.keys())
+            ratios = list(add_species_composition.values())
+            nums = numbers_from_ratio(num_act, ratios)
+            adsorbates_to_add = [ads for k, n in zip(ks, nums) for ads in [k]*n] 
+        self.add_species_composition = add_species_composition
 
+        self.labels_list, self.graph_list = [], []
         self.unique = unique
         self.subsurf_effect = subsurf_effect
         if self.unique and self.append_trajectory:                                 
@@ -741,6 +758,9 @@ class StochasticPatternGenerator(object):
         n_old = 0
         # Start the iteration
         while n_new < num_gen:
+            if self.add_species_composition is not None:
+                self.adsorbates_to_add = adsorbates_to_add.copy()
+
             if n_old == n_new:
                 if self.logfile is not None:                                    
                     self.logfile.write('Generating pattern {}\n'.format(n_new))
@@ -753,6 +773,7 @@ class StochasticPatternGenerator(object):
                 self.atoms = random.choices(k=1, population=self.images, 
                                             weights=self.image_probabilities)[0].copy()
             self.n_image = n_new 
+
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
             elif True in self.atoms.pbc:
@@ -846,7 +867,7 @@ class StochasticPatternGenerator(object):
             if 'data' not in self.atoms.info:
                 self.atoms.info['data'] = {}
             self.atoms.info['data']['labels'] = labs
-            self.traj.write(self.atoms)
+            self.traj.write(self.atoms)            
             n_new += 1
 
 
@@ -1015,6 +1036,11 @@ class SystematicPatternGenerator(object):
             self.both_sides = both_sides
 
     def _add_adsorbate_enumeration(self, atoms, adsorption_sites):
+        if self.add_species_composition is not None:
+            adsorbate_species = [self.adsorbates_to_add[self.act_count]]
+        else:
+            adsorbate_species = self.adsorbate_species
+
         self.n_duplicate = 0        
         sas = adsorption_sites
         if self.adsorption_sites is not None:                                         
@@ -1063,7 +1089,7 @@ class SystematicPatternGenerator(object):
                 newsites.append(s)
 
         for k, nst in enumerate(newsites):
-            for adsorbate in self.adsorbate_species:
+            for adsorbate in adsorbate_species:
                 if self.species_forbidden_labels is not None:
                     if adsorbate in self.species_forbidden_labels: 
                         if True in atoms.pbc:
@@ -1625,6 +1651,7 @@ class SystematicPatternGenerator(object):
     def run(self, max_gen_per_image=None, 
             action='add',
             num_act=1, 
+            add_species_composition=None,
             unique=True, 
             subsurf_effect=False):
         """Run the pattern generator.
@@ -1646,6 +1673,12 @@ class SystematicPatternGenerator(object):
             one adsorbate at a time from low to high coverage if you want to 
             control the exact number of adsorbates.
 
+        add_species_composition : dict, default None
+            A dictionary that contains keys of each adsorbate species and 
+            values of the species composition to be added onto the surface.
+            Adding all possible adsorbate species if not specified. Please 
+            only use this if the action is 'add'.
+
         unique : bool, default True 
             Whether to discard duplicate patterns based on graph isomorphism.
 
@@ -1659,6 +1692,13 @@ class SystematicPatternGenerator(object):
         self.traj = Trajectory(self.trajectory, mode=mode)          
         self.max_gen_per_image = max_gen_per_image
         self.num_act = num_act
+        if add_species_composition is not None:
+            ks = list(add_species_composition.keys())
+            ratios = list(add_species_composition.values())
+            nums = numbers_from_ratio(num_act, ratios)
+            self.adsorbates_to_add = [ads for k, n in zip(ks, nums) for ads in [k]*n] 
+        self.add_species_composition = add_species_composition        
+
         self.act_count = 0
         self.n_write = 0
         self.n_duplicate = 0
