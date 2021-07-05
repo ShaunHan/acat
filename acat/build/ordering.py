@@ -334,12 +334,13 @@ class SymmetricClusterOrderingGenerator(object):
             compositions. This can be controled by eps.
 
         eps : float, default 0.01
-            The tolerance of the concentration for each element. Only 
-            relevant for generating fixed-composition symmetric nanoalloys 
-            using 'stochastic' mode. Set to a small value, e.g. 0.005, if 
-            you want the exact composition accurate to one atom. Please
-            use a larger eps if the concentrations you specified in
-            compositions are not accurate enough.
+            The tolerance of the concentration for each element (the target 
+            concentration range is [c-eps, c+eps]). Only relevant for 
+            generating fixed-composition symmetric nanoalloys using 
+            'stochastic' mode. Set to a small value, e.g. 0.005, if you 
+            want the exact composition accurate to one atom. Please use a 
+            larger eps if the concentrations you specified in compositions 
+            are not accurate enough.
 
         verbose : bool, default False 
             Whether to print out information about number of groups and
@@ -407,7 +408,7 @@ class SymmetricClusterOrderingGenerator(object):
                         
                         # if ratio of permutation partial sum exceeds ratio of ratio partial sum,
                         # the current sublist is "complete"
-                        if s / natoms >= rs / sor:
+                        if s / natoms >= rs / sor - eps:
                             partition.append(lst[lo:i+1])
                             # start creating new sublist from next element
                             lo = i + 1
@@ -425,7 +426,7 @@ class SymmetricClusterOrderingGenerator(object):
                     partition = [[i for p in part for i in p] for part in partition]
 
                     if all(math.isclose(ratios[i] / sor, len(part) / natoms, abs_tol=eps) 
-                    for (i, part) in enumerate(partition)):
+                    for i, part in enumerate(partition)):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
@@ -607,12 +608,13 @@ class OrderedSlabOrderingGenerator(object):
             compositions. This can be controled by eps.
 
         eps : float, default 0.01
-            The tolerance of the concentration for each element. Only 
-            relevant for generating fixed-composition symmetric nanoalloys 
-            using 'stochastic' mode. Set to a small value, e.g. 0.005, if 
-            you want the exact composition accurate to one atom. Please
-            use a larger eps if the concentrations you specified in
-            compositions are not accurate enough.
+            The tolerance of the concentration for each element (the target 
+            concentration range is [c-eps, c+eps]). Only relevant for 
+            generating fixed-composition symmetric nanoalloys using 
+            'stochastic' mode. Set to a small value, e.g. 0.005, if you 
+            want the exact composition accurate to one atom. Please use a 
+            larger eps if the concentrations you specified in compositions 
+            are not accurate enough.
 
         verbose : bool, default False 
             Whether to print out information about number of groups and
@@ -679,7 +681,7 @@ class OrderedSlabOrderingGenerator(object):
                         
                         # if ratio of permutation partial sum exceeds ratio of ratio partial sum,
                         # the current sublist is "complete"
-                        if s / natoms >= rs / sor:
+                        if s / natoms >= rs / sor - eps:
                             partition.append(lst[lo:i+1])
                             # start creating new sublist from next element
                             lo = i + 1
@@ -697,7 +699,7 @@ class OrderedSlabOrderingGenerator(object):
                     partition = [[i for p in part for i in p] for part in partition]
 
                     if all(math.isclose(ratios[i] / sor, len(part) / natoms, abs_tol=eps) 
-                    for (i, part) in enumerate(partition)):
+                    for i, part in enumerate(partition)):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
