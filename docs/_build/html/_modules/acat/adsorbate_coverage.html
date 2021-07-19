@@ -554,7 +554,7 @@
 
         <span class="k">return</span> <span class="n">adsorbates</span></div>
 
-    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
                                               <span class="n">neighbor_number</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -586,7 +586,9 @@
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                  <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
         <span class="sd">&quot;&quot;&quot;Get the graph representation of the nanoparticle with adsorbates.</span>
 
 <span class="sd">        Parameters</span>
@@ -599,14 +601,20 @@
 <span class="sd">        subsurf_effect : bool, default False</span>
 <span class="sd">            Take subsurface atoms into consideration when genearting graph. </span>
 
+<span class="sd">        full_effect : bool, default False</span>
+<span class="sd">            Take the whole catalyst into consideration when generating graph.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_connectivity</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
-            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_subsurface</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
+            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
+            <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_subsurface</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
         <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
@@ -1050,7 +1058,7 @@
 
         <span class="k">return</span> <span class="n">adsorbates</span></div>
 
-    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
                                               <span class="n">neighbor_number</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1082,7 +1090,9 @@
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                  <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
         <span class="sd">&quot;&quot;&quot;Get the graph representation of the nanoparticle with adsorbates.</span>
 
 <span class="sd">        Parameters</span>
@@ -1095,14 +1105,20 @@
 <span class="sd">        subsurf_effect : bool, default False</span>
 <span class="sd">            Take subsurface atoms into consideration when genearting graph. </span>
 
+<span class="sd">        full_effect : bool, default False</span>
+<span class="sd">            Take the whole catalyst into consideration when generating graph.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivity_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
-            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
+        <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
+            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
+            <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
         <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       

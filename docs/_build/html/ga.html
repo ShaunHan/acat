@@ -601,6 +601,10 @@ will have a difference of .5 in both elements:</p>
 returns True if they are isomorphic with node matches. Before
 checking graph isomorphism, a cheap label match is used to reject
 graphs that are impossible to be isomorphic.</p>
+<p>The graphs can be quite costly to obtain every time a graph is
+required (and disk intensive if saved), thus it makes sense to
+get the graph along with e.g. the potential energy and save it in
+atoms.info[‘data’][‘graph’].</p>
 <p>Parameters:</p>
 <dl class="simple">
 <dt>adsorption_sites<span class="classifier">acat.adsorption_sites.ClusterAdsorptionSites object         or acat.adsorption_sites.SlabAdsorptionSites object</span></dt><dd><p>Provide the acat built-in adsorption sites class to accelerate the
@@ -1449,7 +1453,7 @@ structures are still considered to be look alike.</p></li>
              <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
              <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
              <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
-             <span class="n">secondary_cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">secondary_cutoff</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
              <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
              <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">)</span>
 <span class="n">groups</span> <span class="o">=</span> <span class="n">scog1</span><span class="o">.</span><span class="n">get_groups</span><span class="p">()</span>
@@ -1459,7 +1463,7 @@ structures are still considered to be look alike.</p></li>
              <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
              <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
              <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
-             <span class="n">secondary_cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">secondary_cutoff</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
              <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
              <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span>
              <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1469,7 +1473,7 @@ structures are still considered to be look alike.</p></li>
              <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;mirror_circular&#39;</span><span class="p">,</span>
              <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
              <span class="n">secondary_symmetry</span><span class="o">=</span><span class="s1">&#39;chemical&#39;</span><span class="p">,</span>
-             <span class="n">secondary_cutoff</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">secondary_cutoff</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
              <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
              <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;starting_generation.traj&#39;</span><span class="p">,</span>
              <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

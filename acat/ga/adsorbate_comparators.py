@@ -135,6 +135,11 @@ class AdsorptionGraphComparator(object):
     checking graph isomorphism, a cheap label match is used to reject
     graphs that are impossible to be isomorphic.
 
+    The graphs can be quite costly to obtain every time a graph is 
+    required (and disk intensive if saved), thus it makes sense to 
+    get the graph along with e.g. the potential energy and save it in 
+    atoms.info['data']['graph'].
+
     Parameters:
 
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
@@ -180,33 +185,40 @@ class AdsorptionGraphComparator(object):
         self.fragmentation = fragmentation
 
     def looks_like(self, a1, a2):
-        sas = self.adsorption_sites        
-
-        if hasattr(sas, 'surface'):
-            sas.update(a1, update_composition=self.composition_effect)
-            sac1 = SlabAdsorbateCoverage(a1, sas, dmax=self.dmax,
-                                         label_occupied_sites=True) 
-            sas.update(a2, update_composition=self.composition_effect)
-            sac2 = SlabAdsorbateCoverage(a2, sas, dmax=self.dmax,
-                                         label_occupied_sites=True) 
+        isocheck = False
+        if ('data' in a1.info and 'graph' in a1.info['data']) and (
+        'data' in a2.info and 'graph' in a2.info['data']):
+            isocheck = True
+            G1 = a1.info['data']['graph']
+            G2 = a2.info['data']['graph']
         else:
-            sas.update(a1, update_composition=self.composition_effect)
-            sac1 = ClusterAdsorbateCoverage(a1, sas, dmax=self.dmax, 
-                                            label_occupied_sites=True)
-            sas.update(a2, update_composition=self.composition_effect)
-            sac2 = ClusterAdsorbateCoverage(a2, sas, dmax=self.dmax, 
-                                            label_occupied_sites=True)
-        labs1 = sac1.get_occupied_labels(fragmentation=self.fragmentation)
-        labs2 = sac2.get_occupied_labels(fragmentation=self.fragmentation)       
-
-        if labs1 == labs2: 
-            G1 = sac1.get_graph(fragmentation=self.fragmentation,
-                                subsurf_effect=self.subsurf_effect)
-            G2 = sac2.get_graph(fragmentation=self.fragmentation,
-                                subsurf_effect=self.subsurf_effect)
-            # Skip duplicates based on isomorphism 
-            nm = iso.categorical_node_match('symbol', 'X')
-
+            sas = self.adsorption_sites        
+ 
+            if hasattr(sas, 'surface'):
+                sas.update(a1, update_composition=self.composition_effect)
+                sac1 = SlabAdsorbateCoverage(a1, sas, dmax=self.dmax,
+                                             label_occupied_sites=True) 
+                sas.update(a2, update_composition=self.composition_effect)
+                sac2 = SlabAdsorbateCoverage(a2, sas, dmax=self.dmax,
+                                             label_occupied_sites=True) 
+            else:
+                sas.update(a1, update_composition=self.composition_effect)
+                sac1 = ClusterAdsorbateCoverage(a1, sas, dmax=self.dmax, 
+                                                label_occupied_sites=True)
+                sas.update(a2, update_composition=self.composition_effect)
+                sac2 = ClusterAdsorbateCoverage(a2, sas, dmax=self.dmax, 
+                                                label_occupied_sites=True)
+            labs1 = sac1.get_occupied_labels(fragmentation=self.fragmentation)
+            labs2 = sac2.get_occupied_labels(fragmentation=self.fragmentation)       
+ 
+            if labs1 == labs2:
+                isocheck = True 
+                G1 = sac1.get_graph(fragmentation=self.fragmentation,
+                                    subsurf_effect=self.subsurf_effect)
+                G2 = sac2.get_graph(fragmentation=self.fragmentation,
+                                    subsurf_effect=self.subsurf_effect)
+        if isocheck:
+            nm = iso.categorical_node_match('symbol', 'X')  
             if nx.isomorphism.is_isomorphic(G1, G2, node_match=nm):
                 return True
 
