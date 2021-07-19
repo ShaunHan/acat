@@ -413,6 +413,7 @@
 
 
 <div class="viewcode-block" id="bipartitions"><a class="viewcode-back" href="../../utilities.html#acat.utilities.bipartitions">[docs]</a><span class="k">def</span> <span class="nf">bipartitions</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">total</span><span class="p">):</span>
+
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">):</span>
@@ -423,6 +424,7 @@
        
                                                                        
 <div class="viewcode-block" id="partitions_into_totals"><a class="viewcode-back" href="../../utilities.html#acat.utilities.partitions_into_totals">[docs]</a><span class="k">def</span> <span class="nf">partitions_into_totals</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">):</span>
+
     <span class="k">assert</span> <span class="n">totals</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">totals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">yield</span> <span class="p">[</span><span class="n">shells</span><span class="p">]</span>

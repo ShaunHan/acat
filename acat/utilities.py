@@ -251,6 +251,7 @@ def get_max_delta_sum_path(nodes):
 
 
 def bipartitions(shells, total):
+
     n = len(shells)
     for k in range(n + 1):
         for combo in combinations(range(n), k):
@@ -261,6 +262,7 @@ def bipartitions(shells, total):
        
                                                                        
 def partitions_into_totals(shells, totals):
+
     assert totals
     if len(totals) == 1:
         yield [shells]

@@ -424,7 +424,9 @@ class ClusterAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self, fragmentation=True, subsurf_effect=False):                                         
+    def get_graph(self, fragmentation=True, 
+                  subsurf_effect=False, 
+                  full_effect=False):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -437,14 +439,20 @@ class ClusterAdsorbateCoverage(object):
         subsurf_effect : bool, default False
             Take subsurface atoms into consideration when genearting graph. 
 
+        full_effect : bool, default False
+            Take the whole catalyst into consideration when generating graph.
+
         """
 
         hsl = self.hetero_site_list
         hcm = self.cas.get_connectivity().copy()
-        if subsurf_effect:
-            surf_ids = self.surf_ids + self.cas.get_subsurface()
+        if full_effect:
+            surf_ids = self.slab_ids
         else:
-            surf_ids = self.surf_ids
+            if subsurf_effect:
+                surf_ids = self.surf_ids + self.cas.get_subsurface()
+            else:
+                surf_ids = self.surf_ids
         surfhcm = hcm[surf_ids]
         symbols = self.symbols[surf_ids]
         nrows, ncols = surfhcm.shape       
@@ -920,7 +928,9 @@ class SlabAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self, fragmentation=True, subsurf_effect=False):                                         
+    def get_graph(self, fragmentation=True, 
+                  subsurf_effect=False,
+                  full_effect=False):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -933,14 +943,20 @@ class SlabAdsorbateCoverage(object):
         subsurf_effect : bool, default False
             Take subsurface atoms into consideration when genearting graph. 
 
+        full_effect : bool, default False
+            Take the whole catalyst into consideration when generating graph.
+
         """
 
         hsl = self.hetero_site_list
         hcm = self.connectivity_matrix.copy()
-        if subsurf_effect:
-            surf_ids = self.surf_ids + self.subsurf_ids
+        if full_effect:
+            surf_ids = self.slab_ids
         else:
-            surf_ids = self.surf_ids
+            if subsurf_effect:
+                surf_ids = self.surf_ids + self.subsurf_ids
+            else:
+                surf_ids = self.surf_ids
         surfhcm = hcm[surf_ids]
         symbols = self.symbols[surf_ids]
         nrows, ncols = surfhcm.shape       
