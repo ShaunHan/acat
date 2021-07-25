@@ -1,11 +1,12 @@
 from .settings import adsorbate_elements, adsorbate_formulas
 from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites 
-from .utilities import string_fragmentation, neighbor_shell_list, get_connectivity_matrix 
+from .utilities import string_fragmentation, neighbor_shell_list, get_adj_matrix 
 from ase.data import atomic_numbers
 from ase.geometry import find_mic
 from ase.formula import Formula
 from collections import defaultdict, Counter
 from operator import itemgetter
+from bisect import bisect_left
 from copy import deepcopy
 import networkx as nx
 import numpy as np
@@ -128,7 +129,7 @@ class ClusterAdsorbateCoverage(object):
         self.dmax = dmax
 
         self.make_ads_neighbor_list()
-        self.ads_connectivity_matrix = self.get_ads_connectivity() 
+        self.ads_adj_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
 
         if adsorption_sites:
@@ -156,7 +157,7 @@ class ClusterAdsorbateCoverage(object):
     def identify_adsorbates(self):
 
         G = nx.Graph()
-        adscm = self.ads_connectivity_matrix
+        adscm = self.ads_adj_matrix
 
         # Cut all intermolecular H-H bonds except intramolecular               
         # H-H bonds in e.g. H2
@@ -186,18 +187,18 @@ class ClusterAdsorbateCoverage(object):
         self.ads_list = adsorbates
 
     def get_hetero_connectivity(self):
-        """Get the connection matrix of slab + adsorbates."""
+        """Get the adjacency matrix of slab + adsorbates."""
 
         nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
-        return get_connectivity_matrix(nbslist)                          
+        return get_adj_matrix(nbslist)                          
 
     def get_ads_connectivity(self):
-        """Get the connection matrix for adsorbate atoms."""
+        """Get the adjacency matrix for adsorbate atoms."""
 
-        return get_connectivity_matrix(self.ads_nblist) 
+        return get_adj_matrix(self.ads_nblist) 
 
     def get_site_connectivity(self):
-        """Get the connection matrix for adsorption sites."""
+        """Get the adjacency matrix for adsorption sites."""
 
         sl = self.hetero_site_list
         conn_mat = []
@@ -379,7 +380,8 @@ class ClusterAdsorbateCoverage(object):
 
     def get_adsorbates(self):
         """Get a list of tuples that contains each adsorbate (string)
-        and the corresponding adsorbate indices (tuple)."""
+        and the corresponding adsorbate indices (tuple) in ascending
+        order."""
 
         adsorbates = []
         adsorbate_ids = set()
@@ -390,7 +392,7 @@ class ClusterAdsorbateCoverage(object):
                     adsorbates.append((st['adsorbate'], adsi))
                     adsorbate_ids.update(adsi)
 
-        return adsorbates
+        return sorted(adsorbates, key=lambda x: x[1])
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
@@ -426,7 +428,8 @@ class ClusterAdsorbateCoverage(object):
 
     def get_graph(self, fragmentation=True, 
                   subsurf_effect=False, 
-                  full_effect=False):                                         
+                  full_effect=False,
+                  return_adj_matrix=False):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -442,6 +445,10 @@ class ClusterAdsorbateCoverage(object):
         full_effect : bool, default False
             Take the whole catalyst into consideration when generating graph.
 
+        return_adj_matrix : bool, default False
+            Whether to return adjacency matrix instead of the networkx.Graph 
+            object.
+
         """
 
         hsl = self.hetero_site_list
@@ -456,22 +463,34 @@ class ClusterAdsorbateCoverage(object):
         surfhcm = hcm[surf_ids]
         symbols = self.symbols[surf_ids]
         nrows, ncols = surfhcm.shape       
-        newrows, frag_list = [], []
+
+        newrows, frag_list, adsi_list = [], [], []
         for st in hsl:
             if st['occupied']:
+                adsi = st['adsorbate_indices']
                 if not fragmentation and st['dentate'] > 1: 
-                    if st['bonding_index'] != st['adsorbate_indices'][0]:
-                        continue 
-                si = st['indices']                
+                    if st['bonding_index'] != adsi[0]:
+                        continue
+                si = st['indices']
                 newrow = np.zeros(ncols)
                 newrow[list(si)] = 1
-                newrows.append(newrow)
-                if fragmentation:
-                    frag_list.append(st['fragment'])
+                i = bisect_left(adsi_list, adsi)
+                adsi_list.insert(i, adsi)
+                newrows.insert(i, newrow)
+                if fragmentation:                
+                    frag_list.insert(i, st['fragment'])
                 else:
-                    frag_list.append(st['adsorbate'])
+                    frag_list.insert(i, st['adsorbate'])
         if newrows:
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+
+        shcm = surfhcm[:,surf_ids]
+        if return_adj_matrix:
+            if newrows:
+                dd = len(newrows)
+                return np.hstack((shcm, np.vstack((shcm[-dd:].T, np.zeros((dd, dd))))))
+            else:
+                return shcm
 
         G = nx.Graph()               
         # Add nodes from fragment list
@@ -479,8 +498,7 @@ class ClusterAdsorbateCoverage(object):
                            for i in range(nrows)] + 
                          [(j + nrows, {'symbol': frag_list[j]})
                            for j in range(len(frag_list))])
-        # Add edges from surface connectivity matrix
-        shcm = surfhcm[:,surf_ids]
+        # Add edges from surface adjacency matrix
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
@@ -627,7 +645,7 @@ class SlabAdsorbateCoverage(object):
         self.dmax = dmax
 
         self.make_ads_neighbor_list()
-        self.ads_connectivity_matrix = self.get_ads_connectivity() 
+        self.ads_adj_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
         if adsorption_sites:
             sas = adsorption_sites
@@ -648,7 +666,7 @@ class SlabAdsorbateCoverage(object):
             self.metals *= 2
         self.surf_ids = sas.surf_ids
         self.subsurf_ids = sas.subsurf_ids
-        self.connectivity_matrix = sas.connectivity_matrix
+        self.adj_matrix = sas.adj_matrix
         self.label_dict = sas.label_dict 
         self.hetero_site_list = deepcopy(sas.site_list)
 
@@ -660,7 +678,7 @@ class SlabAdsorbateCoverage(object):
     def identify_adsorbates(self):
 
         G = nx.Graph()
-        adscm = self.ads_connectivity_matrix
+        adscm = self.ads_adj_matrix
 
         # Cut all intermolecular H-H bonds except intramolecular        
         # H-H bonds in e.g. H2
@@ -690,18 +708,18 @@ class SlabAdsorbateCoverage(object):
         self.ads_list = adsorbates
 
     def get_hetero_connectivity(self):
-        """Get the connection matrix of slab + adsorbates."""
+        """Get the adjacency matrix of slab + adsorbates."""
 
         nbslist = neighbor_shell_list(self.atoms, 0.3, neighbor_number=1)
-        return get_connectivity_matrix(nbslist)                           
+        return get_adj_matrix(nbslist)                           
 
     def get_ads_connectivity(self):
-        """Get the connection matrix for adsorbate atoms."""
+        """Get the adjacency matrix for adsorbate atoms."""
 
-        return get_connectivity_matrix(self.ads_nblist) 
+        return get_adj_matrix(self.ads_nblist) 
 
     def get_site_connectivity(self):
-        """Get the connection matrix for adsorption sites."""
+        """Get the adjacency matrix for adsorption sites."""
 
         sl = self.hetero_site_list
         conn_mat = []
@@ -883,7 +901,8 @@ class SlabAdsorbateCoverage(object):
 
     def get_adsorbates(self):
         """Get a list of tuples that contains each adsorbate (string)
-        and the corresponding adsorbate indices (tuple)."""
+        and the corresponding adsorbate indices (tuple) in ascending
+        order."""
 
         adsorbates = []
         adsorbate_ids = set()
@@ -894,7 +913,7 @@ class SlabAdsorbateCoverage(object):
                     adsorbates.append((st['adsorbate'], adsi))
                     adsorbate_ids.update(adsi)
 
-        return adsorbates
+        return sorted(adsorbates, key=lambda x: x[1])
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
@@ -930,7 +949,8 @@ class SlabAdsorbateCoverage(object):
 
     def get_graph(self, fragmentation=True, 
                   subsurf_effect=False,
-                  full_effect=False):                                         
+                  full_effect=False,
+                  return_adj_matrix=False):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -946,10 +966,14 @@ class SlabAdsorbateCoverage(object):
         full_effect : bool, default False
             Take the whole catalyst into consideration when generating graph.
 
+        return_adj_matrix : bool, default False
+            Whether to return adjacency matrix instead of the networkx.Graph 
+            object.
+
         """
 
         hsl = self.hetero_site_list
-        hcm = self.connectivity_matrix.copy()
+        hcm = self.adj_matrix.copy()
         if full_effect:
             surf_ids = self.slab_ids
         else:
@@ -960,22 +984,34 @@ class SlabAdsorbateCoverage(object):
         surfhcm = hcm[surf_ids]
         symbols = self.symbols[surf_ids]
         nrows, ncols = surfhcm.shape       
-        newrows, frag_list = [], []
+
+        newrows, frag_list, adsi_list = [], [], []
         for st in hsl:
             if st['occupied']:
+                adsi = st['adsorbate_indices']
                 if not fragmentation and st['dentate'] > 1: 
-                    if st['bonding_index'] != st['adsorbate_indices'][0]:
+                    if st['bonding_index'] != adsi[0]:
                         continue
                 si = st['indices']
                 newrow = np.zeros(ncols)
                 newrow[list(si)] = 1
-                newrows.append(newrow)
+                i = bisect_left(adsi_list, adsi)
+                adsi_list.insert(i, adsi)
+                newrows.insert(i, newrow)
                 if fragmentation:                
-                    frag_list.append(st['fragment'])
+                    frag_list.insert(i, st['fragment'])
                 else:
-                    frag_list.append(st['adsorbate'])
+                    frag_list.insert(i, st['adsorbate'])
         if newrows:
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+
+        shcm = surfhcm[:,surf_ids]
+        if return_adj_matrix:
+            if newrows:
+                dd = len(newrows)
+                return np.hstack((shcm, np.vstack((shcm[-dd:].T, np.zeros((dd, dd))))))
+            else:
+                return shcm
 
         G = nx.Graph()               
         # Add nodes from fragment list
@@ -984,7 +1020,7 @@ class SlabAdsorbateCoverage(object):
                          [(j + nrows, {'symbol': frag_list[j]})
                            for j in range(len(frag_list))])
 
-        # Add edges from surface connectivity matrix
+        # Add edges from surface adjacency matrix
         shcm = surfhcm[:,surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
@@ -995,7 +1031,7 @@ class SlabAdsorbateCoverage(object):
 
 #    def get_surface_bond_count_matrix(self, species):
 #        hsl = self.hetero_site_list
-#        cm = self.connectivity_matrix
+#        cm = self.adj_matrix
 #        atoms = self.atoms
 #        numbers = atoms.numbers
 #        symbols = atoms.symbols

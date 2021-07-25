@@ -1,5 +1,5 @@
 from ..utilities import bipartitions, partitions_into_totals
-from ..utilities import numbers_from_ratio, is_list_or_tuple
+from ..utilities import numbers_from_ratios, is_list_or_tuple
 from ase.geometry import get_distances
 from ase.io import Trajectory, read, write
 from asap3.analysis import FullCNA 
@@ -370,7 +370,7 @@ class SymmetricClusterOrderingGenerator(object):
                     mode = 'stochastic'
 
                 else:
-                    totals = numbers_from_ratio(natoms, ratios) 
+                    totals = numbers_from_ratios(natoms, ratios) 
                     if max_gen is None:
                         max_gen = -1               
 
@@ -643,7 +643,7 @@ class OrderedSlabOrderingGenerator(object):
                               'generator. Use stochastic generator instead')
                     mode = 'stochastic'
                 else:
-                    totals = numbers_from_ratio(natoms, ratios)
+                    totals = numbers_from_ratios(natoms, ratios)
                     if max_gen is None:
                         max_gen = -1             
    
@@ -789,7 +789,7 @@ class RandomOrderingGenerator(object):
             ks = list(self.composition.keys())
             assert set(ks) == set(self.elements)
             vs = list(self.composition.values())
-            nums = numbers_from_ratio(len(self.atoms), vs)
+            nums = numbers_from_ratios(len(self.atoms), vs)
             self.num_dict = {ks[i]: nums[i] for i in range(len(ks))}
 
         if isinstance(trajectory, str):

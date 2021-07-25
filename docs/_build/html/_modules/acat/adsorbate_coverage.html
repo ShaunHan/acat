@@ -162,12 +162,13 @@
   <h1>Source code for acat.adsorbate_coverage</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">adsorbate_formulas</span>
 <span class="kn">from</span> <span class="nn">.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span><span class="p">,</span> <span class="n">SlabAdsorptionSites</span> 
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">string_fragmentation</span><span class="p">,</span> <span class="n">neighbor_shell_list</span><span class="p">,</span> <span class="n">get_connectivity_matrix</span> 
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">string_fragmentation</span><span class="p">,</span> <span class="n">neighbor_shell_list</span><span class="p">,</span> <span class="n">get_adj_matrix</span> 
 <span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
 <span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
 <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect_left</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -290,7 +291,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">make_ads_neighbor_list</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ads_connectivity_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ads_connectivity</span><span class="p">()</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ads_connectivity</span><span class="p">()</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">identify_adsorbates</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">adsorption_sites</span><span class="p">:</span>
@@ -318,7 +319,7 @@
     <span class="k">def</span> <span class="nf">identify_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-        <span class="n">adscm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_connectivity_matrix</span>
+        <span class="n">adscm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span>
 
         <span class="c1"># Cut all intermolecular H-H bonds except intramolecular               </span>
         <span class="c1"># H-H bonds in e.g. H2</span>
@@ -348,18 +349,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span> <span class="o">=</span> <span class="n">adsorbates</span>
 
 <div class="viewcode-block" id="ClusterAdsorbateCoverage.get_hetero_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_hetero_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the connection matrix of slab + adsorbates.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the adjacency matrix of slab + adsorbates.&quot;&quot;&quot;</span>
 
         <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)</span>                          </div>
+        <span class="k">return</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)</span>                          </div>
 
 <div class="viewcode-block" id="ClusterAdsorbateCoverage.get_ads_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_ads_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_ads_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorbate atoms.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the adjacency matrix for adsorbate atoms.&quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span><span class="p">)</span> </div>
+        <span class="k">return</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span><span class="p">)</span> </div>
 
 <div class="viewcode-block" id="ClusterAdsorbateCoverage.get_site_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorption sites.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the adjacency matrix for adsorption sites.&quot;&quot;&quot;</span>
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">conn_mat</span> <span class="o">=</span> <span class="p">[]</span>
@@ -541,7 +542,8 @@
 
 <div class="viewcode-block" id="ClusterAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each adsorbate (string)</span>
-<span class="sd">        and the corresponding adsorbate indices (tuple).&quot;&quot;&quot;</span>
+<span class="sd">        and the corresponding adsorbate indices (tuple) in ascending</span>
+<span class="sd">        order.&quot;&quot;&quot;</span>
 
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -552,7 +554,7 @@
                     <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">],</span> <span class="n">adsi</span><span class="p">))</span>
                     <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">adsorbates</span></div>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">adsorbates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
     <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
@@ -588,7 +590,8 @@
 
 <div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                   <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
+                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">return_adj_matrix</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
         <span class="sd">&quot;&quot;&quot;Get the graph representation of the nanoparticle with adsorbates.</span>
 
 <span class="sd">        Parameters</span>
@@ -604,6 +607,10 @@
 <span class="sd">        full_effect : bool, default False</span>
 <span class="sd">            Take the whole catalyst into consideration when generating graph.</span>
 
+<span class="sd">        return_adj_matrix : bool, default False</span>
+<span class="sd">            Whether to return adjacency matrix instead of the networkx.Graph </span>
+<span class="sd">            object.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
@@ -618,22 +625,34 @@
         <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
-        <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span><span class="p">,</span> <span class="n">adsi_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
-                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
-                        <span class="k">continue</span> 
-                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>                
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">adsi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
                 <span class="n">newrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncols</span><span class="p">)</span>
                 <span class="n">newrow</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">newrows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newrow</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>
-                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">adsi_list</span><span class="p">,</span> <span class="n">adsi</span><span class="p">)</span>
+                <span class="n">adsi_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">adsi</span><span class="p">)</span>
+                <span class="n">newrows</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">newrow</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>                
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
             <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">surfhcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">newrows</span><span class="p">)))</span>
+
+        <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
+                <span class="n">dd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">[</span><span class="o">-</span><span class="n">dd</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd</span><span class="p">,</span> <span class="n">dd</span><span class="p">))))))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">shcm</span>
 
         <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>               
         <span class="c1"># Add nodes from fragment list</span>
@@ -641,8 +660,7 @@
                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">)]</span> <span class="o">+</span> 
                          <span class="p">[(</span><span class="n">j</span> <span class="o">+</span> <span class="n">nrows</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">frag_list</span><span class="p">[</span><span class="n">j</span><span class="p">]})</span>
                            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frag_list</span><span class="p">))])</span>
-        <span class="c1"># Add edges from surface connectivity matrix</span>
-        <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
+        <span class="c1"># Add edges from surface adjacency matrix</span>
         <span class="n">shcm</span> <span class="o">=</span> <span class="n">shcm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tri</span><span class="p">(</span><span class="o">*</span><span class="n">shcm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
@@ -789,7 +807,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">make_ads_neighbor_list</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ads_connectivity_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ads_connectivity</span><span class="p">()</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ads_connectivity</span><span class="p">()</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">identify_adsorbates</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">adsorption_sites</span><span class="p">:</span>
             <span class="n">sas</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
@@ -810,7 +828,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">*=</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">surf_ids</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">subsurf_ids</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">connectivity_matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adj_matrix</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">adj_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">label_dict</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sas</span><span class="o">.</span><span class="n">site_list</span><span class="p">)</span>
 
@@ -822,7 +840,7 @@
     <span class="k">def</span> <span class="nf">identify_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-        <span class="n">adscm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_connectivity_matrix</span>
+        <span class="n">adscm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span>
 
         <span class="c1"># Cut all intermolecular H-H bonds except intramolecular        </span>
         <span class="c1"># H-H bonds in e.g. H2</span>
@@ -852,18 +870,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_list</span> <span class="o">=</span> <span class="n">adsorbates</span>
 
 <div class="viewcode-block" id="SlabAdsorbateCoverage.get_hetero_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_hetero_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the connection matrix of slab + adsorbates.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the adjacency matrix of slab + adsorbates.&quot;&quot;&quot;</span>
 
         <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)</span>                           </div>
+        <span class="k">return</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)</span>                           </div>
 
 <div class="viewcode-block" id="SlabAdsorbateCoverage.get_ads_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_ads_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_ads_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorbate atoms.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the adjacency matrix for adsorbate atoms.&quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span><span class="p">)</span> </div>
+        <span class="k">return</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span><span class="p">)</span> </div>
 
 <div class="viewcode-block" id="SlabAdsorbateCoverage.get_site_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the connection matrix for adsorption sites.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get the adjacency matrix for adsorption sites.&quot;&quot;&quot;</span>
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">conn_mat</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1045,7 +1063,8 @@
 
 <div class="viewcode-block" id="SlabAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each adsorbate (string)</span>
-<span class="sd">        and the corresponding adsorbate indices (tuple).&quot;&quot;&quot;</span>
+<span class="sd">        and the corresponding adsorbate indices (tuple) in ascending</span>
+<span class="sd">        order.&quot;&quot;&quot;</span>
 
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -1056,7 +1075,7 @@
                     <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">],</span> <span class="n">adsi</span><span class="p">))</span>
                     <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">adsorbates</span></div>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">adsorbates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
     <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
@@ -1092,7 +1111,8 @@
 
 <div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                   <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
+                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">return_adj_matrix</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                                         
         <span class="sd">&quot;&quot;&quot;Get the graph representation of the nanoparticle with adsorbates.</span>
 
 <span class="sd">        Parameters</span>
@@ -1108,10 +1128,14 @@
 <span class="sd">        full_effect : bool, default False</span>
 <span class="sd">            Take the whole catalyst into consideration when generating graph.</span>
 
+<span class="sd">        return_adj_matrix : bool, default False</span>
+<span class="sd">            Whether to return adjacency matrix instead of the networkx.Graph </span>
+<span class="sd">            object.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
-        <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivity_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
             <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1122,22 +1146,34 @@
         <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
-        <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span><span class="p">,</span> <span class="n">adsi_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
-                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">adsi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                         <span class="k">continue</span>
                 <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
                 <span class="n">newrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncols</span><span class="p">)</span>
                 <span class="n">newrow</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">newrows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newrow</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">adsi_list</span><span class="p">,</span> <span class="n">adsi</span><span class="p">)</span>
+                <span class="n">adsi_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">adsi</span><span class="p">)</span>
+                <span class="n">newrows</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">newrow</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>                
-                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
             <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">surfhcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">newrows</span><span class="p">)))</span>
+
+        <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
+                <span class="n">dd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">[</span><span class="o">-</span><span class="n">dd</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd</span><span class="p">,</span> <span class="n">dd</span><span class="p">))))))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">shcm</span>
 
         <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>               
         <span class="c1"># Add nodes from fragment list</span>
@@ -1146,7 +1182,7 @@
                          <span class="p">[(</span><span class="n">j</span> <span class="o">+</span> <span class="n">nrows</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">frag_list</span><span class="p">[</span><span class="n">j</span><span class="p">]})</span>
                            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frag_list</span><span class="p">))])</span>
 
-        <span class="c1"># Add edges from surface connectivity matrix</span>
+        <span class="c1"># Add edges from surface adjacency matrix</span>
         <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
         <span class="n">shcm</span> <span class="o">=</span> <span class="n">shcm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tri</span><span class="p">(</span><span class="o">*</span><span class="n">shcm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
@@ -1157,7 +1193,7 @@
 
 <span class="c1">#    def get_surface_bond_count_matrix(self, species):</span>
 <span class="c1">#        hsl = self.hetero_site_list</span>
-<span class="c1">#        cm = self.connectivity_matrix</span>
+<span class="c1">#        cm = self.adj_matrix</span>
 <span class="c1">#        atoms = self.atoms</span>
 <span class="c1">#        numbers = atoms.numbers</span>
 <span class="c1">#        symbols = atoms.symbols</span>

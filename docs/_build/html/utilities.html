@@ -190,9 +190,9 @@ radii instead.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_connectivity_matrix">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_connectivity_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">neighborlist</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_connectivity_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_connectivity_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a connectivity matrix from a neighborlist object.</p>
+<dt id="acat.utilities.get_adj_matrix">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_adj_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">neighborlist</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_adj_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_adj_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an adjacency matrix from a neighborlist object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>neighborlist</strong> (<em>dict</em>) – A neighborlist (dictionary) that contains keys of each
@@ -382,14 +382,25 @@ from a given adsorbate (string).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.numbers_from_ratio">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">numbers_from_ratio</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sum_numbers</span></em>, <em class="sig-param"><span class="n">ratio</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#numbers_from_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.numbers_from_ratio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the number of atoms for each element from ratio.</p>
+<dt id="acat.utilities.ratios_from_atoms">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">ratios_from_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#ratios_from_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.ratios_from_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of ratios for each element from the atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="acat.utilities.numbers_from_ratios">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">numbers_from_ratios</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sum_numbers</span></em>, <em class="sig-param"><span class="n">ratios</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#numbers_from_ratios"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.numbers_from_ratios" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of atoms for each element from ratios.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sum_numbers</strong> (<em>int</em>) – The total number of atoms</p></li>
-<li><p><strong>ratio</strong> (<em>list</em>) – A list of ratio for different elements</p></li>
+<li><p><strong>ratios</strong> (<em>list</em>) – A list of ratios for different elements</p></li>
 </ul>
 </dd>
 </dl>
@@ -397,7 +408,7 @@ from a given adsorbate (string).</p>
 
 <dl class="py function">
 <dt id="acat.utilities.draw_graph">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">draw_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">'graph.png'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#draw_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.draw_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">draw_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">'graph.png'</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#draw_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.draw_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw the graph using matplotlib.pyplot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
