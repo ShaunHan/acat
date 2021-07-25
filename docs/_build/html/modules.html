@@ -380,13 +380,19 @@ on the crystalline lattice constant of the material.</p>
 <dl class="py method">
 <dt id="acat.adsorption_sites.ClusterAdsorptionSites.get_connectivity">
 <code class="sig-name descname">get_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix.</p>
+<dd><p>Get the adjacency matrix.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.ClusterAdsorptionSites.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>return_adj_matrix</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return adjacency matrix instead of the networkx.Graph
+object.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -631,7 +637,7 @@ checking uniqueness.</p></li>
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.get_connectivity">
 <code class="sig-name descname">get_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix.</p>
+<dd><p>Get the adjacency matrix.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -640,7 +646,7 @@ checking uniqueness.</p></li>
 <dd><p>Return the indices of surface and subsurface atoms. This
 function relies on coordination number and the connectivity
 of the atoms. The top surface termination is singled out by
-graph connectivity using networkx.</p>
+graph adjacency using networkx.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>side</strong> (<em>string</em><em>, </em><em>default 'top'</em>) – The side of the surface termination (‘top’ or ‘bottom’).</p>
@@ -662,8 +668,14 @@ of 3 atoms that forms to that plane.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>return_adj_matrix</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return adjacency matrix instead of the networkx.Graph
+object.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1216,19 +1228,19 @@ bonding atom  that should be considered as an adsorbate.</p></li>
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_hetero_connectivity">
 <code class="sig-name descname">get_hetero_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_hetero_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_hetero_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix of slab + adsorbates.</p>
+<dd><p>Get the adjacency matrix of slab + adsorbates.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_ads_connectivity">
 <code class="sig-name descname">get_ads_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_ads_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_ads_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix for adsorbate atoms.</p>
+<dd><p>Get the adjacency matrix for adsorbate atoms.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site_connectivity">
 <code class="sig-name descname">get_site_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_site_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix for adsorption sites.</p>
+<dd><p>Get the adjacency matrix for adsorption sites.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1264,7 +1276,8 @@ of those sites and collect in a heterogeneous site list.</p>
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_adsorbates">
 <code class="sig-name descname">get_adsorbates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_adsorbates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_adsorbates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of tuples that contains each adsorbate (string)
-and the corresponding adsorbate indices (tuple).</p>
+and the corresponding adsorbate indices (tuple) in ascending
+order.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1284,7 +1297,7 @@ different labels.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle with adsorbates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1294,6 +1307,8 @@ that multidentate species with different orientations have
 different graphs.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Take subsurface atoms into consideration when genearting graph.</p></li>
 <li><p><strong>full_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Take the whole catalyst into consideration when generating graph.</p></li>
+<li><p><strong>return_adj_matrix</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return adjacency matrix instead of the networkx.Graph
+object.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1394,19 +1409,19 @@ bonding atom  that should be considered as an adsorbate.</p></li>
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_hetero_connectivity">
 <code class="sig-name descname">get_hetero_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_hetero_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_hetero_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix of slab + adsorbates.</p>
+<dd><p>Get the adjacency matrix of slab + adsorbates.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_ads_connectivity">
 <code class="sig-name descname">get_ads_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_ads_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_ads_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix for adsorbate atoms.</p>
+<dd><p>Get the adjacency matrix for adsorbate atoms.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site_connectivity">
 <code class="sig-name descname">get_site_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_site_connectivity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site_connectivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the connection matrix for adsorption sites.</p>
+<dd><p>Get the adjacency matrix for adsorption sites.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1442,7 +1457,8 @@ of those sites and collect in a heterogeneous site list.</p>
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_adsorbates">
 <code class="sig-name descname">get_adsorbates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_adsorbates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_adsorbates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of tuples that contains each adsorbate (string)
-and the corresponding adsorbate indices (tuple).</p>
+and the corresponding adsorbate indices (tuple) in ascending
+order.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1462,7 +1478,7 @@ different labels.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle with adsorbates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1472,6 +1488,8 @@ that multidentate species with different orientations have
 different graphs.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Take subsurface atoms into consideration when genearting graph.</p></li>
 <li><p><strong>full_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Take the whole catalyst into consideration when generating graph.</p></li>
+<li><p><strong>return_adj_matrix</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return adjacency matrix instead of the networkx.Graph
+object.</p></li>
 </ul>
 </dd>
 </dl>

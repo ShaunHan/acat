@@ -3,7 +3,7 @@ from ase.geometry.geometry import _row_col_from_pdist
 from ase.geometry import find_mic
 from ase.formula import Formula
 from itertools import product, permutations, combinations
-from collections import abc
+from collections import abc, Counter
 import networkx as nx
 import numpy as np
 import scipy
@@ -78,8 +78,8 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     return conn
 
 
-def get_connectivity_matrix(neighborlist):
-    """Returns a connectivity matrix from a neighborlist object.
+def get_adj_matrix(neighborlist):
+    """Returns an adjacency matrix from a neighborlist object.
 
     Parameters
     ----------
@@ -506,29 +506,43 @@ def string_fragmentation(adsorbate):
     return frag_list        
 
 
-def numbers_from_ratio(sum_numbers, ratio):
-    """Return the number of atoms for each element from ratio.
+def ratios_from_atoms(atoms):
+    """Return a list of ratios for each element from the atoms.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms object
+    """
+
+    ct = Counter(atoms.symbols)  
+    natoms = len(atoms)
+
+    return {x: y / natoms for x, y in ct.items()}
+
+
+def numbers_from_ratios(sum_numbers, ratios):
+    """Return the number of atoms for each element from ratios.
 
     Parameters
     ----------
     sum_numbers : int
         The total number of atoms
 
-    ratio : list
-        A list of ratio for different elements
+    ratios : list
+        A list of ratios for different elements
     """
 
-    sum_ratio = sum(ratio)
-    totals = [int((sum_numbers * r) // sum_ratio) for r in ratio]
-    residues = [(sum_numbers * r) % sum_ratio for r in ratio]
-    for i in sorted(range(len(ratio)), key=lambda i: residues[i] 
-    * ratio[i], reverse=True)[:sum_numbers-sum(totals)]:
+    sum_ratios = sum(ratios)
+    totals = [int((sum_numbers * r) // sum_ratios) for r in ratios]
+    residues = [(sum_numbers * r) % sum_ratios for r in ratios]
+    for i in sorted(range(len(ratios)), key=lambda i: residues[i] 
+    * ratios[i], reverse=True)[:sum_numbers-sum(totals)]:
         totals[i] += 1
 
     return totals
 
 
-def draw_graph(G, savefig='graph.png'):               
+def draw_graph(G, savefig='graph.png', *args, **kwargs):               
     """Draw the graph using matplotlib.pyplot.
 
     Parameters
@@ -561,5 +575,5 @@ def draw_graph(G, savefig='graph.png'):
                             font_size=10, 
                             font_color='w')
     plt.axis('off')
-    plt.savefig(savefig)
+    plt.savefig(savefig, *args, **kwargs)
     plt.clf()

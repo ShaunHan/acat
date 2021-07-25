@@ -161,7 +161,7 @@
             
   <h1>Source code for acat.build.ordering</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">bipartitions</span><span class="p">,</span> <span class="n">partitions_into_totals</span>
-<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">numbers_from_ratio</span><span class="p">,</span> <span class="n">is_list_or_tuple</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">numbers_from_ratios</span><span class="p">,</span> <span class="n">is_list_or_tuple</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">get_distances</span>
 <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">Trajectory</span><span class="p">,</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
 <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
@@ -532,7 +532,7 @@
                     <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
 
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">totals</span> <span class="o">=</span> <span class="n">numbers_from_ratio</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">ratios</span><span class="p">)</span> 
+                    <span class="n">totals</span> <span class="o">=</span> <span class="n">numbers_from_ratios</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">ratios</span><span class="p">)</span> 
                     <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">max_gen</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>               
 
@@ -805,7 +805,7 @@
                               <span class="s1">&#39;generator. Use stochastic generator instead&#39;</span><span class="p">)</span>
                     <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">totals</span> <span class="o">=</span> <span class="n">numbers_from_ratio</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">ratios</span><span class="p">)</span>
+                    <span class="n">totals</span> <span class="o">=</span> <span class="n">numbers_from_ratios</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">ratios</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">max_gen</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>             
    
@@ -951,7 +951,7 @@
             <span class="n">ks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">ks</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
             <span class="n">vs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-            <span class="n">nums</span> <span class="o">=</span> <span class="n">numbers_from_ratio</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">),</span> <span class="n">vs</span><span class="p">)</span>
+            <span class="n">nums</span> <span class="o">=</span> <span class="n">numbers_from_ratios</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">),</span> <span class="n">vs</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">ks</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ks</span><span class="p">))}</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>

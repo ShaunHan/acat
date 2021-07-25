@@ -4,7 +4,7 @@ from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
 from ..adsorption_sites import group_sites_by_facet
 from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
 from ..utilities import get_mic, atoms_too_close_after_addition 
-from ..utilities import is_list_or_tuple, numbers_from_ratio
+from ..utilities import is_list_or_tuple, numbers_from_ratios
 from ..labels import get_cluster_signature_from_label, get_slab_signature_from_label
 from .action import add_adsorbate_to_site, remove_adsorbate_from_site 
 from ase.io import read, write, Trajectory
@@ -714,7 +714,7 @@ class StochasticPatternGenerator(object):
         if add_species_composition is not None:
             ks = list(add_species_composition.keys())
             ratios = list(add_species_composition.values())
-            nums = numbers_from_ratio(num_act, ratios)
+            nums = numbers_from_ratios(num_act, ratios)
             adsorbates_to_add = [ads for k, n in zip(ks, nums) for ads in [k]*n] 
         self.add_species_composition = add_species_composition
 
@@ -1695,7 +1695,7 @@ class SystematicPatternGenerator(object):
         if add_species_composition is not None:
             ks = list(add_species_composition.keys())
             ratios = list(add_species_composition.values())
-            nums = numbers_from_ratio(num_act, ratios)
+            nums = numbers_from_ratios(num_act, ratios)
             self.adsorbates_to_add = [ads for k, n in zip(ks, nums) for ads in [k]*n] 
         self.add_species_composition = add_species_composition        
 

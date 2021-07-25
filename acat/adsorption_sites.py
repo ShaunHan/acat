@@ -1,7 +1,7 @@
 from .settings import adsorbate_elements, site_heights
 from .utilities import expand_cell, get_mic 
 from .utilities import is_list_or_tuple, get_max_delta_sum_path  
-from .utilities import neighbor_shell_list, get_connectivity_matrix
+from .utilities import neighbor_shell_list, get_adj_matrix
 from .labels import get_monometallic_cluster_labels, get_monometallic_slab_labels
 from .labels import get_bimetallic_cluster_labels, get_bimetallic_slab_labels
 from .labels import get_multimetallic_cluster_labels, get_multimetallic_slab_labels
@@ -687,10 +687,10 @@ class ClusterAdsorptionSites(object):
         self.nblist = FullNeighborList(rCut=rMax, atoms=self.ref_atoms)
 
     def get_connectivity(self):                                      
-        """Get the connection matrix."""
+        """Get the adjacency matrix."""
 
         nbslist = neighbor_shell_list(self.ref_atoms, 0.3, neighbor_number=1)
-        return get_connectivity_matrix(nbslist)                  
+        return get_adj_matrix(nbslist)                  
 
     def get_site_dict(self):
         icosa_dict = {                                                                                     
@@ -838,12 +838,23 @@ class ClusterAdsorptionSites(object):
         elif len(indices) == 3:
             return 'fcc111'
 
-    def get_graph(self):                             
-        """Get the graph representation of the nanoparticle."""
+    def get_graph(self, return_adj_matrix=False):                             
+        """Get the graph representation of the nanoparticle.
+
+        Parameters
+        ----------
+        return_adj_matrix : bool, default False
+            Whether to return adjacency matrix instead of the networkx.Graph 
+            object.
+
+        """
 
         cm = self.get_connectivity()
+        if return_adj_matrix:
+            return cm
+        
         G = nx.Graph()                               
-        # Add edges from surface connectivity matrix
+        # Add edges from surface adjacency matrix
         rows, cols = np.where(cm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
@@ -1160,7 +1171,7 @@ class SlabAdsorptionSites(object):
         self.tol = tol 
 
         self.make_neighbor_list(neighbor_number=1) 
-        self.connectivity_matrix = self.get_connectivity()         
+        self.adj_matrix = self.get_connectivity()         
 
         self.surf_ids, self.subsurf_ids = self.get_termination() 
         self.site_list = []
@@ -1192,7 +1203,7 @@ class SlabAdsorptionSites(object):
         normals_for_site = dict(list(zip(top_indices, 
                             [[] for _ in top_indices])))
         usi = set() # used_site_indices
-        cm = self.connectivity_matrix 
+        cm = self.adj_matrix 
         for s in top_indices:
             occurence = cm[s]
             sumo = np.sum(occurence, axis=0)
@@ -2431,15 +2442,15 @@ class SlabAdsorptionSites(object):
                                           neighbor_number, mic=True)
 
     def get_connectivity(self):                                      
-        """Get the connection matrix."""
+        """Get the adjacency matrix."""
 
-        return get_connectivity_matrix(self.nblist)
+        return get_adj_matrix(self.nblist)
 
     def get_termination(self, side='top'):
         """Return the indices of surface and subsurface atoms. This 
         function relies on coordination number and the connectivity 
         of the atoms. The top surface termination is singled out by 
-        graph connectivity using networkx.
+        graph adjacency using networkx.
 
         Parameters
         ----------
@@ -2449,7 +2460,7 @@ class SlabAdsorptionSites(object):
         """
 
         assert side in ['top', 'bottom']
-        cm = self.connectivity_matrix.copy()                               
+        cm = self.adj_matrix.copy()                               
         np.fill_diagonal(cm, 0)
         indices = self.indices 
         coord = np.count_nonzero(cm, axis=1)
@@ -2520,12 +2531,23 @@ class SlabAdsorptionSites(object):
             n *= -1
         return n
 
-    def get_graph(self):                              
-        """Get the graph representation of the nanoparticle."""
+    def get_graph(self, return_adj_matrix=False):                              
+        """Get the graph representation of the nanoparticle.
 
-        cm = self.connectivity_matrix
+        Parameters
+        ----------
+        return_adj_matrix : bool, default False
+            Whether to return adjacency matrix instead of the networkx.Graph 
+            object.
+
+        """
+
+        cm = self.adj_matrix
+        if return_adj_matrix:
+            return cm
+
         G = nx.Graph()                                                  
-        # Add edges from surface connectivity matrix
+        # Add edges from surface adjacency matrix
         rows, cols = np.where(cm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
