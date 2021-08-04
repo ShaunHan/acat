@@ -177,13 +177,13 @@ neighbor shell e.g. 1st, 2nd, 3rd by changing the neighbor number.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – Accept any ase.Atoms object. No need to be built-in.</p></li>
 <li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.3</em>) – Buffer to calculate nearest neighbor pairs.</p></li>
 <li><p><strong>neighbor_number</strong> (<em>int</em><em>, </em><em>default 1</em>) – Neighbor shell number.</p></li>
-<li><p><strong>different_species</strong> (<em>boolean</em><em>, </em><em>default False</em>) – Whether each neighbor pair are different species.</p></li>
-<li><p><strong>mic</strong> (<em>boolean</em><em>, </em><em>default False</em>) – Whether to apply minimum image convention. Remember to set
+<li><p><strong>different_species</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether each neighbor pair are different species.</p></li>
+<li><p><strong>mic</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to apply minimum image convention. Remember to set
 mic=True for periodic systems.</p></li>
 <li><p><strong>radius</strong> (<em>float</em><em>, </em><em>default None</em>) – The radius of each shell. Works exactly as a conventional
 neighbor list when specified. If not specified, use covalent
 radii instead.</p></li>
-<li><p><strong>span</strong> (<em>boolean</em><em>, </em><em>default False</em>) – Whether to include all neighbors spanned within the shell.</p></li>
+<li><p><strong>span</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to include all neighbors spanned within the shell.</p></li>
 </ul>
 </dd>
 </dl>
@@ -404,6 +404,32 @@ from a given adsorbate (string).</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="acat.utilities.dag_from_ucg">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">dag_from_ucg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adj_matrix</span></em>, <em class="sig-param"><span class="n">sources</span></em>, <em class="sig-param"><span class="n">return_depths</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#dag_from_ucg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.dag_from_ucg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes the adjacency matrix of an undirected cyclic graph
+(UCG) and the indices of the starting nodes, returns an
+adjacency list represeting the corresponding shortest-paths
+directed acyclic graph (DAG).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adj_matrix</strong> (<em>np.ndarray</em><em> or </em><em>list of lists</em>) – The adjacency matrix of the UCG.</p></li>
+<li><p><strong>sources</strong> (<em>list of strs</em>) – The indices of the starting nodes for the DAG.</p></li>
+<li><p><strong>return_depths</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to also return the node indices at each walking depth
+(in ascending order) together with the DAG.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="acat.utilities.relative_cosine_similarity">
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">relative_cosine_similarity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">counter1</span></em>, <em class="sig-param"><span class="n">counter2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#relative_cosine_similarity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.relative_cosine_similarity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the relative cosine similarity between two.
+counter dictionaries (e.g. {‘Pt’: 5, ‘Ni’: 8}).</p>
 </dd></dl>
 
 <dl class="py function">
