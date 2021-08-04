@@ -17,7 +17,7 @@ Optimize adsorbate overlayer pattern
 
 **Example1**
 
-All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate`` and ``ReplaceAdsorbate`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
+All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate``, ``ReplaceAdsorbate`` and ``AdsorbateCatalystCrossover`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
 
 As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
 

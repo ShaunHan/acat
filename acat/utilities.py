@@ -28,10 +28,10 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     neighbor_number : int, default 1
         Neighbor shell number.
 
-    different_species : boolean, default False
+    different_species : bool, default False
         Whether each neighbor pair are different species.
 
-    mic : boolean, default False
+    mic : bool, default False
         Whether to apply minimum image convention. Remember to set 
         mic=True for periodic systems.
 
@@ -40,7 +40,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
         neighbor list when specified. If not specified, use covalent 
         radii instead.
 
-    span : boolean, default False
+    span : bool, default False
         Whether to include all neighbors spanned within the shell.
 
     """
@@ -540,6 +540,73 @@ def numbers_from_ratios(sum_numbers, ratios):
         totals[i] += 1
 
     return totals
+
+
+def dag_from_ucg(adj_matrix, sources, return_depths=False):
+    """Takes the adjacency matrix of an undirected cyclic graph
+    (UCG) and the indices of the starting nodes, returns an 
+    adjacency list represeting the corresponding shortest-paths 
+    directed acyclic graph (DAG).
+
+    Parameters
+    ----------
+    adj_matrix : np.ndarray or list of lists
+        The adjacency matrix of the UCG.
+
+    sources : list of strs
+        The indices of the starting nodes for the DAG.
+
+    return_depths : bool, default False
+        Whether to also return the node indices at each walking depth 
+        (in ascending order) together with the DAG.
+
+    """
+
+    # Get the indices of the nearest neighbors for each atom
+    adj_list = [[target for target, is_connected in enumerate(row) 
+                 if is_connected] for row in adj_matrix]
+    sources = set(sources)
+    frontier = sources.copy()
+    depths = []
+    dag = [[] for _ in range(len(adj_list))]
+
+    # Iterate until no nearest neighbors can be found
+    while frontier:
+        if return_depths:
+            depths.append(frontier)
+        # Point to nearest neighbors that are not previously queried
+        # Prevent pointing to nodes with same depth or backwards
+        for source in frontier:            
+            dag[source].extend(target for target in adj_list[source] 
+                               if not target in sources)
+        # Update queried atoms with new nearest neighbor set
+        frontier = set(target for source in frontier for target 
+                       in adj_list[source] if not target in sources)
+        sources.update(frontier)
+
+    if return_depths:
+        return dag, depths
+
+    return dag
+
+
+def relative_cosine_similarity(counter1, counter2):
+    """Computes the relative cosine similarity between two.
+    counter dictionaries (e.g. {'Pt': 5, 'Ni': 8})."""
+
+    if not counter1 and not counter2:
+        return 1
+    if not counter1 or not counter2:
+        return 0 
+    lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())
+    lensim = min(lenc1, lenc2) / max(lenc1, lenc2)
+    terms = set(counter1).union(counter2)
+    dotprod = sum(counter1.get(k, 0) * counter2.get(k, 0) for k in terms)
+    magA = math.sqrt(sum(counter1.get(k, 0)**2 for k in terms))
+    magB = math.sqrt(sum(counter2.get(k, 0)**2 for k in terms))
+    cossim = dotprod / (magA * magB)
+
+    return lensim * cossim
 
 
 def draw_graph(G, savefig='graph.png', *args, **kwargs):               

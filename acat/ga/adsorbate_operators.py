@@ -837,9 +837,10 @@ class ReplaceAdsorbate(AdsorbateOperator):
         
 class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     """Crossover that cuts two particles with adsorbates through a plane 
-    in space and merges two halfes from different particles together.
-    The indexing of the atoms is not preserved. Please only use this
-    operator if the particle is allowed to change shape.
+    in space and merges two halfes from different particles together 
+    (only returns one of them). The indexing of the atoms is not 
+    preserved. Please only use this operator if the particle is allowed 
+    to change shape.
 
     It keeps the correct composition by randomly assigning elements in
     the new particle. If some of the atoms in the two particle halves
@@ -1188,9 +1189,9 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
 class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     """Crossover that divides two particles through a plane in space and
     merges the symbols of two halves from different particles with 
-    adosrbates together. The indexing of the atoms is preserved. Please 
-    only use this operator with other operators that also preserves the 
-    indexing.
+    adosrbates together (only returns one of them). The indexing of the 
+    atoms is preserved. Please only use this operator with other operators 
+    that also preserves the indexing.
 
     It keeps the correct composition by randomly assigning elements in
     the new particle.
@@ -1417,3 +1418,112 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         del ac[[a.index for a in ac
                 if a.symbol in adsorbate_elements]]
         return ac
+
+
+def AdsorbateCatalystCrossover(AdsorbateOperator):
+    """Crossover that divides two particles or two slabs by the adsorbate
+    -catalyst interfaces and exchange all adsorbates (only returns one of
+    them). The indexing of the atoms is preserved. Please only use this 
+    operator with other operators that also preserves the indexing.
+
+    Parameters
+    ----------
+    adsorbate_species : str or list of strs 
+        One or a list of adsorbate species to be added to the surface.
+
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        genetic algorithm. Make sure all the operators used with this
+        operator preserve the indexing of the atoms.
+
+    surface : str, default None
+        The surface type (crystal structure + Miller indices).
+        Only required if the structure is a periodic surface slab.
+
+    allow_6fold : bool, default False
+        Whether to allow the adsorption on 6-fold subsurf sites 
+        underneath fcc hollow sites.
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
+    """
+
+    def __init__(self, adsorbate_species,
+                 heights=site_heights,
+                 adsorption_sites=None,
+                 surface=None, 
+                 allow_6fold=False, 
+                 dmax=2.5):
+        AdsorbateOperator.__init__(self, adsorbate_species)
+        self.descriptor = 'AdsorbateCatalystCrossover'
+
+        self.heights = heights
+        self.adsorption_sites = adsorption_sites
+        self.surface = surface
+        self.allow_6fold = allow_6fold              
+        self.min_inputs = 2
+        self.dmax = dmax
+        
+    def get_new_individual(self, parents):
+        f, m = parents        
+        indi = f.copy()
+
+        # Place adsorbates from m onto the clean slab of f
+        if True in indi.pbc:
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = SlabAdsorptionSites(indi, self.surface, 
+                                          self.allow_6fold,
+                                          composition_effect=False) 
+            msac = SlabAdsorbateCoverage(m, sas, dmax=self.dmax)
+        else:
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)                
+            else:
+                sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
+                                             composition_effect=False)
+            msac = ClusterAdsorbateCoverage(m, sas, dmax=self.dmax)
+        indi = indi[sas.slab_ids]
+        mhsl = msac.hetero_site_list
+
+        adsi_dict = {}
+        adsorbate_ids = set()      
+        for st in mhsl:
+            if st['occupied']:
+                si = st['indices']
+                adsi = st['adsorbate_indices']
+                if set(adsi).issubset(adsorbate_ids):
+                    continue
+                adsorbate_ids.update(adsi)
+                si = st['indices']
+                adsi_dict[si] = {}
+                adsi_dict[si]['height'] = self.heights[st['site']]
+                adsi_dict[si]['adsorbate'] = st['adsorbate']
+                adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']        
+
+        for st in sas.site_list:
+            si = st['indices']
+            if si in adsi_dict:
+                adsorbate = adsi_dict[si]['adsorbate']
+                height = adsi_dict[si]['height']    
+                add_adsorbate_to_site(indi, adsorbate, st, height)
+
+        indi = self.initialize_individual(f, indi)
+        indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
+        indi.info['data']['operation'] = 'crossover'
+        indi.info['data']['adsorbates'] = msac.get_adsorbates()
+        parent_message = ':Parents {0} {1}'.format(f.info['confid'],
+                                                   m.info['confid'])
+        return (self.finalize_individual(indi),
+                self.descriptor + parent_message)

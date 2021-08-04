@@ -190,10 +190,10 @@
 <span class="sd">    neighbor_number : int, default 1</span>
 <span class="sd">        Neighbor shell number.</span>
 
-<span class="sd">    different_species : boolean, default False</span>
+<span class="sd">    different_species : bool, default False</span>
 <span class="sd">        Whether each neighbor pair are different species.</span>
 
-<span class="sd">    mic : boolean, default False</span>
+<span class="sd">    mic : bool, default False</span>
 <span class="sd">        Whether to apply minimum image convention. Remember to set </span>
 <span class="sd">        mic=True for periodic systems.</span>
 
@@ -202,7 +202,7 @@
 <span class="sd">        neighbor list when specified. If not specified, use covalent </span>
 <span class="sd">        radii instead.</span>
 
-<span class="sd">    span : boolean, default False</span>
+<span class="sd">    span : bool, default False</span>
 <span class="sd">        Whether to include all neighbors spanned within the shell.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -702,6 +702,73 @@
         <span class="n">totals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">return</span> <span class="n">totals</span></div>
+
+
+<div class="viewcode-block" id="dag_from_ucg"><a class="viewcode-back" href="../../utilities.html#acat.utilities.dag_from_ucg">[docs]</a><span class="k">def</span> <span class="nf">dag_from_ucg</span><span class="p">(</span><span class="n">adj_matrix</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">return_depths</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes the adjacency matrix of an undirected cyclic graph</span>
+<span class="sd">    (UCG) and the indices of the starting nodes, returns an </span>
+<span class="sd">    adjacency list represeting the corresponding shortest-paths </span>
+<span class="sd">    directed acyclic graph (DAG).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adj_matrix : np.ndarray or list of lists</span>
+<span class="sd">        The adjacency matrix of the UCG.</span>
+
+<span class="sd">    sources : list of strs</span>
+<span class="sd">        The indices of the starting nodes for the DAG.</span>
+
+<span class="sd">    return_depths : bool, default False</span>
+<span class="sd">        Whether to also return the node indices at each walking depth </span>
+<span class="sd">        (in ascending order) together with the DAG.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get the indices of the nearest neighbors for each atom</span>
+    <span class="n">adj_list</span> <span class="o">=</span> <span class="p">[[</span><span class="n">target</span> <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">is_connected</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> 
+                 <span class="k">if</span> <span class="n">is_connected</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">adj_matrix</span><span class="p">]</span>
+    <span class="n">sources</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+    <span class="n">frontier</span> <span class="o">=</span> <span class="n">sources</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dag</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">adj_list</span><span class="p">))]</span>
+
+    <span class="c1"># Iterate until no nearest neighbors can be found</span>
+    <span class="k">while</span> <span class="n">frontier</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">return_depths</span><span class="p">:</span>
+            <span class="n">depths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frontier</span><span class="p">)</span>
+        <span class="c1"># Point to nearest neighbors that are not previously queried</span>
+        <span class="c1"># Prevent pointing to nodes with same depth or backwards</span>
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">frontier</span><span class="p">:</span>            
+            <span class="n">dag</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">target</span> <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">adj_list</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> 
+                               <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">)</span>
+        <span class="c1"># Update queried atoms with new nearest neighbor set</span>
+        <span class="n">frontier</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">target</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">frontier</span> <span class="k">for</span> <span class="n">target</span> 
+                       <span class="ow">in</span> <span class="n">adj_list</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">)</span>
+        <span class="n">sources</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">frontier</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_depths</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dag</span><span class="p">,</span> <span class="n">depths</span>
+
+    <span class="k">return</span> <span class="n">dag</span></div>
+
+
+<div class="viewcode-block" id="relative_cosine_similarity"><a class="viewcode-back" href="../../utilities.html#acat.utilities.relative_cosine_similarity">[docs]</a><span class="k">def</span> <span class="nf">relative_cosine_similarity</span><span class="p">(</span><span class="n">counter1</span><span class="p">,</span> <span class="n">counter2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the relative cosine similarity between two.</span>
+<span class="sd">    counter dictionaries (e.g. {&#39;Pt&#39;: 5, &#39;Ni&#39;: 8}).&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">counter1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">counter2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">counter1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">counter2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span> 
+    <span class="n">lenc1</span><span class="p">,</span> <span class="n">lenc2</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter1</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter2</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">lensim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lenc1</span><span class="p">,</span> <span class="n">lenc2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">lenc1</span><span class="p">,</span> <span class="n">lenc2</span><span class="p">)</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">counter1</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">counter2</span><span class="p">)</span>
+    <span class="n">dotprod</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">counter2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">)</span>
+    <span class="n">magA</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">counter1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">))</span>
+    <span class="n">magB</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">counter2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">))</span>
+    <span class="n">cossim</span> <span class="o">=</span> <span class="n">dotprod</span> <span class="o">/</span> <span class="p">(</span><span class="n">magA</span> <span class="o">*</span> <span class="n">magB</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lensim</span> <span class="o">*</span> <span class="n">cossim</span></div>
 
 
 <div class="viewcode-block" id="draw_graph"><a class="viewcode-back" href="../../utilities.html#acat.utilities.draw_graph">[docs]</a><span class="k">def</span> <span class="nf">draw_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="s1">&#39;graph.png&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>               

@@ -999,9 +999,10 @@
         
 <div class="viewcode-block" id="CutSpliceCrossoverWithAdsorbates"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates">[docs]</a><span class="k">class</span> <span class="nc">CutSpliceCrossoverWithAdsorbates</span><span class="p">(</span><span class="n">AdsorbateOperator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Crossover that cuts two particles with adsorbates through a plane </span>
-<span class="sd">    in space and merges two halfes from different particles together.</span>
-<span class="sd">    The indexing of the atoms is not preserved. Please only use this</span>
-<span class="sd">    operator if the particle is allowed to change shape.</span>
+<span class="sd">    in space and merges two halfes from different particles together </span>
+<span class="sd">    (only returns one of them). The indexing of the atoms is not </span>
+<span class="sd">    preserved. Please only use this operator if the particle is allowed </span>
+<span class="sd">    to change shape.</span>
 
 <span class="sd">    It keeps the correct composition by randomly assigning elements in</span>
 <span class="sd">    the new particle. If some of the atoms in the two particle halves</span>
@@ -1350,9 +1351,9 @@
 <div class="viewcode-block" id="SimpleCutSpliceCrossoverWithAdsorbates"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_operators.SimpleCutSpliceCrossoverWithAdsorbates">[docs]</a><span class="k">class</span> <span class="nc">SimpleCutSpliceCrossoverWithAdsorbates</span><span class="p">(</span><span class="n">AdsorbateOperator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Crossover that divides two particles through a plane in space and</span>
 <span class="sd">    merges the symbols of two halves from different particles with </span>
-<span class="sd">    adosrbates together. The indexing of the atoms is preserved. Please </span>
-<span class="sd">    only use this operator with other operators that also preserves the </span>
-<span class="sd">    indexing.</span>
+<span class="sd">    adosrbates together (only returns one of them). The indexing of the </span>
+<span class="sd">    atoms is preserved. Please only use this operator with other operators </span>
+<span class="sd">    that also preserves the indexing.</span>
 
 <span class="sd">    It keeps the correct composition by randomly assigning elements in</span>
 <span class="sd">    the new particle.</span>
@@ -1579,6 +1580,115 @@
         <span class="k">del</span> <span class="n">ac</span><span class="p">[[</span><span class="n">a</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ac</span>
                 <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">adsorbate_elements</span><span class="p">]]</span>
         <span class="k">return</span> <span class="n">ac</span></div>
+
+
+<div class="viewcode-block" id="AdsorbateCatalystCrossover"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_operators.AdsorbateCatalystCrossover">[docs]</a><span class="k">def</span> <span class="nf">AdsorbateCatalystCrossover</span><span class="p">(</span><span class="n">AdsorbateOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Crossover that divides two particles or two slabs by the adsorbate</span>
+<span class="sd">    -catalyst interfaces and exchange all adsorbates (only returns one of</span>
+<span class="sd">    them). The indexing of the atoms is preserved. Please only use this </span>
+<span class="sd">    operator with other operators that also preserves the indexing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adsorbate_species : str or list of strs </span>
+<span class="sd">        One or a list of adsorbate species to be added to the surface.</span>
+
+<span class="sd">    heights : dict, default acat.settings.site_heights</span>
+<span class="sd">        A dictionary that contains the adsorbate height for each site </span>
+<span class="sd">        type. Use the default height settings if the height for a site </span>
+<span class="sd">        type is not specified.</span>
+
+<span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \</span>
+<span class="sd">        or acat.adsorption_sites.SlabAdsorptionSites object, default None</span>
+<span class="sd">        Provide the built-in adsorption sites class to accelerate the </span>
+<span class="sd">        genetic algorithm. Make sure all the operators used with this</span>
+<span class="sd">        operator preserve the indexing of the atoms.</span>
+
+<span class="sd">    surface : str, default None</span>
+<span class="sd">        The surface type (crystal structure + Miller indices).</span>
+<span class="sd">        Only required if the structure is a periodic surface slab.</span>
+
+<span class="sd">    allow_6fold : bool, default False</span>
+<span class="sd">        Whether to allow the adsorption on 6-fold subsurf sites </span>
+<span class="sd">        underneath fcc hollow sites.</span>
+
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
+<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
+                 <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
+                 <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
+        <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;AdsorbateCatalystCrossover&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="n">surface</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="o">=</span> <span class="n">allow_6fold</span>              
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
+        
+    <span class="k">def</span> <span class="nf">get_new_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parents</span><span class="p">):</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">parents</span>        
+        <span class="n">indi</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Place adsorbates from m onto the clean slab of f</span>
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
+                <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span> 
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span><span class="p">,</span>
+                                          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> 
+            <span class="n">msac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
+                <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span><span class="p">,</span> 
+                                             <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">msac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">indi</span> <span class="o">=</span> <span class="n">indi</span><span class="p">[</span><span class="n">sas</span><span class="o">.</span><span class="n">slab_ids</span><span class="p">]</span>
+        <span class="n">mhsl</span> <span class="o">=</span> <span class="n">msac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+
+        <span class="n">adsi_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>      
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">mhsl</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>        
+
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sas</span><span class="o">.</span><span class="n">site_list</span><span class="p">:</span>
+            <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">adsi_dict</span><span class="p">:</span>
+                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>    
+                <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">indi</span><span class="p">)</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">]</span> 
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;operation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;crossover&#39;</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">msac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()</span>
+        <span class="n">parent_message</span> <span class="o">=</span> <span class="s1">&#39;:Parents </span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span>
+                                                   <span class="n">m</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="n">parent_message</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
