@@ -1426,6 +1426,9 @@ def AdsorbateCatalystCrossover(AdsorbateOperator):
     them). The indexing of the atoms is preserved. Please only use this 
     operator with other operators that also preserves the indexing.
 
+    The composition or the coverage is fixed if it is preserved by all 
+    other operators being used.
+
     Parameters
     ----------
     adsorbate_species : str or list of strs 

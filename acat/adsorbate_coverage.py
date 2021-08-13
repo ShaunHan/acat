@@ -1,12 +1,11 @@
 from .settings import adsorbate_elements, adsorbate_formulas
 from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites 
-from .utilities import string_fragmentation, neighbor_shell_list, get_adj_matrix 
+from .utilities import neighbor_shell_list, get_adj_matrix 
 from ase.data import atomic_numbers
 from ase.geometry import find_mic
 from ase.formula import Formula
 from collections import defaultdict, Counter
 from operator import itemgetter
-from bisect import bisect_left
 from copy import deepcopy
 import networkx as nx
 import numpy as np
@@ -307,15 +306,21 @@ class ClusterAdsorbateCoverage(object):
         self.multidentate_labels = []
         multidentate_adsorbate_dict = {}
         for j, st in enumerate(hsl):
-            adssym = st['adsorbate']
             if st['occupied']:
+                adssym = st['adsorbate']
                 if st['dentate'] > 1:
                     bondid = st['bonding_index']
                     bondsym = self.symbols[bondid]
-                    fsym = next((f for f in string_fragmentation(adssym) 
-                                 if f[0] == bondsym), None)
+                    conns = [self.ads_ids[k] for k in np.where(self.ads_adj_matrix[
+                             self.ads_ids.index(bondid)] == 1)[0].tolist()]
+                    hnnlen = len([i for i in conns if self.atoms[i].symbol == 'H'])
+                    fsym = self.atoms[bondid].symbol
+                    if hnnlen == 1:
+                        fsym += 'H'
+                    elif hnnlen > 1:
+                        fsym += 'H{}'.format(hnnlen)
                     st['fragment'] = fsym
-                    flen = len(list(Formula(fsym)))
+                    flen = hnnlen + 1
                     adsids = st['adsorbate_indices']
                     ibond = adsids.index(bondid)
                     fsi = adsids[ibond:ibond+flen]
@@ -465,30 +470,50 @@ class ClusterAdsorbateCoverage(object):
         nrows, ncols = surfhcm.shape       
 
         newrows, frag_list, adsi_list = [], [], []
-        for st in hsl:
-            if st['occupied']:
-                adsi = st['adsorbate_indices']
-                if not fragmentation and st['dentate'] > 1: 
-                    if st['bonding_index'] != adsi[0]:
-                        continue
-                si = st['indices']
-                newrow = np.zeros(ncols)
-                newrow[list(si)] = 1
-                i = bisect_left(adsi_list, adsi)
-                adsi_list.insert(i, adsi)
-                newrows.insert(i, newrow)
-                if fragmentation:                
-                    frag_list.insert(i, st['fragment'])
-                else:
-                    frag_list.insert(i, st['adsorbate'])
+        multi_conns = defaultdict(list)
+        ohsl = [st for st in hsl if st['occupied']]
+        for st in sorted(ohsl, key=lambda x: x['fragment_indices']):
+            adsi = st['adsorbate_indices']
+            if not fragmentation and st['dentate'] > 1: 
+                if st['bonding_index'] != adsi[0]:
+                    continue
+            si = st['indices']
+            newrow = np.zeros(ncols)
+            newrow[list(si)] = 1
+            newrows.append(newrow)
+
+            if fragmentation:                
+                frag_list.append(st['fragment'])
+                if st['dentate'] > 1:
+                    bondid = st['bonding_index']
+                    all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
+                                 self.ads_ids.index(bondid)] == 1)[0].tolist()]
+                    conns = [c for c in all_conns if c not in st['fragment_indices']]
+                    i = len(newrows) - 1
+                    if i not in multi_conns:
+                        multi_conns[bondid].append([i])
+                    for k, v in multi_conns.items():
+                        if k in conns:
+                            multi_conns[k].append([i, v[0][0]])
+            else:
+                frag_list.append(st['adsorbate'])
+
+        links = []
         if newrows:
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+            if multi_conns:
+                links = [sorted(c) for cs in multi_conns.values() for c in cs if len(c) > 1]
 
         shcm = surfhcm[:,surf_ids]
         if return_adj_matrix:
             if newrows:
                 dd = len(newrows)
-                return np.hstack((shcm, np.vstack((shcm[-dd:].T, np.zeros((dd, dd))))))
+                small_mat = np.zeros((dd, dd))
+                if links:
+                    for (i, j) in links:
+                        small_mat[i,j] = 1
+                        small_mat[j,i] = 1
+                return np.hstack((shcm, np.vstack((shcm[-dd:].T, small_mat))))
             else:
                 return shcm
 
@@ -498,11 +523,15 @@ class ClusterAdsorbateCoverage(object):
                            for i in range(nrows)] + 
                          [(j + nrows, {'symbol': frag_list[j]})
                            for j in range(len(frag_list))])
+
         # Add edges from surface adjacency matrix
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
+        if links:
+            for (i, j) in links:
+                G.add_edge(i + len(surf_ids), j + len(surf_ids))
 
         return G
 
@@ -833,10 +862,16 @@ class SlabAdsorbateCoverage(object):
                 if st['dentate'] > 1:
                     bondid = st['bonding_index']
                     bondsym = self.symbols[bondid] 
-                    fsym = next((f for f in string_fragmentation(adssym) 
-                                 if f[0] == bondsym), None)
-                    st['fragment'] = fsym
-                    flen = len(list(Formula(fsym)))
+                    conns = [self.ads_ids[k] for k in np.where(self.ads_adj_matrix[
+                             self.ads_ids.index(bondid)] == 1)[0].tolist()]
+                    hnnlen = len([i for i in conns if self.atoms[i].symbol == 'H'])
+                    fsym = self.atoms[bondid].symbol
+                    if hnnlen == 1:
+                        fsym += 'H'
+                    elif hnnlen > 1:
+                        fsym += 'H{}'.format(hnnlen)
+                    st['fragment'] = fsym 
+                    flen = hnnlen + 1
                     adsids = st['adsorbate_indices']
                     ibond = adsids.index(bondid)
                     fsi = adsids[ibond:ibond+flen]
@@ -986,30 +1021,50 @@ class SlabAdsorbateCoverage(object):
         nrows, ncols = surfhcm.shape       
 
         newrows, frag_list, adsi_list = [], [], []
-        for st in hsl:
-            if st['occupied']:
-                adsi = st['adsorbate_indices']
-                if not fragmentation and st['dentate'] > 1: 
-                    if st['bonding_index'] != adsi[0]:
-                        continue
-                si = st['indices']
-                newrow = np.zeros(ncols)
-                newrow[list(si)] = 1
-                i = bisect_left(adsi_list, adsi)
-                adsi_list.insert(i, adsi)
-                newrows.insert(i, newrow)
-                if fragmentation:                
-                    frag_list.insert(i, st['fragment'])
-                else:
-                    frag_list.insert(i, st['adsorbate'])
+        multi_conns = defaultdict(list)
+        ohsl = [st for st in hsl if st['occupied']]
+        for st in sorted(ohsl, key=lambda x: x['fragment_indices']):
+            adsi = st['adsorbate_indices']
+            if not fragmentation and st['dentate'] > 1: 
+                if st['bonding_index'] != adsi[0]:
+                    continue
+            si = st['indices']
+            newrow = np.zeros(ncols)
+            newrow[list(si)] = 1
+            newrows.append(newrow)
+
+            if fragmentation:                
+                frag_list.append(st['fragment'])
+                if st['dentate'] > 1:
+                    bondid = st['bonding_index']
+                    all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
+                                 self.ads_ids.index(bondid)] == 1)[0].tolist()]
+                    conns = [c for c in all_conns if c not in st['fragment_indices']]
+                    i = len(newrows) - 1
+                    if i not in multi_conns:
+                        multi_conns[bondid].append([i])
+                    for k, v in multi_conns.items():
+                        if k in conns:
+                            multi_conns[k].append([i, v[0][0]])
+            else:
+                frag_list.append(st['adsorbate'])
+
+        links = []
         if newrows:
             surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+            if multi_conns:
+                links = [sorted(c) for cs in multi_conns.values() for c in cs if len(c) > 1]
 
         shcm = surfhcm[:,surf_ids]
         if return_adj_matrix:
             if newrows:
                 dd = len(newrows)
-                return np.hstack((shcm, np.vstack((shcm[-dd:].T, np.zeros((dd, dd))))))
+                small_mat = np.zeros((dd, dd))
+                if links:
+                    for (i, j) in links:
+                        small_mat[i,j] = 1
+                        small_mat[j,i] = 1
+                return np.hstack((shcm, np.vstack((shcm[-dd:].T, small_mat))))
             else:
                 return shcm
 
@@ -1021,11 +1076,13 @@ class SlabAdsorbateCoverage(object):
                            for j in range(len(frag_list))])
 
         # Add edges from surface adjacency matrix
-        shcm = surfhcm[:,surf_ids]
         shcm = shcm * np.tri(*shcm.shape, k=-1)
         rows, cols = np.where(shcm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
+        if links:
+            for (i, j) in links:
+                G.add_edge(i + len(surf_ids), j + len(surf_ids))
 
         return G
 
