@@ -598,6 +598,7 @@ def relative_cosine_similarity(counter1, counter2):
         return 1
     if not counter1 or not counter2:
         return 0 
+
     lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())
     lensim = min(lenc1, lenc2) / max(lenc1, lenc2)
     terms = set(counter1).union(counter2)
