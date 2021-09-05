@@ -1,12 +1,17 @@
-from ..settings import adsorbate_elements, site_heights  
-from ..settings import monodentate_adsorbate_list, multidentate_adsorbate_list
-from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
-from ..adsorption_sites import group_sites_by_facet
-from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
-from ..utilities import get_mic, atoms_too_close_after_addition 
-from ..utilities import is_list_or_tuple, numbers_from_ratios
-from ..labels import get_cluster_signature_from_label, get_slab_signature_from_label
-from .action import add_adsorbate_to_site, remove_adsorbate_from_site 
+from ..settings import (adsorbate_elements, site_heights, 
+                        monodentate_adsorbate_list, 
+                        multidentate_adsorbate_list)
+from ..adsorption_sites import (ClusterAdsorptionSites, 
+                                SlabAdsorptionSites, 
+                                group_sites_by_facet)
+from ..adsorbate_coverage import (ClusterAdsorbateCoverage, 
+                                  SlabAdsorbateCoverage)
+from ..utilities import (get_mic, atoms_too_close_after_addition, 
+                         is_list_or_tuple, numbers_from_ratios)
+from ..labels import (get_cluster_signature_from_label, 
+                      get_slab_signature_from_label)
+from .action import (add_adsorbate_to_site, 
+                     remove_adsorbate_from_site)
 from ase.io import read, write, Trajectory
 from ase.formula import Formula
 from copy import deepcopy
@@ -81,7 +86,7 @@ class StochasticPatternGenerator(object):
         consistent with what is specified in adsorption_sites. Only
         relvevant for periodic surface slabs.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -134,7 +139,7 @@ class StochasticPatternGenerator(object):
                  allow_6fold=False,
                  composition_effect=True,
                  both_sides=False,
-                 dmax=2.5,                 
+                 dmax=3.,                 
                  species_forbidden_sites=None,    
                  species_forbidden_labels=None,
                  fragmentation=True,
@@ -366,7 +371,8 @@ class StochasticPatternGenerator(object):
                 self.logfile.flush()
             return
         rmst = random.choice(occupied)
-        remove_adsorbate_from_site(self.atoms, rmst)
+        rm_frag = rmst['fragment'] in self.adsorbate_species 
+        remove_adsorbate_from_site(self.atoms, rmst, remove_fragment=rm_frag)
 
         ads_remain = [a for a in self.atoms if a.symbol in adsorbate_elements]
         if not ads_remain:
@@ -406,7 +412,8 @@ class StochasticPatternGenerator(object):
             return
         rmst = random.choice(occupied)
         adsorbate = rmst['adsorbate']
-        remove_adsorbate_from_site(self.atoms, rmst)
+        rm_frag = rmst['fragment'] in self.adsorbate_species 
+        remove_adsorbate_from_site(self.atoms, rmst, remove_fragment=rm_frag)
 
         nbstids, selfids = [], []
         for j, st in enumerate(hsl):
@@ -539,7 +546,8 @@ class StochasticPatternGenerator(object):
 
         rpsti = random.choice(occupied_stids)
         rpst = hsl[rpsti]
-        remove_adsorbate_from_site(self.atoms, rpst)
+        rm_frag = rpst['fragment'] in self.adsorbate_species 
+        remove_adsorbate_from_site(self.atoms, rpst, remove_fragment=rm_frag)
 
         # Select a different adsorbate with probability 
         old_adsorbate = rpst['adsorbate']
@@ -662,6 +670,7 @@ class StochasticPatternGenerator(object):
             num_act=1,
             add_species_composition=None,
             unique=True,
+            site_preference=None,
             subsurf_effect=False):
         """Run the pattern generator.
 
@@ -698,6 +707,9 @@ class StochasticPatternGenerator(object):
 
         unique : bool, default True 
             Whether to discard duplicate patterns based on graph isomorphism.
+
+        site_preference : str of list of strs, defualt None
+            The site type(s) that has higher priority to attach adsorbates.
 
         subsurf_effect : bool, default False
             Whether to take subsurface atoms into consideration when checking 
@@ -786,6 +798,11 @@ class StochasticPatternGenerator(object):
             else:
                 sas = ClusterAdsorptionSites(self.atoms, self.allow_6fold,
                                              self.composition_effect)      
+            if site_preference is not None:                                              
+                if not is_list_or_tuple(site_preference):
+                    site_preference = [site_preference]
+                sas.site_list.sort(key=lambda x: x['site'] in site_preference, reverse=True)
+
             # Choose an action 
             self.clean_slab = False
             n_slab = len(sas.indices) 
@@ -928,7 +945,7 @@ class SystematicPatternGenerator(object):
         consistent with what is specified in adsorption_sites. Only
         relevant for periodic surface slabs.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -971,7 +988,7 @@ class SystematicPatternGenerator(object):
                  allow_6fold=False,
                  composition_effect=True,
                  both_sides=False,
-                 dmax=2.5,
+                 dmax=3.,
                  species_forbidden_sites=None,
                  species_forbidden_labels=None,
                  enumerate_orientations=True,
@@ -1035,7 +1052,7 @@ class SystematicPatternGenerator(object):
             self.composition_effect = composition_effect
             self.both_sides = both_sides
 
-    def _add_adsorbate_enumeration(self, atoms, adsorption_sites):
+    def _exhaustive_add_adsorbate(self, atoms, adsorption_sites):
         if self.add_species_composition is not None:
             adsorbate_species = [self.adsorbates_to_add[self.act_count]]
         else:
@@ -1162,7 +1179,7 @@ class SystematicPatternGenerator(object):
 
                     self.act_count += 1
                     if self.act_count < self.num_act:                        
-                        self._add_adsorbate_enumeration(final_atoms, sas)
+                        self._exhaustive_add_adsorbate(final_atoms, sas)
                     self.act_count -= 1
                     if self.exit:
                         return
@@ -1207,7 +1224,7 @@ class SystematicPatternGenerator(object):
                             self.exit = True
                             return 
 
-    def _remove_adsorbate_enumeration(self, atoms, adsorption_sites):
+    def _exhaustive_remove_adsorbate(self, atoms, adsorption_sites):
         self.n_duplicate = 0                                                           
         sas = adsorption_sites
         if True in atoms.pbc:
@@ -1232,7 +1249,8 @@ class SystematicPatternGenerator(object):
                 continue
             rm_ids.update(ads_ids)                
             final_atoms = atoms.copy()
-            remove_adsorbate_from_site(final_atoms, rmst)
+            rm_frag = rmst['fragment'] in self.adsorbate_species 
+            remove_adsorbate_from_site(final_atoms, rmst, remove_fragment=rm_frag)
 
             ads_remain = [a for a in final_atoms if a.symbol in adsorbate_elements]
             if not ads_remain:
@@ -1248,7 +1266,7 @@ class SystematicPatternGenerator(object):
 
             self.act_count += 1
             if self.act_count < self.num_act:
-                self._remove_adsorbate_enumeration(final_atoms, sas)
+                self._exhaustive_remove_adsorbate(final_atoms, sas)
             self.act_count -= 1
             if self.exit:
                 return
@@ -1293,7 +1311,7 @@ class SystematicPatternGenerator(object):
                     self.exit = True
                     return
 
-    def _move_adsorbate_enumeration(self, atoms, adsorption_sites): 
+    def _exhaustive_move_adsorbate(self, atoms, adsorption_sites): 
         self.n_duplicate = 0                                                           
         sas = adsorption_sites                      
         if self.adsorption_sites is not None:                            
@@ -1330,9 +1348,10 @@ class SystematicPatternGenerator(object):
                 continue
             rm_ids.update(ads_ids)                              
             test_atoms = atoms.copy()
-            remove_adsorbate_from_site(test_atoms, st)
-            adsorbate = st['adsorbate']
+            rm_frag = st['fragment'] in self.adsorbate_species
+            remove_adsorbate_from_site(test_atoms, st, remove_fragment=rm_frag)
 
+            adsorbate = st['adsorbate']
             if adsorbate in self.multidentate_adsorbates:
                 if self.adsorption_sites is not None:
                     bidentate_nblist = self.bidentate_nblist
@@ -1425,7 +1444,7 @@ class SystematicPatternGenerator(object):
 
                     self.act_count += 1
                     if self.act_count < self.num_act:
-                        self._move_adsorbate_enumeration(final_atoms, sas)
+                        self._exhaustive_move_adsorbate(final_atoms, sas)
                     self.act_count -= 1
                     if self.exit:
                         return
@@ -1470,7 +1489,7 @@ class SystematicPatternGenerator(object):
                             self.exit = True
                             return
 
-    def _replace_adsorbate_enumeration(self, atoms, adsorption_sites):
+    def _exhaustive_replace_adsorbate(self, atoms, adsorption_sites):
         sas = adsorption_sites
         if True in atoms.pbc:                                                           
             sac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax,
@@ -1495,7 +1514,8 @@ class SystematicPatternGenerator(object):
                 continue
             rm_ids.update(ads_ids)                             
             test_atoms = atoms.copy()
-            remove_adsorbate_from_site(test_atoms, rpst)
+            rm_frag = rpst['fragment'] in self.adsorbate_species  
+            remove_adsorbate_from_site(test_atoms, rpst, remove_fragment=rm_frag)
                                                                                              
             # Select a different adsorbate with probability 
             old_adsorbate = rpst['adsorbate']
@@ -1603,7 +1623,7 @@ class SystematicPatternGenerator(object):
 
                     self.act_count += 1
                     if self.act_count < self.num_act:
-                        self._replace_adsorbate_enumeration(final_atoms, sas)
+                        self._exhaustive_replace_adsorbate(final_atoms, sas)
                     self.act_count -= 1
                     if self.exit:
                         return
@@ -1653,6 +1673,7 @@ class SystematicPatternGenerator(object):
             num_act=1, 
             add_species_composition=None,
             unique=True, 
+            site_preference=None,
             subsurf_effect=False):
         """Run the pattern generator.
 
@@ -1681,6 +1702,9 @@ class SystematicPatternGenerator(object):
 
         unique : bool, default True 
             Whether to discard duplicate patterns based on graph isomorphism.
+
+        site_preference : str of list of strs, defualt None
+            The site type(s) that has higher priority to attach adsorbates.
 
         subsurf_effect : bool, default False
             Whether to take subsurface atoms into consideration when checking 
@@ -1761,6 +1785,10 @@ class SystematicPatternGenerator(object):
             else:
                 sas = ClusterAdsorptionSites(atoms, self.allow_6fold,
                                              self.composition_effect)     
+            if site_preference is not None:                                              
+                if not is_list_or_tuple(site_preference):
+                    site_preference = [site_preference]
+                sas.site_list.sort(key=lambda x: x['site'] in site_preference, reverse=True)
 
             self.clean_slab = False
             self.n_slab = len(sas.indices)
@@ -1776,13 +1804,13 @@ class SystematicPatternGenerator(object):
                 self.logfile.flush()
 
             if action == 'add':            
-                self._add_adsorbate_enumeration(atoms, sas)
+                self._exhaustive_add_adsorbate(atoms, sas)
             elif action == 'remove':
-                self._remove_adsorbate_enumeration(atoms, sas)
+                self._exhaustive_remove_adsorbate(atoms, sas)
             elif action == 'move':
-                self._move_adsorbate_enumeration(atoms, sas)
+                self._exhaustive_move_adsorbate(atoms, sas)
             elif action == 'replace':
-                self._replace_adsorbate_enumeration(atoms, sas)            
+                self._exhaustive_replace_adsorbate(atoms, sas)            
 
             if self.logfile is not None:
                 method = 'label match' if self.clean_slab else 'isomorphism'
@@ -1815,10 +1843,12 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
     coverage : float, default 1. 
         The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
-        Support 4 overlayer patterns (0.25 for p(2x2) pattern; 
+        Support 4 overlayer patterns (
+        0.25 for p(2x2) pattern; 
         0.5 for c(2x2) pattern on fcc100 or honeycomb pattern on fcc111; 
         0.75 for (2x2) pattern on fcc100 or Kagome pattern on fcc111; 
-        1 for p(1x1) pattern.
+        1. for p(1x1) pattern; 
+        2. for ontop+4fold pattern on fcc100 or fcc+hcp pattern on fcc111.
         Note that for small nanoparticles, the function might give 
         results that do not correspond to the coverage. This is normal 
         since the surface area can be too small to encompass the 
@@ -1850,7 +1880,7 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
     
     """
 
-    assert coverage in [0.25, 0.5, 0.75, 1.], 'coverage not supported' 
+    assert coverage in [0.25, 0.5, 0.75, 1., 2.], 'coverage not supported' 
 
     adsorbate_species = adsorbate_species if is_list_or_tuple(                                     
                         adsorbate_species) else [adsorbate_species]
@@ -1877,17 +1907,21 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
     def find_ordered_sites(site_list):
         final_sites = []
         if 'fcc111' in surface: 
+            # fcc+hcp pattern
+            if coverage == 2:
+                fold3_sites = [s for s in site_list if s['site'] in ['fcc', 'hcp']]
+                if fold3_sites:
+                    final_sites += fold3_sites
+
             # p(1x1) pattern
             if coverage == 1:
-                fcc_sites = [s for s in site_list 
-                             if s['site'] == 'fcc']
+                fcc_sites = [s for s in site_list if s['site'] == 'fcc']
                 if fcc_sites:
                     final_sites += fcc_sites
  
             # Kagome pattern
             elif coverage == 3/4:
-                fcc_sites = [s for s in site_list  
-                             if s['site'] == 'fcc']
+                fcc_sites = [s for s in site_list if s['site'] == 'fcc']
                 if True not in atoms.pbc:                                
                     grouped_sites = group_sites_by_facet(atoms, fcc_sites, site_list)
                 else:
@@ -1958,8 +1992,7 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
  
             # p(2x2) pattern
             elif coverage == 1/4:
-                fcc_sites = [s for s in site_list 
-                             if s['site'] == 'fcc']                                                                 
+                fcc_sites = [s for s in site_list if s['site'] == 'fcc']                                                                 
                 if True not in atoms.pbc:                                
                     grouped_sites = group_sites_by_facet(atoms, fcc_sites, site_list)
                 else:
@@ -1987,6 +2020,12 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                         final_sites += sites_to_remain
  
         if 'fcc100' in surface:
+            # ontop+4fold pattern
+            if coverage == 2:
+                fold14_sites = [s for s in site_list if s['site'] in ['ontop', '4fold']]
+                if fold14_sites:
+                    final_sites += fold14_sites
+
             # p(1x1) pattern
             if coverage == 1:
                 fold4_sites = [s for s in site_list if s['site'] == '4fold']
@@ -2080,10 +2119,9 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
     if True in atoms.pbc:
         if both_sides:
             final_sites += find_ordered_sites(bot_site_list)
-
     # Add edge coverage for nanoparticles
     else:
-        if coverage == 1:
+        if coverage in [1, 2]:
             edge_sites = [s for s in site_list if 
                           s['site'] == 'bridge' and 
                           s['surface'] == 'edge']
@@ -2338,6 +2376,7 @@ def random_coverage_pattern(atoms, adsorbate_species,
                             min_adsorbate_distance=1.5, 
                             heights=site_heights,
                             allow_6fold=False,
+                            site_preference=None,
                             both_sides=False):
     """A function for generating random overlayer patterns with a 
     minimum distance constraint. The function is generalized for both 
@@ -2375,6 +2414,9 @@ def random_coverage_pattern(atoms, adsorbate_species,
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
+
+    site_preference : str of list of strs, defualt None
+        The site type(s) that has higher priority to attach adsorbates.
     
     both_sides : bool, default False
         Whether to add adsorbate to both top and bottom sides of the slab.
@@ -2406,6 +2448,11 @@ def random_coverage_pattern(atoms, adsorbate_species,
     random.shuffle(site_list)
     natoms = len(atoms)
     nads_dict = {ads: len(list(Formula(ads))) for ads in adsorbate_species}
+
+    if site_preference is not None:
+        if not is_list_or_tuple(site_preference):
+            site_preference = [site_preference]
+        site_list.sort(key=lambda x: x['site'] in site_preference, reverse=True)
 
     for st in site_list:
         # Select adsorbate with probability 

@@ -1,11 +1,17 @@
 """Adsorbate procreation operators that adds an adsorbate to the surface of 
 a particle or given structure."""
-from ..settings import adsorbate_elements, adsorbate_molecule, site_heights
-from ..utilities import is_list_or_tuple, atoms_too_close_after_addition
-from ..adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites
-from ..adsorbate_coverage import ClusterAdsorbateCoverage, SlabAdsorbateCoverage
-from ..build.action import add_adsorbate_to_site, remove_adsorbate_from_site
-from ..build.action import remove_adsorbates_from_sites
+from ..settings import (adsorbate_elements, 
+                        adsorbate_molecule, 
+                        site_heights)
+from ..utilities import (is_list_or_tuple, 
+                         atoms_too_close_after_addition)
+from ..adsorption_sites import (ClusterAdsorptionSites, 
+                                SlabAdsorptionSites)
+from ..adsorbate_coverage import (ClusterAdsorbateCoverage, 
+                                  SlabAdsorbateCoverage)
+from ..build.action import (add_adsorbate_to_site, 
+                            remove_adsorbate_from_site, 
+                            remove_adsorbates_from_sites)
 from ase.ga.offspring_creator import OffspringCreator
 from ase.formula import Formula
 from ase import Atoms, Atom
@@ -21,12 +27,16 @@ class AdsorbateOperator(OffspringCreator):
 
     Don't use this operator directly!"""
 
-    def __init__(self, adsorbate_species, num_muts=1):        
+    def __init__(self, adsorbate_species, species_probabilities=None, num_muts=1):        
         OffspringCreator.__init__(self, num_muts=num_muts)
 
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
                                  adsorbate_species) else [adsorbate_species]
-
+        self.species_probabilities = species_probabilities
+        if self.species_probabilities is not None:
+            assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
+            self.species_probability_list = [self.species_probabilities[a] for 
+                                             a in self.adsorbate_species]        
         self.descriptor = 'AdsorbateOperator'
 
     @classmethod
@@ -43,9 +53,10 @@ class AdsorbateOperator(OffspringCreator):
     def get_new_individual(self, parents):
         raise NotImplementedError
 
-    def add_adsorbate(self, atoms, hetero_site_list, 
-                      heights, adsorbate_species=None, 
-                      min_adsorbate_distance=2., tilt_angle=0.):
+    def add_adsorbate(self, atoms, hetero_site_list, heights, 
+                      adsorbate_species=None, 
+                      min_adsorbate_distance=2., 
+                      tilt_angle=0.):
         """Adds the adsorbate in self.adsorbate to the supplied atoms
         object at the first free site in the specified site_list. A site
         is free if no other adsorbates can be found in a sphere of radius
@@ -78,9 +89,10 @@ class AdsorbateOperator(OffspringCreator):
 
         """
 
-        if not adsorbate_species:
-            adsorbate_species=self.adsorbate_species
-
+        if adsorbate_species is None:
+            adsorbate_species = self.adsorbate_species
+        elif not is_list_or_tuple(adsorbate_species): 
+            adsorbate_species = [adsorbate_species]
         i = 0
         too_close = True
         while too_close:
@@ -98,7 +110,12 @@ class AdsorbateOperator(OffspringCreator):
                 adsorbate_species = [s for s in adsorbate_species if len(s) == 1]
 
             # Add a random adsorbate to the correct position
-            adsorbate = random.choice(adsorbate_species)
+            if self.species_probabilities is None:
+                adsorbate = random.choice(adsorbate_species)
+            else:
+                probs = [self.species_probability_list[a] for a in adsorbate_species]
+                adsorbate = random.choices(k=1, population=adsorbate_species,
+                                           weights=probs)[0]                   
             height = heights[this_site]
             add_adsorbate_to_site(atoms, adsorbate, site, height, 
                                   tilt_angle=tilt_angle)
@@ -160,8 +177,10 @@ class AdsorbateOperator(OffspringCreator):
                 print('Removal not possible, will add instead')
                 return self.add_adsorbate(atoms, hetero_site_list, site_heights)
 
-            # Remove adsorbate from the correct position
-            remove_adsorbate_from_site(atoms, site)
+            # Remove adsorbate from the correct position. Remove the fragment
+            # with priority if it is one of the given adsorbate species
+            rm_frag = site['fragment'] in self.adsorbate_species 
+            remove_adsorbate_from_site(atoms, site, remove_fragment=rm_frag)
 
             if return_site_index:
                 return i
@@ -242,6 +261,11 @@ class AddAdsorbate(AdsorbateOperator):
     adsorbate_species : str or list of strs 
         One or a list of adsorbate species to be added to the surface.
 
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of adding onto the surface.
+        Adding adsorbate species with equal probability if not specified.
+
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
@@ -265,12 +289,18 @@ class AddAdsorbate(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
 
-    site_preference : str, defualt None
-        The site type that has higher priority to attach adsorbates.
+    site_preference : str of list of strs, defualt None
+        The site type(s) that has higher priority to attach adsorbates.
 
     surface_preference : str, default None
         The surface type that has higher priority to attach adsorbates.
         Please only use this for nanoparticles.
+
+    max_coverage : float, default None
+        The maximum allowed coverage on the surface. Coverage is defined
+        as (number of surface occupied sites / number of surface atoms).
+        The maximum coverage is solely governed by min_adsorbate_distance 
+        if max_coverage is not specified.
 
     tilt_angle : float, default 0.
         Tilt the adsorbate with an angle (in degress) relative to the 
@@ -279,13 +309,14 @@ class AddAdsorbate(AdsorbateOperator):
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
     """
 
     def __init__(self, adsorbate_species,
+                 species_probabilities=None,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
                  adsorption_sites=None,
@@ -293,10 +324,12 @@ class AddAdsorbate(AdsorbateOperator):
                  allow_6fold=False,
                  site_preference=None,
                  surface_preference=None,
+                 max_coverage=None,
                  tilt_angle=None,
                  num_muts=1,
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species,
+                                   species_probabilities,
                                    num_muts=num_muts)
         self.descriptor = 'AddAdsorbate'
 
@@ -306,8 +339,12 @@ class AddAdsorbate(AdsorbateOperator):
         self.surface = surface
         self.allow_6fold = allow_6fold
         self.site_preference = site_preference
+        if site_preference is not None:
+            if not is_list_or_tuple(site_preference):
+                self.site_preference = [site_preference]
         self.surface_preference = surface_preference
-        
+
+        self.max_coverage = max_coverage        
         self.tilt_angle = tilt_angle or 0.
         self.min_inputs = 1
         self.dmax = dmax
@@ -342,10 +379,13 @@ class AddAdsorbate(AdsorbateOperator):
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
-        nsac = None
         for _ in range(self.num_muts):
-            random.shuffle(ads_sites)
+            # Make sure the coverage does not exceed maximum coverage
+            if self.max_coverage is not None:
+                if sac.coverage > self.max_coverage:
+                    break
 
+            random.shuffle(ads_sites)
             if self.surface_preference is not None:
                 def func(x):
                     return x['surface'] == self.surface_preference
@@ -353,7 +393,7 @@ class AddAdsorbate(AdsorbateOperator):
 
             if self.site_preference is not None:
                 def func(x):
-                    return x['site'] == self.site_preference
+                    return x['site'] in self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
             nindi = self.add_adsorbate(indi, ads_sites, self.heights,
@@ -365,13 +405,12 @@ class AddAdsorbate(AdsorbateOperator):
 
             indi = nindi
             if True in indi.pbc:
-                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
             else:
-                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
-            ads_sites = nsac.hetero_site_list                          
+                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = sac.hetero_site_list                          
         
-        if nsac is not None:
-            indi.info['data']['adsorbates'] = nsac.get_adsorbates()
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -403,21 +442,22 @@ class RemoveAdsorbate(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites underneath 
         fcc hollow sites.
 
-    site_preference : str, defualt None
-        The site type that has higher priority to attach adsorbates.
+    site_preference : str or list of strs, defualt None
+        The site type(s) that has higher priority to detach adsorbates.
 
     surface_preference : str, default None
-        The surface type that has higher priority to attach adsorbates.
+        The surface type that has higher priority to detach adsorbates.
         Please only use this for nanoparticles.
 
-    tilt_angle : float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to the 
-        surface normal.
+    min_coverage : float, default None
+        The minimum allowed coverage on the surface. Coverage is defined
+        as (number of surface occupied sites / number of surface atoms).
+        The minimum coverage is 0 if min_coverage is not specified.
 
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -429,8 +469,9 @@ class RemoveAdsorbate(AdsorbateOperator):
                  allow_6fold=False,
                  site_preference=None,
                  surface_preference=None,
+                 min_coverage=None,
                  num_muts=1,
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
@@ -439,8 +480,12 @@ class RemoveAdsorbate(AdsorbateOperator):
         self.surface = surface
         self.allow_6fold = allow_6fold
         self.site_preference = site_preference
-        self.surface_preference = surface_preference
+        if site_preference is not None:
+            if not is_list_or_tuple(site_preference):
+                self.site_preference = [site_preference]
 
+        self.min_coverage = min_coverage
+        self.surface_preference = surface_preference
         self.min_inputs = 1
         self.dmax = dmax
 
@@ -473,10 +518,13 @@ class RemoveAdsorbate(AdsorbateOperator):
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
-        nsac = None
         for _ in range(self.num_muts):
-            random.shuffle(ads_sites)
+            # Make sure the coverage is not lower than the minimum coverage
+            if self.min_coverage is not None:
+                if sac.coverage < self.min_coverage:
+                    break
 
+            random.shuffle(ads_sites)
             if self.surface_preference is not None:
                 def func(x):
                     return x['surface'] == self.surface_preference
@@ -484,7 +532,7 @@ class RemoveAdsorbate(AdsorbateOperator):
 
             if self.site_preference is not None:
                 def func(x):
-                    return x['site'] == self.site_preference
+                    return x['site'] in self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
             indi = self.remove_adsorbate(indi, ads_sites)
@@ -493,13 +541,12 @@ class RemoveAdsorbate(AdsorbateOperator):
             if not [a for a in indi if a.symbol in adsorbate_elements]:
                 break
             if True in indi.pbc:
-                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
             else:
-                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
-            ads_sites = nsac.hetero_site_list                          
+                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = sac.hetero_site_list                          
 
-        if nsac is not None:
-            indi.info['data']['adsorbates'] = nsac.get_adsorbates()
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -540,15 +587,15 @@ class MoveAdsorbate(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
 
-    site_preference_from : str, defualt None
-        The site type that has higher priority to detach adsorbates.
+    site_preference_from : str or list of strs, defualt None
+        The site type(s) that has higher priority to detach adsorbates.
 
     surface_preference_from : str, default None
         The surface type that has higher priority to detach adsorbates.
         Please only use this for nanoparticles.
 
-    site_preference_to : str, defualt None
-        The site type that has higher priority to attach adsorbates.
+    site_preference_to : str or list of strs, defualt None
+        The site type(s) that has higher priority to attach adsorbates.
 
     surface_preference_to : str, default None
         The surface type that has higher priority to attach adsorbates.
@@ -561,7 +608,7 @@ class MoveAdsorbate(AdsorbateOperator):
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -579,7 +626,7 @@ class MoveAdsorbate(AdsorbateOperator):
                  surface_preference_to=None,
                  tilt_angle=None,
                  num_muts=1,
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'MoveAdsorbate'
@@ -590,8 +637,14 @@ class MoveAdsorbate(AdsorbateOperator):
         self.surface = surface
         self.allow_6fold = allow_6fold               
         self.site_preference_from = site_preference_from
+        if site_preference_from is not None:
+            if not is_list_or_tuple(site_preference_from):
+                self.site_preference_from = [site_preference_from]
         self.surface_preference_from = surface_preference_from
         self.site_preference_to = site_preference_to
+        if site_preference_to is not None:
+            if not is_list_or_tuple(site_preference_to):
+                self.site_preference_to = [site_preference_to]
         self.surface_preference_to = surface_preference_to
 
         self.tilt_angle = tilt_angle or 0.
@@ -627,7 +680,6 @@ class MoveAdsorbate(AdsorbateOperator):
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
-        nsac = None
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
             if self.surface_preference_from is not None:
@@ -637,7 +689,7 @@ class MoveAdsorbate(AdsorbateOperator):
 
             if self.site_preference_from is not None:
                 def func(x):
-                    return x['site'] == self.site_preference_from
+                    return x['site'] in self.site_preference_from
                 ads_sites.sort(key=func, reverse=True)
 
             removed = self.remove_adsorbate(indi, ads_sites,
@@ -655,7 +707,7 @@ class MoveAdsorbate(AdsorbateOperator):
 
             if self.site_preference_to is not None:
                 def func(x):
-                    return x['site'] == self.site_preference_to
+                    return x['site'] in self.site_preference_to
                 ads_sites.sort(key=func, reverse=True)
 
             nindi = self.add_adsorbate(indi, ads_sites, 
@@ -667,13 +719,12 @@ class MoveAdsorbate(AdsorbateOperator):
 
             indi = nindi
             if True in indi.pbc:
-                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
             else:
-                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
-            ads_sites = nsac.hetero_site_list                          
+                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = sac.hetero_site_list                          
 
-        if nsac is not None:
-            indi.info['data']['adsorbates'] = nsac.get_adsorbates()
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -690,6 +741,12 @@ class ReplaceAdsorbate(AdsorbateOperator):
     ----------
     adsorbate_species : str or list of strs 
         One or a list of adsorbate species to be added to the surface.
+
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of replacing an adsorbate on the 
+        surface. Adding adsorbate species with equal probability if not 
+        specified.
 
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
@@ -714,10 +771,10 @@ class ReplaceAdsorbate(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
 
-    site_preference_from : str, defualt None
-        The site type that has higher priority to replace adsorbates.
+    site_preference : str or list of strs, defualt None
+        The site type(s) that has higher priority to replace adsorbates.
 
-    surface_preference_from : str, default None
+    surface_preference : str, default None
         The surface type that has higher priority to replace adsorbates.
         Please only use this for nanoparticles.
 
@@ -728,24 +785,26 @@ class ReplaceAdsorbate(AdsorbateOperator):
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
     """
 
     def __init__(self, adsorbate_species,
+                 species_probabilities=None,
                  heights=site_heights,
                  min_adsorbate_distance=2.,
                  adsorption_sites=None,
                  surface=None,
                  allow_6fold=False,
-                 site_preference_from=None,
-                 surface_preference_from=None,
+                 site_preference=None,
+                 surface_preference=None,
                  tilt_angle=None,
                  num_muts=1,
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species,
+                                   species_probabilities,
                                    num_muts=num_muts)
         self.descriptor = 'ReplaceAdsorbate'
 
@@ -754,8 +813,11 @@ class ReplaceAdsorbate(AdsorbateOperator):
         self.adsorption_sites = adsorption_sites
         self.surface = surface
         self.allow_6fold = allow_6fold               
-        self.site_preference_from = site_preference_from
-        self.surface_preference_from = surface_preference_from
+        self.site_preference = site_preference
+        if site_preference is not None:
+            if not is_list_or_tuple(site_preference):
+                self.site_preference = [site_preference]
+        self.surface_preference = surface_preference
 
         self.tilt_angle = tilt_angle or 0.
         self.min_inputs = 1
@@ -790,17 +852,16 @@ class ReplaceAdsorbate(AdsorbateOperator):
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
-        nsac = None
         for _ in range(self.num_muts):
             random.shuffle(ads_sites)
-            if self.surface_preference_from is not None:
+            if self.surface_preference is not None:
                 def func(x):
-                    return x['surface'] == self.surface_preference_from
+                    return x['surface'] == self.surface_preference
                 ads_sites.sort(key=func, reverse=True)
 
-            if self.site_preference_from is not None:
+            if self.site_preference is not None:
                 def func(x):
-                    return x['site'] == self.site_preference_from
+                    return x['site'] in self.site_preference
                 ads_sites.sort(key=func, reverse=True)
 
             removed = self.remove_adsorbate(indi, ads_sites,
@@ -823,13 +884,12 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
             indi = nindi
             if True in indi.pbc:
-                nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
             else:
-                nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
-            ads_sites = nsac.hetero_site_list                          
+                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            ads_sites = sac.hetero_site_list                          
 
-        if nsac is not None:
-            indi.info['data']['adsorbates'] = nsac.get_adsorbates()
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -889,7 +949,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         vector being rotated around is set in rotate_vectors. Default 
         None meaning no rotation is performed.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -903,7 +963,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                  allow_6fold=False, 
                  rotate_vectors=None, 
                  rotate_angles=None,
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
 
@@ -1150,7 +1210,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                         indi.pop(i)                
             cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
 
-        indi.info['data']['adsorbates'] = cac.get_adsorbates()
+        indi.info['data']['adsorbates'] = cac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0} {1}'.format(f.info['confid'],
@@ -1227,7 +1287,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -1240,7 +1300,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                  min_adsorbate_distance=2.,
                  adsorption_sites=None, 
                  allow_6fold=False, 
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'SimpleCutSpliceCrossoverWithAdsorbates'
 
@@ -1334,7 +1394,10 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             if st['occupied']:
                 if not set(st['adsorbate_indices']).isdisjoint(rmset):
                     rmsites.append(st)
-        remove_adsorbates_from_sites(indi, sites=rmsites) 
+
+        # Remove fragments if every fragment is one of the given adsorbate species
+        rm_frags = all(st['fragment'] in self.adsorbate_species for st in rmsites)
+        remove_adsorbates_from_sites(indi, sites=rmsites, remove_fragments=rm_frags) 
 
         mset = set(mids)
         adsi_dict = {}
@@ -1399,7 +1462,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
-        indi.info['data']['adsorbates'] = cac.get_adsorbates()
+        indi.info['data']['adsorbates'] = cac.get_adsorbates(self.adsorbate_species)
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],
                                                    m.info['confid'])
         return (self.finalize_individual(indi),
@@ -1453,7 +1516,7 @@ def AdsorbateCatalystCrossover(AdsorbateOperator):
         Whether to allow the adsorption on 6-fold subsurf sites 
         underneath fcc hollow sites.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -1464,7 +1527,7 @@ def AdsorbateCatalystCrossover(AdsorbateOperator):
                  adsorption_sites=None,
                  surface=None, 
                  allow_6fold=False, 
-                 dmax=2.5):
+                 dmax=3.):
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'AdsorbateCatalystCrossover'
 
@@ -1525,7 +1588,7 @@ def AdsorbateCatalystCrossover(AdsorbateOperator):
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
-        indi.info['data']['adsorbates'] = msac.get_adsorbates()
+        indi.info['data']['adsorbates'] = msac.get_adsorbates(self.adsorbate_species)
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],
                                                    m.info['confid'])
         return (self.finalize_individual(indi),

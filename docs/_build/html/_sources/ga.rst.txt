@@ -30,12 +30,12 @@ The script for a parallel genetic algorithm looks as follows:
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.ordering import RandomOrderingGenerator as ROG
     from acat.build.overlayer import random_coverage_pattern
-    from acat.ga.adsorbate_operators import AddAdsorbate, RemoveAdsorbate
-    from acat.ga.adsorbate_operators import MoveAdsorbate, ReplaceAdsorbate
-    from acat.ga.adsorbate_operators import SimpleCutSpliceCrossoverWithAdsorbates
+    from acat.ga.adsorbate_operators import (AddAdsorbate, RemoveAdsorbate,
+                                             MoveAdsorbate, ReplaceAdsorbate,
+                                             SimpleCutSpliceCrossoverWithAdsorbates)
     # Import particle_mutations from acat instead of ase to get the indexing-preserved version
-    from acat.ga.particle_mutations import RandomPermutation, COM2surfPermutation
-    from acat.ga.particle_mutations import Rich2poorPermutation, Poor2richPermutation
+    from acat.ga.particle_mutations import (RandomPermutation, COM2surfPermutation,
+                                            Rich2poorPermutation, Poor2richPermutation)
     from acat.ga.adsorbate_comparators import AdsorptionSitesComparator
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
@@ -245,12 +245,12 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.ordering import RandomOrderingGenerator as ROG
     from acat.build.overlayer import StochasticPatternGenerator as SPG
-    from acat.ga.adsorbate_operators import AddAdsorbate, RemoveAdsorbate
-    from acat.ga.adsorbate_operators import MoveAdsorbate, ReplaceAdsorbate
-    from acat.ga.adsorbate_operators import SimpleCutSpliceCrossoverWithAdsorbates
+    from acat.ga.adsorbate_operators import (AddAdsorbate, RemoveAdsorbate,
+                                             MoveAdsorbate, ReplaceAdsorbate,
+                                             SimpleCutSpliceCrossoverWithAdsorbates)
     # Import particle_mutations from acat instead of ase to get the indexing-preserved version
-    from acat.ga.particle_mutations import RandomPermutation, COM2surfPermutation
-    from acat.ga.particle_mutations import Rich2poorPermutation, Poor2richPermutation
+    from acat.ga.particle_mutations import (RandomPermutation, COM2surfPermutation,
+                                            Rich2poorPermutation, Poor2richPermutation)
     from acat.ga.adsorbate_comparators import AdsorptionSitesComparator
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
@@ -472,11 +472,11 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
 .. code-block:: python
 
     from acat.build.ordering import SymmetricClusterOrderingGenerator as SCOG
-    from acat.ga.group_operators import GroupSubstitute
-    from acat.ga.group_operators import GroupPermutation
-    from acat.ga.group_operators import GroupCrossover
-    from acat.ga.group_comparators import GroupSizeComparator
-    from acat.ga.group_comparators import GroupCompositionComparator
+    from acat.ga.group_operators import (GroupSubstitute,
+                                         GroupPermutation,
+                                         GroupCrossover)
+    from acat.ga.group_comparators import (GroupSizeComparator,
+                                           GroupCompositionComparator)
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
     from ase.ga.offspring_creator import OperationSelector
@@ -655,11 +655,11 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
 .. code-block:: python
                                                                                                                     
     from acat.build.ordering import SymmetricClusterOrderingGenerator as SCOG
-    from acat.ga.group_operators import GroupSubstitute
-    from acat.ga.group_operators import GroupPermutation
-    from acat.ga.group_operators import GroupCrossover
-    from acat.ga.group_comparators import GroupSizeComparator
-    from acat.ga.group_comparators import GroupCompositionComparator
+    from acat.ga.group_operators import (GroupSubstitute,
+                                         GroupPermutation,
+                                         GroupCrossover)
+    from acat.ga.group_comparators import (GroupSizeComparator,
+                                           GroupCompositionComparator)
     from ase.ga.particle_comparator import NNMatComparator
     from ase.ga.standard_comparators import SequentialComparator
     from ase.ga.offspring_creator import OperationSelector

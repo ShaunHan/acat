@@ -1,5 +1,5 @@
-from ..utilities import bipartitions, partitions_into_totals
-from ..utilities import numbers_from_ratios, is_list_or_tuple
+from ..utilities import (bipartitions, partitions_into_totals,
+                         numbers_from_ratios, is_list_or_tuple)
 from ase.geometry import get_distances
 from ase.io import Trajectory, read, write
 from asap3.analysis import FullCNA 

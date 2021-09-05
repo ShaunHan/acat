@@ -80,10 +80,11 @@ class Mutation(OffspringCreator):
 class RandomMutation(Mutation):
     """Moves a random atom the supplied length in a random direction."""
 
-    def __init__(self, length=2., num_muts=1):
+    def __init__(self, length=2., num_muts=1, allowed_indices=None):
         Mutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'RandomMutation'
         self.length = length
+        self.allowed_indices = allowed_indices
 
     def mutate(self, atoms):
         """ Does the actual mutation. """
@@ -97,7 +98,11 @@ class RandomMutation(Mutation):
         return indi
 
     def get_new_individual(self, parents):
-        f = parents[0]
+        f0 = parents[0]
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
@@ -108,6 +113,13 @@ class RandomMutation(Mutation):
 
         for atom in to_mut:
             indi.append(atom)
+
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
@@ -125,15 +137,24 @@ class RandomPermutation(Mutation):
 
     Parameters:
 
-    num_muts: the number of times to perform this operation."""
+    num_muts: the number of times to perform this operation.
 
-    def __init__(self, elements=None, num_muts=1):
+    allowed_indices: The indices of atoms that are allowed to 
+        be mutated by this operator. All indices are considered 
+        if this is not specified."""
+
+    def __init__(self, elements=None, num_muts=1, allowed_indices=None):
         Mutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'RandomPermutation'
         self.elements = elements
+        self.allowed_indices = allowed_indices
 
     def get_new_individual(self, parents):
-        f = parents[0].copy()
+        f0 = parents[0].copy()
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         diffatoms = len(set(f.numbers))
         assert diffatoms > 1, 'Permutations with one atomic type is not valid'
@@ -146,6 +167,13 @@ class RandomPermutation(Mutation):
 
         for atom in f:
             indi.append(atom)
+
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
@@ -183,16 +211,26 @@ class COM2surfPermutation(Mutation):
         complete particle. In that case remember to decrease this min_ratio.
 
     num_muts: the number of times to perform this operation.
+
+    allowed_indices: The indices of atoms that are allowed to 
+        be mutated by this operator. All indices are considered 
+        if this is not specified.
     """
 
-    def __init__(self, elements=None, min_ratio=0.25, num_muts=1):
+    def __init__(self, elements=None, min_ratio=0.25, 
+                 num_muts=1, allowed_indices=None):
         Mutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'COM2surfPermutation'
         self.min_ratio = min_ratio
         self.elements = elements
+        self.allowed_indices = allowed_indices
 
     def get_new_individual(self, parents):
-        f = parents[0].copy()
+        f0 = parents[0].copy()
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         diffatoms = len(set(f.numbers))
         assert diffatoms > 1, 'Permutations with one atomic type is not valid'
@@ -206,6 +244,13 @@ class COM2surfPermutation(Mutation):
 
         for atom in f:
             indi.append(atom)
+
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
@@ -332,15 +377,26 @@ class Poor2richPermutation(_NeighborhoodPermutation):
     Parameters:
 
     elements: Which elements to take into account in this permutation
+
+    num_muts: the number of times to perform this operation.
+
+    allowed_indices: The indices of atoms that are allowed to 
+        be mutated by this operator. All indices are considered 
+        if this is not specified.
     """
 
-    def __init__(self, elements=[], num_muts=1):
+    def __init__(self, elements=[], num_muts=1, allowed_indices=None):
         _NeighborhoodPermutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'Poor2richPermutation'
         self.elements = elements
+        self.allowed_indices = allowed_indices
 
     def get_new_individual(self, parents):
-        f = parents[0].copy()
+        f0 = parents[0].copy()
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         diffatoms = len(set(f.numbers))
         assert diffatoms > 1, 'Permutations with one atomic type is not valid'
@@ -353,6 +409,13 @@ class Poor2richPermutation(_NeighborhoodPermutation):
 
         for atom in f:
             indi.append(atom)
+
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
@@ -381,15 +444,26 @@ class Rich2poorPermutation(_NeighborhoodPermutation):
     Parameters:
 
     elements: Which elements to take into account in this permutation
+
+    num_muts: the number of times to perform this operation.
+
+    allowed_indices: The indices of atoms that are allowed to 
+        be mutated by this operator. All indices are considered 
+        if this is not specified.
     """
 
-    def __init__(self, elements=None, num_muts=1):
+    def __init__(self, elements=None, num_muts=1, allowed_indices=None):
         _NeighborhoodPermutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'Rich2poorPermutation'
         self.elements = elements
+        self.allowed_indices = allowed_indices
 
     def get_new_individual(self, parents):
-        f = parents[0].copy()
+        f0 = parents[0].copy()
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         diffatoms = len(set(f.numbers))
         assert diffatoms > 1, 'Permutations with one atomic type is not valid'
@@ -406,6 +480,13 @@ class Rich2poorPermutation(_NeighborhoodPermutation):
 
         for atom in f:
             indi.append(atom)
+
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
@@ -429,10 +510,11 @@ class SymmetricSubstitute(Mutation):
 
     """
 
-    def __init__(self, elements=None, num_muts=1):
+    def __init__(self, elements=None, num_muts=1, allowed_indices=None):
         Mutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'SymmetricSubstitute'
         self.elements = elements
+        self.allowed_indices = allowed_indices
 
     def substitute(self, atoms):
         """Does the actual substitution"""
@@ -448,10 +530,21 @@ class SymmetricSubstitute(Mutation):
         return atoms
 
     def get_new_individual(self, parents):
-        f = parents[0]
+        f0 = parents[0]
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         indi = self.substitute(f)
         indi = self.initialize_individual(f, indi)
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
+
         indi.info['data']['parents'] = [f.info['confid']]
 
         return (self.finalize_individual(indi),
@@ -462,10 +555,11 @@ class RandomSubstitute(Mutation):
     """Substitutes one atom with another atom type. The possible atom types
     are supplied in the parameter elements"""
 
-    def __init__(self, elements=None, num_muts=1):
+    def __init__(self, elements=None, num_muts=1, allowed_indices=None):
         Mutation.__init__(self, num_muts=num_muts)
         self.descriptor = 'RandomSubstitute'
         self.elements = elements
+        self.allowed_indices = allowed_indices
 
     def substitute(self, atoms):
         """Does the actual substitution"""
@@ -484,10 +578,21 @@ class RandomSubstitute(Mutation):
         return atoms
 
     def get_new_individual(self, parents):
-        f = parents[0]
+        f0 = parents[0]
+        if self.allowed_indices is None: 
+            f = f0
+        else:
+            f = f0[self.allowed_indices]
 
         indi = self.substitute(f)
         indi = self.initialize_individual(f, indi)
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
+
         indi.info['data']['parents'] = [f.info['confid']]
 
         return (self.finalize_individual(indi),
