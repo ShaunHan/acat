@@ -161,13 +161,20 @@
             
   <h1>Source code for acat.adsorption_sites</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">expand_cell</span><span class="p">,</span> <span class="n">get_mic</span> 
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">is_list_or_tuple</span><span class="p">,</span> <span class="n">get_max_delta_sum_path</span>  
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">neighbor_shell_list</span><span class="p">,</span> <span class="n">get_adj_matrix</span>
-<span class="kn">from</span> <span class="nn">.labels</span> <span class="kn">import</span> <span class="n">get_monometallic_cluster_labels</span><span class="p">,</span> <span class="n">get_monometallic_slab_labels</span>
-<span class="kn">from</span> <span class="nn">.labels</span> <span class="kn">import</span> <span class="n">get_bimetallic_cluster_labels</span><span class="p">,</span> <span class="n">get_bimetallic_slab_labels</span>
-<span class="kn">from</span> <span class="nn">.labels</span> <span class="kn">import</span> <span class="n">get_multimetallic_cluster_labels</span><span class="p">,</span> <span class="n">get_multimetallic_slab_labels</span>
-<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">reference_states</span><span class="p">,</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">chemical_symbols</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">expand_cell</span><span class="p">,</span> <span class="n">get_mic</span><span class="p">,</span> 
+                        <span class="n">is_list_or_tuple</span><span class="p">,</span> 
+                        <span class="n">get_max_delta_sum_path</span><span class="p">,</span>
+                        <span class="n">neighbor_shell_list</span><span class="p">,</span> 
+                        <span class="n">get_adj_matrix</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.labels</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_monometallic_cluster_labels</span><span class="p">,</span> 
+                     <span class="n">get_monometallic_slab_labels</span><span class="p">,</span>
+                     <span class="n">get_bimetallic_cluster_labels</span><span class="p">,</span> 
+                     <span class="n">get_bimetallic_slab_labels</span><span class="p">,</span>
+                     <span class="n">get_multimetallic_cluster_labels</span><span class="p">,</span> 
+                     <span class="n">get_multimetallic_slab_labels</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">reference_states</span><span class="p">,</span> 
+                      <span class="n">atomic_numbers</span><span class="p">,</span> 
+                      <span class="n">chemical_symbols</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
 <span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span><span class="p">,</span> <span class="n">FIRE</span>
 <span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>

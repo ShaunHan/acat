@@ -33,16 +33,27 @@ class SimpleCutSpliceCrossover(Crossover):
         Boolean that signifies if the composition should be the same 
         as in the parents.
 
+    allowed_indices : list of ints, default None
+        The indices of atoms that are allowed to be mutated by this 
+        operator. All indices are considered if this is not specified.
+
     """
 
-    def __init__(self, elements=None, keep_composition=True):
+    def __init__(self, elements=None, 
+                 keep_composition=True, 
+                 allowed_indices=None):
         Crossover.__init__(self)
         self.elements = elements
         self.keep_composition = keep_composition
+        self.allowed_indices = allowed_indices
         self.descriptor = 'SimpleCutSpliceCrossover'
         
     def get_new_individual(self, parents):
-        f, m = parents        
+        f0, m0 = parents
+        if self.allowed_indices is None:
+            f, m = f0, m0
+        else:
+            f, m = f0[self.allowed_indices], m0[self.allowed_indices]
         indi = f.copy()
 
         theta = random.random() * 2 * np.pi  # 0,2pi
@@ -102,6 +113,13 @@ class SimpleCutSpliceCrossover(Crossover):
                 indi[ai].number = add
 
         indi = self.initialize_individual(f, indi)
+        if self.allowed_indices is not None:
+            tmp = f0.copy()
+            tmp.symbols[self.allowed_indices] = indi.symbols
+            info = indi.info.copy()
+            indi = tmp.copy()
+            indi.info = info
+
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],

@@ -161,7 +161,8 @@
             
   <h1>Source code for acat.adsorbate_coverage</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">adsorbate_formulas</span>
-<span class="kn">from</span> <span class="nn">.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span><span class="p">,</span> <span class="n">SlabAdsorptionSites</span> 
+<span class="kn">from</span> <span class="nn">.adsorption_sites</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorptionSites</span><span class="p">,</span> 
+                               <span class="n">SlabAdsorptionSites</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">neighbor_shell_list</span><span class="p">,</span> <span class="n">get_adj_matrix</span> 
 <span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
@@ -223,7 +224,7 @@
 <span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
 <span class="sd">        label that represents the occpied site.</span>
 
-<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">    dmax : float, default 3.</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
 <span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
 
@@ -269,7 +270,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> 
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                  <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
 
         <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
@@ -545,21 +546,48 @@
             <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
         <span class="k">return</span> <span class="n">all_sites</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each adsorbate (string)</span>
 <span class="sd">        and the corresponding adsorbate indices (tuple) in ascending</span>
-<span class="sd">        order.&quot;&quot;&quot;</span>
+<span class="sd">        order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        adsorbate_species : list of strs, default None</span>
+<span class="sd">            The available adsorbate species. If the adsorbate is not</span>
+<span class="sd">            one of the available species, return the fragment instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">adsorbate_species</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adsorbate_species</span><span class="p">:</span>
+                        <span class="n">fragi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>
+                        <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">],</span> <span class="n">fragi</span><span class="p">))</span>
+                        <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fragi</span><span class="p">)</span>
+                        <span class="k">continue</span>
                 <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
                     <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">],</span> <span class="n">adsi</span><span class="p">))</span>
                     <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">adsorbates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_fragments"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each fragment (string)</span>
+<span class="sd">        and the corresponding fragment indices (tuple) in ascending</span>
+<span class="sd">        order.&quot;&quot;&quot;</span>
+
+        <span class="n">fragments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">fragi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>
+                <span class="n">fragments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">],</span> <span class="n">fragi</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fragments</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>        </div>
 
     <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
@@ -769,7 +797,7 @@
 <span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
 <span class="sd">        label that represents the occpied site.</span>
 
-<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">    dmax : float, default 3.</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
 <span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
 
@@ -814,7 +842,7 @@
                  <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                  <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
 
         <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">ptp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> 
@@ -1096,21 +1124,48 @@
             <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
         <span class="k">return</span> <span class="n">all_sites</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_adsorbates"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_adsorbates">[docs]</a>    <span class="k">def</span> <span class="nf">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each adsorbate (string)</span>
 <span class="sd">        and the corresponding adsorbate indices (tuple) in ascending</span>
-<span class="sd">        order.&quot;&quot;&quot;</span>
+<span class="sd">        order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        adsorbate_species : list of strs, default None</span>
+<span class="sd">            The available adsorbate species. If the adsorbate is not</span>
+<span class="sd">            one of the available species, return the fragment instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">adsorbate_species</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adsorbate_species</span><span class="p">:</span>
+                        <span class="n">fragi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>
+                        <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">],</span> <span class="n">fragi</span><span class="p">))</span>
+                        <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fragi</span><span class="p">)</span>
+                        <span class="k">continue</span>
                 <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
                     <span class="n">adsorbates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">],</span> <span class="n">adsi</span><span class="p">))</span>
                     <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">adsorbates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_fragments"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of tuples that contains each fragment (string)</span>
+<span class="sd">        and the corresponding fragment indices (tuple) in ascending</span>
+<span class="sd">        order.&quot;&quot;&quot;</span>
+
+        <span class="n">fragments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">fragi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>
+                <span class="n">fragments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">],</span> <span class="n">fragi</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fragments</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>        </div>
 
     <span class="k">def</span> <span class="nf">make_ads_neighbor_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">.2</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_atoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> 
@@ -1291,7 +1346,7 @@
                              <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                              <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                             
-                             <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
+                             <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function that enumerates all occupied adsorption sites of</span>
 <span class="sd">    the input atoms object. The function is generalized for both </span>
 <span class="sd">    periodic and non-periodic systems (distinguished by atoms.pbc).</span>
@@ -1322,7 +1377,7 @@
 <span class="sd">        of the occupying adsorbate is concatentated to the numerical </span>
 <span class="sd">        label that represents the occpied site.</span>
 
-<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">    dmax : float, default 3.</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
 <span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
 

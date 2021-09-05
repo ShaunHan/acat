@@ -157,7 +157,10 @@ class AdsorptionGraphComparator(object):
         Whether to take subsurface atoms into consideration when checking 
         uniqueness. Could be important for surfaces like fcc100.
 
-    dmax : float, default 2.5
+    full_effect : bool, default False
+        Take the whole catalyst into consideration when generating graph.
+
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -170,9 +173,10 @@ class AdsorptionGraphComparator(object):
 
     def __init__(self, adsorption_sites,  
                  composition_effect=True,
+                 fragmentation=True,
                  subsurf_effect=False, 
-                 dmax=2.5, 
-                 fragmentation=True):
+                 full_effect=False,
+                 dmax=3.):
         from ..adsorbate_coverage import ClusterAdsorbateCoverage
         from ..adsorbate_coverage import SlabAdsorbateCoverage
         import networkx.algorithms.isomorphism as iso
@@ -180,9 +184,10 @@ class AdsorptionGraphComparator(object):
 
         self.adsorption_sites = adsorption_sites
         self.composition_effect = composition_effect
-        self.subsurf_effect = subsurf_effect
-        self.dmax = dmax
         self.fragmentation = fragmentation
+        self.subsurf_effect = subsurf_effect
+        self.full_effect = full_effect
+        self.dmax = dmax
 
     def looks_like(self, a1, a2):
         isocheck = False
@@ -214,9 +219,11 @@ class AdsorptionGraphComparator(object):
             if labs1 == labs2:
                 isocheck = True 
                 G1 = sac1.get_graph(fragmentation=self.fragmentation,
-                                    subsurf_effect=self.subsurf_effect)
+                                    subsurf_effect=self.subsurf_effect,
+                                    full_effect=self.full_effect)
                 G2 = sac2.get_graph(fragmentation=self.fragmentation,
-                                    subsurf_effect=self.subsurf_effect)
+                                    subsurf_effect=self.subsurf_effect,
+                                    full_effect=self.full_effect)
         if isocheck:
             nm = iso.categorical_node_match('symbol', 'X')  
             if nx.isomorphism.is_isomorphic(G1, G2, node_match=nm):

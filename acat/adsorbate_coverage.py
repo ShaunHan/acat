@@ -1,5 +1,6 @@
 from .settings import adsorbate_elements, adsorbate_formulas
-from .adsorption_sites import ClusterAdsorptionSites, SlabAdsorptionSites 
+from .adsorption_sites import (ClusterAdsorptionSites, 
+                               SlabAdsorptionSites)
 from .utilities import neighbor_shell_list, get_adj_matrix 
 from ase.data import atomic_numbers
 from ase.geometry import find_mic
@@ -61,7 +62,7 @@ class ClusterAdsorbateCoverage(object):
         of the occupying adsorbate is concatentated to the numerical 
         label that represents the occpied site.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -107,7 +108,7 @@ class ClusterAdsorbateCoverage(object):
     def __init__(self, atoms, 
                  adsorption_sites=None, 
                  label_occupied_sites=False,
-                 dmax=2.5):
+                 dmax=3.):
 
         atoms = atoms.copy()
         for dim in range(3):
@@ -383,21 +384,48 @@ class ClusterAdsorbateCoverage(object):
             all_sites = [s for s in all_sites if s['occupied']]
         return all_sites
 
-    def get_adsorbates(self):
+    def get_adsorbates(self, adsorbate_species=None):
         """Get a list of tuples that contains each adsorbate (string)
         and the corresponding adsorbate indices (tuple) in ascending
-        order."""
+        order.
+
+        Parameters
+        ----------
+        adsorbate_species : list of strs, default None
+            The available adsorbate species. If the adsorbate is not
+            one of the available species, return the fragment instead.
+
+        """
 
         adsorbates = []
         adsorbate_ids = set()
         for st in self.hetero_site_list:
             if st['occupied']:
+                if adsorbate_species is not None:
+                    if st['adsorbate'] not in adsorbate_species:
+                        fragi = st['fragment_indices']
+                        adsorbates.append((st['fragment'], fragi))
+                        adsorbate_ids.update(fragi)
+                        continue
                 adsi = st['adsorbate_indices']
                 if not set(adsi).issubset(adsorbate_ids):
                     adsorbates.append((st['adsorbate'], adsi))
                     adsorbate_ids.update(adsi)
 
         return sorted(adsorbates, key=lambda x: x[1])
+
+    def get_fragments(self):
+        """Get a list of tuples that contains each fragment (string)
+        and the corresponding fragment indices (tuple) in ascending
+        order."""
+
+        fragments = []
+        for st in self.hetero_site_list:
+            if st['occupied']:
+                fragi = st['fragment_indices']
+                fragments.append((st['fragment'], fragi))
+
+        return sorted(fragments, key=lambda x: x[1])        
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
@@ -607,7 +635,7 @@ class SlabAdsorbateCoverage(object):
         of the occupying adsorbate is concatentated to the numerical 
         label that represents the occpied site.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 
@@ -652,7 +680,7 @@ class SlabAdsorbateCoverage(object):
                  surface=None, 
                  both_sides=False,
                  label_occupied_sites=False,
-                 dmax=2.5):
+                 dmax=3.):
 
         atoms = atoms.copy()
         ptp = np.ptp(atoms.positions[:, 2]) 
@@ -934,21 +962,48 @@ class SlabAdsorbateCoverage(object):
             all_sites = [s for s in all_sites if s['occupied']]
         return all_sites
 
-    def get_adsorbates(self):
+    def get_adsorbates(self, adsorbate_species=None):
         """Get a list of tuples that contains each adsorbate (string)
         and the corresponding adsorbate indices (tuple) in ascending
-        order."""
+        order.
+
+        Parameters
+        ----------
+        adsorbate_species : list of strs, default None
+            The available adsorbate species. If the adsorbate is not
+            one of the available species, return the fragment instead.
+
+        """
 
         adsorbates = []
         adsorbate_ids = set()
         for st in self.hetero_site_list:
             if st['occupied']:
+                if adsorbate_species is not None:
+                    if st['adsorbate'] not in adsorbate_species:
+                        fragi = st['fragment_indices']
+                        adsorbates.append((st['fragment'], fragi))
+                        adsorbate_ids.update(fragi)
+                        continue
                 adsi = st['adsorbate_indices']
                 if not set(adsi).issubset(adsorbate_ids):
                     adsorbates.append((st['adsorbate'], adsi))
                     adsorbate_ids.update(adsi)
 
         return sorted(adsorbates, key=lambda x: x[1])
+
+    def get_fragments(self):
+        """Get a list of tuples that contains each fragment (string)
+        and the corresponding fragment indices (tuple) in ascending
+        order."""
+
+        fragments = []
+        for st in self.hetero_site_list:
+            if st['occupied']:
+                fragi = st['fragment_indices']
+                fragments.append((st['fragment'], fragi))
+
+        return sorted(fragments, key=lambda x: x[1])        
 
     def make_ads_neighbor_list(self, dx=.2, neighbor_number=1):
         self.ads_nblist = neighbor_shell_list(self.ads_atoms, dx, 
@@ -1129,7 +1184,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
                              surface=None, 
                              both_sides=False,
                              label_occupied_sites=False,                             
-                             dmax=2.5):
+                             dmax=3.):
     """A function that enumerates all occupied adsorption sites of
     the input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -1160,7 +1215,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         of the occupying adsorbate is concatentated to the numerical 
         label that represents the occpied site.
 
-    dmax : float, default 2.5
+    dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom  that should be considered as an adsorbate.
 

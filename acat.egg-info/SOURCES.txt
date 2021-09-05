@@ -30,6 +30,7 @@ acat/ga/group_comparators.py
 acat/ga/group_operators.py
 acat/ga/particle_crossovers.py
 acat/ga/particle_mutations.py
+acat/ga/slab_operators.py
 docs/.gitkeep
 docs/Makefile
 docs/acat_favicon.ico
