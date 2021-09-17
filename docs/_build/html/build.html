@@ -106,8 +106,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#the-stochasticpatterngenerator-class">The StochasticPatternGenerator class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-systematicpatterngenerator-class">The SystematicPatternGenerator class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-ordered-coverage-pattern-function">The ordered_coverage_pattern function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-full-coverage-pattern-function">The full_coverage_pattern function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-random-coverage-pattern-function">The random_coverage_pattern function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-max-dist-coverage-pattern-function">The max_dist_coverage_pattern function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-min-dist-coverage-pattern-function">The min_dist_coverage_pattern function</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.build.ordering">Generate alloy chemical orderings</a><ul>
@@ -456,15 +456,15 @@ of the whole adsorbate.</p></li>
 with both CO and OH:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">remove_adsorbates_from_sites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span> <span class="o">=</span> <span class="n">fcc111</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">4</span><span class="p">,</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">random_coverage_pattern</span><span class="p">(</span><span class="n">slab</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;CO&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">slab</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;CO&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                                  <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                  <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">occupied_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">get_sites</span><span class="p">(</span><span class="n">occupied_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -648,7 +648,7 @@ CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface slabs with
 random C and O coverages, where CH3 is forbidden to be added to
 ontop and bridge sites:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">StochasticPatternGenerator</span> <span class="k">as</span> <span class="n">SPG</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
@@ -657,9 +657,9 @@ ontop and bridge sites:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">atoms</span> <span class="o">=</span> <span class="n">slab</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>    <span class="n">image</span> <span class="o">=</span> <span class="n">random_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                    <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">image</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                                      <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                      <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span> <span class="o">=</span> <span class="n">SPG</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;CH3&#39;</span><span class="p">,</span><span class="s1">&#39;CHO&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;CO&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
@@ -900,7 +900,7 @@ bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom
 <blockquote>
 <div><dl class="py function">
 <dt id="acat.build.overlayer.ordered_coverage_pattern">
-<code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">ordered_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#ordered_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.ordered_coverage_pattern" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">ordered_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#ordered_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.ordered_coverage_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function for generating representative ordered adsorbate
 overlayer patterns. The function is generalized for both periodic
 and non-periodic systems (distinguished by atoms.pbc).</p>
@@ -924,9 +924,12 @@ overlayer pattern properly. We expect this function to work
 well on large nanoparticles and surface slabs.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
 values of their probabilities of adding onto the surface.</p></li>
+<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
+pattern generation.</p></li>
 <li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
 For now only support 2 common surfaces: fcc100 and fcc111.
-If the structure is a periodic surface slab, this is required.
+If the structure is a periodic surface slab, this is required when
+adsorption_sites is not provided.
 If the structure is a nanoparticle, the function only add
 adsorbates to the sites on the specified surface.</p></li>
 <li><p><strong>height</strong> (<em>float</em><em>, </em><em>default None</em>) – The height of the added adsorbate from the surface.
@@ -970,32 +973,42 @@ Only relvevant for periodic surface slabs.</p></li>
 <img alt="_images/ordered_coverage_pattern_2.png" src="_images/ordered_coverage_pattern_2.png" />
 </div></blockquote>
 </div>
-<div class="section" id="the-full-coverage-pattern-function">
-<h3>The full_coverage_pattern function<a class="headerlink" href="#the-full-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-max-dist-coverage-pattern-function">
+<h3>The max_dist_coverage_pattern function<a class="headerlink" href="#the-max-dist-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.overlayer.full_coverage_pattern">
-<code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">full_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">site</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#full_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.full_coverage_pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function for generating adsorbate overlayer patterns on sites
-that are of a same type. The function is generalized for both
-periodic and non-periodic systems (distinguished by atoms.pbc).</p>
+<dt id="acat.build.overlayer.max_dist_coverage_pattern">
+<code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">max_dist_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">coverage</span></em>, <em class="sig-param"><span class="n">site_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#max_dist_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.max_dist_coverage_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function for generating random overlayer patterns with
+a certain surface adsorbate coverage (i.e. fixed number of
+adsorbates N) and trying to even the adsorbate density. The
+function samples N sites from all given sites using K-medoids
+clustering to maximize the minimum distance between sites and
+add N adsorbates to these sites. The function is generalized
+for both periodic and non-periodic systems (distinguished by
+atoms.pbc). pyclustering is required.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle or surface slab onto which the adsorbates are
 added. Accept any ase.Atoms object. No need to be built-in.</p></li>
 <li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be added to the surface.</p></li>
-<li><p><strong>site</strong> (<em>str</em>) – The site type that the adsorbates should be added to.</p></li>
+<li><p><strong>coverage</strong> (<em>float</em>) – The surface coverage calculated by (number of adsorbates /
+number of surface atoms). Subsurface sites are not considered.</p></li>
+<li><p><strong>site_types</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default None</em>) – The site type(s) that the adsorbates should be added to.
+Consider all sites if not specified.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
 values of their probabilities of adding onto the surface.</p></li>
+<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
+pattern generation.</p></li>
 <li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
-If the structure is a periodic surface slab, this is required.
+If the structure is a periodic surface slab, this is required when
+adsorption_sites is not provided.
 If the structure is a nanoparticle, the function only add
 adsorbates to the sites on the specified surface.</p></li>
-<li><p><strong>height</strong> (<em>float</em><em>, </em><em>default None</em>) – The height of the added adsorbate from the surface.
-Use the default settings if not specified.</p></li>
-<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 0.</em>) – The minimum distance between two atoms that belongs to two
-adsorbates.</p></li>
+<li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
+type. Use the default height settings if the height for a site
+type is not specified.</p></li>
 <li><p><strong>both_sides</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to add adsorbate to both top and bottom sides of the slab.
 Only relvevant for periodic surface slabs.</p></li>
 </ul>
@@ -1004,45 +1017,48 @@ Only relvevant for periodic surface slabs.</p></li>
 </dd></dl>
 
 <p><strong>Example1</strong></p>
-<p>To add CO to all hcp sites on a icosahedron:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">full_coverage_pattern</span>
+<p>To add 0.33 ML CO to all fcc and hcp sites on a icosahedron:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">max_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Au&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">full_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">site</span><span class="o">=</span><span class="s1">&#39;hcp&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">max_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">coverage</span><span class="o">=</span><span class="mf">0.33</span><span class="p">,</span> <span class="n">site_types</span><span class="o">=</span><span class="s1">&#39;hcp&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<img alt="_images/full_coverage_pattern_1.png" src="_images/full_coverage_pattern_1.png" />
+<img alt="_images/max_dist_coverage_pattern_1.png" src="_images/max_dist_coverage_pattern_1.png" />
 <p><strong>Example2</strong></p>
-<p>To add CO to all 3fold sites on a bcc110 surface slab:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">full_coverage_pattern</span>
+<p>To add N and O (3 : 1 ratio)to all 3fold sites on a bcc110 surface
+slab:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">max_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">bcc110</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">bcc110</span><span class="p">(</span><span class="s1">&#39;Mo&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">full_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;bcc110&#39;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="s1">&#39;3fold&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">max_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                                    <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">},</span>
+<span class="gp">... </span>                                    <span class="n">coverage</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">site_types</span><span class="o">=</span><span class="s1">&#39;3fold&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;bcc110&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<img alt="_images/full_coverage_pattern_2.png" src="_images/full_coverage_pattern_2.png" />
+<img alt="_images/max_dist_coverage_pattern_2.png" src="_images/max_dist_coverage_pattern_2.png" />
 </div></blockquote>
 </div>
-<div class="section" id="the-random-coverage-pattern-function">
-<h3>The random_coverage_pattern function<a class="headerlink" href="#the-random-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-min-dist-coverage-pattern-function">
+<h3>The min_dist_coverage_pattern function<a class="headerlink" href="#the-min-dist-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.overlayer.random_coverage_pattern">
-<code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">random_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#random_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.random_coverage_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.build.overlayer.min_dist_coverage_pattern">
+<code class="sig-prename descclassname">acat.build.overlayer.</code><code class="sig-name descname">min_dist_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">site_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/overlayer.html#min_dist_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.overlayer.min_dist_coverage_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function for generating random overlayer patterns with a
-minimum distance constraint. The function is generalized for both
-periodic and non-periodic systems (distinguished by atoms.pbc).
-Especially useful for generating high coverage patterns.</p>
+minimum distance constraint and trying to maximize the adsorbate
+density. The function is generalized for both periodic and
+non-periodic systems (distinguished by atoms.pbc). Especially
+useful for generating high coverage patterns.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1051,15 +1067,20 @@ added. Accept any ase.Atoms object. No need to be built-in.</p></li>
 <li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
 values of their probabilities of adding onto the surface.</p></li>
+<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
+pattern generation.</p></li>
 <li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
-If the structure is a periodic surface slab, this is required.
+If the structure is a periodic surface slab, this is required when
+adsorption_sites is not provided.
 If the structure is a nanoparticle, the function only add
 adsorbates to the sites on the specified surface.</p></li>
+<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 1.5</em>) – The minimum distance constraint between two atoms that belongs
+to two adsorbates.</p></li>
+<li><p><strong>site_types</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default None</em>) – The site type(s) that the adsorbates should be added to.
+Consider all sites if not specified.</p></li>
 <li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
 type. Use the default height settings if the height for a site
 type is not specified.</p></li>
-<li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 1.5</em>) – The minimum distance constraint between two atoms that belongs
-to two adsorbates.</p></li>
 <li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
 underneath fcc hollow sites.</p></li>
 <li><p><strong>site_preference</strong> (<em>str of list of strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
@@ -1073,44 +1094,44 @@ Only relvevant for periodic surface slabs.</p></li>
 <p><strong>Example1</strong></p>
 <p>To add CO randomly onto a cuboctahedron with a minimum adsorbate
 distance of 5 Angstrom:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Au&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">random_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<img alt="_images/random_coverage_pattern_1.png" src="_images/random_coverage_pattern_1.png" />
+<img alt="_images/min_dist_coverage_pattern_1.png" src="_images/min_dist_coverage_pattern_1.png" />
 <p><strong>Example2</strong></p>
 <p>To add C, N, O randomly onto a hcp0001 surface slab with probabilities
 of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 2 Angstrom:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">hcp0001</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">hcp0001</span><span class="p">(</span><span class="s1">&#39;Ru&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">random_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                  <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                         <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                         <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
-<span class="gp">... </span>                                  <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;hcp0001&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                                    <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+<span class="gp">... </span>                                    <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;hcp0001&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<img alt="_images/random_coverage_pattern_2.png" src="_images/random_coverage_pattern_2.png" />
+<img alt="_images/min_dist_coverage_pattern_2.png" src="_images/min_dist_coverage_pattern_2.png" />
 <p><strong>Example3</strong></p>
 <p>To add H, OH and H2O randomly onto a fcc100 Ni2Cu surface slab on both top
 and bottom interfaces ( <a class="reference download internal" download="" href="_downloads/d4db2def8832c660c65d58623887badd/water_bulk.xyz"><code class="xref download docutils literal notranslate"><span class="pre">bulk</span> <span class="pre">water</span></code></a>
 in between) with probabilities of 0.25, 0.25, 0.5, respectively, and a
 minimum adsorbate distance of 2 Angstrom:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">random_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.overlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc100</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
@@ -1123,18 +1144,18 @@ minimum adsorbate distance of 2 Angstrom:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">-</span><span class="n">slab</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">slab</span> <span class="o">+</span> <span class="n">water_bulk</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">random_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;OH2&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                  <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                         <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                         <span class="s1">&#39;OH2&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
-<span class="gp">... </span>                                  <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
-<span class="gp">... </span>                                  <span class="n">both_sides</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;OH2&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                                    <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                                           <span class="s1">&#39;OH2&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+<span class="gp">... </span>                                    <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">both_sides</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<img alt="_images/random_coverage_pattern_3.png" src="_images/random_coverage_pattern_3.png" />
+<img alt="_images/min_dist_coverage_pattern_3.png" src="_images/min_dist_coverage_pattern_3.png" />
 </div></blockquote>
 </div>
 </div>

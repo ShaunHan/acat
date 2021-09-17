@@ -164,15 +164,15 @@ The remove_adsorbates_from_sites function
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-        >>> from acat.build.overlayer import random_coverage_pattern
+        >>> from acat.build.overlayer import min_dist_coverage_pattern
         >>> from acat.build.action import remove_adsorbates_from_sites
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
         >>> slab = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
         >>> slab.center()
-        >>> atoms = random_coverage_pattern(slab, adsorbate_species=['OH','CO'],
-        ...                                 surface='fcc111',
-        ...                                 min_adsorbate_distance=5.)
+        >>> atoms = min_dist_coverage_pattern(slab, adsorbate_species=['OH','CO'],
+        ...                                   surface='fcc111',
+        ...                                   min_adsorbate_distance=5.)
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc111')
         >>> sac = SlabAdsorbateCoverage(atoms, sas)
         >>> occupied_sites = sac.get_sites(occupied_only=True)
@@ -217,7 +217,7 @@ Generate adsorbate overlayer patterns
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, ordered_coverage_pattern, full_coverage_pattern, random_coverage_pattern
+    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, ordered_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
 
 The StochasticPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,7 +235,7 @@ The StochasticPatternGenerator class
     ontop and bridge sites:
 
         >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
-        >>> from acat.build.overlayer import random_coverage_pattern
+        >>> from acat.build.overlayer import min_dist_coverage_pattern
         >>> from ase.build import fcc111
         >>> from ase.io import read
         >>> from ase.visualize import view
@@ -244,9 +244,9 @@ The StochasticPatternGenerator class
         >>> images = []
         >>> for _ in range(10):
         ...     atoms = slab.copy()
-        ...     image = random_coverage_pattern(atoms, adsorbate_species=['C','O'],
-        ...                                     surface='fcc111',
-        ...                                     min_adsorbate_distance=5.)
+        ...     image = min_dist_coverage_pattern(atoms, adsorbate_species=['C','O'],
+        ...                                       surface='fcc111',
+        ...                                       min_adsorbate_distance=5.)
         ...     images.append(image)
         >>> spg = SPG(images, adsorbate_species=['CO','OH','CH3','CHO'],
         ...           species_probabilities={'CO': 0.3, 'OH': 0.3, 
@@ -450,67 +450,69 @@ The ordered_coverage_pattern function
 
     .. image:: ../images/ordered_coverage_pattern_2.png
 
-The full_coverage_pattern function
+The max_dist_coverage_pattern function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autofunction:: full_coverage_pattern
+    .. autofunction:: max_dist_coverage_pattern
 
     **Example1**
 
-    To add CO to all hcp sites on a icosahedron:
+    To add 0.33 ML CO to all fcc and hcp sites on a icosahedron:
 
-        >>> from acat.build.overlayer import full_coverage_pattern
+        >>> from acat.build.overlayer import max_dist_coverage_pattern
         >>> from ase.cluster import Icosahedron
         >>> from ase.visualize import view
         >>> atoms = Icosahedron('Au', noshells=5)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = full_coverage_pattern(atoms, adsorbate_species='CO', 
-        ...                                 site='hcp')
+        >>> pattern = max_dist_coverage_pattern(atoms, adsorbate_species='CO', 
+        ...                                     coverage=0.33, site_types='hcp')
         >>> view(pattern)
 
     Output:
 
-    .. image:: ../images/full_coverage_pattern_1.png
+    .. image:: ../images/max_dist_coverage_pattern_1.png
 
     **Example2**
 
-    To add CO to all 3fold sites on a bcc110 surface slab:
+    To add N and O (3 : 1 ratio)to all 3fold sites on a bcc110 surface 
+    slab: 
 
-        >>> from acat.build.overlayer import full_coverage_pattern
+        >>> from acat.build.overlayer import max_dist_coverage_pattern
         >>> from ase.build import bcc110
         >>> from ase.visualize import view
         >>> atoms = bcc110('Mo', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = full_coverage_pattern(atoms, adsorbate_species='CO',
-        ...                                 surface='bcc110', site='3fold')
+        >>> pattern = max_dist_coverage_pattern(atoms, adsorbate_species=['N','O'],
+        ...                                     species_probabilities={'N': 0.75, 'O':0.25},
+        ...                                     coverage=1, site_types='3fold', surface='bcc110')
         >>> view(pattern)
 
     Output:
 
-    .. image:: ../images/full_coverage_pattern_2.png
+    .. image:: ../images/max_dist_coverage_pattern_2.png
 
-The random_coverage_pattern function
+The min_dist_coverage_pattern function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autofunction:: random_coverage_pattern
+    .. autofunction:: min_dist_coverage_pattern
 
     **Example1**
 
     To add CO randomly onto a cuboctahedron with a minimum adsorbate 
     distance of 5 Angstrom:
 
-        >>> from acat.build.overlayer import random_coverage_pattern
+        >>> from acat.build.overlayer import min_dist_coverage_pattern
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = random_coverage_pattern(atoms, adsorbate_species='CO', 
-        ...                                   min_adsorbate_distance=5.)
+        >>> pattern = min_dist_coverage_pattern(atoms, adsorbate_species='CO', 
+        ...                                     min_adsorbate_distance=5.)
         >>> view(pattern)
 
     Output:
 
-    .. image:: ../images/random_coverage_pattern_1.png
+    .. image:: ../images/min_dist_coverage_pattern_1.png
 
     **Example2**
 
@@ -518,22 +520,22 @@ The random_coverage_pattern function
     of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
     2 Angstrom:
 
-        >>> from acat.build.overlayer import random_coverage_pattern
+        >>> from acat.build.overlayer import min_dist_coverage_pattern
         >>> from ase.build import hcp0001
         >>> from ase.visualize import view
         >>> atoms = hcp0001('Ru', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = random_coverage_pattern(atoms, adsorbate_species=['C','N','O'],
-        ...                                   species_probabilities={'C': 0.25, 
-        ...                                                          'N': 0.25, 
-        ...                                                          'O': 0.5},
-        ...                                   surface='hcp0001',
-        ...                                   min_adsorbate_distance=2.)
+        >>> pattern = min_dist_coverage_pattern(atoms, adsorbate_species=['C','N','O'],
+        ...                                     species_probabilities={'C': 0.25, 
+        ...                                                            'N': 0.25, 
+        ...                                                            'O': 0.5},
+        ...                                     surface='hcp0001',
+        ...                                     min_adsorbate_distance=2.)
         >>> view(pattern)
 
     Output:
 
-    .. image:: ../images/random_coverage_pattern_2.png
+    .. image:: ../images/min_dist_coverage_pattern_2.png
 
     **Example3**
 
@@ -542,7 +544,7 @@ The random_coverage_pattern function
     in between) with probabilities of 0.25, 0.25, 0.5, respectively, and a 
     minimum adsorbate distance of 2 Angstrom:
 
-        >>> from acat.build.overlayer import random_coverage_pattern                        
+        >>> from acat.build.overlayer import min_dist_coverage_pattern                        
         >>> from ase.io import read
         >>> from ase.build import fcc100 
         >>> from ase.visualize import view
@@ -555,18 +557,18 @@ The random_coverage_pattern function
         >>> slab.translate(-slab.cell[2] / 2)
         >>> slab.wrap()
         >>> atoms = slab + water_bulk
-        >>> pattern = random_coverage_pattern(atoms, adsorbate_species=['H','OH','OH2'],
-        ...                                   species_probabilities={'H': 0.25,
-        ...                                                          'OH': 0.25,
-        ...                                                          'OH2': 0.5},
-        ...                                   surface='fcc100',
-        ...                                   min_adsorbate_distance=2.,
-        ...                                   both_sides=True)
+        >>> pattern = min_dist_coverage_pattern(atoms, adsorbate_species=['H','OH','OH2'],
+        ...                                     species_probabilities={'H': 0.25,
+        ...                                                            'OH': 0.25,
+        ...                                                            'OH2': 0.5},
+        ...                                     surface='fcc100',
+        ...                                     min_adsorbate_distance=2.,
+        ...                                     both_sides=True)
         >>> view(pattern) 
 
     Output:
 
-    .. image:: ../images/random_coverage_pattern_3.png
+    .. image:: ../images/min_dist_coverage_pattern_3.png
 
 Generate alloy chemical orderings
 ---------------------------------

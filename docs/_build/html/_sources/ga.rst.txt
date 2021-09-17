@@ -29,7 +29,7 @@ The script for a parallel genetic algorithm looks as follows:
     from acat.adsorption_sites import ClusterAdsorptionSites
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.ordering import RandomOrderingGenerator as ROG
-    from acat.build.overlayer import random_coverage_pattern
+    from acat.build.overlayer import min_dist_coverage_pattern
     from acat.ga.adsorbate_operators import (AddAdsorbate, RemoveAdsorbate,
                                              MoveAdsorbate, ReplaceAdsorbate,
                                              SimpleCutSpliceCrossoverWithAdsorbates)
@@ -72,8 +72,8 @@ The script for a parallel genetic algorithm looks as follows:
     patterns = []
     for atoms in images:
         dmin = uniform(3.5, 8.5)
-        pattern = random_coverage_pattern(atoms, adsorbate_species=species,
-                                          min_adsorbate_distance=dmin)
+        pattern = min_dist_coverage_pattern(atoms, adsorbate_species=species,
+                                            min_adsorbate_distance=dmin)
         patterns.append(pattern)
     
     # Get the adsorption sites. Composition does not matter in GA
