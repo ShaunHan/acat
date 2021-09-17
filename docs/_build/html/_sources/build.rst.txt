@@ -471,6 +471,8 @@ The max_dist_coverage_pattern function
     Output:
 
     .. image:: ../images/max_dist_coverage_pattern_1.png
+       :scale: 40 %
+       :align: center
 
     **Example2**
 
@@ -490,6 +492,8 @@ The max_dist_coverage_pattern function
     Output:
 
     .. image:: ../images/max_dist_coverage_pattern_2.png
+       :scale: 40 %
+       :align: center
 
 The min_dist_coverage_pattern function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
