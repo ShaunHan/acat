@@ -590,6 +590,24 @@ def dag_from_ucg(adj_matrix, sources, return_depths=False):
     return dag
 
 
+def sort_atoms_by_ref_atoms(atoms, ref_atoms, mic=False):
+    """Sort a structure based on a reference structure. This could 
+    be super useful when restarting DFT relaxation in VASP since 
+    VASP always shuffles the atom indices when starting a new run.
+    Each pair of atoms after sorting is a closest pair. Note that
+    the number of atmos of the structures must be the same. The 
+    cells of the two periodic structures must be the same."""
+
+    if mic:
+        return atoms[np.asarray([find_mic(atoms.positions - 
+                     np.tile(ref_atoms.positions[i], (len(atoms), 1)), 
+                     cell=atoms.cell, pbc=True)[1] 
+                     for i in range(len(atoms))]).argmin(1)]
+    else:
+        return atoms[((ref_atoms.positions[:, np.newaxis] - 
+                     atoms.positions)**2).sum(2).argmin(1)]
+
+
 def relative_cosine_similarity(counter1, counter2):
     """Computes the relative cosine similarity between two.
     counter dictionaries (e.g. {'Pt': 5, 'Ni': 8})."""

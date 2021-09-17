@@ -109,6 +109,7 @@ class SlabOperator(OffspringCreator):
     def __init__(self, verbose=False, num_muts=1,
                  allowed_compositions=None,
                  distribution_correction_function=None,
+                 filter_function=None,
                  element_pools=None):
         OffspringCreator.__init__(self, verbose, num_muts=num_muts)
 
@@ -118,6 +119,7 @@ class SlabOperator(OffspringCreator):
             self.dcf = dummy_func
         else:
             self.dcf = distribution_correction_function
+        self.ff = filter_function
         # Number of different elements i.e. [2, 1] if len(element_pools) == 2
         # then 2 different elements in pool 1 is allowed but only 1 from pool 2
 
@@ -225,7 +227,8 @@ class CutSpliceSlabCrossover(SlabOperator):
                  num_muts=1, 
                  tries=1000, 
                  min_ratio=0.25,
-                 distribution_correction_function=None):
+                 distribution_correction_function=None,
+                 filter_function=None):
         SlabOperator.__init__(self, verbose, num_muts,
                               allowed_compositions,
                               distribution_correction_function,
@@ -243,7 +246,14 @@ class CutSpliceSlabCrossover(SlabOperator):
         else:
             f, m = f0[self.allowed_indices], m0[self.allowed_indices]
 
-        indi = self.initialize_individual(f, self.operate(f, m))
+        fail = True
+        while fail:
+            indi = self.initialize_individual(f, self.operate(f, m))
+            if self.ff is None:
+                fail = False
+            else:
+                if self.ff(indi):
+                    fail = False
         if self.allowed_indices is not None:
             tmp = f0.copy()
             tmp.symbols[self.allowed_indices] = indi.symbols
@@ -313,9 +323,12 @@ class RandomCompositionMutation(SlabOperator):
     means that there can be 5 or 6 Au and Cu, and 2 or 3 In and Bi.
     """
 
-    def __init__(self, verbose=False, num_muts=1, element_pools=None,
-                 allowed_compositions=None, allowed_indices=None,
-                 distribution_correction_function=None):
+    def __init__(self, verbose=False, num_muts=1, 
+                 element_pools=None,
+                 allowed_compositions=None, 
+                 allowed_indices=None,
+                 distribution_correction_function=None, 
+                 filter_function=None):
         SlabOperator.__init__(self, verbose, num_muts,
                               allowed_compositions,
                               distribution_correction_function,
@@ -341,7 +354,14 @@ class RandomCompositionMutation(SlabOperator):
                     return None, self.descriptor + parent_message
 
         # Do the operation
-        indi = self.initialize_individual(f, self.operate(f))
+        fail = True
+        while fail:
+            indi = self.initialize_individual(f, self.operate(f))
+            if self.ff is None:
+                fail = False
+            else:
+                if self.ff(indi):
+                    fail = False
         if self.allowed_indices is not None:
             tmp = f0.copy()
             tmp.symbols[self.allowed_indices] = indi.symbols
@@ -395,7 +415,8 @@ class RandomSlabPermutation(SlabOperator):
     def __init__(self, verbose=False, num_muts=1,
                  allowed_compositions=None,
                  allowed_indices=None,
-                 distribution_correction_function=None):
+                 distribution_correction_function=None,
+                 filter_function=None):
         SlabOperator.__init__(self, verbose, num_muts,
                               allowed_compositions,
                               distribution_correction_function)
@@ -421,7 +442,14 @@ class RandomSlabPermutation(SlabOperator):
                 return None, '{1} not possible in {0}'.format(f.info['confid'],
                                                               self.descriptor)
         indi = self.initialize_individual(f, f)
-        indi = self.operate(indi)
+        fail = True
+        while fail:
+            indi = self.operate(indi)
+            if self.ff is None:
+                fail = False
+            else:
+                if self.ff(indi):
+                    fail = False
         if self.allowed_indices is not None:
             tmp = f0.copy()
             tmp.symbols[self.allowed_indices] = indi.symbols

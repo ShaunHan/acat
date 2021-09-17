@@ -846,7 +846,7 @@ class ClusterAdsorptionSites(object):
             return 'fcc111'
 
     def get_graph(self, return_adj_matrix=False):                             
-        """Get the graph representation of the nanoparticle.
+        """Get the graph representation of the slab.
 
         Parameters
         ----------

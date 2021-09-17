@@ -14,9 +14,11 @@ from .action import (add_adsorbate_to_site,
                      remove_adsorbate_from_site)
 from ase.io import read, write, Trajectory
 from ase.formula import Formula
+from ase.geometry import find_mic
 from copy import deepcopy
 import networkx.algorithms.isomorphism as iso
 import networkx as nx
+from scipy.spatial import distance_matrix
 import numpy as np
 import warnings
 import random
@@ -1824,6 +1826,7 @@ class SystematicPatternGenerator(object):
 def ordered_coverage_pattern(atoms, adsorbate_species, 
                              coverage=1., 
                              species_probabilities=None,
+                             adsorption_sites=None,
                              surface=None, 
                              height=None, 
                              min_adsorbate_distance=0.,
@@ -1859,10 +1862,16 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
         A dictionary that contains keys of each adsorbate species and 
         values of their probabilities of adding onto the surface.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices).
         For now only support 2 common surfaces: fcc100 and fcc111. 
-        If the structure is a periodic surface slab, this is required. 
+        If the structure is a periodic surface slab, this is required when
+        adsorption_sites is not provided. 
         If the structure is a nanoparticle, the function only add 
         adsorbates to the sites on the specified surface. 
 
@@ -1890,11 +1899,17 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
     if True not in atoms.pbc:                            
         if surface is None:
-            surface = ['fcc100', 'fcc111']        
-        sas = ClusterAdsorptionSites(atoms)
+            surface = ['fcc100', 'fcc111'] 
+        if adsorption_sites is None:       
+            sas = ClusterAdsorptionSites(atoms)
+        else:
+            sas = adsorption_sites
         site_list = sas.site_list
     else:
-        sas = SlabAdsorptionSites(atoms, surface=surface, both_sides=both_sides)
+        if adsorption_sites is None:
+            sas = SlabAdsorptionSites(atoms, surface=surface, both_sides=both_sides)
+        else:
+            sas = adsorption_sites
         site_list = sas.site_list
         if both_sides:
             bot_site_list = site_list[len(site_list)//2:]
@@ -1929,26 +1944,32 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
                 for sites in grouped_sites.values():
                     if sites:
-                        sites_to_delete = [sites[0]]
-                        for sitei in sites_to_delete:
+                        sites_to_remove = [sites[0]]
+                        for sitei in sites_to_remove:
                             common_site_indices = []
                             non_common_sites = []
                             for sitej in sites:
                                 if sitej['indices'] == sitei['indices']:
-                                    pass
-                                elif set(sitej['indices']) & set(sitei['indices']):
+                                    continue
+                                if set(sitej['indices']) & set(sitei['indices']):
                                     common_site_indices += list(sitej['indices'])
                                 else:
                                     non_common_sites.append(sitej)
                             for sitej in non_common_sites:
                                 overlap = sum([common_site_indices.count(i) 
-                                              for i in sitej['indices']])
-                                if overlap == 1 and sitej['indices'] \
-                                not in [s['indices'] for s in sites_to_delete]:
-                                    sites_to_delete.append(sitej)                
+                                               for i in sitej['indices']])
+                                if overlap == 1 and sitej['indices'] not in [
+                                s['indices'] for s in sites_to_remove]:
+                                    sites_to_remove.append(sitej)
+                        if True in atoms.pbc:
+                            if len(sites_to_remove) == 1:
+                                sorted_sites = sorted(sites, key=lambda x: get_mic(                
+                                                      x['position'], sites[0]['position'], 
+                                                      atoms.cell, return_squared_distance=True))
+                                sites_to_remove = [sites[0]] + sorted_sites[
+                                                   1-int(len(sas.surf_ids)*1/4):]
                         for s in sites:
-                            if s['indices'] not in [st['indices'] 
-                            for st in sites_to_delete]:
+                            if s['indices'] not in [st['indices'] for st in sites_to_remove]:
                                 final_sites.append(s)
  
             # Honeycomb pattern
@@ -1962,19 +1983,25 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                     grouped_sites = {'pbc_sites': all_sites}
                 for sites in grouped_sites.values():
                     if sites:                    
-                        sites_to_remain = [sites[0]]
-                        for sitei in sites_to_remain:
+                        sites_to_keep = [sites[0]]
+                        for sitei in sites_to_keep:
                             for sitej in sites:
                                 if sitej['indices'] == sitei['indices']:
-                                    pass
-                                elif len(set(sitej['indices']) & \
+                                    continue
+                                if len(set(sitej['indices']) & \
                                 set(sitei['indices'])) == 1 \
                                 and sitej['site'] != sitei['site'] \
                                 and sitej['indices'] not in [s['indices'] 
-                                for s in sites_to_remain]:
-                                    sites_to_remain.append(sitej)
-                        final_sites += sites_to_remain                                         
- 
+                                for s in sites_to_keep]:
+                                    sites_to_keep.append(sitej)
+                        if True in atoms.pbc:
+                            if len(sites_to_keep) == 1:
+                                sorted_sites = sorted(all_sites, key=lambda x: get_mic(                
+                                                      x['position'], all_sites[0]['position'], 
+                                                      atoms.cell, return_squared_distance=True))
+                                sites_to_keep = [all_sites[0]] + sorted_sites[
+                                                 1-int(len(sas.surf_ids)*1/2):]
+                        final_sites += sites_to_keep                                          
                 if True not in atoms.pbc:                                                                       
                     bad_sites = []
                     for sti in final_sites:
@@ -1982,13 +2009,12 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                             count = 0
                             for stj in final_sites:
                                 if stj['site'] == 'fcc':
-                                    if len(set(stj['indices']) & \
-                                    set(sti['indices'])) == 2:
+                                    if len(set(stj['indices']) & set(sti['indices'])) == 2:
                                         count += 1
                             if count != 0:
                                 bad_sites.append(sti)
-                    final_sites = [s for s in final_sites if s['indices'] \
-                                   not in [st['indices'] for st in bad_sites]]
+                    final_sites = [s for s in final_sites if s['indices'] not in 
+                                   [st['indices'] for st in bad_sites]]
  
             # p(2x2) pattern
             elif coverage == 1/4:
@@ -2000,24 +2026,31 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
  
                 for sites in grouped_sites.values():
                     if sites:
-                        sites_to_remain = [sites[0]]
-                        for sitei in sites_to_remain:
+                        sites_to_keep = [sites[0]]
+                        for sitei in sites_to_keep:
                             common_site_indices = []
                             non_common_sites = []
                             for sitej in sites:
                                 if sitej['indices'] == sitei['indices']:
-                                    pass
-                                elif set(sitej['indices']) & set(sitei['indices']):
+                                    continue
+                                if set(sitej['indices']) & set(sitei['indices']):
                                     common_site_indices += list(sitej['indices'])
                                 else:
                                     non_common_sites.append(sitej)
                             for sitej in non_common_sites:
                                 overlap = sum([common_site_indices.count(i) 
                                               for i in sitej['indices']])
-                                if overlap == 1 and sitej['indices'] \
-                                not in [s['indices'] for s in sites_to_remain]:
-                                    sites_to_remain.append(sitej)               
-                        final_sites += sites_to_remain
+                                if overlap == 1 and sitej['indices'] not in [
+                                s['indices'] for s in sites_to_keep]:
+                                    sites_to_keep.append(sitej)               
+                        if True in atoms.pbc:
+                            if len(sites_to_keep) == 1:
+                                sorted_sites = sorted(sites, key=lambda x: get_mic(                
+                                                      x['position'], sites[0]['position'], 
+                                                      atoms.cell, return_squared_distance=True))
+                                sites_to_keep = [sites[0]] + sorted_sites[
+                                                 1-int(len(sas.surf_ids)*1/4):]
+                        final_sites += sites_to_keep
  
         if 'fcc100' in surface:
             # ontop+4fold pattern
@@ -2041,26 +2074,32 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                     grouped_sites = {'pbc_sites': fold4_sites}
                 for sites in grouped_sites.values():
                     if sites:
-                        sites_to_delete = [sites[0]]
-                        for sitei in sites_to_delete:
+                        sites_to_remove = [sites[0]]
+                        for sitei in sites_to_remove:
                             common_site_indices = []
                             non_common_sites = []
                             for sitej in sites:
                                 if sitej['indices'] == sitei['indices']:
-                                    pass
-                                elif set(sitej['indices']) & set(sitei['indices']):
+                                    continue
+                                if set(sitej['indices']) & set(sitei['indices']):
                                     common_site_indices += list(sitej['indices'])
                                 else:
-                                    non_common_sites.append(sitej)                        
+                                    non_common_sites.append(sitej)
                             for sitej in non_common_sites:                        
                                 overlap = sum([common_site_indices.count(i) 
                                               for i in sitej['indices']])                        
-                                if overlap in [1, 4] and sitej['indices'] not in \
-                                [s['indices'] for s in sites_to_delete]:  
-                                    sites_to_delete.append(sitej)
+                                if overlap in [1, 4] and sitej['indices'] not in [
+                                s['indices'] for s in sites_to_remove]:  
+                                    sites_to_remove.append(sitej)
+                        if True in atoms.pbc:
+                            if len(sites_to_remove) == 1:
+                                sorted_sites = sorted(sites, key=lambda x: get_mic(                
+                                                      x['position'], sites[0]['position'], 
+                                                      atoms.cell, return_squared_distance=True))
+                                sites_to_remove = [sites[0]] + sorted_sites[
+                                                   1-int(len(sas.surf_ids)*1/4):]
                         for s in sites:
-                            if s['indices'] not in [st['indices'] 
-                                       for st in sites_to_delete]:
+                            if s['indices'] not in [st['indices'] for st in sites_to_remove]:
                                 final_sites.append(s)
  
             # c(2x2) pattern
@@ -2073,17 +2112,23 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                     grouped_sites = {'pbc_sites': fold4_sites}
                 for sites in grouped_sites.values():
                     if sites:
-                        sites_to_remain = [sites[0]]
-                        for sitei in sites_to_remain:
+                        sites_to_keep = [sites[0]]
+                        for sitei in sites_to_keep:
                             for sitej in sites:
                                 if (len(set(sitej['indices']) & \
                                 set(sitei['indices'])) == 1) and \
                                 (sitej['indices'] not in [s['indices'] 
-                                for s in sites_to_remain]):
-                                    sites_to_remain.append(sitej)
+                                for s in sites_to_keep]):
+                                    sites_to_keep.append(sitej)
+                        if True in atoms.pbc:
+                            if len(sites_to_keep) == 1:
+                                sorted_sites = sorted(sites, key=lambda x: get_mic(                
+                                                      x['position'], sites[0]['position'], 
+                                                      atoms.cell, return_squared_distance=True))
+                                sites_to_keep = [sites[0]] + sorted_sites[
+                                                 1-int(len(sas.surf_ids)*1/2):]
                         for s in original_sites:
-                            if s['indices'] in [st['indices'] 
-                            for st in sites_to_remain]:
+                            if s['indices'] in [st['indices'] for st in sites_to_keep]:
                                 final_sites.append(s)
  
             # p(2x2) pattern
@@ -2095,24 +2140,31 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                     grouped_sites = {'pbc_sites': fold4_sites}
                 for sites in grouped_sites.values():
                     if sites:
-                        sites_to_remain = [sites[0]]
-                        for sitei in sites_to_remain:
+                        sites_to_keep = [sites[0]]
+                        for sitei in sites_to_keep:
                             common_site_indices = []
                             non_common_sites = []
                             for idx, sitej in enumerate(sites):
                                 if sitej['indices'] == sitei['indices']:
-                                    pass
-                                elif set(sitej['indices']) & set(sitei['indices']):
+                                    continue
+                                if set(sitej['indices']) & set(sitei['indices']):
                                     common_site_indices += list(sitej['indices'])
                                 else:
                                     non_common_sites.append(sitej)
                             for sitej in non_common_sites:
                                 overlap = sum([common_site_indices.count(i) 
                                               for i in sitej['indices']])
-                                if overlap in [1, 4] and sitej['indices'] not in \
-                                [s['indices'] for s in sites_to_remain]:  
-                                    sites_to_remain.append(sitej)
-                        final_sites += sites_to_remain
+                                if overlap in [1, 4] and sitej['indices'] not in [
+                                s['indices'] for s in sites_to_keep]:  
+                                    sites_to_keep.append(sitej)
+                        if True in atoms.pbc:
+                            if len(sites_to_keep) == 1:
+                                sorted_sites = sorted(sites, key=lambda x: get_mic(                
+                                                      x['position'], sites[0]['position'], 
+                                                      atoms.cell, return_squared_distance=True))
+                                sites_to_keep = [sites[0]] + sorted_sites[
+                                                 1-int(len(sas.surf_ids)*1/4):]
+                        final_sites += sites_to_keep
         return final_sites
 
     final_sites = find_ordered_sites(site_list)
@@ -2163,19 +2215,16 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                 ve_common_indices):
                     intermediate_indices = []
                     for hsite in hcp_sites:
-                        if len(set(esite['indices']) & \
-                               set(hsite['indices'])) == 2:
+                        if len(set(esite['indices']) & set(hsite['indices'])) == 2:
                             intermediate_indices.append(min(
-                            set(esite['indices']) ^ \
-                            set(hsite['indices'])))
+                            set(esite['indices']) ^ set(hsite['indices'])))
                     too_close = 0
                     for s in occupied_sites:
-                        if len(set(esite['indices']) & \
-                        set(s['indices'])) == 2:
+                        if len(set(esite['indices']) & set(s['indices'])) == 2:
                             too_close += 1
                     share = [0]
                     for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if \
+                        share.append(len([s for s in occupied_sites if
                                           interi in s['indices']]))
                     if max(share) <= 2 and too_close == 0:
                         final_sites.append(esite)
@@ -2200,19 +2249,16 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                 ve_common_indices):
                     intermediate_indices = []
                     for hsite in hcp_sites:
-                        if len(set(esite['indices']) & \
-                               set(hsite['indices'])) == 2:
+                        if len(set(esite['indices']) & set(hsite['indices'])) == 2:
                             intermediate_indices.append(min(
-                            set(esite['indices']) ^ \
-                            set(hsite['indices'])))
+                            set(esite['indices']) ^ set(hsite['indices'])))
                     share = [0]
                     for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if \
+                        share.append(len([s for s in occupied_sites if
                                           interi in s['indices']]))
                     too_close = 0
                     for s in occupied_sites:
-                        if len(set(esite['indices']) & \
-                        set(s['indices'])) == 2:
+                        if len(set(esite['indices']) & set(s['indices'])) == 2:
                             too_close += 1
                     if max(share) <= 1 and too_close == 0:
                         final_sites.append(esite)
@@ -2240,18 +2286,16 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                 ve_common_indices):
                     intermediate_indices = []
                     for hsite in hcp_sites:
-                        if len(set(esite['indices']) & \
-                        set(hsite['indices'])) == 2:
+                        if len(set(esite['indices']) & set(hsite['indices'])) == 2:
                             intermediate_indices.append(min(
-                             set(esite['indices']) ^ \
-                             set(hsite['indices'])))
+                            set(esite['indices']) ^ set(hsite['indices'])))
                     share = [0]
                     for interi in intermediate_indices:
-                        share.append(len([s for s in occupied_sites if \
+                        share.append(len([s for s in occupied_sites if
                                           interi in s['indices']]))
                     too_close = 0
                     for s in occupied_sites:
-                        if len(set(esite['indices']) & \
+                        if len(set(esite['indices']) &
                         set(s['indices'])) > 0:
                             too_close += 1
                     if max(share) == 0 and too_close == 0:
@@ -2281,15 +2325,21 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
     return atoms
 
 
-def full_coverage_pattern(atoms, adsorbate_species, site, 
-                          species_probabilities=None,
-                          surface=None,
-                          height=None, 
-                          min_adsorbate_distance=0.,
-                          both_sides=False):
-    """A function for generating adsorbate overlayer patterns on sites
-    that are of a same type. The function is generalized for both 
-    periodic and non-periodic systems (distinguished by atoms.pbc).
+def max_dist_coverage_pattern(atoms, adsorbate_species, 
+                              coverage, site_types=None, 
+                              species_probabilities=None,
+                              adsorption_sites=None,
+                              surface=None,
+                              heights=site_heights, 
+                              both_sides=False):
+    """A function for generating random overlayer patterns with 
+    a certain surface adsorbate coverage (i.e. fixed number of 
+    adsorbates N) and trying to even the adsorbate density. The 
+    function samples N sites from all given sites using K-medoids 
+    clustering to maximize the minimum distance between sites and 
+    add N adsorbates to these sites. The function is generalized 
+    for both periodic and non-periodic systems (distinguished by 
+    atoms.pbc). pyclustering is required.
 
     Parameters
     ----------
@@ -2300,88 +2350,120 @@ def full_coverage_pattern(atoms, adsorbate_species, site,
     adsorbate_species : str or list of strs 
         A list of adsorbate species to be added to the surface.
 
-    site : str
-        The site type that the adsorbates should be added to.
+    coverage : float
+        The surface coverage calculated by (number of adsorbates /
+        number of surface atoms). Subsurface sites are not considered.
+
+    site_types : str or list of strs, default None
+        The site type(s) that the adsorbates should be added to.
+        Consider all sites if not specified.
 
     species_probabilities : dict, default None
         A dictionary that contains keys of each adsorbate species and 
         values of their probabilities of adding onto the surface.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices). 
-        If the structure is a periodic surface slab, this is required. 
+        If the structure is a periodic surface slab, this is required when
+        adsorption_sites is not provided. 
         If the structure is a nanoparticle, the function only add 
         adsorbates to the sites on the specified surface. 
 
-    height : float, default None
-        The height of the added adsorbate from the surface.
-        Use the default settings if not specified.
-
-    min_adsorbate_distance : float, default 0.
-        The minimum distance between two atoms that belongs to two 
-        adsorbates.
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
 
     both_sides : bool, default False
         Whether to add adsorbate to both top and bottom sides of the slab.
         Only relvevant for periodic surface slabs.
     
     """
+    from pyclustering.cluster.kmedoids import kmedoids
 
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]
+    if site_types is not None:
+        site_types = site_types if is_list_or_tuple(site_types) else [site_types]
     if species_probabilities is not None:
         assert len(species_probabilities.keys()) == len(adsorbate_species)
         probability_list = [species_probabilities[a] for a in adsorbate_species]               
-
-    if True not in atoms.pbc:                                 
-        if surface is None:
-            surface = ['fcc100', 'fcc111']        
-        sas = ClusterAdsorptionSites(atoms, allow_6fold=True)
+    
+    _heights = site_heights
+    for k, v in heights.items():
+        _heights[k] = v
+    heights = _heights
+ 
+    if True not in atoms.pbc:                                
+        if adsorption_sites is None:
+            sas = ClusterAdsorptionSites(atoms, allow_6fold=False)
+        else:
+            sas = adsorption_sites
         site_list = sas.site_list
+        if surface is not None:
+            site_list = [s for s in site_list if s['surface'] == surface]
     else:
-        sas = SlabAdsorptionSites(atoms, surface=surface,
-                                  allow_6fold=True,
-                                  both_sides=both_sides)
+        if adsorption_sites is None:
+            sas = SlabAdsorptionSites(atoms, surface=surface,
+                                      allow_6fold=False,
+                                      both_sides=both_sides)
+        else:
+            sas = adsorption_sites
         site_list = sas.site_list
+    if site_types is not None:
+        site_list = [s for s in site_list if s['site'] in site_types 
+                     and s['site'] != '6fold']
+    else:
+        site_list = [s for s in site_list if s['site'] != '6fold']
 
-    if not isinstance(surface, list):
-        surface = [surface] 
-    natoms = len(atoms)
-    nads_dict = {ads: len(list(Formula(ads))) for ads in adsorbate_species}
+    nads = int(len(sas.surf_ids) * coverage)
+    points = np.asarray([s['position'] for s in site_list])
+    if True in atoms.pbc:
+        D = np.asarray([find_mic(points - np.tile(points[i], (len(points),1)), 
+                        cell=atoms.cell, pbc=True)[1] for i in range(len(points))])
+    else:
+        D = distance_matrix(points, points)
 
-    for st in site_list:
+    # K-medoids clustering (PAM algorithm)
+    medoids_init = random.sample(range(len(points)), nads)
+    pam = kmedoids(D, medoids_init, data_type='distance_matrix')
+    pam.process()
+    sampled_indices = pam.get_medoids()
+
+    final_sites = [site_list[j] for j in sampled_indices]
+    for st in final_sites:
         # Select adsorbate with probability 
         if not species_probabilities:
             adsorbate = random.choice(adsorbate_species)
         else: 
             adsorbate = random.choices(k=1, population=adsorbate_species,
                                        weights=probability_list)[0]        
-        nads = nads_dict[adsorbate] 
-
-        if st['site'] == site and st['surface'] in surface:
-            if height is None:
-                height = site_heights[st['site']]
-            add_adsorbate_to_site(atoms, adsorbate, st, height)       
-            if min_adsorbate_distance > 0:
-                if atoms_too_close_after_addition(atoms[natoms:], nads,
-                min_adsorbate_distance, mic=(True in atoms.pbc)):
-                    atoms = atoms[:-nads]                               
+        height = heights[st['site']]
+        add_adsorbate_to_site(atoms, adsorbate, st, height)       
 
     return atoms
 
 
-def random_coverage_pattern(atoms, adsorbate_species, 
-                            species_probabilities=None,
-                            surface=None, 
-                            min_adsorbate_distance=1.5, 
-                            heights=site_heights,
-                            allow_6fold=False,
-                            site_preference=None,
-                            both_sides=False):
+def min_dist_coverage_pattern(atoms, adsorbate_species, 
+                              species_probabilities=None,
+                              adsorption_sites=None,
+                              surface=None, 
+                              min_adsorbate_distance=1.5, 
+                              site_types=None,
+                              heights=site_heights,
+                              allow_6fold=False,
+                              site_preference=None,
+                              both_sides=False):
     """A function for generating random overlayer patterns with a 
-    minimum distance constraint. The function is generalized for both 
-    periodic and non-periodic systems (distinguished by atoms.pbc).
-    Especially useful for generating high coverage patterns.
+    minimum distance constraint and trying to maximize the adsorbate
+    density. The function is generalized for both periodic and 
+    non-periodic systems (distinguished by atoms.pbc). Especially 
+    useful for generating high coverage patterns.
 
     Parameters
     ----------
@@ -2396,20 +2478,30 @@ def random_coverage_pattern(atoms, adsorbate_species,
         A dictionary that contains keys of each adsorbate species and 
         values of their probabilities of adding onto the surface.
 
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation.
+
     surface : str, default None
         The surface type (crystal structure + Miller indices).
-        If the structure is a periodic surface slab, this is required. 
+        If the structure is a periodic surface slab, this is required when
+        adsorption_sites is not provided. 
         If the structure is a nanoparticle, the function only add 
         adsorbates to the sites on the specified surface. 
+
+    min_adsorbate_distance : float, default 1.5
+        The minimum distance constraint between two atoms that belongs 
+        to two adsorbates.
+
+    site_types : str or list of strs, default None
+        The site type(s) that the adsorbates should be added to.
+        Consider all sites if not specified.
 
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
         type is not specified.
-
-    min_adsorbate_distance : float, default 1.5
-        The minimum distance constraint between two atoms that belongs 
-        to two adsorbates.
 
     allow_6fold : bool, default False
         Whether to allow the adsorption on 6-fold subsurf sites 
@@ -2425,6 +2517,8 @@ def random_coverage_pattern(atoms, adsorbate_species,
     """
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]
+    if site_types is not None:
+        site_types = site_types if is_list_or_tuple(site_types) else [site_types]
     if species_probabilities is not None:
         assert len(species_probabilities.keys()) == len(adsorbate_species)
         probability_list = [species_probabilities[a] for a in adsorbate_species]               
@@ -2435,15 +2529,23 @@ def random_coverage_pattern(atoms, adsorbate_species,
     heights = _heights
  
     if True not in atoms.pbc:                                
-        sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
+        if adsorption_sites is None:
+            sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
+        else:
+            sas = adsorption_sites
         site_list = sas.site_list
         if surface is not None:
             site_list = [s for s in site_list if s['surface'] == surface]
     else:
-        sas = SlabAdsorptionSites(atoms, surface=surface,
-                                  allow_6fold=allow_6fold,
-                                  both_sides=both_sides)
+        if adsorption_sites is None:
+            sas = SlabAdsorptionSites(atoms, surface=surface,
+                                      allow_6fold=allow_6fold,
+                                      both_sides=both_sides)
+        else:
+            sas = adsorption_sites
         site_list = sas.site_list
+    if site_types is not None:
+        site_list = [s for s in site_list if s['site'] in site_types]
 
     random.shuffle(site_list)
     natoms = len(atoms)
