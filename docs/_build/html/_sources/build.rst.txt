@@ -471,12 +471,12 @@ The max_dist_coverage_pattern function
     Output:
 
     .. image:: ../images/max_dist_coverage_pattern_1.png
-       :scale: 60 %
+       :scale: 55 %
        :align: center
 
     **Example2**
 
-    To add N and O (3 : 1 ratio)to all 3fold sites on a bcc110 surface 
+    To add N and O (3 : 1 ratio) to all 3fold sites on a bcc110 surface 
     slab: 
 
         >>> from acat.build.overlayer import max_dist_coverage_pattern
@@ -492,7 +492,7 @@ The max_dist_coverage_pattern function
     Output:
 
     .. image:: ../images/max_dist_coverage_pattern_2.png
-       :scale: 60 %
+       :scale: 55 %
        :align: center
 
 The min_dist_coverage_pattern function
