@@ -29,7 +29,7 @@ The script for a parallel genetic algorithm looks as follows:
     from acat.adsorption_sites import ClusterAdsorptionSites
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.ordering import RandomOrderingGenerator as ROG
-    from acat.build.overlayer import min_dist_coverage_pattern
+    from acat.build.adlayer import min_dist_coverage_pattern
     from acat.ga.adsorbate_operators import (AddAdsorbate, RemoveAdsorbate,
                                              MoveAdsorbate, ReplaceAdsorbate,
                                              SimpleCutSpliceCrossoverWithAdsorbates)
@@ -244,7 +244,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     from acat.adsorption_sites import ClusterAdsorptionSites
     from acat.adsorbate_coverage import ClusterAdsorbateCoverage
     from acat.build.ordering import RandomOrderingGenerator as ROG
-    from acat.build.overlayer import StochasticPatternGenerator as SPG
+    from acat.build.adlayer import StochasticPatternGenerator as SPG
     from acat.ga.adsorbate_operators import (AddAdsorbate, RemoveAdsorbate,
                                              MoveAdsorbate, ReplaceAdsorbate,
                                              SimpleCutSpliceCrossoverWithAdsorbates)

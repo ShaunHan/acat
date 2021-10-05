@@ -462,7 +462,8 @@ class ClusterAdsorbateCoverage(object):
     def get_graph(self, fragmentation=True, 
                   subsurf_effect=False, 
                   full_effect=False,
-                  return_adj_matrix=False):                                         
+                  return_adj_matrix=False,
+                  connect_dentates=True):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -481,6 +482,9 @@ class ClusterAdsorbateCoverage(object):
         return_adj_matrix : bool, default False
             Whether to return adjacency matrix instead of the networkx.Graph 
             object.
+
+        connect_dentates : bool, default True
+            Whether to add edges between the fragments of multidentate species.
 
         """
 
@@ -512,7 +516,7 @@ class ClusterAdsorbateCoverage(object):
 
             if fragmentation:                
                 frag_list.append(st['fragment'])
-                if st['dentate'] > 1:
+                if st['dentate'] > 1 and connect_dentates:
                     bondid = st['bonding_index']
                     all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
                                  self.ads_ids.index(bondid)] == 1)[0].tolist()]
@@ -1040,7 +1044,8 @@ class SlabAdsorbateCoverage(object):
     def get_graph(self, fragmentation=True, 
                   subsurf_effect=False,
                   full_effect=False,
-                  return_adj_matrix=False):                                         
+                  return_adj_matrix=False,
+                  connect_dentates=True):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -1059,6 +1064,9 @@ class SlabAdsorbateCoverage(object):
         return_adj_matrix : bool, default False
             Whether to return adjacency matrix instead of the networkx.Graph 
             object.
+
+        connect_dentates : bool, default True
+            Whether to add edges between the fragments of multidentate species.
 
         """
 
@@ -1090,7 +1098,7 @@ class SlabAdsorbateCoverage(object):
 
             if fragmentation:                
                 frag_list.append(st['fragment'])
-                if st['dentate'] > 1:
+                if st['dentate'] > 1 and connect_dentates:
                     bondid = st['bonding_index']
                     all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
                                  self.ads_ids.index(bondid)] == 1)[0].tolist()]

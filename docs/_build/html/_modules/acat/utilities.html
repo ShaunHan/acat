@@ -178,6 +178,7 @@
     <span class="sd">&quot;&quot;&quot;Make dict of neighboring shell atoms for both periodic and </span>
 <span class="sd">    non-periodic systems. Possible to return neighbors from defined </span>
 <span class="sd">    neighbor shell e.g. 1st, 2nd, 3rd by changing the neighbor number.</span>
+<span class="sd">    Essentially returns a unit disk (or ring) graph.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -204,6 +205,8 @@
 
 <span class="sd">    span : bool, default False</span>
 <span class="sd">        Whether to include all neighbors spanned within the shell.</span>
+<span class="sd">        Returns a unit disk graph if True, otherwise returns a unit</span>
+<span class="sd">        ring graph.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -770,24 +773,24 @@
                      <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span></div>
 
 
-<div class="viewcode-block" id="relative_cosine_similarity"><a class="viewcode-back" href="../../utilities.html#acat.utilities.relative_cosine_similarity">[docs]</a><span class="k">def</span> <span class="nf">relative_cosine_similarity</span><span class="p">(</span><span class="n">counter1</span><span class="p">,</span> <span class="n">counter2</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Computes the relative cosine similarity between two.</span>
-<span class="sd">    counter dictionaries (e.g. {&#39;Pt&#39;: 5, &#39;Ni&#39;: 8}).&quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">counter1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">counter2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">counter1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">counter2</span><span class="p">:</span>
-        <span class="k">return</span> <span class="mi">0</span> 
-
-    <span class="n">lenc1</span><span class="p">,</span> <span class="n">lenc2</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter1</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter2</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-    <span class="n">lensim</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lenc1</span><span class="p">,</span> <span class="n">lenc2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">lenc1</span><span class="p">,</span> <span class="n">lenc2</span><span class="p">)</span>
-    <span class="n">terms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">counter1</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">counter2</span><span class="p">)</span>
-    <span class="n">dotprod</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counter1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">counter2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">)</span>
-    <span class="n">magA</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">counter1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">))</span>
-    <span class="n">magB</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">counter2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">))</span>
-    <span class="n">cossim</span> <span class="o">=</span> <span class="n">dotprod</span> <span class="o">/</span> <span class="p">(</span><span class="n">magA</span> <span class="o">*</span> <span class="n">magB</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">lensim</span> <span class="o">*</span> <span class="n">cossim</span></div>
+<span class="c1">#def relative_cosine_similarity(counter1, counter2):</span>
+<span class="c1">#    &quot;&quot;&quot;Computes the relative cosine similarity between two.</span>
+<span class="c1">#    counter dictionaries (e.g. {&#39;Pt&#39;: 5, &#39;Ni&#39;: 8}).&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#    if not counter1 and not counter2:</span>
+<span class="c1">#        return 1</span>
+<span class="c1">#    if not counter1 or not counter2:</span>
+<span class="c1">#        return 0 </span>
+<span class="c1">#</span>
+<span class="c1">#    lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())</span>
+<span class="c1">#    lensim = min(lenc1, lenc2) / max(lenc1, lenc2)</span>
+<span class="c1">#    terms = set(counter1).union(counter2)</span>
+<span class="c1">#    dotprod = sum(counter1.get(k, 0) * counter2.get(k, 0) for k in terms)</span>
+<span class="c1">#    magA = math.sqrt(sum(counter1.get(k, 0)**2 for k in terms))</span>
+<span class="c1">#    magB = math.sqrt(sum(counter2.get(k, 0)**2 for k in terms))</span>
+<span class="c1">#    cossim = dotprod / (magA * magB)</span>
+<span class="c1">#</span>
+<span class="c1">#    return lensim * cossim</span>
 
 
 <div class="viewcode-block" id="draw_graph"><a class="viewcode-back" href="../../utilities.html#acat.utilities.draw_graph">[docs]</a><span class="k">def</span> <span class="nf">draw_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="s1">&#39;graph.png&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>               
