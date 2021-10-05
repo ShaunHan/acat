@@ -167,7 +167,7 @@ class AdsorptionGraphComparator(object):
     fragmentation : bool, default True
         Whether to cut multidentate species into fragments. This ensures 
         that multidentate species with different orientations are
-        considered as different overlayer patterns.
+        considered as different adlayer patterns.
 
     """
 

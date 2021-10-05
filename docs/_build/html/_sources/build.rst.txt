@@ -164,7 +164,7 @@ The remove_adsorbates_from_sites function
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-        >>> from acat.build.overlayer import min_dist_coverage_pattern
+        >>> from acat.build.adlayer import min_dist_coverage_pattern
         >>> from acat.build.action import remove_adsorbates_from_sites
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
@@ -195,7 +195,7 @@ The remove_adsorbates_too_close function
     To remove unphysically close adsorbates on the edges of a Marks 
     decahedron with 0.75 ML ordered CO coverage:
 
-        >>> from acat.build.overlayer import ordered_coverage_pattern
+        >>> from acat.build.adlayer import ordered_coverage_pattern
         >>> from acat.build.action import remove_adsorbates_too_close
         >>> from ase.cluster import Decahedron
         >>> from ase.visualize import view
@@ -213,7 +213,7 @@ The remove_adsorbates_too_close function
 Generate adsorbate overlayer patterns
 -------------------------------------
 
-.. automodule:: acat.build.overlayer
+.. automodule:: acat.build.adlayer
     :members:
     :undoc-members:
     :show-inheritance:
@@ -234,8 +234,8 @@ The StochasticPatternGenerator class
     random C and O coverages, where CH3 is forbidden to be added to 
     ontop and bridge sites:
 
-        >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
-        >>> from acat.build.overlayer import min_dist_coverage_pattern
+        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import min_dist_coverage_pattern
         >>> from ase.build import fcc111
         >>> from ase.io import read
         >>> from ase.visualize import view
@@ -274,7 +274,7 @@ The StochasticPatternGenerator class
     between) with probabilities of 0.25, 0.25, 0.5, respectively, and a 
     minimum adsorbate distance of 2.5 Angstrom:
 
-        >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from ase.io import read
         >>> from ase.build import fcc100
@@ -316,7 +316,7 @@ The StochasticPatternGenerator class
     nanoparticles):
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
-        >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
         >>> from acat.build.ordering import RandomOrderingGenerator as ROG
         >>> from ase.cluster import Octahedron
         >>> from ase.io import read
@@ -354,7 +354,7 @@ The SystematicPatternGenerator class
     distance of 2 Angstrom:
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
-        >>> from acat.build.overlayer import SystematicPatternGenerator as SPG
+        >>> from acat.build.adlayer import SystematicPatternGenerator as SPG
         >>> from ase.cluster import Octahedron
         >>> from ase.io import read
         >>> from ase.visualize import view
@@ -383,7 +383,7 @@ The SystematicPatternGenerator class
     bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom 
     (here only generate a maximum of 100 unique patterns):
 
-        >>> from acat.build.overlayer import SystematicPatternGenerator as SPG
+        >>> from acat.build.adlayer import SystematicPatternGenerator as SPG
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from ase.io import read
         >>> from ase.build import bcc111
@@ -418,9 +418,9 @@ The ordered_coverage_pattern function
 
     **Example1**
 
-    To add a 0.5 ML CO overlayer pattern on a cuboctahedron:
+    To add a 0.5 ML CO adlayer pattern on a cuboctahedron:
 
-        >>> from acat.build.overlayer import ordered_coverage_pattern
+        >>> from acat.build.adlayer import ordered_coverage_pattern
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
@@ -435,9 +435,9 @@ The ordered_coverage_pattern function
 
     **Example2**
 
-    To add a 0.5 ML CO overlayer pattern on a fcc111 surface slab:
+    To add a 0.5 ML CO adlayer pattern on a fcc111 surface slab:
 
-        >>> from acat.build.overlayer import ordered_coverage_pattern
+        >>> from acat.build.adlayer import ordered_coverage_pattern
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
         >>> atoms = fcc111('Cu', (8, 8, 4), vacuum=5.)
@@ -459,7 +459,7 @@ The max_dist_coverage_pattern function
 
     To add 0.33 ML CO to all fcc and hcp sites on an icosahedron:
 
-        >>> from acat.build.overlayer import max_dist_coverage_pattern
+        >>> from acat.build.adlayer import max_dist_coverage_pattern
         >>> from ase.cluster import Icosahedron
         >>> from ase.visualize import view
         >>> atoms = Icosahedron('Au', noshells=5)
@@ -479,7 +479,7 @@ The max_dist_coverage_pattern function
     To add N and O (3 : 1 ratio) to all 3fold sites on a bcc110 surface 
     slab: 
 
-        >>> from acat.build.overlayer import max_dist_coverage_pattern
+        >>> from acat.build.adlayer import max_dist_coverage_pattern
         >>> from ase.build import bcc110
         >>> from ase.visualize import view
         >>> atoms = bcc110('Mo', (8, 8, 4), vacuum=5.)
@@ -505,7 +505,7 @@ The min_dist_coverage_pattern function
     To add CO randomly onto a cuboctahedron with a minimum adsorbate 
     distance of 5 Angstrom:
 
-        >>> from acat.build.overlayer import min_dist_coverage_pattern
+        >>> from acat.build.adlayer import min_dist_coverage_pattern
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
@@ -524,7 +524,7 @@ The min_dist_coverage_pattern function
     of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
     2 Angstrom:
 
-        >>> from acat.build.overlayer import min_dist_coverage_pattern
+        >>> from acat.build.adlayer import min_dist_coverage_pattern
         >>> from ase.build import hcp0001
         >>> from ase.visualize import view
         >>> atoms = hcp0001('Ru', (8, 8, 4), vacuum=5.)
@@ -548,7 +548,7 @@ The min_dist_coverage_pattern function
     in between) with probabilities of 0.25, 0.25, 0.5, respectively, and a 
     minimum adsorbate distance of 2 Angstrom:
 
-        >>> from acat.build.overlayer import min_dist_coverage_pattern                        
+        >>> from acat.build.adlayer import min_dist_coverage_pattern                        
         >>> from ase.io import read
         >>> from ase.build import fcc100 
         >>> from ase.visualize import view

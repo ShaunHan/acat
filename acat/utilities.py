@@ -16,6 +16,7 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
     """Make dict of neighboring shell atoms for both periodic and 
     non-periodic systems. Possible to return neighbors from defined 
     neighbor shell e.g. 1st, 2nd, 3rd by changing the neighbor number.
+    Essentially returns a unit disk (or ring) graph.
 
     Parameters
     ----------
@@ -42,6 +43,8 @@ def neighbor_shell_list(atoms, dx=0.3, neighbor_number=1,
 
     span : bool, default False
         Whether to include all neighbors spanned within the shell.
+        Returns a unit disk graph if True, otherwise returns a unit
+        ring graph.
 
     """
 
@@ -608,24 +611,24 @@ def sort_atoms_by_ref_atoms(atoms, ref_atoms, mic=False):
                      atoms.positions)**2).sum(2).argmin(1)]
 
 
-def relative_cosine_similarity(counter1, counter2):
-    """Computes the relative cosine similarity between two.
-    counter dictionaries (e.g. {'Pt': 5, 'Ni': 8})."""
-
-    if not counter1 and not counter2:
-        return 1
-    if not counter1 or not counter2:
-        return 0 
-
-    lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())
-    lensim = min(lenc1, lenc2) / max(lenc1, lenc2)
-    terms = set(counter1).union(counter2)
-    dotprod = sum(counter1.get(k, 0) * counter2.get(k, 0) for k in terms)
-    magA = math.sqrt(sum(counter1.get(k, 0)**2 for k in terms))
-    magB = math.sqrt(sum(counter2.get(k, 0)**2 for k in terms))
-    cossim = dotprod / (magA * magB)
-
-    return lensim * cossim
+#def relative_cosine_similarity(counter1, counter2):
+#    """Computes the relative cosine similarity between two.
+#    counter dictionaries (e.g. {'Pt': 5, 'Ni': 8})."""
+#
+#    if not counter1 and not counter2:
+#        return 1
+#    if not counter1 or not counter2:
+#        return 0 
+#
+#    lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())
+#    lensim = min(lenc1, lenc2) / max(lenc1, lenc2)
+#    terms = set(counter1).union(counter2)
+#    dotprod = sum(counter1.get(k, 0) * counter2.get(k, 0) for k in terms)
+#    magA = math.sqrt(sum(counter1.get(k, 0)**2 for k in terms))
+#    magB = math.sqrt(sum(counter2.get(k, 0)**2 for k in terms))
+#    cossim = dotprod / (magA * magB)
+#
+#    return lensim * cossim
 
 
 def draw_graph(G, savefig='graph.png', *args, **kwargs):               

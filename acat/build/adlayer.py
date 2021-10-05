@@ -27,8 +27,8 @@ import random
 class StochasticPatternGenerator(object):
     """`StochasticPatternGenerator` is a class for generating 
     adsorbate overlayer patterns stochastically. Graph isomorphism
-    is implemented to identify identical overlayer patterns.
-    4 adsorbate actions are supported: add, remove, move, replace. 
+    is implemented to identify identical adlayer patterns. 4 
+    adsorbate actions are supported: add, remove, move, replace. 
     The function is generalized for both periodic and non-periodic 
     systems (distinguished by atoms.pbc). 
 
@@ -107,7 +107,7 @@ class StochasticPatternGenerator(object):
     fragmentation : bool, default True
         Whether to cut multidentate species into fragments. This ensures 
         that multidentate species with different orientations are
-        considered as different overlayer patterns.
+        considered as different adlayer patterns.
 
     trajectory : str, default 'patterns.traj'
         The name of the output ase trajectory file.
@@ -116,11 +116,11 @@ class StochasticPatternGenerator(object):
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
         graph isomorphism for the existing structures in the trajectory.
-        This is also useful when you want to generate overlayer patterns 
+        This is also useful when you want to generate adlayer patterns 
         stochastically but for all images systematically, e.g. generating
-        10 stochastic overlayer patterns for each image:
+        10 stochastic adlayer patterns for each image:
 
-        >>> from acat.build.overlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
         >>> for atoms in images:
         ...    spg = SPG(atoms, ..., append_trajectory=True)
         ...    spg.run(num_gen = 10)
@@ -697,7 +697,7 @@ class StochasticPatternGenerator(object):
             The recommended ways to generate high coverage patterns are:
             1) adding one adsorbate at a time from low to high coverage if 
             you want to control the exact number of adsorbates;
-            2) use `acat.build.overlayer.random_coverage_pattern` if you want
+            2) use `acat.build.adlayer.random_coverage_pattern` if you want
             to control the minimum adsorbate distance. This is the fastest
             way, but the number of adsorbates is not guaranteed to be fixed.
 
@@ -895,7 +895,7 @@ class SystematicPatternGenerator(object):
     adsorbate overlayer patterns systematically. This is useful to 
     enumerate all unique patterns at low coverage, but explodes at
     higher coverages. Graph isomorphism is implemented to identify 
-    identical overlayer patterns. 4 adsorbate actions are supported: 
+    identical adlayer patterns. 4 adsorbate actions are supported: 
     add, remove, move, replace. The function is generalized for both
     periodic and non-periodic systems (distinguished by atoms.pbc). 
 
@@ -1846,7 +1846,7 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
     coverage : float, default 1. 
         The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms). 
-        Support 4 overlayer patterns (
+        Support 4 adlayer patterns (
         0.25 for p(2x2) pattern; 
         0.5 for c(2x2) pattern on fcc100 or honeycomb pattern on fcc111; 
         0.75 for (2x2) pattern on fcc100 or Kagome pattern on fcc111; 
@@ -1855,7 +1855,7 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
         Note that for small nanoparticles, the function might give 
         results that do not correspond to the coverage. This is normal 
         since the surface area can be too small to encompass the 
-        overlayer pattern properly. We expect this function to work 
+        adlayer pattern properly. We expect this function to work 
         well on large nanoparticles and surface slabs.                  
 
     species_probabilities : dict, default None
@@ -1962,12 +1962,12 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                                 s['indices'] for s in sites_to_remove]:
                                     sites_to_remove.append(sitej)
                         if True in atoms.pbc:
-                            if len(sites_to_remove) == 1:
+                            if len(sites_to_remove) != len(fcc_sites) * 1/4:
                                 sorted_sites = sorted(sites, key=lambda x: get_mic(                
                                                       x['position'], sites[0]['position'], 
                                                       atoms.cell, return_squared_distance=True))
                                 sites_to_remove = [sites[0]] + sorted_sites[
-                                                   1-int(len(sas.surf_ids)*1/4):]
+                                                   1-int(len(fcc_sites)*1/4):]
                         for s in sites:
                             if s['indices'] not in [st['indices'] for st in sites_to_remove]:
                                 final_sites.append(s)
@@ -1995,12 +1995,12 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                                 for s in sites_to_keep]:
                                     sites_to_keep.append(sitej)
                         if True in atoms.pbc:
-                            if len(sites_to_keep) == 1:
+                            if len(sites_to_keep) != len(fcc_sites) * 1/2:
                                 sorted_sites = sorted(all_sites, key=lambda x: get_mic(                
                                                       x['position'], all_sites[0]['position'], 
                                                       atoms.cell, return_squared_distance=True))
                                 sites_to_keep = [all_sites[0]] + sorted_sites[
-                                                 1-int(len(sas.surf_ids)*1/2):]
+                                                 1-int(len(fcc_sites)*1/2):]
                         final_sites += sites_to_keep                                          
                 if True not in atoms.pbc:                                                                       
                     bad_sites = []
@@ -2044,12 +2044,12 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                                 s['indices'] for s in sites_to_keep]:
                                     sites_to_keep.append(sitej)               
                         if True in atoms.pbc:
-                            if len(sites_to_keep) == 1:
+                            if len(sites_to_keep) != len(fcc_sites) * 1/4:
                                 sorted_sites = sorted(sites, key=lambda x: get_mic(                
                                                       x['position'], sites[0]['position'], 
                                                       atoms.cell, return_squared_distance=True))
                                 sites_to_keep = [sites[0]] + sorted_sites[
-                                                 1-int(len(sas.surf_ids)*1/4):]
+                                                 1-int(len(fcc_sites)*1/4):]
                         final_sites += sites_to_keep
  
         if 'fcc100' in surface:
@@ -2092,12 +2092,13 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                                 s['indices'] for s in sites_to_remove]:  
                                     sites_to_remove.append(sitej)
                         if True in atoms.pbc:
-                            if len(sites_to_remove) == 1:
+                            if len(sites_to_remove) != len(fold4_sites) * 1/4:
                                 sorted_sites = sorted(sites, key=lambda x: get_mic(                
                                                       x['position'], sites[0]['position'], 
                                                       atoms.cell, return_squared_distance=True))
-                                sites_to_remove = [sites[0]] + sorted_sites[
-                                                   1-int(len(sas.surf_ids)*1/4):]
+                                sites_to_remove = [sites[0]] + [sorted_sites[-1]] + sorted_sites[
+                                                   1-2*int(len(fold4_sites)*1/4):
+                                                   -int(len(fold4_sites)*1/4)-1]
                         for s in sites:
                             if s['indices'] not in [st['indices'] for st in sites_to_remove]:
                                 final_sites.append(s)
@@ -2121,12 +2122,13 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                                 for s in sites_to_keep]):
                                     sites_to_keep.append(sitej)
                         if True in atoms.pbc:
-                            if len(sites_to_keep) == 1:
+                            if len(sites_to_keep) != len(fold4_sites) * 1/2:
                                 sorted_sites = sorted(sites, key=lambda x: get_mic(                
                                                       x['position'], sites[0]['position'], 
                                                       atoms.cell, return_squared_distance=True))
-                                sites_to_keep = [sites[0]] + sorted_sites[
-                                                 1-int(len(sas.surf_ids)*1/2):]
+                                sites_to_keep = [sites[0]] + [sorted_sites[-1]] + sorted_sites[
+                                                 1-2*int(len(fold4_sites)*1/2):
+                                                 -int(len(fold4_sites)*1/2)-1]
                         for s in original_sites:
                             if s['indices'] in [st['indices'] for st in sites_to_keep]:
                                 final_sites.append(s)
@@ -2138,6 +2140,7 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                     grouped_sites = group_sites_by_facet(atoms, fold4_sites, site_list)
                 else:
                     grouped_sites = {'pbc_sites': fold4_sites}
+
                 for sites in grouped_sites.values():
                     if sites:
                         sites_to_keep = [sites[0]]
@@ -2158,12 +2161,14 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
                                 s['indices'] for s in sites_to_keep]:  
                                     sites_to_keep.append(sitej)
                         if True in atoms.pbc:
-                            if len(sites_to_keep) == 1:
+                            print(sites[0]['indices'])
+                            if len(sites_to_keep) != len(fold4_sites) * 1/4:
                                 sorted_sites = sorted(sites, key=lambda x: get_mic(                
                                                       x['position'], sites[0]['position'], 
                                                       atoms.cell, return_squared_distance=True))
-                                sites_to_keep = [sites[0]] + sorted_sites[
-                                                 1-int(len(sas.surf_ids)*1/4):]
+                                sites_to_keep = [sites[0]] + [sorted_sites[-1]] + sorted_sites[
+                                                 1-2*int(len(fold4_sites)*1/4):
+                                                 -int(len(fold4_sites)*1/4)-1]
                         final_sites += sites_to_keep
         return final_sites
 
@@ -2332,7 +2337,7 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
                               surface=None,
                               heights=site_heights, 
                               both_sides=False):
-    """A function for generating random overlayer patterns with 
+    """A function for generating random adlayer patterns with 
     a certain surface adsorbate coverage (i.e. fixed number of 
     adsorbates N) and trying to even the adsorbate density. The 
     function samples N sites from all given sites using K-medoids 
@@ -2415,11 +2420,11 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
         else:
             sas = adsorption_sites
         site_list = sas.site_list
-    if site_types is not None:
+    if site_types is None:
+        site_list = [s for s in site_list if s['site'] != '6fold']
+    else:
         site_list = [s for s in site_list if s['site'] in site_types 
                      and s['site'] != '6fold']
-    else:
-        site_list = [s for s in site_list if s['site'] != '6fold']
 
     nads = int(len(sas.surf_ids) * coverage)
     points = np.asarray([s['position'] for s in site_list])
@@ -2459,7 +2464,7 @@ def min_dist_coverage_pattern(atoms, adsorbate_species,
                               allow_6fold=False,
                               site_preference=None,
                               both_sides=False):
-    """A function for generating random overlayer patterns with a 
+    """A function for generating random adlayer patterns with a 
     minimum distance constraint and trying to maximize the adsorbate
     density. The function is generalized for both periodic and 
     non-periodic systems (distinguished by atoms.pbc). Especially 

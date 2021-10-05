@@ -13,7 +13,7 @@ if os.path.isfile(requirementPath):
 
 setuptools.setup(
     name="acat", 
-    version="1.2.0",
+    version="1.2.1",
     author="Shuang Han",
     author_email="hanshuangshiren@gmail.com",
     description="Alloy Catalysis Automated Toolkit",

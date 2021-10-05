@@ -20,8 +20,8 @@ acat/__pycache__/__init__.cpython-38.pyc
 acat/build/.gitkeep
 acat/build/__init__.py
 acat/build/action.py
+acat/build/adlayer.py
 acat/build/ordering.py
-acat/build/overlayer.py
 acat/ga/.gitkeep
 acat/ga/__init__.py
 acat/ga/adsorbate_comparators.py
@@ -87,6 +87,11 @@ docs/_build/html/_images/add_adsorbate_to_site_1.png
 docs/_build/html/_images/add_adsorbate_to_site_2.png
 docs/_build/html/_images/all_ordered_coverage_patterns.png
 docs/_build/html/_images/color_facets.png
+docs/_build/html/_images/max_dist_coverage_pattern_1.png
+docs/_build/html/_images/max_dist_coverage_pattern_2.png
+docs/_build/html/_images/min_dist_coverage_pattern_1.png
+docs/_build/html/_images/min_dist_coverage_pattern_2.png
+docs/_build/html/_images/min_dist_coverage_pattern_3.png
 docs/_build/html/_images/ordered_coverage_pattern_1.png
 docs/_build/html/_images/ordered_coverage_pattern_2.png
 docs/_build/html/_images/remove_adsorbate_from_site.png
@@ -99,7 +104,6 @@ docs/_build/html/_modules/acat/adsorption_sites.html
 docs/_build/html/_modules/acat/utilities.html
 docs/_build/html/_modules/acat/build/action.html
 docs/_build/html/_modules/acat/build/ordering.html
-docs/_build/html/_modules/acat/build/overlayer.html
 docs/_build/html/_modules/acat/ga/adsorbate_comparators.html
 docs/_build/html/_modules/acat/ga/adsorbate_operators.html
 docs/_build/html/_modules/acat/ga/group_comparators.html
@@ -225,6 +229,11 @@ images/eu_logo.png
 images/fcc111_0.75ml.png
 images/full_sites_enumeration.png
 images/labeled_sites.png
+images/max_dist_coverage_pattern_1.png
+images/max_dist_coverage_pattern_2.png
+images/min_dist_coverage_pattern_1.png
+images/min_dist_coverage_pattern_2.png
+images/min_dist_coverage_pattern_3.png
 images/ordered_coverage_pattern_1.png
 images/ordered_coverage_pattern_2.png
 images/random_NiPt_111_surface_with_OH.png
