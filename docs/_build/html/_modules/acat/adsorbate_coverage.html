@@ -621,7 +621,8 @@
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_wise</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                   <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                   <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">return_adj_matrix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -630,6 +631,10 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        atom_wise : bool, default False</span>
+<span class="sd">            Whether to treat each adsorbate as an atom-wise subgraph. If not, </span>
+<span class="sd">            treat each adsorbate as a unity (molecule-wise).</span>
+
 <span class="sd">        fragmentation : bool, default True</span>
 <span class="sd">            Whether to cut multidentate species into fragments. This ensures </span>
 <span class="sd">            that multidentate species with different orientations have </span>
@@ -650,82 +655,108 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
-        <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_connectivity</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
-            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
-                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_subsurface</span><span class="p">()</span>
+        <span class="c1"># Molecule-wise</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">atom_wise</span><span class="p">:</span>
+            <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
+            <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_connectivity</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
-        <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
-        <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
-        <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
-
-        <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span><span class="p">,</span> <span class="n">adsi_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-        <span class="n">multi_conns</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="n">ohsl</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span> <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
-        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ohsl</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]):</span>
-            <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">adsi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                    <span class="k">continue</span>
-            <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
-            <span class="n">newrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncols</span><span class="p">)</span>
-            <span class="n">newrow</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">newrows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newrow</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>                
-                <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">connect_dentates</span><span class="p">:</span>
-                    <span class="n">bondid</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span>
-                    <span class="n">all_conns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span><span class="p">[</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">bondid</span><span class="p">)]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
-                    <span class="n">conns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_conns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]]</span>
-                    <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-                    <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="p">:</span>
-                        <span class="n">multi_conns</span><span class="p">[</span><span class="n">bondid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">conns</span><span class="p">:</span>
-                            <span class="n">multi_conns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
-
-        <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
-            <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">surfhcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">newrows</span><span class="p">)))</span>
-            <span class="k">if</span> <span class="n">multi_conns</span><span class="p">:</span>
-                <span class="n">links</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas</span><span class="o">.</span><span class="n">get_subsurface</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
+            <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
+            <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
+ 
+            <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span><span class="p">,</span> <span class="n">adsi_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">multi_conns</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="n">ohsl</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span> <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ohsl</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]):</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">adsi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
+                <span class="n">newrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncols</span><span class="p">)</span>
+                <span class="n">newrow</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">newrows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newrow</span><span class="p">)</span>
+ 
+                <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>                
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">connect_dentates</span><span class="p">:</span>
+                        <span class="n">bondid</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span>
+                        <span class="n">all_conns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span><span class="p">[</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">bondid</span><span class="p">)]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
+                        <span class="n">conns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_conns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]]</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="p">:</span>
+                            <span class="n">multi_conns</span><span class="p">[</span><span class="n">bondid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">conns</span><span class="p">:</span>
+                                <span class="n">multi_conns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
+ 
+            <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
-                <span class="n">dd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span>
-                <span class="n">small_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd</span><span class="p">,</span> <span class="n">dd</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
-                        <span class="n">small_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                        <span class="n">small_mat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">[</span><span class="o">-</span><span class="n">dd</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">small_mat</span><span class="p">))))</span>
+                <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">surfhcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">newrows</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="n">multi_conns</span><span class="p">:</span>
+                    <span class="n">links</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+ 
+            <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
+                    <span class="n">dd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span>
+                    <span class="n">small_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd</span><span class="p">,</span> <span class="n">dd</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+                            <span class="n">small_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="n">small_mat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">[</span><span class="o">-</span><span class="n">dd</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">small_mat</span><span class="p">))))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">shcm</span>
+ 
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>               
+            <span class="c1"># Add nodes from fragment list</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span> 
+                               <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">)]</span> <span class="o">+</span> 
+                             <span class="p">[(</span><span class="n">j</span> <span class="o">+</span> <span class="n">nrows</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">frag_list</span><span class="p">[</span><span class="n">j</span><span class="p">]})</span>
+                               <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frag_list</span><span class="p">))])</span>
+ 
+            <span class="c1"># Add edges from surface adjacency matrix</span>
+            <span class="n">shcm</span> <span class="o">=</span> <span class="n">shcm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tri</span><span class="p">(</span><span class="o">*</span><span class="n">shcm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">),</span> <span class="n">j</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">))</span>
+        <span class="c1"># Atom-wise</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> 
+                                         <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">cm</span> <span class="o">=</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="n">nblist</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
+            <span class="n">surf_ads_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">)</span>
+            <span class="n">shcm</span> <span class="o">=</span> <span class="n">cm</span><span class="p">[</span><span class="n">surf_ads_ids</span><span class="p">]</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ads_ids</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">shcm</span>
-
-        <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>               
-        <span class="c1"># Add nodes from fragment list</span>
-        <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span> 
-                           <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">)]</span> <span class="o">+</span> 
-                         <span class="p">[(</span><span class="n">j</span> <span class="o">+</span> <span class="n">nrows</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">frag_list</span><span class="p">[</span><span class="n">j</span><span class="p">]})</span>
-                           <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frag_list</span><span class="p">))])</span>
-
-        <span class="c1"># Add edges from surface adjacency matrix</span>
-        <span class="n">shcm</span> <span class="o">=</span> <span class="n">shcm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tri</span><span class="p">(</span><span class="o">*</span><span class="n">shcm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
-            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
-                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">),</span> <span class="n">j</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">))</span>
+ 
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>                                                  
+            <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span> 
+                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">))])</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">G</span></div>
 
@@ -1203,7 +1234,8 @@
 
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+<div class="viewcode-block" id="SlabAdsorbateCoverage.get_graph"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">[docs]</a>    <span class="k">def</span> <span class="nf">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_wise</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                   <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">return_adj_matrix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1212,6 +1244,10 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        atom_wise : bool, default False</span>
+<span class="sd">            Whether to treat each adsorbate as an atom-wise subgraph. If not, </span>
+<span class="sd">            treat each adsorbate as a unity (molecule-wise).</span>
+
 <span class="sd">        fragmentation : bool, default True</span>
 <span class="sd">            Whether to cut multidentate species into fragments. This ensures </span>
 <span class="sd">            that multidentate species with different orientations have </span>
@@ -1232,82 +1268,108 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
-        <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
-            <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
-                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
+        <span class="c1"># Molecule-wise</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">atom_wise</span><span class="p">:</span>
+            <span class="n">hsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span>
+            <span class="n">hcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
-        <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
-        <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
-        <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
-
-        <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span><span class="p">,</span> <span class="n">adsi_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-        <span class="n">multi_conns</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="n">ohsl</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span> <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
-        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ohsl</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]):</span>
-            <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">adsi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                    <span class="k">continue</span>
-            <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
-            <span class="n">newrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncols</span><span class="p">)</span>
-            <span class="n">newrow</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">newrows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newrow</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>                
-                <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">connect_dentates</span><span class="p">:</span>
-                    <span class="n">bondid</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span>
-                    <span class="n">all_conns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span><span class="p">[</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">bondid</span><span class="p">)]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
-                    <span class="n">conns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_conns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]]</span>
-                    <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-                    <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="p">:</span>
-                        <span class="n">multi_conns</span><span class="p">[</span><span class="n">bondid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">conns</span><span class="p">:</span>
-                            <span class="n">multi_conns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
-
-        <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
-            <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">surfhcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">newrows</span><span class="p">)))</span>
-            <span class="k">if</span> <span class="n">multi_conns</span><span class="p">:</span>
-                <span class="n">links</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
+            <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">hcm</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">]</span>
+            <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="o">.</span><span class="n">shape</span>       
+ 
+            <span class="n">newrows</span><span class="p">,</span> <span class="n">frag_list</span><span class="p">,</span> <span class="n">adsi_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">multi_conns</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="n">ohsl</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">hsl</span> <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ohsl</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]):</span>
+                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">fragmentation</span> <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">adsi</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
+                <span class="n">newrow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ncols</span><span class="p">)</span>
+                <span class="n">newrow</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">newrows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newrow</span><span class="p">)</span>
+ 
+                <span class="k">if</span> <span class="n">fragmentation</span><span class="p">:</span>                
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;dentate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">connect_dentates</span><span class="p">:</span>
+                        <span class="n">bondid</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;bonding_index&#39;</span><span class="p">]</span>
+                        <span class="n">all_conns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span><span class="p">[</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">bondid</span><span class="p">)]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
+                        <span class="n">conns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_conns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]]</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="p">:</span>
+                            <span class="n">multi_conns</span><span class="p">[</span><span class="n">bondid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">conns</span><span class="p">:</span>
+                                <span class="n">multi_conns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">frag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">])</span>
+ 
+            <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
-                <span class="n">dd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span>
-                <span class="n">small_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd</span><span class="p">,</span> <span class="n">dd</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
-                        <span class="n">small_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                        <span class="n">small_mat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">[</span><span class="o">-</span><span class="n">dd</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">small_mat</span><span class="p">))))</span>
+                <span class="n">surfhcm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">surfhcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">newrows</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="n">multi_conns</span><span class="p">:</span>
+                    <span class="n">links</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">multi_conns</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+ 
+            <span class="n">shcm</span> <span class="o">=</span> <span class="n">surfhcm</span><span class="p">[:,</span><span class="n">surf_ids</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">newrows</span><span class="p">:</span>
+                    <span class="n">dd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">newrows</span><span class="p">)</span>
+                    <span class="n">small_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd</span><span class="p">,</span> <span class="n">dd</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+                            <span class="n">small_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="n">small_mat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">shcm</span><span class="p">[</span><span class="o">-</span><span class="n">dd</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">small_mat</span><span class="p">))))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">shcm</span>
+ 
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>               
+            <span class="c1"># Add nodes from fragment list</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span> 
+                               <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">)]</span> <span class="o">+</span> 
+                             <span class="p">[(</span><span class="n">j</span> <span class="o">+</span> <span class="n">nrows</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">frag_list</span><span class="p">[</span><span class="n">j</span><span class="p">]})</span>
+                               <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frag_list</span><span class="p">))])</span>
+ 
+            <span class="c1"># Add edges from surface adjacency matrix</span>
+            <span class="n">shcm</span> <span class="o">=</span> <span class="n">shcm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tri</span><span class="p">(</span><span class="o">*</span><span class="n">shcm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">),</span> <span class="n">j</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">))</span>
+        <span class="c1"># Atom-wise</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> 
+                                         <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">cm</span> <span class="o">=</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="n">nblist</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">full_effect</span><span class="p">:</span>
+                <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">subsurf_effect</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
+            <span class="n">surf_ads_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">)</span>
+            <span class="n">shcm</span> <span class="o">=</span> <span class="n">cm</span><span class="p">[</span><span class="n">surf_ads_ids</span><span class="p">]</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">surf_ads_ids</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">return_adj_matrix</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">shcm</span>
-
-        <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>               
-        <span class="c1"># Add nodes from fragment list</span>
-        <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span> 
-                           <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">)]</span> <span class="o">+</span> 
-                         <span class="p">[(</span><span class="n">j</span> <span class="o">+</span> <span class="n">nrows</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">frag_list</span><span class="p">[</span><span class="n">j</span><span class="p">]})</span>
-                           <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frag_list</span><span class="p">))])</span>
-
-        <span class="c1"># Add edges from surface adjacency matrix</span>
-        <span class="n">shcm</span> <span class="o">=</span> <span class="n">shcm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tri</span><span class="p">(</span><span class="o">*</span><span class="n">shcm</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
-            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
-                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">),</span> <span class="n">j</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">surf_ids</span><span class="p">))</span>
+ 
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>                                                  
+            <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]})</span> 
+                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">))])</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">shcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">G</span></div>
 

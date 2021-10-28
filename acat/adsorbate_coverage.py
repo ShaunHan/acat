@@ -459,7 +459,8 @@ class ClusterAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self, fragmentation=True, 
+    def get_graph(self, atom_wise=False,
+                  fragmentation=True, 
                   subsurf_effect=False, 
                   full_effect=False,
                   return_adj_matrix=False,
@@ -468,6 +469,10 @@ class ClusterAdsorbateCoverage(object):
 
         Parameters
         ----------
+        atom_wise : bool, default False
+            Whether to treat each adsorbate as an atom-wise subgraph. If not, 
+            treat each adsorbate as a unity (molecule-wise).
+
         fragmentation : bool, default True
             Whether to cut multidentate species into fragments. This ensures 
             that multidentate species with different orientations have 
@@ -488,82 +493,108 @@ class ClusterAdsorbateCoverage(object):
 
         """
 
-        hsl = self.hetero_site_list
-        hcm = self.cas.get_connectivity().copy()
-        if full_effect:
-            surf_ids = self.slab_ids
-        else:
-            if subsurf_effect:
-                surf_ids = self.surf_ids + self.cas.get_subsurface()
+        # Molecule-wise
+        if not atom_wise:
+            hsl = self.hetero_site_list
+            hcm = self.cas.get_connectivity().copy()
+            if full_effect:
+                surf_ids = self.slab_ids
             else:
-                surf_ids = self.surf_ids
-        surfhcm = hcm[surf_ids]
-        symbols = self.symbols[surf_ids]
-        nrows, ncols = surfhcm.shape       
-
-        newrows, frag_list, adsi_list = [], [], []
-        multi_conns = defaultdict(list)
-        ohsl = [st for st in hsl if st['occupied']]
-        for st in sorted(ohsl, key=lambda x: x['fragment_indices']):
-            adsi = st['adsorbate_indices']
-            if not fragmentation and st['dentate'] > 1: 
-                if st['bonding_index'] != adsi[0]:
-                    continue
-            si = st['indices']
-            newrow = np.zeros(ncols)
-            newrow[list(si)] = 1
-            newrows.append(newrow)
-
-            if fragmentation:                
-                frag_list.append(st['fragment'])
-                if st['dentate'] > 1 and connect_dentates:
-                    bondid = st['bonding_index']
-                    all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
-                                 self.ads_ids.index(bondid)] == 1)[0].tolist()]
-                    conns = [c for c in all_conns if c not in st['fragment_indices']]
-                    i = len(newrows) - 1
-                    if i not in multi_conns:
-                        multi_conns[bondid].append([i])
-                    for k, v in multi_conns.items():
-                        if k in conns:
-                            multi_conns[k].append([i, v[0][0]])
-            else:
-                frag_list.append(st['adsorbate'])
-
-        links = []
-        if newrows:
-            surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
-            if multi_conns:
-                links = [sorted(c) for cs in multi_conns.values() for c in cs if len(c) > 1]
-
-        shcm = surfhcm[:,surf_ids]
-        if return_adj_matrix:
+                if subsurf_effect:
+                    surf_ids = self.surf_ids + self.cas.get_subsurface()
+                else:
+                    surf_ids = self.surf_ids
+            surfhcm = hcm[surf_ids]
+            symbols = self.symbols[surf_ids]
+            nrows, ncols = surfhcm.shape       
+ 
+            newrows, frag_list, adsi_list = [], [], []
+            multi_conns = defaultdict(list)
+            ohsl = [st for st in hsl if st['occupied']]
+            for st in sorted(ohsl, key=lambda x: x['fragment_indices']):
+                adsi = st['adsorbate_indices']
+                if not fragmentation and st['dentate'] > 1: 
+                    if st['bonding_index'] != adsi[0]:
+                        continue
+                si = st['indices']
+                newrow = np.zeros(ncols)
+                newrow[list(si)] = 1
+                newrows.append(newrow)
+ 
+                if fragmentation:                
+                    frag_list.append(st['fragment'])
+                    if st['dentate'] > 1 and connect_dentates:
+                        bondid = st['bonding_index']
+                        all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
+                                     self.ads_ids.index(bondid)] == 1)[0].tolist()]
+                        conns = [c for c in all_conns if c not in st['fragment_indices']]
+                        i = len(newrows) - 1
+                        if i not in multi_conns:
+                            multi_conns[bondid].append([i])
+                        for k, v in multi_conns.items():
+                            if k in conns:
+                                multi_conns[k].append([i, v[0][0]])
+                else:
+                    frag_list.append(st['adsorbate'])
+ 
+            links = []
             if newrows:
-                dd = len(newrows)
-                small_mat = np.zeros((dd, dd))
-                if links:
-                    for (i, j) in links:
-                        small_mat[i,j] = 1
-                        small_mat[j,i] = 1
-                return np.hstack((shcm, np.vstack((shcm[-dd:].T, small_mat))))
+                surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+                if multi_conns:
+                    links = [sorted(c) for cs in multi_conns.values() for c in cs if len(c) > 1]
+ 
+            shcm = surfhcm[:,surf_ids]
+            if return_adj_matrix:
+                if newrows:
+                    dd = len(newrows)
+                    small_mat = np.zeros((dd, dd))
+                    if links:
+                        for (i, j) in links:
+                            small_mat[i,j] = 1
+                            small_mat[j,i] = 1
+                    return np.hstack((shcm, np.vstack((shcm[-dd:].T, small_mat))))
+                else:
+                    return shcm
+ 
+            G = nx.Graph()               
+            # Add nodes from fragment list
+            G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                               for i in range(nrows)] + 
+                             [(j + nrows, {'symbol': frag_list[j]})
+                               for j in range(len(frag_list))])
+ 
+            # Add edges from surface adjacency matrix
+            shcm = shcm * np.tri(*shcm.shape, k=-1)
+            rows, cols = np.where(shcm == 1)
+            edges = zip(rows.tolist(), cols.tolist())
+            G.add_edges_from(edges)
+            if links:
+                for (i, j) in links:
+                    G.add_edge(i + len(surf_ids), j + len(surf_ids))
+        # Atom-wise
+        else:
+            nblist = neighbor_shell_list(self.atoms, dx=0.3, 
+                                         neighbor_number=1, mic=False)
+            cm = get_adj_matrix(nblist)
+            if full_effect:
+                surf_ids = self.slab_ids
             else:
+                if subsurf_effect:
+                    surf_ids = self.surf_ids + self.subsurf_ids
+                else:
+                    surf_ids = self.surf_ids
+            surf_ads_ids = sorted(surf_ids + self.ads_ids)
+            shcm = cm[surf_ads_ids]
+            symbols = self.symbols[surf_ads_ids]
+            if return_adj_matrix:
                 return shcm
-
-        G = nx.Graph()               
-        # Add nodes from fragment list
-        G.add_nodes_from([(i, {'symbol': symbols[i]}) 
-                           for i in range(nrows)] + 
-                         [(j + nrows, {'symbol': frag_list[j]})
-                           for j in range(len(frag_list))])
-
-        # Add edges from surface adjacency matrix
-        shcm = shcm * np.tri(*shcm.shape, k=-1)
-        rows, cols = np.where(shcm == 1)
-        edges = zip(rows.tolist(), cols.tolist())
-        G.add_edges_from(edges)
-        if links:
-            for (i, j) in links:
-                G.add_edge(i + len(surf_ids), j + len(surf_ids))
+ 
+            G = nx.Graph()                                                  
+            G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                              for i in range(len(symbols))])
+            rows, cols = np.where(shcm == 1)
+            edges = zip(rows.tolist(), cols.tolist())
+            G.add_edges_from(edges)
 
         return G
 
@@ -1041,7 +1072,8 @@ class SlabAdsorbateCoverage(object):
 
         return sorted(labs)
 
-    def get_graph(self, fragmentation=True, 
+    def get_graph(self, atom_wise=False,
+                  fragmentation=True, 
                   subsurf_effect=False,
                   full_effect=False,
                   return_adj_matrix=False,
@@ -1050,6 +1082,10 @@ class SlabAdsorbateCoverage(object):
 
         Parameters
         ----------
+        atom_wise : bool, default False
+            Whether to treat each adsorbate as an atom-wise subgraph. If not, 
+            treat each adsorbate as a unity (molecule-wise).
+
         fragmentation : bool, default True
             Whether to cut multidentate species into fragments. This ensures 
             that multidentate species with different orientations have 
@@ -1070,82 +1106,108 @@ class SlabAdsorbateCoverage(object):
 
         """
 
-        hsl = self.hetero_site_list
-        hcm = self.adj_matrix.copy()
-        if full_effect:
-            surf_ids = self.slab_ids
-        else:
-            if subsurf_effect:
-                surf_ids = self.surf_ids + self.subsurf_ids
+        # Molecule-wise
+        if not atom_wise:
+            hsl = self.hetero_site_list
+            hcm = self.adj_matrix.copy()
+            if full_effect:
+                surf_ids = self.slab_ids
             else:
-                surf_ids = self.surf_ids
-        surfhcm = hcm[surf_ids]
-        symbols = self.symbols[surf_ids]
-        nrows, ncols = surfhcm.shape       
-
-        newrows, frag_list, adsi_list = [], [], []
-        multi_conns = defaultdict(list)
-        ohsl = [st for st in hsl if st['occupied']]
-        for st in sorted(ohsl, key=lambda x: x['fragment_indices']):
-            adsi = st['adsorbate_indices']
-            if not fragmentation and st['dentate'] > 1: 
-                if st['bonding_index'] != adsi[0]:
-                    continue
-            si = st['indices']
-            newrow = np.zeros(ncols)
-            newrow[list(si)] = 1
-            newrows.append(newrow)
-
-            if fragmentation:                
-                frag_list.append(st['fragment'])
-                if st['dentate'] > 1 and connect_dentates:
-                    bondid = st['bonding_index']
-                    all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
-                                 self.ads_ids.index(bondid)] == 1)[0].tolist()]
-                    conns = [c for c in all_conns if c not in st['fragment_indices']]
-                    i = len(newrows) - 1
-                    if i not in multi_conns:
-                        multi_conns[bondid].append([i])
-                    for k, v in multi_conns.items():
-                        if k in conns:
-                            multi_conns[k].append([i, v[0][0]])
-            else:
-                frag_list.append(st['adsorbate'])
-
-        links = []
-        if newrows:
-            surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
-            if multi_conns:
-                links = [sorted(c) for cs in multi_conns.values() for c in cs if len(c) > 1]
-
-        shcm = surfhcm[:,surf_ids]
-        if return_adj_matrix:
+                if subsurf_effect:
+                    surf_ids = self.surf_ids + self.subsurf_ids
+                else:
+                    surf_ids = self.surf_ids
+            surfhcm = hcm[surf_ids]
+            symbols = self.symbols[surf_ids]
+            nrows, ncols = surfhcm.shape       
+ 
+            newrows, frag_list, adsi_list = [], [], []
+            multi_conns = defaultdict(list)
+            ohsl = [st for st in hsl if st['occupied']]
+            for st in sorted(ohsl, key=lambda x: x['fragment_indices']):
+                adsi = st['adsorbate_indices']
+                if not fragmentation and st['dentate'] > 1: 
+                    if st['bonding_index'] != adsi[0]:
+                        continue
+                si = st['indices']
+                newrow = np.zeros(ncols)
+                newrow[list(si)] = 1
+                newrows.append(newrow)
+ 
+                if fragmentation:                
+                    frag_list.append(st['fragment'])
+                    if st['dentate'] > 1 and connect_dentates:
+                        bondid = st['bonding_index']
+                        all_conns = [self.ads_ids[j] for j in np.where(self.ads_adj_matrix[
+                                     self.ads_ids.index(bondid)] == 1)[0].tolist()]
+                        conns = [c for c in all_conns if c not in st['fragment_indices']]
+                        i = len(newrows) - 1
+                        if i not in multi_conns:
+                            multi_conns[bondid].append([i])
+                        for k, v in multi_conns.items():
+                            if k in conns:
+                                multi_conns[k].append([i, v[0][0]])
+                else:
+                    frag_list.append(st['adsorbate'])
+ 
+            links = []
             if newrows:
-                dd = len(newrows)
-                small_mat = np.zeros((dd, dd))
-                if links:
-                    for (i, j) in links:
-                        small_mat[i,j] = 1
-                        small_mat[j,i] = 1
-                return np.hstack((shcm, np.vstack((shcm[-dd:].T, small_mat))))
+                surfhcm = np.vstack((surfhcm, np.asarray(newrows)))
+                if multi_conns:
+                    links = [sorted(c) for cs in multi_conns.values() for c in cs if len(c) > 1]
+ 
+            shcm = surfhcm[:,surf_ids]
+            if return_adj_matrix:
+                if newrows:
+                    dd = len(newrows)
+                    small_mat = np.zeros((dd, dd))
+                    if links:
+                        for (i, j) in links:
+                            small_mat[i,j] = 1
+                            small_mat[j,i] = 1
+                    return np.hstack((shcm, np.vstack((shcm[-dd:].T, small_mat))))
+                else:
+                    return shcm
+ 
+            G = nx.Graph()               
+            # Add nodes from fragment list
+            G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                               for i in range(nrows)] + 
+                             [(j + nrows, {'symbol': frag_list[j]})
+                               for j in range(len(frag_list))])
+ 
+            # Add edges from surface adjacency matrix
+            shcm = shcm * np.tri(*shcm.shape, k=-1)
+            rows, cols = np.where(shcm == 1)
+            edges = zip(rows.tolist(), cols.tolist())
+            G.add_edges_from(edges)
+            if links:
+                for (i, j) in links:
+                    G.add_edge(i + len(surf_ids), j + len(surf_ids))
+        # Atom-wise
+        else:
+            nblist = neighbor_shell_list(self.atoms, dx=0.3, 
+                                         neighbor_number=1, mic=True)
+            cm = get_adj_matrix(nblist)
+            if full_effect:
+                surf_ids = self.slab_ids
             else:
+                if subsurf_effect:
+                    surf_ids = self.surf_ids + self.subsurf_ids
+                else:
+                    surf_ids = self.surf_ids
+            surf_ads_ids = sorted(surf_ids + self.ads_ids)
+            shcm = cm[surf_ads_ids]
+            symbols = self.symbols[surf_ads_ids]
+            if return_adj_matrix:
                 return shcm
-
-        G = nx.Graph()               
-        # Add nodes from fragment list
-        G.add_nodes_from([(i, {'symbol': symbols[i]}) 
-                           for i in range(nrows)] + 
-                         [(j + nrows, {'symbol': frag_list[j]})
-                           for j in range(len(frag_list))])
-
-        # Add edges from surface adjacency matrix
-        shcm = shcm * np.tri(*shcm.shape, k=-1)
-        rows, cols = np.where(shcm == 1)
-        edges = zip(rows.tolist(), cols.tolist())
-        G.add_edges_from(edges)
-        if links:
-            for (i, j) in links:
-                G.add_edge(i + len(surf_ids), j + len(surf_ids))
+ 
+            G = nx.Graph()                                                  
+            G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                              for i in range(len(symbols))])
+            rows, cols = np.where(shcm == 1)
+            edges = zip(rows.tolist(), cols.tolist())
+            G.add_edges_from(edges)
 
         return G
 

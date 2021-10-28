@@ -235,22 +235,14 @@ def expand_cell(atoms, cutoff=None, padding=None):
     return index, coords, offsets
 
 
-def get_max_delta_sum_path(nodes):
-
-    delta_sum = -10000
-    res_nodes = []
-    for i in range(len(nodes)):
-        new_nodes = nodes[i:] + nodes[:i]
-        ds = sum([new_nodes[j+1] - new_nodes[j] 
-                  for j in range(len(nodes)-1)])
-        if ds > delta_sum:
-            delta_sum = ds
-            res_nodes = new_nodes 
-        if -ds > delta_sum:
-            delta_sum = -ds
-            res_nodes = new_nodes[::-1]
- 
-    return res_nodes
+def hash_composition(nodes):
+    """A hashing function to generate an unique identifier of the 
+    composition considering self-symmetry. Note that this function 
+    only accepts a sequence of connected nodes.
+    """
+    start  = min(nodes)
+    starts = [i for i,v in enumerate(nodes) if v == start]
+    return min([*nodes[i::d],*nodes[:i:d]] for d in (1,-1) for i in starts)
 
 
 def bipartitions(shells, total):
