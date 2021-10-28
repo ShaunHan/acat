@@ -203,7 +203,7 @@ numpy array.</p>
 array.</p>
 <p><strong>‘indices’</strong>: the indices of the atoms that constitute the site.</p>
 <p><strong>‘composition’</strong>: the elemental composition of the site. Always in
-the order of atomic numbers.</p>
+the lowest lexicographical order.</p>
 <p><strong>‘subsurf_index’</strong>: the index of the subsurface atom underneath an
 hcp or 4fold site.</p>
 <p><strong>‘subsurf_element’</strong>: the element of the subsurface atom underneath
@@ -497,7 +497,7 @@ numpy array.</p>
 array.</p>
 <p><strong>‘indices’</strong>: the indices of the atoms that constitute the site.</p>
 <p><strong>‘composition’</strong>: the elemental composition of the site. Always in
-the order of atomic numbers.</p>
+the lowest lexicographical order.</p>
 <p><strong>‘subsurf_index’</strong>: the index of the subsurface atom underneath an
 hcp or 4fold site.</p>
 <p><strong>‘subsurf_element’</strong>: the element of the subsurface atom underneath
@@ -834,7 +834,7 @@ numpy array.</p>
 array.</p>
 <p><strong>‘indices’</strong>: the indices of the atoms that constitute the site.</p>
 <p><strong>‘composition’</strong>: the elemental composition of the site. Always in
-the order of atomic numbers.</p>
+the lowest lexicographical order.</p>
 <p><strong>‘subsurf_index’</strong>: the index of the subsurface atom underneath an
 hcp or 4fold site.</p>
 <p><strong>‘subsurf_element’</strong>: the element of the subsurface atom underneath
@@ -970,7 +970,7 @@ numpy array.</p>
 array.</p>
 <p><strong>‘indices’</strong>: the indices of the atoms that constitute the site.</p>
 <p><strong>‘composition’</strong>: the elemental composition of the site. Always in
-the order of atomic numbers.</p>
+the lowest lexicographical order.</p>
 <p><strong>‘subsurf_index’</strong>: the index of the subsurface atom underneath an
 hcp or 4fold site.</p>
 <p><strong>‘subsurf_element’</strong>: the element of the subsurface atom underneath
@@ -1311,11 +1311,13 @@ different labels.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atom_wise</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle with adsorbates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>atom_wise</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to treat each adsorbate as an atom-wise subgraph. If not,
+treat each adsorbate as a unity (molecule-wise).</p></li>
 <li><p><strong>fragmentation</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to cut multidentate species into fragments. This ensures
 that multidentate species with different orientations have
 different graphs.</p></li>
@@ -1507,11 +1509,13 @@ different labels.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atom_wise</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle with adsorbates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>atom_wise</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to treat each adsorbate as an atom-wise subgraph. If not,
+treat each adsorbate as a unity (molecule-wise).</p></li>
 <li><p><strong>fragmentation</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to cut multidentate species into fragments. This ensures
 that multidentate species with different orientations have
 different graphs.</p></li>

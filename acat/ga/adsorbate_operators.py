@@ -1483,7 +1483,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         return ac
 
 
-def AdsorbateCatalystCrossover(AdsorbateOperator):
+class AdsorbateCatalystCrossover(AdsorbateOperator):
     """Crossover that divides two particles or two slabs by the adsorbate
     -catalyst interfaces and exchange all adsorbates (only returns one of
     them). The indexing of the atoms is preserved. Please only use this 

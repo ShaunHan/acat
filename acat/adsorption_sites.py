@@ -1,7 +1,7 @@
 from .settings import adsorbate_elements, site_heights
 from .utilities import (expand_cell, get_mic, 
                         is_list_or_tuple, 
-                        get_max_delta_sum_path,
+                        hash_composition,
                         neighbor_shell_list, 
                         get_adj_matrix)
 from .labels import (get_monometallic_cluster_labels, 
@@ -52,7 +52,7 @@ class ClusterAdsorptionSites(object):
     **'indices'**: the indices of the atoms that constitute the site.
 
     **'composition'**: the elemental composition of the site. Always in 
-    the order of atomic numbers.
+    the lowest lexicographical order.
 
     **'subsurf_index'**: the index of the subsurface atom underneath an
     hcp or 4fold site.
@@ -265,9 +265,8 @@ class ClusterAdsorptionSites(object):
                                     elif nma == 3:
                                         composition = 3*ma
                                 else:
-                                    nodes = list(self.numbers[list(si)])
-                                    path = get_max_delta_sum_path(nodes)
-                                    composition = ''.join([chemical_symbols[z] for z in path])
+                                    nodes = self.symbols[list(si)]
+                                    composition = ''.join(hash_composition(nodes))
                                 site.update({'composition': composition})   
 
                             if this_site == 'hcp':
@@ -334,9 +333,8 @@ class ClusterAdsorptionSites(object):
                                                               np.linalg.norm(self.positions[x]
                                                               - self.positions[si[0]]))
                                                     nni = [i for i in si[1:] if i != opp]
-                                                    nodes = list(self.numbers[[si[0], nni[0], opp, nni[1]]])
-                                                    path = get_max_delta_sum_path(nodes)
-                                                    composition = ''.join([chemical_symbols[z] for z in path])
+                                                    nodes = self.symbols[[si[0], nni[0], opp, nni[1]]]
+                                                    composition = ''.join(hash_composition(nodes))
                                                 site.update({'composition': composition})    
 
                                             new_pos = pos - normal * self.r * (2./3)**(.5)
@@ -419,9 +417,8 @@ class ClusterAdsorptionSites(object):
                             endsym = re.findall('[A-Z][^A-Z]*', comp)[-1]
                             subpos = [self.positions[i] for i in si if 
                                       self.symbols[i] == endsym][0]
-                            nodes = list(self.numbers[sorted(subsi, key=get_squared_distance)])
-                            path = get_max_delta_sum_path(nodes)
-                            composition = comp + ''.join([chemical_symbols[z] for z in path])
+                            nodes = self.symbols[sorted(subsi, key=get_squared_distance)]
+                            composition = comp + ''.join(hash_composition(nodes))
                         site.update({'composition': composition})
                     sl.append(site)
                     usi.add(si) 
@@ -861,10 +858,13 @@ class ClusterAdsorptionSites(object):
             return cm
         
         G = nx.Graph()                               
-        # Add edges from surface adjacency matrix
+        symbols = self.symbols                               
+        G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                          for i in range(len(symbols))])
         rows, cols = np.where(cm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
+
         return G
 
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
@@ -1043,7 +1043,7 @@ class SlabAdsorptionSites(object):
     **'indices'**: the indices of the atoms that constitute the site.
 
     **'composition'**: the elemental composition of the site. Always in 
-    the order of atomic numbers.
+    the lowest lexicographical order.
 
     **'subsurf_index'**: the index of the subsurface atom underneath an
     hcp or 4fold site.
@@ -1328,9 +1328,8 @@ class SlabAdsorptionSites(object):
                                       get_mic(self.positions[x], self.positions[extraids[0]],
                                               self.cell, return_squared_distance=True))
                             nni = [i for i in extraids[1:] if i != opp]
-                            nodes = list(self.numbers[[extraids[0], nni[0], opp, nni[1]]])
-                            path = get_max_delta_sum_path(nodes)
-                            composition = ''.join([chemical_symbols[z] for z in path])
+                            nodes = self.symbols[[extraids[0], nni[0], opp, nni[1]]]
+                            composition = ''.join(hash_composition(nodes))
                         st['composition'] += '-{}'.format(composition) 
                     st['indices'] = tuple(sorted(list(si)+ extraids))
                     del st['extra']
@@ -1795,14 +1794,13 @@ class SlabAdsorptionSites(object):
                                               get_mic(self.positions[x], self.positions[fold4ids[0]],
                                                       self.cell, return_squared_distance=True))
                                     nni = [i for i in fold4ids[1:] if i != opp]
-                                    nodes = list(self.numbers[[fold4ids[0], nni[0], opp, nni[1]]])
+                                    nodes = self.symbols[[fold4ids[0], nni[0], opp, nni[1]]]
                                 else:
                                     opposite = np.where(cm[si[1:],si[0]]==0)[0]
                                     opp = si[1+opposite[0]] 
                                     nni = [i for i in si[1:] if i != opp]
-                                    nodes = list(self.numbers[[si[0], nni[0], opp, nni[1]]])
-                                path = get_max_delta_sum_path(nodes)
-                                composition = ''.join([chemical_symbols[z] for z in path])
+                                    nodes = self.symbols[[si[0], nni[0], opp, nni[1]]]
+                                composition = ''.join(hash_composition(nodes))
                             site.update({'composition': composition})
                             if this_site == '5fold':                   
                                 site['composition'] = '{}-'.format(
@@ -1915,9 +1913,8 @@ class SlabAdsorptionSites(object):
                             elif nma == 3:
                                 composition = 3*ma
                         else:
-                            nodes = list(self.numbers[list(si)])
-                            path = get_max_delta_sum_path(nodes)
-                            composition = ''.join([chemical_symbols[z] for z in path])
+                            nodes = self.symbols[list(si)]
+                            composition = ''.join(hash_composition(nodes))
                         site.update({'composition': composition})   
 
                     if this_site == 'hcp':
@@ -2042,14 +2039,13 @@ class SlabAdsorptionSites(object):
                                           get_mic(self.positions[x], self.positions[fold4ids[0]],
                                                   self.cell, return_squared_distance=True))
                                 nni = [i for i in fold4ids[1:] if i != opp]
-                                nodes = list(self.numbers[[fold4ids[0], nni[0], opp, nni[1]]])
+                                nodes = self.symbols[[fold4ids[0], nni[0], opp, nni[1]]]
                             else:
                                 opposite = np.where(cm[si[1:],si[0]]==0)[0]
                                 opp = si[1+opposite[0]] 
                                 nni = [i for i in si[1:] if i != opp]
-                                nodes = list(self.numbers[[si[0], nni[0], opp, nni[1]]])
-                            path = get_max_delta_sum_path(nodes)
-                            composition = ''.join([chemical_symbols[z] for z in path])
+                                nodes = self.symbols[[si[0], nni[0], opp, nni[1]]]
+                            composition = ''.join(hash_composition(nodes))
                         site.update({'composition': composition})
                         if this_site == '5fold':
                             site['composition'] = '{}-'.format(
@@ -2213,9 +2209,8 @@ class SlabAdsorptionSites(object):
                             elif nma == 3:
                                 comp = 3*ma
                         else:
-                            nodes = list(self.numbers[list(si)])
-                            path = get_max_delta_sum_path(nodes)
-                            comp = ''.join([chemical_symbols[z] for z in path]) 
+                            nodes = self.symbols[list(si)]
+                            comp = ''.join(hash_composition(nodes)) 
                     else:
                         comp = site['composition']
 
@@ -2250,9 +2245,8 @@ class SlabAdsorptionSites(object):
                         endsym = re.findall('[A-Z][^A-Z]*', comp)[-1]
                         subpos = [self.positions[i] for i in si if 
                                   self.symbols[i] == endsym][0]
-                        nodes = list(self.numbers[sorted(subsi, key=get_squared_distance)])
-                        path = get_max_delta_sum_path(nodes)
-                        composition = comp + ''.join([chemical_symbols[z] for z in path])
+                        nodes = self.symbols[sorted(subsi, key=get_squared_distance)]
+                        composition = comp + ''.join(hash_composition(nodes))
                     site.update({'composition': composition})
                 sl.append(site)
                 usi.add(si)
@@ -2553,11 +2547,14 @@ class SlabAdsorptionSites(object):
         if return_adj_matrix:
             return cm
 
-        G = nx.Graph()                                                  
-        # Add edges from surface adjacency matrix
+        G = nx.Graph()                   
+        symbols = self.symbols                               
+        G.add_nodes_from([(i, {'symbol': symbols[i]}) 
+                          for i in range(len(symbols))])
         rows, cols = np.where(cm == 1)
         edges = zip(rows.tolist(), cols.tolist())
         G.add_edges_from(edges)
+
         return G
 
     def get_neighbor_site_list(self, neighbor_number=1, span=True):           
