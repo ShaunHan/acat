@@ -1,5 +1,10 @@
 """Comparator objects relevant to particles with adsorbates."""
 from ase import Atoms
+from ..adsorbate_coverage import ClusterAdsorbateCoverage
+from ..adsorbate_coverage import SlabAdsorbateCoverage
+import networkx.algorithms.isomorphism as iso
+import networkx as nx
+
 
 def count_ads(atoms, adsorbate):
     """Very naive implementation only taking into account
@@ -177,11 +182,7 @@ class AdsorptionGraphComparator(object):
                  subsurf_effect=False, 
                  full_effect=False,
                  dmax=3.):
-        from ..adsorbate_coverage import ClusterAdsorbateCoverage
-        from ..adsorbate_coverage import SlabAdsorbateCoverage
-        import networkx.algorithms.isomorphism as iso
-        import networkx as nx
-
+        
         self.adsorption_sites = adsorption_sites
         self.composition_effect = composition_effect
         self.fragmentation = fragmentation

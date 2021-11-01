@@ -188,6 +188,8 @@ The script for a parallel genetic algorithm looks as follows:
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles
     pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
+    pool.close()
+    pool.join()
     pop.update()
     
     # Number of generations
@@ -228,6 +230,8 @@ The script for a parallel genetic algorithm looks as follows:
         # Perform procreations in parallel. Especially useful when
         # using adsorbate operators which requires site identification
         pool.map(procreation, range(pop_size))
+        pool.close()
+        pool.join()
     
         # update the population to allow new candidates to enter
         pop.update()
@@ -404,6 +408,8 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles
     pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
+    pool.close()
+    pool.join()
     pop.update()
     
     # Number of generations
@@ -444,6 +450,8 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
         # Perform procreations in parallel. Especially useful when
         # using adsorbate operators which requires site identification
         pool.map(procreation, range(pop_size))
+        pool.close()
+        pool.join()
     
         # update the population to allow new candidates to enter
         pop.update()
@@ -601,6 +609,8 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles  
     pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
+    pool.close()
+    pool.join()
     pop.update()
 
     # Number of generations
@@ -642,6 +652,8 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         # Perform procreations in parallel. Especially
         # useful when running GA on large nanoparticles  
         pool.map(procreation, range(pop_size))  
+        pool.close()
+        pool.join()
     
         # update the population to allow new candidates to enter
         pop.update()
@@ -813,6 +825,8 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles  
     pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
+    pool.close()
+    pool.join()
     pop.update()
 
     # Number of generations
@@ -854,6 +868,8 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
         # Perform procreations in parallel. Especially
         # useful when running GA on large nanoparticles  
         pool.map(procreation, range(pop_size))  
+        pool.close()
+        pool.join()
     
         # update the population to allow new candidates to enter
         pop.update()

@@ -853,6 +853,8 @@ considered as different adlayer patterns.</p>
 <span class="c1"># Perform relaxations in parallel. Especially</span>
 <span class="c1"># useful when running GA on large nanoparticles</span>
 <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">relax_an_unrelaxed_candidate</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">get_all_unrelaxed_candidates</span><span class="p">())</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
 <span class="c1"># Number of generations</span>
@@ -893,6 +895,8 @@ considered as different adlayer patterns.</p>
     <span class="c1"># Perform procreations in parallel. Especially useful when</span>
     <span class="c1"># using adsorbate operators which requires site identification</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -1065,6 +1069,8 @@ considered as different adlayer patterns.</p>
 <span class="c1"># Perform relaxations in parallel. Especially</span>
 <span class="c1"># useful when running GA on large nanoparticles</span>
 <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">relax_an_unrelaxed_candidate</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">get_all_unrelaxed_candidates</span><span class="p">())</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
 <span class="c1"># Number of generations</span>
@@ -1105,6 +1111,8 @@ considered as different adlayer patterns.</p>
     <span class="c1"># Perform procreations in parallel. Especially useful when</span>
     <span class="c1"># using adsorbate operators which requires site identification</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -1419,6 +1427,8 @@ structures are still considered to be look alike.</p></li>
 <span class="c1"># Perform relaxations in parallel. Especially</span>
 <span class="c1"># useful when running GA on large nanoparticles</span>
 <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">relax_an_unrelaxed_candidate</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">get_all_unrelaxed_candidates</span><span class="p">())</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
 <span class="c1"># Number of generations</span>
@@ -1460,6 +1470,8 @@ structures are still considered to be look alike.</p></li>
     <span class="c1"># Perform procreations in parallel. Especially</span>
     <span class="c1"># useful when running GA on large nanoparticles</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -1627,6 +1639,8 @@ structures are still considered to be look alike.</p></li>
 <span class="c1"># Perform relaxations in parallel. Especially</span>
 <span class="c1"># useful when running GA on large nanoparticles</span>
 <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">relax_an_unrelaxed_candidate</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">get_all_unrelaxed_candidates</span><span class="p">())</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
 <span class="c1"># Number of generations</span>
@@ -1668,6 +1682,8 @@ structures are still considered to be look alike.</p></li>
     <span class="c1"># Perform procreations in parallel. Especially</span>
     <span class="c1"># useful when running GA on large nanoparticles</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
     <span class="c1"># update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>

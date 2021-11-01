@@ -162,6 +162,11 @@
   <h1>Source code for acat.ga.adsorbate_comparators</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Comparator objects relevant to particles with adsorbates.&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+<span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
+<span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
+<span class="kn">import</span> <span class="nn">networkx.algorithms.isomorphism</span> <span class="k">as</span> <span class="nn">iso</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
 
 <div class="viewcode-block" id="count_ads"><a class="viewcode-back" href="../../../ga.html#acat.ga.adsorbate_comparators.count_ads">[docs]</a><span class="k">def</span> <span class="nf">count_ads</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Very naive implementation only taking into account</span>
@@ -339,11 +344,7 @@
                  <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="n">full_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
-        <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
-        <span class="kn">import</span> <span class="nn">networkx.algorithms.isomorphism</span> <span class="k">as</span> <span class="nn">iso</span>
-        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">composition_effect</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span> <span class="o">=</span> <span class="n">fragmentation</span>

@@ -232,7 +232,8 @@ class CutSpliceSlabCrossover(SlabOperator):
         SlabOperator.__init__(self, verbose, num_muts,
                               allowed_compositions,
                               distribution_correction_function,
-                              element_pools=element_pools)
+                              element_pools=element_pools,
+                              filter_function=filter_function)
 
         self.allowed_indices = allowed_indices
         self.tries = tries
@@ -248,18 +249,17 @@ class CutSpliceSlabCrossover(SlabOperator):
 
         fail = True
         while fail:
-            indi = self.initialize_individual(f, self.operate(f, m))
-            if self.ff is None:
-                fail = False
+            indi = self.initialize_individual(f, self.operate(f, m)) 
+            if self.allowed_indices is None:
+                tmp = indi
             else:
-                if self.ff(indi):
-                    fail = False
-        if self.allowed_indices is not None:
-            tmp = f0.copy()
-            tmp.symbols[self.allowed_indices] = indi.symbols
-            info = indi.info.copy()
-            indi = tmp.copy()
-            indi.info = info
+                tmp = f0.copy()
+                tmp.symbols[self.allowed_indices] = indi.symbols
+            if (self.ff is None) or self.ff(tmp):
+                fail = False
+                info = indi.info.copy()
+                indi = tmp.copy()
+                indi.info = info
 
         indi.info['data']['parents'] = [i.info['confid'] for i in parents]
         parent_message = ': Parents {0} {1}'.format(f.info['confid'],
@@ -332,7 +332,8 @@ class RandomCompositionMutation(SlabOperator):
         SlabOperator.__init__(self, verbose, num_muts,
                               allowed_compositions,
                               distribution_correction_function,
-                              element_pools=element_pools)
+                              element_pools=element_pools,
+                              filter_function=filter_function)
         self.allowed_indices = allowed_indices
 
         self.descriptor = 'RandomCompositionMutation'
@@ -357,17 +358,16 @@ class RandomCompositionMutation(SlabOperator):
         fail = True
         while fail:
             indi = self.initialize_individual(f, self.operate(f))
-            if self.ff is None:
-                fail = False
+            if self.allowed_indices is None:
+                tmp = indi
             else:
-                if self.ff(indi):
-                    fail = False
-        if self.allowed_indices is not None:
-            tmp = f0.copy()
-            tmp.symbols[self.allowed_indices] = indi.symbols
-            info = indi.info.copy()
-            indi = tmp.copy()
-            indi.info = info
+                tmp = f0.copy()
+                tmp.symbols[self.allowed_indices] = indi.symbols
+            if (self.ff is None) or self.ff(tmp):
+                fail = False
+                info = indi.info.copy()
+                indi = tmp.copy()
+                indi.info = info
 
         indi.info['data']['parents'] = [i.info['confid'] for i in parents]
 
@@ -419,7 +419,8 @@ class RandomSlabPermutation(SlabOperator):
                  filter_function=None):
         SlabOperator.__init__(self, verbose, num_muts,
                               allowed_compositions,
-                              distribution_correction_function)
+                              distribution_correction_function,
+                              filter_function=filter_function)
         self.allowed_indices = allowed_indices
 
         self.descriptor = 'RandomSlabPermutation'
@@ -445,17 +446,16 @@ class RandomSlabPermutation(SlabOperator):
         fail = True
         while fail:
             indi = self.operate(indi)
-            if self.ff is None:
-                fail = False
+            if self.allowed_indices is None:
+                tmp = indi
             else:
-                if self.ff(indi):
-                    fail = False
-        if self.allowed_indices is not None:
-            tmp = f0.copy()
-            tmp.symbols[self.allowed_indices] = indi.symbols
-            info = indi.info.copy()
-            indi = tmp.copy()
-            indi.info = info
+                tmp = f0.copy()
+                tmp.symbols[self.allowed_indices] = indi.symbols
+            if (self.ff is None) or self.ff(tmp):
+                fail = False
+                info = indi.info.copy()
+                indi = tmp.copy()
+                indi.info = info
 
         indi.info['data']['parents'] = [i.info['confid'] for i in parents]
         parent_message = ': Parent {0}'.format(f.info['confid'])
