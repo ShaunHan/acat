@@ -353,7 +353,6 @@ class AddAdsorbate(AdsorbateOperator):
         """Returns the new individual as an atoms object."""
         f = parents[0]
 
-        #print('Add adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -382,7 +381,7 @@ class AddAdsorbate(AdsorbateOperator):
         for _ in range(self.num_muts):
             # Make sure the coverage does not exceed maximum coverage
             if self.max_coverage is not None:
-                if sac.coverage > self.max_coverage:
+                if sac.coverage >= self.max_coverage:
                     break
 
             random.shuffle(ads_sites)
@@ -492,7 +491,6 @@ class RemoveAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
-        #print('Remove adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -521,7 +519,7 @@ class RemoveAdsorbate(AdsorbateOperator):
         for _ in range(self.num_muts):
             # Make sure the coverage is not lower than the minimum coverage
             if self.min_coverage is not None:
-                if sac.coverage < self.min_coverage:
+                if sac.coverage <= self.min_coverage:
                     break
 
             random.shuffle(ads_sites)
@@ -654,7 +652,6 @@ class MoveAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
-        #print('Move adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -826,7 +823,6 @@ class ReplaceAdsorbate(AdsorbateOperator):
     def get_new_individual(self, parents):
         f = parents[0]
 
-        #print('Replace adsorbate')
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -981,7 +977,6 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
     def get_new_individual(self, parents):
         f, m = parents
 
-        #print('Crossover with adsorbates')        
         if self.fix_coverage:
             # Count number of adsorbates
             adsorbates_in_parents = len(self.get_all_adsorbate_indices(f))
@@ -1560,7 +1555,7 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
                 sas = ClusterAdsorptionSites(indi, self.allow_6fold, 
                                              composition_effect=False)
             msac = ClusterAdsorbateCoverage(m, sas, dmax=self.dmax)
-        indi = indi[sas.slab_ids]
+        indi = indi[sas.indices]
         mhsl = msac.hetero_site_list
 
         adsi_dict = {}

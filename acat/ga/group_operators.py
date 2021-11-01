@@ -288,9 +288,7 @@ class GroupCrossover(Crossover):
             mgroups = groups[len(groups)//2:]
             mids = [i for group in mgroups for i in group]
 
-        for i in mids:
-            indi[i].symbol = m[i].symbol
-
+        indi.symbols[mids] = m.symbols[mids]
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
