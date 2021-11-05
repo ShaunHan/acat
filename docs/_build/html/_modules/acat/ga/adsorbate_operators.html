@@ -856,7 +856,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">removed</span><span class="p">:</span>
                 <span class="n">removed_species</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">removed_species</span> <span class="o">=</span> <span class="n">ads_sites</span><span class="p">[</span><span class="n">removed</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>            
+                <span class="n">removed_species</span> <span class="o">=</span> <span class="n">ads_sites</span><span class="p">[</span><span class="n">removed</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>            
             <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">ads_sites</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_preference_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1028,7 +1028,7 @@
                 <span class="n">removed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ads_sites</span><span class="p">)))</span>
                 <span class="n">removed_species</span> <span class="o">=</span> <span class="s1">&#39;x&#39;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">removed_species</span> <span class="o">=</span> <span class="n">ads_sites</span><span class="p">[</span><span class="n">removed</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
+                <span class="n">removed_species</span> <span class="o">=</span> <span class="n">ads_sites</span><span class="p">[</span><span class="n">removed</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
             <span class="n">ads_sites</span><span class="p">[</span><span class="n">removed</span><span class="p">][</span><span class="s1">&#39;occupied&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">other_species</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="k">if</span>
                              <span class="n">s</span> <span class="o">!=</span> <span class="n">removed_species</span><span class="p">]</span>
@@ -1306,18 +1306,13 @@
         <span class="n">pads_sites</span> <span class="o">=</span> <span class="n">pcac</span><span class="o">.</span><span class="n">hetero_site_list</span>       
 
         <span class="n">adsi_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>      
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">pads_sites</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
-                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
-                    <span class="k">continue</span>
-                <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
                 <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
                 <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
-                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
-                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>
 
         <span class="n">indi</span> <span class="o">=</span> <span class="n">pcas</span><span class="o">.</span><span class="n">atoms</span>                
         <span class="n">indi</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">pcas</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">positions</span>
@@ -1328,13 +1323,13 @@
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">cas</span><span class="o">.</span><span class="n">site_list</span><span class="p">:</span>
             <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">adsi_dict</span><span class="p">:</span>
-                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
+                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>    
                 <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
                 <span class="c1"># Make sure no adsorbates too close to each other </span>
                 <span class="c1"># after each adsorbate addition</span>
-                <span class="n">nads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">])</span>
+                <span class="n">nads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">atoms_too_close_after_addition</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">nads</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">min_adsorbate_distance</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
                     <span class="n">indi</span> <span class="o">=</span> <span class="n">indi</span><span class="p">[:</span><span class="o">-</span><span class="n">nads</span><span class="p">]</span>                               
@@ -1549,7 +1544,7 @@
         <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">fhsl</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">rmset</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">rmset</span><span class="p">):</span>
                     <span class="n">rmsites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">)</span>
 
         <span class="c1"># Remove fragments if every fragment is one of the given adsorbate species</span>
@@ -1558,32 +1553,27 @@
 
         <span class="n">mset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">mids</span><span class="p">)</span>
         <span class="n">adsi_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>      
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">mhsl</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">si</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">mset</span><span class="p">):</span>
-                    <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
-                        <span class="k">continue</span>
-                    <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
                     <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
                     <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
                     <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
-                    <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
-                    <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>        
+                    <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
+                    <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>        
 
         <span class="n">nori</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span> 
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">cas</span><span class="o">.</span><span class="n">site_list</span><span class="p">:</span>
             <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">adsi_dict</span><span class="p">:</span>
-                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
+                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>    
                 <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
                 <span class="c1"># Make sure no adsorbates too close to each other </span>
                 <span class="c1"># after each adsorbate addition</span>
-                <span class="n">nads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">])</span>
+                <span class="n">nads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">atoms_too_close_after_addition</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">nads</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">min_adsorbate_distance</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
                     <span class="n">indi</span> <span class="o">=</span> <span class="n">indi</span><span class="p">[:</span><span class="o">-</span><span class="n">nads</span><span class="p">]</span>                               
@@ -1721,24 +1711,18 @@
         <span class="n">mhsl</span> <span class="o">=</span> <span class="n">msac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="n">adsi_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">adsorbate_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>      
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">mhsl</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
-                <span class="n">adsi</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">adsorbate_ids</span><span class="p">):</span>
-                    <span class="k">continue</span>
-                <span class="n">adsorbate_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">adsi</span><span class="p">)</span>
-                <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
                 <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
-                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
-                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">]</span>        
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
+                <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;fragment_indices&#39;</span><span class="p">]</span>        
 
         <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sas</span><span class="o">.</span><span class="n">site_list</span><span class="p">:</span>
             <span class="n">si</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">adsi_dict</span><span class="p">:</span>
-                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;adsorbate&#39;</span><span class="p">]</span>
+                <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
                 <span class="n">height</span> <span class="o">=</span> <span class="n">adsi_dict</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>    
                 <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
