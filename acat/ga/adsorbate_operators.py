@@ -694,7 +694,7 @@ class MoveAdsorbate(AdsorbateOperator):
             if not removed:
                 removed_species = random.choice(self.adsorbate_species)
             else:
-                removed_species = ads_sites[removed]['adsorbate']            
+                removed_species = ads_sites[removed]['fragment']            
             random.shuffle(ads_sites)
 
             if self.surface_preference_to is not None:
@@ -866,7 +866,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
                 removed = random.choice(range(len(ads_sites)))
                 removed_species = 'x'
             else:
-                removed_species = ads_sites[removed]['adsorbate']
+                removed_species = ads_sites[removed]['fragment']
             ads_sites[removed]['occupied'] = 0
             other_species = [s for s in self.adsorbate_species if
                              s != removed_species]
@@ -1144,18 +1144,13 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         pads_sites = pcac.hetero_site_list       
 
         adsi_dict = {}
-        adsorbate_ids = set()      
         for st in pads_sites:
             if st['occupied']:
-                adsi = st['adsorbate_indices']
-                if set(adsi).issubset(adsorbate_ids):
-                    continue
-                adsorbate_ids.update(adsi)
                 si = st['indices']
                 adsi_dict[si] = {}
                 adsi_dict[si]['height'] = self.heights[st['site']]
-                adsi_dict[si]['adsorbate'] = st['adsorbate']
-                adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']
+                adsi_dict[si]['fragment'] = st['fragment']
+                adsi_dict[si]['fragment_indices'] = st['fragment_indices']
 
         indi = pcas.atoms                
         indi.positions = pcas.ref_atoms.positions
@@ -1166,13 +1161,13 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         for st in cas.site_list:
             si = st['indices']
             if si in adsi_dict:
-                adsorbate = adsi_dict[si]['adsorbate']
+                adsorbate = adsi_dict[si]['fragment']
                 height = adsi_dict[si]['height']    
                 add_adsorbate_to_site(indi, adsorbate, st, height)
 
                 # Make sure no adsorbates too close to each other 
                 # after each adsorbate addition
-                nads = len(adsi_dict[si]['adsorbate_indices'])
+                nads = len(adsi_dict[si]['fragment_indices'])
                 if atoms_too_close_after_addition(indi, nads,
                 self.min_adsorbate_distance, mic=False):
                     indi = indi[:-nads]                               
@@ -1387,7 +1382,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         rmsites = []
         for st in fhsl:
             if st['occupied']:
-                if not set(st['adsorbate_indices']).isdisjoint(rmset):
+                if not set(st['fragment_indices']).isdisjoint(rmset):
                     rmsites.append(st)
 
         # Remove fragments if every fragment is one of the given adsorbate species
@@ -1396,32 +1391,27 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
 
         mset = set(mids)
         adsi_dict = {}
-        adsorbate_ids = set()      
         for st in mhsl:
             if st['occupied']:
                 si = st['indices']
                 if set(si).issubset(mset):
-                    adsi = st['adsorbate_indices']
-                    if set(adsi).issubset(adsorbate_ids):
-                        continue
-                    adsorbate_ids.update(adsi)
                     si = st['indices']
                     adsi_dict[si] = {}
                     adsi_dict[si]['height'] = self.heights[st['site']]
-                    adsi_dict[si]['adsorbate'] = st['adsorbate']
-                    adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']        
+                    adsi_dict[si]['fragment'] = st['fragment']
+                    adsi_dict[si]['fragment_indices'] = st['fragment_indices']        
 
         nori = len(indi) 
         for st in cas.site_list:
             si = st['indices']
             if si in adsi_dict:
-                adsorbate = adsi_dict[si]['adsorbate']
+                adsorbate = adsi_dict[si]['fragment']
                 height = adsi_dict[si]['height']    
                 add_adsorbate_to_site(indi, adsorbate, st, height)
 
                 # Make sure no adsorbates too close to each other 
                 # after each adsorbate addition
-                nads = len(adsi_dict[si]['adsorbate_indices'])
+                nads = len(adsi_dict[si]['fragment_indices'])
                 if atoms_too_close_after_addition(indi, nads,
                 self.min_adsorbate_distance, mic=False):
                     indi = indi[:-nads]                               
@@ -1559,24 +1549,18 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
         mhsl = msac.hetero_site_list
 
         adsi_dict = {}
-        adsorbate_ids = set()      
         for st in mhsl:
             if st['occupied']:
                 si = st['indices']
-                adsi = st['adsorbate_indices']
-                if set(adsi).issubset(adsorbate_ids):
-                    continue
-                adsorbate_ids.update(adsi)
-                si = st['indices']
                 adsi_dict[si] = {}
                 adsi_dict[si]['height'] = self.heights[st['site']]
-                adsi_dict[si]['adsorbate'] = st['adsorbate']
-                adsi_dict[si]['adsorbate_indices'] = st['adsorbate_indices']        
+                adsi_dict[si]['fragment'] = st['fragment']
+                adsi_dict[si]['fragment_indices'] = st['fragment_indices']        
 
         for st in sas.site_list:
             si = st['indices']
             if si in adsi_dict:
-                adsorbate = adsi_dict[si]['adsorbate']
+                adsorbate = adsi_dict[si]['fragment']
                 height = adsi_dict[si]['height']    
                 add_adsorbate_to_site(indi, adsorbate, st, height)
 

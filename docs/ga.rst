@@ -51,6 +51,7 @@ The script for a parallel genetic algorithm looks as follows:
     from collections import defaultdict
     from random import choices, uniform
     from multiprocessing import Pool
+    import numpy as np
     import time
     import os
     
@@ -207,7 +208,10 @@ The script for a parallel genetic algorithm looks as follows:
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
-            # Select parents for a new candidate
+            # Assign rng with a random seed
+            np.random.seed(random.randint(1, 10000))
+            pop.rng = np.random 
+            # Select parents for a new candidate            
             p1, p2 = pop.get_two_candidates()
             parents = [p1, p2]
             # Pure or bare nanoparticles are not considered
@@ -270,6 +274,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     from collections import defaultdict
     from random import choices, uniform
     from multiprocessing import Pool
+    import numpy as np
     import time
     import os
     
@@ -427,6 +432,9 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
+            # Assign rng with a random seed
+            np.random.seed(random.randint(1, 10000))
+            pop.rng = np.random 
             # Select parents for a new candidate
             p1, p2 = pop.get_two_candidates()
             parents = [p1, p2]
@@ -497,6 +505,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     from ase.optimize import BFGS
     from asap3 import EMT as asapEMT
     from multiprocessing import Pool
+    import numpy as np
     import os
     
     # Define population. 
@@ -629,6 +638,9 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
+            # Assign rng with a random seed
+            np.random.seed(random.randint(1, 10000))
+            pop.rng = np.random 
             # Select parents for a new candidate
             p1, p2 = pop.get_two_candidates()
             # Pure and binary candidates are not considered
@@ -684,6 +696,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
     from ase.optimize import BFGS
     from asap3 import EMT as asapEMT
     from multiprocessing import Pool
+    import numpy as np
     import os
     
     # Define population. 
@@ -845,6 +858,9 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
+            # Assign rng with a random seed
+            np.random.seed(random.randint(1, 10000))
+            pop.rng = np.random 
             # Select parents for a new candidate
             p1, p2 = pop.get_two_candidates()
             # Pure and binary candidates are not considered

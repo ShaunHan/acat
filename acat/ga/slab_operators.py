@@ -245,6 +245,8 @@ class CutSpliceSlabCrossover(SlabOperator):
         if self.allowed_indices is None:
             f, m = f0, m0
         else:
+            if any(isinstance(i, list) for i in self.allowed_indices):
+                self.allowed_indices = random.choice(self.allowed_indices)
             f, m = f0[self.allowed_indices], m0[self.allowed_indices]
 
         fail = True
@@ -343,6 +345,8 @@ class RandomCompositionMutation(SlabOperator):
         if self.allowed_indices is None: 
             f = f0
         else:
+            if any(isinstance(i, list) for i in self.allowed_indices):
+                self.allowed_indices = random.choice(self.allowed_indices)
             f = f0[self.allowed_indices]
 
         parent_message = ': Parent {0}'.format(f.info['confid'])
@@ -430,6 +434,8 @@ class RandomSlabPermutation(SlabOperator):
         if self.allowed_indices is None: 
             f = f0
         else:
+            if any(isinstance(i, list) for i in self.allowed_indices):
+                self.allowed_indices = random.choice(self.allowed_indices)
             f = f0[self.allowed_indices]
 
         # Permutation only makes sense if two different elements are present
