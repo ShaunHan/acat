@@ -453,6 +453,8 @@ The SymmetricPatternGenerator class
     Output:
 
     .. image:: ../images/SymmetricPatternGenerator1.gif                     
+       :scale: 60 %
+       :align: center
 
 The special_coverage_pattern function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
