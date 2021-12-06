@@ -168,7 +168,7 @@
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
 <span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
-<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span><span class="p">,</span> <span class="n">attrgetter</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -218,6 +218,8 @@
 <span class="sd">        default None</span>
 <span class="sd">        `ClusterAdsorptionSites` object of the nanoparticle. Initialize a </span>
 <span class="sd">        `ClusterAdsorptionSites` object if not specified.</span>
+<span class="sd">        If this is not provided, the arguments for identifying adsorption </span>
+<span class="sd">        sites can still be passed in by **kwargs.</span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -235,7 +237,7 @@
 
 <span class="sd">        &gt;&gt;&gt; from acat.adsorption_sites import ClusterAdsorptionSites</span>
 <span class="sd">        &gt;&gt;&gt; from acat.adsorbate_coverage import ClusterAdsorbateCoverage</span>
-<span class="sd">        &gt;&gt;&gt; from acat.build.actions import add_adsorbate_to_site</span>
+<span class="sd">        &gt;&gt;&gt; from acat.build.action import add_adsorbate_to_site</span>
 <span class="sd">        &gt;&gt;&gt; from ase.cluster import Octahedron</span>
 <span class="sd">        &gt;&gt;&gt; atoms = Octahedron(&#39;Ni&#39;, length=7, cutoff=2)</span>
 <span class="sd">        &gt;&gt;&gt; for atom in atoms:</span>
@@ -270,7 +272,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> 
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                  <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
@@ -289,21 +291,22 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span> <span class="o">=</span> <span class="n">label_occupied_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="s1">&#39;ignore_bridge_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;label_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_ads_neighbor_list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ads_connectivity</span><span class="p">()</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">identify_adsorbates</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">adsorption_sites</span><span class="p">:</span>
             <span class="n">cas</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">k</span><span class="p">)(</span><span class="n">cas</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                         <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>    
+            <span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cas</span> <span class="o">=</span> <span class="n">cas</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">indices</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">allow_6fold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">composition_effect</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">metals</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">*=</span> <span class="mi">2</span>
@@ -817,15 +820,8 @@
 <span class="sd">        default None</span>
 <span class="sd">        `SlabAdsorptionSites` object of the nanoparticle. Initialize a         </span>
 <span class="sd">        `SlabAdsorptionSites` object if not specified.</span>
-
-<span class="sd">    surface : str</span>
-<span class="sd">        The surface type (crystal structure + Miller indices).</span>
-<span class="sd">        Required if adsorption_sites is not provided.</span>
-
-<span class="sd">    both_sides : bool, default False</span>
-<span class="sd">        Whether to consider adsorbate coverage on both top and bottom </span>
-<span class="sd">        sides of the slab. Only works if adsorption_sites is not provided,</span>
-<span class="sd">        otherwise consistent with what is specified in adsorption_sites.</span>
+<span class="sd">        If this is not provided, the arguments for identifying adsorption </span>
+<span class="sd">        sites can still be passed in by **kwargs.</span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -843,7 +839,7 @@
 
 <span class="sd">        &gt;&gt;&gt; from acat.adsorption_sites import SlabAdsorptionSites</span>
 <span class="sd">        &gt;&gt;&gt; from acat.adsorbate_coverage import SlabAdsorbateCoverage</span>
-<span class="sd">        &gt;&gt;&gt; from acat.build.actions import add_adsorbate</span>
+<span class="sd">        &gt;&gt;&gt; from acat.build.action import add_adsorbate</span>
 <span class="sd">        &gt;&gt;&gt; from ase.build import fcc211</span>
 <span class="sd">        &gt;&gt;&gt; atoms = fcc211(&#39;Cu&#39;, (3, 3, 4), vacuum=5.)</span>
 <span class="sd">        &gt;&gt;&gt; for atom in atoms:</span>
@@ -874,10 +870,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> 
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">ptp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> 
@@ -894,27 +888,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span> <span class="o">=</span> <span class="n">both_sides</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span> <span class="o">=</span> <span class="n">label_occupied_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="s1">&#39;ignore_bridge_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;label_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_ads_neighbor_list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ads_adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ads_connectivity</span><span class="p">()</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">identify_adsorbates</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="n">adsorption_sites</span><span class="p">:</span>
             <span class="n">sas</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">k</span><span class="p">)(</span><span class="n">sas</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
-                                      <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                      <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                      <span class="n">both_sides</span><span class="o">=</span><span class="n">both_sides</span><span class="p">)</span>    
+            <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sas</span> <span class="o">=</span> <span class="n">sas</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">slab_ids</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">indices</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">surface</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">allow_6fold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">composition_effect</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">both_sides</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">metals</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">*=</span> <span class="mi">2</span>
@@ -1109,7 +1101,7 @@
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;morphology&#39;</span><span class="p">]]</span>                     
+                        <span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;morphology&#39;</span><span class="p">]]</span>   
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
                             <span class="n">signature</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">])</span>
                         <span class="n">stlab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">signature</span><span class="p">)]</span>
@@ -1414,9 +1406,8 @@
 
 <div class="viewcode-block" id="enumerate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.enumerate_occupied_sites">[docs]</a><span class="k">def</span> <span class="nf">enumerate_occupied_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                              <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                             <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                             
-                             <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">):</span>
+                             <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function that enumerates all occupied adsorption sites of</span>
 <span class="sd">    the input atoms object. The function is generalized for both </span>
 <span class="sd">    periodic and non-periodic systems (distinguished by atoms.pbc).</span>
@@ -1429,18 +1420,15 @@
 <span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites \</span>
 <span class="sd">        object or acat.adsorption_sites.SlabAdsorptionSites object, \</span>
 <span class="sd">        default None</span>
-<span class="sd">        The built-in adsorption sites class.</span>
+<span class="sd">        The built-in adsorption sites class. If this is not provided, </span>
+<span class="sd">        the arguments for identifying adsorption sites can still be </span>
+<span class="sd">        passed in by **kwargs.</span>
 
 <span class="sd">    surface : str, default None</span>
 <span class="sd">        The surface type (crystal structure + Miller indices)</span>
 <span class="sd">        If the structure is a periodic surface slab, this is required.</span>
 <span class="sd">        If the structure is a nanoparticle, the function enumerates</span>
 <span class="sd">        only the sites on the specified surface.</span>
-
-<span class="sd">    both_sides : bool, default False</span>
-<span class="sd">        Whether to consider adsorbate coverage on both top and bottom </span>
-<span class="sd">        sides of the slab. Only works if adsorption_sites is not provided,</span>
-<span class="sd">        otherwise consistent with what is specified in adsorption_sites.</span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -1458,7 +1446,7 @@
 
 <span class="sd">        &gt;&gt;&gt; from acat.adsorption_sites import ClusterAdsorptionSites</span>
 <span class="sd">        &gt;&gt;&gt; from acat.adsorbate_coverage import enumerate_occupied_sites</span>
-<span class="sd">        &gt;&gt;&gt; from acat.build.actions import add_adsorbate_to_site</span>
+<span class="sd">        &gt;&gt;&gt; from acat.build.action import add_adsorbate_to_site</span>
 <span class="sd">        &gt;&gt;&gt; from ase.cluster import Octahedron</span>
 <span class="sd">        &gt;&gt;&gt; atoms = Octahedron(&#39;Ni&#39;, length=7, cutoff=2)</span>
 <span class="sd">        &gt;&gt;&gt; for atom in atoms:</span>
@@ -1489,18 +1477,21 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span>
-                                       <span class="n">label_occupied_sites</span><span class="p">,</span> <span class="n">dmax</span><span class="p">)</span>
+        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span>
+                                       <span class="n">label_occupied_sites</span><span class="p">,</span> 
+                                       <span class="n">dmax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">hetero_site_list</span>
-        <span class="k">if</span> <span class="n">surface</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">surface</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">occupied_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span> 
                               <span class="o">==</span> <span class="n">surface</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">occupied_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span>
-                                    <span class="n">both_sides</span><span class="p">,</span> <span class="n">label_occupied_sites</span><span class="p">,</span> <span class="n">dmax</span><span class="p">)</span>
+        <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
+                                    <span class="n">adsorption_sites</span><span class="p">,</span>
+                                    <span class="n">label_occupied_sites</span><span class="p">,</span> 
+                                    <span class="n">dmax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">occupied_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]]</span>
 

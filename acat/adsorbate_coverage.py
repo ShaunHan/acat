@@ -6,7 +6,7 @@ from ase.data import atomic_numbers
 from ase.geometry import find_mic
 from ase.formula import Formula
 from collections import defaultdict, Counter
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 from copy import deepcopy
 import networkx as nx
 import numpy as np
@@ -56,6 +56,8 @@ class ClusterAdsorbateCoverage(object):
         default None
         `ClusterAdsorptionSites` object of the nanoparticle. Initialize a 
         `ClusterAdsorptionSites` object if not specified.
+        If this is not provided, the arguments for identifying adsorption 
+        sites can still be passed in by **kwargs.
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -73,7 +75,7 @@ class ClusterAdsorbateCoverage(object):
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
         >>> from acat.adsorbate_coverage import ClusterAdsorbateCoverage
-        >>> from acat.build.actions import add_adsorbate_to_site
+        >>> from acat.build.action import add_adsorbate_to_site
         >>> from ase.cluster import Octahedron
         >>> atoms = Octahedron('Ni', length=7, cutoff=2)
         >>> for atom in atoms:
@@ -108,7 +110,7 @@ class ClusterAdsorbateCoverage(object):
     def __init__(self, atoms, 
                  adsorption_sites=None, 
                  label_occupied_sites=False,
-                 dmax=3.):
+                 dmax=3., **kwargs):
 
         atoms = atoms.copy()
         for dim in range(3):
@@ -127,21 +129,22 @@ class ClusterAdsorbateCoverage(object):
 
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
-
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False,
+                       'ignore_bridge_sites': False, 'label_sites': False} 
+        self.kwargs.update(kwargs)
         self.make_ads_neighbor_list()
         self.ads_adj_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
 
         if adsorption_sites:
             cas = adsorption_sites
+            for k in self.kwargs.keys():
+                self.kwargs[k] = attrgetter(k)(cas)
         else:
-            cas = ClusterAdsorptionSites(atoms, allow_6fold=True,
-                                         composition_effect=True)    
+            cas = ClusterAdsorptionSites(atoms, **self.kwargs)    
+        self.__dict__.update(self.kwargs)
         self.cas = cas
         self.slab_ids = cas.indices
-        self.allow_6fold = cas.allow_6fold
-        self.composition_effect = cas.composition_effect
-
         self.metals = cas.metals
         if len(self.metals) == 1 and self.composition_effect:
             self.metals *= 2
@@ -655,15 +658,8 @@ class SlabAdsorbateCoverage(object):
         default None
         `SlabAdsorptionSites` object of the nanoparticle. Initialize a         
         `SlabAdsorptionSites` object if not specified.
-
-    surface : str
-        The surface type (crystal structure + Miller indices).
-        Required if adsorption_sites is not provided.
-
-    both_sides : bool, default False
-        Whether to consider adsorbate coverage on both top and bottom 
-        sides of the slab. Only works if adsorption_sites is not provided,
-        otherwise consistent with what is specified in adsorption_sites.
+        If this is not provided, the arguments for identifying adsorption 
+        sites can still be passed in by **kwargs.
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -681,7 +677,7 @@ class SlabAdsorbateCoverage(object):
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-        >>> from acat.build.actions import add_adsorbate
+        >>> from acat.build.action import add_adsorbate
         >>> from ase.build import fcc211
         >>> atoms = fcc211('Cu', (3, 3, 4), vacuum=5.)
         >>> for atom in atoms:
@@ -712,10 +708,8 @@ class SlabAdsorbateCoverage(object):
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
-                 surface=None, 
-                 both_sides=False,
                  label_occupied_sites=False,
-                 dmax=3.):
+                 dmax=3., **kwargs):
 
         atoms = atoms.copy()
         ptp = np.ptp(atoms.positions[:, 2]) 
@@ -732,27 +726,25 @@ class SlabAdsorbateCoverage(object):
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
-        self.both_sides = both_sides
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
 
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False,
+                       'ignore_bridge_sites': False, 'label_sites': False} 
+        self.kwargs.update(kwargs)
         self.make_ads_neighbor_list()
         self.ads_adj_matrix = self.get_ads_connectivity() 
         self.identify_adsorbates()
+
         if adsorption_sites:
             sas = adsorption_sites
+            for k in self.kwargs.keys():
+                self.kwargs[k] = attrgetter(k)(sas)
         else:
-            sas = SlabAdsorptionSites(atoms, surface, 
-                                      allow_6fold=True,
-                                      composition_effect=True,
-                                      both_sides=both_sides)    
+            sas = SlabAdsorptionSites(atoms, **self.kwargs)    
+        self.__dict__.update(self.kwargs)
         self.sas = sas
         self.slab_ids = sas.indices
-        self.surface = sas.surface
-        self.allow_6fold = sas.allow_6fold
-        self.composition_effect = sas.composition_effect
-        self.both_sides = sas.both_sides
-
         self.metals = sas.metals
         if len(self.metals) == 1 and self.composition_effect:
             self.metals *= 2
@@ -947,7 +939,7 @@ class SlabAdsorbateCoverage(object):
 
                 if self.label_occupied_sites:
                     if st['label'] is None:
-                        signature = [st['site'], st['morphology']]                     
+                        signature = [st['site'], st['morphology']]   
                         if self.composition_effect:
                             signature.append(st['composition'])
                         stlab = self.label_dict['|'.join(signature)]
@@ -1252,9 +1244,8 @@ class SlabAdsorbateCoverage(object):
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
                              surface=None, 
-                             both_sides=False,
                              label_occupied_sites=False,                             
-                             dmax=3.):
+                             dmax=3., **kwargs):
     """A function that enumerates all occupied adsorption sites of
     the input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -1267,18 +1258,15 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites \
         object or acat.adsorption_sites.SlabAdsorptionSites object, \
         default None
-        The built-in adsorption sites class.
+        The built-in adsorption sites class. If this is not provided, 
+        the arguments for identifying adsorption sites can still be 
+        passed in by **kwargs.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices)
         If the structure is a periodic surface slab, this is required.
         If the structure is a nanoparticle, the function enumerates
         only the sites on the specified surface.
-
-    both_sides : bool, default False
-        Whether to consider adsorbate coverage on both top and bottom 
-        sides of the slab. Only works if adsorption_sites is not provided,
-        otherwise consistent with what is specified in adsorption_sites.
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -1296,7 +1284,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
         >>> from acat.adsorbate_coverage import enumerate_occupied_sites
-        >>> from acat.build.actions import add_adsorbate_to_site
+        >>> from acat.build.action import add_adsorbate_to_site
         >>> from ase.cluster import Octahedron
         >>> atoms = Octahedron('Ni', length=7, cutoff=2)
         >>> for atom in atoms:
@@ -1327,18 +1315,21 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     """
 
     if True not in atoms.pbc:
-        cac = ClusterAdsorbateCoverage(atoms, adsorption_sites, surface,
-                                       label_occupied_sites, dmax)
+        cac = ClusterAdsorbateCoverage(atoms, adsorption_sites,
+                                       label_occupied_sites, 
+                                       dmax, **kwargs)
         all_sites = cac.hetero_site_list
-        if surface:
+        if surface is not None:
             occupied_sites = [s for s in all_sites if s['surface'] 
                               == surface and s['occupied']]
         else:
             occupied_sites = [s for s in all_sites if s['occupied']]
 
     else:
-        sac = SlabAdsorbateCoverage(atoms, adsorption_sites, surface,
-                                    both_sides, label_occupied_sites, dmax)
+        sac = SlabAdsorbateCoverage(atoms, surface, 
+                                    adsorption_sites,
+                                    label_occupied_sites, 
+                                    dmax, **kwargs)
         all_sites = sac.hetero_site_list
         occupied_sites = [s for s in all_sites if s['occupied']]
 

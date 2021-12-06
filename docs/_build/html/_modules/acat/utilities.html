@@ -165,6 +165,7 @@
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
 <span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">permutations</span><span class="p">,</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">cdist</span><span class="p">,</span> <span class="n">euclidean</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">abc</span><span class="p">,</span> <span class="n">Counter</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -407,7 +408,7 @@
     <span class="k">return</span> <span class="nb">min</span><span class="p">([</span><span class="o">*</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="n">d</span><span class="p">],</span><span class="o">*</span><span class="n">nodes</span><span class="p">[:</span><span class="n">i</span><span class="p">:</span><span class="n">d</span><span class="p">]]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">starts</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="bipartitions"><a class="viewcode-back" href="../../utilities.html#acat.utilities.bipartitions">[docs]</a><span class="k">def</span> <span class="nf">bipartitions</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">total</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">bipartitions</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">total</span><span class="p">):</span>
 
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
@@ -415,10 +416,10 @@
             <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo</span><span class="p">)</span> <span class="o">==</span> <span class="n">total</span><span class="p">:</span>
                 <span class="n">set_combo</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">combo</span><span class="p">)</span>
                 <span class="k">yield</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo</span><span class="p">),</span> <span class="nb">sorted</span><span class="p">(</span>
-                <span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">set_combo</span><span class="p">)</span></div>
+                <span class="n">shells</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">set_combo</span><span class="p">)</span>
        
                                                                        
-<div class="viewcode-block" id="partitions_into_totals"><a class="viewcode-back" href="../../utilities.html#acat.utilities.partitions_into_totals">[docs]</a><span class="k">def</span> <span class="nf">partitions_into_totals</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">partitions_into_totals</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">):</span>
 
     <span class="k">assert</span> <span class="n">totals</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">totals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -426,7 +427,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">remaining_shells</span> <span class="ow">in</span> <span class="n">bipartitions</span><span class="p">(</span><span class="n">shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="k">for</span> <span class="n">rest</span> <span class="ow">in</span> <span class="n">partitions_into_totals</span><span class="p">(</span><span class="n">remaining_shells</span><span class="p">,</span> <span class="n">totals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-                <span class="k">yield</span> <span class="p">[</span><span class="n">first</span><span class="p">]</span> <span class="o">+</span> <span class="n">rest</span></div>
+                <span class="k">yield</span> <span class="p">[</span><span class="n">first</span><span class="p">]</span> <span class="o">+</span> <span class="n">rest</span>
 
 
 <div class="viewcode-block" id="get_close_atoms"><a class="viewcode-back" href="../../utilities.html#acat.utilities.get_close_atoms">[docs]</a><span class="k">def</span> <span class="nf">get_close_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>

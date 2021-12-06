@@ -435,7 +435,12 @@ class RandomSlabPermutation(SlabOperator):
             f = f0
         else:
             if any(isinstance(i, list) for i in self.allowed_indices):
-                self.allowed_indices = random.choice(self.allowed_indices)
+                allowed_indices = [idxs for idxs in self.allowed_indices if 
+                                   len(set(f0[idxs].get_chemical_symbols())) > 1]
+                if not allowed_indices:
+                    return None, '{1} not possible in {0}'.format(f0.info['confid'],
+                                                                  self.descriptor)
+                self.allowed_indices = random.choice(allowed_indices)
             f = f0[self.allowed_indices]
 
         # Permutation only makes sense if two different elements are present

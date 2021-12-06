@@ -1,6 +1,8 @@
-from ..utilities import (bipartitions, partitions_into_totals,
-                         numbers_from_ratios, is_list_or_tuple)
-from ase.geometry import get_distances
+from ..utilities import (bipartitions, get_mic,
+                         partitions_into_totals, 
+                         numbers_from_ratios, 
+                         is_list_or_tuple)
+from ase.geometry import get_distances, find_mic, get_layers
 from ase.io import Trajectory, read, write
 from asap3.analysis import FullCNA 
 from asap3 import EMT as asapEMT
@@ -33,8 +35,8 @@ class SymmetricClusterOrderingGenerator(object):
     symmetry : str, default 'spherical'
         Support 9 symmetries: 
 
-        **'spherical'**: centrosymmetry (groups defined by the distances 
-        to the geometric center);
+        **'spherical'**: spherical symmetry (groups defined by the 
+        distances to the geometric center);
 
         **'cylindrical'**: cylindrical symmetry around z axis (groups 
         defined by the distances to the z axis);
@@ -98,6 +100,11 @@ class SymmetricClusterOrderingGenerator(object):
         concentrations as values. Generate orderings at all compositions 
         if not specified. 
 
+    groups : list of lists, default None
+        Provide the user defined symmetry equivalent groups as a list of 
+        lists of atom indices. Useful for generating structures with
+        symmetries that are not supported.
+
     trajectory : str, default 'orderings.traj'
         The name of the output ase trajectory file.
 
@@ -112,6 +119,7 @@ class SymmetricClusterOrderingGenerator(object):
                  secondary_symmetry=None,
                  secondary_cutoff=1.,
                  composition=None,
+                 groups=None,
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
@@ -127,14 +135,17 @@ class SymmetricClusterOrderingGenerator(object):
         if self.composition is not None:
             ks = list(self.composition.keys())
             assert set(ks) == set(self.elements)
-        
+ 
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
         self.append_trajectory = append_trajectory
 
-        self.groups = self.get_groups()
+        if groups is None:
+            self.groups = self.get_groups()
+        else:
+            self.groups = groups
 
-    def get_sorted_indices(self, symmetry):
+    def get_sorted_indices(self, symmetry):                               
         """Returns the indices sorted by the metric that defines different 
         groups, together with the corresponding vlues, given a specific 
         symmetry. Returns the indices sorted by geometrical environment if 
@@ -149,7 +160,7 @@ class SymmetricClusterOrderingGenerator(object):
 
         """
 
-        atoms = self.atoms
+        atoms = self.atoms.copy()
         atoms.center()
         geo_mid = [(atoms.cell/2.)[0][0], (atoms.cell/2.)[1][1], 
                    (atoms.cell/2.)[2][2]]
@@ -456,7 +467,7 @@ class SymmetricClusterOrderingGenerator(object):
  
             if mode == 'stochastic':
                 combos = set()
-                too_few = (2 ** ngroups * 0.95 <= max_gen)
+                too_few = (2**ngroups * 0.95 <= max_gen)
                 if too_few and verbose:
                     print('Too few groups. Will generate duplicate images.')
                 while True:
@@ -474,40 +485,67 @@ class SymmetricClusterOrderingGenerator(object):
             print('{} symmetric chemical orderings generated'.format(n_write))
 
 
-class OrderedSlabOrderingGenerator(object):
-
-    """`OrderedSlabOrderingGenerator` is a class for generating 
-    ordered chemical orderings for a **alloy surface slab**. 
+class SymmetricSlabOrderingGenerator(object):
+    """`SymmetricSlabOrderingGenerator` is a class for generating 
+    symmetric chemical orderings for a **alloy surface slab**. 
     There is no limitation of the number of metal components.
  
     Parameters
     ----------
     atoms : ase.Atoms object
-        The surface slab to use as a template to generate ordered 
-        chemical orderings. Accept any ase.Atoms object. No need 
-        to be built-in.
+        The surface slab to use as a template to generate symmetric 
+        chemical orderings. Accept any ase.Atoms object. No need to 
+        be built-in.
 
     elements : list of strs 
         The metal elements of the alloy catalyst.
 
-    repeating_size : list of ints or tuple of ints, default (2, 2)
+    symmetry : str, default 'rotational'
+        Support 4 symmetries: 
+
+        **'rotational'**: rotational symmetry with symmetry
+        equivalent groups depending on the symmetry_axis.
+
+        **'translational'**: translational symmetry with symmetry 
+        equivalent groups depending on repeating_size.
+
+        **'inversion'**: centrosymmetry with symmetry equivalent 
+        groups depending on the distance to the geometric center.
+        Only works for certain number of slab layers (e.g. 5) and 
+        orthogonal cell.
+
+        **'mirror'**: mirror plane symmetry with symmetry equivalent
+        groups depeneding on the xy plane bisecting the slab. Only
+        works for certain number of slab layers (e.g. 5) and orthogonal 
+        cell.
+
+    symmetry_axis : numpy.array or list, default None
+        The symmetry axis (3d vector) to form symmetric ordering 
+        around. Only relevant for rotational symmetry.
+
+    repeating_size : list of ints or tuple of ints, default (1, 1)
         The multiples that describe the size of the repeating pattern
         on the surface. Symmetry-equivalent atoms are grouped by 
         the multiples in the x and y directions. The x or y length of 
         the cell must be this multiple of the distance between each 
         pair of symmetry-equivalent atoms. Larger reducing size 
-        generates fewer structures.
+        generates fewer structures. For translational symmetry please
+        change repeating_size to larger numbers.
 
     composition : dict, default None
-        Generate ordered orderings only at a certain composition. 
+        Generate symmetric orderings only at a certain composition. 
         The dictionary contains the metal elements as keys and their 
-        concentrations as values. Generate orderings at all 
-        compositions if not specified. 
+        concentrations as values. Generate orderings at all compositions 
+        if not specified. 
+
+    groups : list of lists, default None
+        Provide the user defined symmetry equivalent groups as a list of 
+        lists of atom indices. Useful for generating structures with
+        symmetries that are not supported.
 
     dtol : float, default 0.01
-        The distance tolerance (in Angstrom) when comparing with 
-        (cell length / multiple). Use a larger value if the structure 
-        is distorted.
+        The distance tolerance (in Angstrom) when comparing distances. 
+        Use a larger value if the structure is distorted.
 
     ztol : float, default 0.1
         The tolerance (in Angstrom) when comparing z values. Use a 
@@ -522,8 +560,11 @@ class OrderedSlabOrderingGenerator(object):
     """
 
     def __init__(self, atoms, elements,
-                 repeating_size=(2, 2),
+                 symmetry='rotational',
+                 symmetry_axis=None,
+                 repeating_size=(1, 1),
                  composition=None,
+                 groups=None,
                  dtol=0.01,
                  ztol=0.1,
                  trajectory='orderings.traj',
@@ -531,8 +572,13 @@ class OrderedSlabOrderingGenerator(object):
 
         self.atoms = atoms
         self.elements = elements
+        self.symmetry = symmetry
+        self.symmetry_axis = symmetry_axis
+        if self.symmetry_axis is not None:
+            self.symmetry_axis = np.asarray(self.symmetry_axis)
 
-        assert (is_list_or_tuple(repeating_size)) and (len(repeating_size) == 2)
+        assert is_list_or_tuple(repeating_size) 
+        assert len(repeating_size) == 2
         self.repeating_size = repeating_size
         self.dtol = dtol
         self.ztol = ztol
@@ -546,41 +592,130 @@ class OrderedSlabOrderingGenerator(object):
             self.trajectory = trajectory                        
         self.append_trajectory = append_trajectory
 
-        self.groups = self.get_groups()
+        if groups is None:                  
+            self.groups = self.get_groups()
+        else:
+            self.groups = groups
+
+    def get_symmetric_pairs(self, atoms):                               
+        sa = self.symmetry_axis
+        layers = get_layers(atoms, (0, 0, 1), tolerance=self.ztol)[0]
+        dd = defaultdict(list)
+        for i, layer in enumerate(layers): 
+            dd[layer].append(i)
+        positions = atoms.positions
+        natoms = len(positions)
+        indices, sym_pts = [], []
+        for idxs in dd.values():
+            geo_mid = np.mean(positions[idxs], axis=0)
+            sa2 = sa @ sa
+            projs = np.sum((positions[idxs] - geo_mid) * sa, 
+                            axis=1).reshape((-1,1)) * sa / sa2
+            norms = positions[idxs] - geo_mid - projs
+            indices += idxs
+            sym_pts += (positions[idxs] - 2 * norms).tolist()
+        sym_pts = np.asarray([pt for _, pt in sorted(zip(indices, sym_pts))])
+        new_indices = np.asarray(list(product(range(natoms), range(natoms))))
+        p1 = atoms.positions[new_indices[:,0]]
+        p2 = sym_pts[new_indices[:,1]]
+        _, ds = find_mic(p1 - p2, atoms.cell, pbc=True)
+
+        pairs = []
+        for i in range(0, len(ds), natoms):
+            idx1 = [int(i / natoms)]
+            idx2 = []
+            for j, d in enumerate(ds[i:i+natoms]):
+                if i == j:
+                    continue
+                if np.isclose(0, d, rtol=0., atol=self.dtol):
+                    idx2.append(j)
+                    break
+            pairs.append(sorted(idx1 + idx2))
+        return pairs
+
+    def get_x_y_identical_pairs(self, atoms):
+        xy_atoms = atoms.copy()
+        xy_atoms.positions[:,2] = 1
+        ds = xy_atoms.get_all_distances(mic=True)
+        return np.column_stack(np.where(ds < self.dtol)).tolist() 
+
+    def get_lx_ly_identical_pairs(self, atoms):
+        ds = atoms.get_all_distances(mic=True)
+        cell = atoms.cell
+        x_cell = np.linalg.norm(cell[0])
+        y_cell = np.linalg.norm(cell[1])
+                                                                              
+        ref_x_dist = x_cell / self.repeating_size[0]
+        ref_y_dist = y_cell / self.repeating_size[1]
+        x_pairs = np.column_stack(np.where(abs(ds - ref_x_dist) < self.dtol))
+        y_pairs = np.column_stack(np.where(abs(ds - ref_y_dist) < self.dtol))
+        return x_pairs.tolist() + y_pairs.tolist()
+
+    def get_collinear_pairs(self, atoms):
+        atoms.center()
+        geo_mid = [(atoms.cell/2.)[0][0], (atoms.cell/2.)[1][1],                
+                   (atoms.cell/2.)[2][2]]
+        vecs, _ = find_mic(atoms.positions - np.asarray([geo_mid]), 
+                           atoms.cell, pbc=True)
+        # Generate the i, j indices
+        rows, cols = np.triu_indices(len(vecs), 1)
+        # Find the cross products using numpy indexing on vecs
+        cross = np.cross(vecs[rows], vecs[cols])
+        # Find the values that are close 
+        arg = np.argwhere(np.isclose(0, (cross * cross).sum(axis=1)**0.5, 
+                          rtol=0, atol=self.dtol))
+        # Get the i, j indices where is close to 0
+        return np.hstack([rows[arg], cols[arg]]).tolist(), geo_mid            
 
     def get_groups(self):
         """Get the groups (a list of lists of atom indices) of all
         symmetry-equivalent atoms."""
 
-        atoms = self.atoms
-        ds = atoms.get_all_distances(mic=True)
-        cell = atoms.cell
-        z_positions = atoms.positions[:,2]
-        x_cell = np.linalg.norm(cell[0])
-        y_cell = np.linalg.norm(cell[1])
+        atoms = self.atoms.copy()
+        if self.symmetry == 'rotational':
+            assert self.symmetry_axis is not None
+            pairs = self.get_symmetric_pairs(atoms)
 
-        ref_x_dist = x_cell / self.repeating_size[0]
-        ref_y_dist = y_cell / self.repeating_size[1]
+        elif self.symmetry == 'translational':
+            if self.repeating_size[0] * self.repeating_size[1] == 1:
+                raise ValueError('Please set repeating_size larger than (1, 1) ' + 
+                                 'for translational symmetry') 
+            pairs = self.get_lx_ly_identical_pairs(atoms)  
+            z_positions = atoms.positions[:,2]
+            pairs = [p for p in pairs if abs(z_positions[p[0]] -
+                     z_positions[p[1]]) < self.ztol]
 
-        x_pairs = np.column_stack(np.where(abs(ds - ref_x_dist) < self.dtol))
-        y_pairs = np.column_stack(np.where(abs(ds - ref_y_dist) < self.dtol))
-        pairs = x_pairs.tolist() + y_pairs.tolist()
-        pairs = [p for p in pairs if abs(z_positions[p[0]] - 
-                 z_positions[p[1]]) < self.ztol]
+        elif self.symmetry == 'inversion':
+            pairs, geo_mid = self.get_collinear_pairs(atoms)
+            atoms.center()
+            positions = atoms.positions
+            cell = atoms.cell
+            pairs = [p for p in pairs if abs(get_mic(positions[p[0]], geo_mid, cell, 
+                     return_squared_distance=True)**0.5 - get_mic(positions[p[1]], 
+                     geo_mid, cell, return_squared_distance=True)**0.5) < self.dtol]
 
+        elif self.symmetry == 'mirror':
+            pairs = self.get_x_y_identical_pairs(atoms)
+            atoms.center()
+            z_positions = atoms.positions[:,2]
+            mid_z = (atoms.cell/2.)[2][2]
+            pairs = [p for p in pairs if abs(abs(z_positions[p[0]] - mid_z) - 
+                     abs(z_positions[p[1]] - mid_z)) < self.ztol]
+            
         def to_edges(lst):
             it = iter(lst)
             last = next(it) 
             for current in it:
                 yield last, current
                 last = current    
-
         G = nx.Graph()
         for p in pairs:
             G.add_nodes_from(p)
             G.add_edges_from(to_edges(p))
-
         groups = [list(cc) for cc in list(connected_components(G))]
+        uni = {i for group in groups for i in group}
+        addition = [[i] for i in set(range(len(atoms))) - uni]
+        groups += addition
 
         return groups
 
@@ -729,7 +864,7 @@ class OrderedSlabOrderingGenerator(object):
  
             if mode == 'stochastic':
                 combos = set()
-                too_few = (2 ** ngroups * 0.95 <= max_gen)
+                too_few = (2**ngroups * 0.95 <= max_gen)
                 if too_few and verbose:
                     print('Too few groups. Will generate duplicate images.')
                 while True:
@@ -744,7 +879,7 @@ class OrderedSlabOrderingGenerator(object):
                             if n_write == max_gen:
                                 break
         if verbose:
-            print('{} ordered chemical orderings generated'.format(n_write))
+            print('{} symmetric chemical orderings generated'.format(n_write))
 
 
 class RandomOrderingGenerator(object):

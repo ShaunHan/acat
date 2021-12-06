@@ -11,10 +11,14 @@ class GroupSizeComparator(object):
 
     Parameters
     ----------
-    groups : list of lists
+    groups : list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
-        or `acat.build.ordering.OrderedSlabOrderingGenerator`.
+        or `acat.build.ordering.SymmetricSlabOrderingGenerator` or
+        `acat.build.adlayer.SymmetricPatternGenerator`. If not provided 
+        here, please provide the groups in atoms.info['data']['groups'] 
+        in all intial structures. This is useful to mix structures with 
+        different group divisions in one GA.
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -22,14 +26,21 @@ class GroupSizeComparator(object):
 
     """
 
-    def __init__(self, groups, elements=None):
+    def __init__(self, groups=None, elements=None):
         self.groups = groups
         self.elements = elements
 
     def looks_like(self, a1, a2):
         """ Return if structure a1 or a2 are similar or not. """
 
-        groups = self.groups
+        if self.groups is None:                     
+            groups1 = a1.info['data']['groups']
+            if groups1 == a2.info['data']['groups']:
+                groups = groups1
+            else:
+                return False 
+        else:
+            groups = self.groups
         size1_dict = {e: [] for e in self.elements}
         size2_dict = {e: [] for e in self.elements}
 
@@ -49,10 +60,14 @@ class GroupCompositionComparator(object):
 
     Parameters
     ----------
-    groups : list of lists
+    groups : list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
-        or `acat.build.ordering.OrderedSlabOrderingGenerator`.
+        or `acat.build.ordering.SymmetricSlabOrderingGenerator` or
+        `acat.build.adlayer.SymmetricPatternGenerator`. If not provided 
+        here, please provide the groups in atoms.info['data']['groups'] 
+        in all intial structures. This is useful to mix structures with 
+        different group divisions in one GA. 
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -64,7 +79,7 @@ class GroupCompositionComparator(object):
 
     """
 
-    def __init__(self, groups, elements=None, tol=0):
+    def __init__(self, groups=None, elements=None, tol=0):
         self.groups = groups
         self.elements = elements
         self.tol = tol
@@ -72,6 +87,14 @@ class GroupCompositionComparator(object):
     def looks_like(self, a1, a2):
         """ Return if structure a1 or a2 are similar or not. """
 
+        if self.groups is None:                     
+            groups1 = a1.info['data']['groups']
+            if groups1 == a2.info['data']['groups']:
+                groups = groups1
+            else:
+                return False 
+        else:
+            groups = self.groups
         elements = self.elements
         if self.elements is None:
             e = list(set(a1.get_chemical_symbols()))

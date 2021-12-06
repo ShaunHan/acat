@@ -5,4 +5,4 @@ Other utilities
    :members:
    :undoc-members:
    :show-inheritance:
-   :exclude-members: expand_cell, is_list_or_tuple
+   :exclude-members: expand_cell, is_list_or_tuple, bipartitions, partitions_into_totals

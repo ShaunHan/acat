@@ -240,6 +240,9 @@
 <span class="sd">        compositions as different sites. It is recommended to </span>
 <span class="sd">        set composition_effect=False for monometallics.</span>
 
+<span class="sd">    ignore_bridge_sites : bool, default False</span>
+<span class="sd">        Whether to ignore bridge sites.</span>
+
 <span class="sd">    label_sites : bool, default False</span>
 <span class="sd">        Whether to assign a numerical label to each site.</span>
 <span class="sd">        Labels for different sites are listed in acat.labels.</span>
@@ -295,6 +298,7 @@
                  <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">proxy_metal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">):</span>
 
@@ -315,6 +319,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="o">=</span> <span class="n">allow_6fold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">composition_effect</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span> <span class="o">=</span> <span class="n">ignore_bridge_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proxy_metal</span> <span class="o">=</span> <span class="n">proxy_metal</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
         
@@ -346,6 +351,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">populate_site_list</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">get_labels</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> <span class="s1">&#39;bridge&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
  
 <div class="viewcode-block" id="ClusterAdsorptionSites.populate_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.populate_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find all ontop, bridge and hollow sites (3-fold and 4-fold) </span>
@@ -1029,12 +1037,15 @@
 
         <span class="k">return</span> <span class="n">G</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>           
+<div class="viewcode-block" id="ClusterAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>           
         <span class="sd">&quot;&quot;&quot;Returns the site_list index of all neighbor shell sites </span>
 <span class="sd">        for each site.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        dx : float, default 0.1</span>
+<span class="sd">            Buffer to calculate nearest neighbor pairs.</span>
+
 <span class="sd">        neighbor_number : int, default 1</span>
 <span class="sd">            Neighbor shell number. </span>
 
@@ -1054,8 +1065,9 @@
         <span class="n">cr</span> <span class="o">=</span> <span class="mf">0.55</span> 
         <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">cr</span> <span class="o">+=</span> <span class="mf">0.1</span>
-                                                                   
-        <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="p">,</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
+            <span class="n">cr</span> <span class="o">*=</span> <span class="mf">1.5</span>                                             
+        <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="p">,</span>
                                       <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">cr</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">topi_dict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1239,6 +1251,9 @@
 <span class="sd">        Whether to consider sites on both top and bottom sides</span>
 <span class="sd">        of the slab.</span>
 
+<span class="sd">    ignore_bridge_sites : bool, default False</span>
+<span class="sd">        Whether to ignore bridge sites.</span>
+
 <span class="sd">    label_sites : bool, default False</span>
 <span class="sd">        Whether to assign a numerical label to each site.</span>
 <span class="sd">        Labels for different sites are listed in acat.labels.</span>
@@ -1295,6 +1310,7 @@
                  <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">proxy_metal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">):</span>
@@ -1326,6 +1342,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="o">=</span> <span class="n">allow_6fold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">composition_effect</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span> <span class="o">=</span> <span class="n">both_sides</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span> <span class="o">=</span> <span class="n">ignore_bridge_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span> <span class="o">=</span> <span class="n">label_sites</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
@@ -1348,8 +1365,11 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">populate_opposite_site_list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> <span class="s1">&#39;bridge&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">get_labels</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
         
 <div class="viewcode-block" id="SlabAdsorptionSites.populate_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_obtuse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span> <span class="n">_bot_side</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>        
         <span class="sd">&quot;&quot;&quot;Find all ontop, bridge and hollow sites (3-fold and 4-fold) </span>
@@ -2719,12 +2739,15 @@
 
         <span class="k">return</span> <span class="n">G</span></div>
 
-<div class="viewcode-block" id="SlabAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>           
+<div class="viewcode-block" id="SlabAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>           
         <span class="sd">&quot;&quot;&quot;Returns the site_list index of all neighbor shell sites </span>
 <span class="sd">        for each site.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        dx : float, default 0.1</span>
+<span class="sd">            Buffer to calculate nearest neighbor pairs.</span>
+
 <span class="sd">        neighbor_number : int, default 1</span>
 <span class="sd">            Neighbor shell number. </span>
 
@@ -2746,8 +2769,9 @@
         <span class="n">cr</span> <span class="o">=</span> <span class="mf">0.55</span> 
         <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">cr</span> <span class="o">+=</span> <span class="mf">0.1</span>
-
-        <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="p">,</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
+            <span class="n">cr</span> <span class="o">*=</span> <span class="mf">1.5</span>
+        <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="p">,</span>
                                       <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">cr</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">top_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">)</span>
@@ -2865,11 +2889,7 @@
 
 
 <div class="viewcode-block" id="enumerate_adsorption_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.enumerate_adsorption_sites">[docs]</a><span class="k">def</span> <span class="nf">enumerate_adsorption_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                               <span class="n">morphology</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                               <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                               <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                               <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                               <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                               <span class="n">morphology</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function that enumerates all adsorption sites of the </span>
 <span class="sd">    input atoms object. The function is generalized for both </span>
 <span class="sd">    periodic and non-periodic systems (distinguished by atoms.pbc).</span>
@@ -2888,25 +2908,6 @@
 <span class="sd">    morphology : str, default None</span>
 <span class="sd">        The function enumerates only the sites of the specified </span>
 <span class="sd">        local surface morphology. Only available for surface slabs.</span>
-
-<span class="sd">    allow_6fold : bool, default False</span>
-<span class="sd">        Whether to allow the adsorption on 6-fold subsurf sites </span>
-<span class="sd">        underneath fcc hollow sites.</span>
-<span class="sd"> </span>
-<span class="sd">    composition_effect : bool, default False</span>
-<span class="sd">        Whether to consider sites with different elemental </span>
-<span class="sd">        compositions as different sites. It is recommended to </span>
-<span class="sd">        set composition_effect=False for monometallics.</span>
-
-<span class="sd">    both_sides : bool, default False</span>
-<span class="sd">        Whether to consider sites on both top and bottom sides</span>
-<span class="sd">        of the slab. Only relevant for periodic surface slabs.</span>
-
-<span class="sd">    label_sites : bool, default False</span>
-<span class="sd">        Whether to assign a numerical label to each site.</span>
-<span class="sd">        Labels for different sites are listed in acat.labels.</span>
-<span class="sd">        Use the bimetallic labels if composition_effect=True,</span>
-<span class="sd">        otherwise use the monometallic labels.</span>
 
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
@@ -2937,20 +2938,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-        <span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">allow_6fold</span><span class="p">,</span>
-                                     <span class="n">composition_effect</span><span class="p">,</span>
-                                     <span class="n">label_sites</span><span class="p">)</span>
+        <span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="k">if</span> <span class="n">surface</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">surface</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> 
                          <span class="n">s</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">surface</span><span class="p">]</span> 
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span>
-                                  <span class="n">allow_6fold</span><span class="p">,</span> 
-                                  <span class="n">composition_effect</span><span class="p">,</span>
-                                  <span class="n">both_sides</span><span class="p">,</span>
-                                  <span class="n">label_sites</span><span class="p">)</span>            
+        <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">site_list</span>
         <span class="k">if</span> <span class="n">morphology</span><span class="p">:</span>
             <span class="n">all_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> 
