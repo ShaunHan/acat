@@ -15,6 +15,7 @@ from .action import (add_adsorbate_to_site,
 from ase.io import read, write, Trajectory
 from ase.formula import Formula
 from ase.geometry import find_mic
+from operator import attrgetter
 from copy import deepcopy
 import networkx.algorithms.isomorphism as iso
 import networkx as nx
@@ -29,7 +30,7 @@ class StochasticPatternGenerator(object):
     adsorbate overlayer patterns stochastically. Graph isomorphism
     is implemented to identify identical adlayer patterns. 4 
     adsorbate actions are supported: add, remove, move, replace. 
-    The function is generalized for both periodic and non-periodic 
+    The class is generalized for both periodic and non-periodic 
     systems (distinguished by atoms.pbc). 
 
     Parameters
@@ -62,35 +63,17 @@ class StochasticPatternGenerator(object):
         pattern generation. Make sure all the structures have the same 
         periodicity and atom indexing. If composition_effect=True, you 
         should only provide adsorption_sites when the surface composition 
-        is fixed.
-
-    surface : str, default None
-        The surface type (crystal structure + Miller indices).
-        Only required if the structure is a periodic surface slab.
+        is fixed. If this is not provided, the arguments for identifying
+        adsorption sites can still be passed in by **kwargs.
 
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    allow_6fold : bool, default False
-        Whether to allow the adsorption on 6-fold subsurf sites 
-        underneath fcc hollow sites.
-
-    composition_effect : bool, default False
-        Whether to consider sites with different elemental 
-        compositions as different sites. It is recommended to 
-        set composition_effect=False for monometallics.
-
-    both_sides : bool, default False
-        Whether to add adsorbate to both top and bottom sides of the slab.
-        Only works if adsorption_sites is not provided, otherwise 
-        consistent with what is specified in adsorption_sites. Only
-        relvevant for periodic surface slabs.
-
     dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+        bonding atom that should be considered as an adsorbate.
 
     species_forbidden_sites : dict, default None
         A dictionary that contains keys of each adsorbate species and 
@@ -104,7 +87,7 @@ class StochasticPatternGenerator(object):
         are written as numerical labels according to acat.labels. Useful
         when you need to differentiate sites with different compositions.
 
-    fragmentation : bool, default True
+    fragmentation : bool, default True                                  
         Whether to cut multidentate species into fragments. This ensures 
         that multidentate species with different orientations are
         considered as different adlayer patterns.
@@ -136,18 +119,15 @@ class StochasticPatternGenerator(object):
                  species_probabilities=None,
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
-                 surface=None,
                  heights=site_heights,
-                 allow_6fold=False,
-                 composition_effect=True,
-                 both_sides=False,
                  dmax=3.,                 
                  species_forbidden_sites=None,    
                  species_forbidden_labels=None,
                  fragmentation=True,
                  trajectory='patterns.traj',
                  append_trajectory=False,
-                 logfile='patterns.log'):
+                 logfile='patterns.log', 
+                 **kwargs):
 
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
@@ -175,12 +155,17 @@ class StochasticPatternGenerator(object):
          
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
-        self.surface = surface
-        self.heights = site_heights
+        self.heights = site_heights 
         for k, v in heights.items():
             self.heights[k] = v
-
         self.dmax = dmax
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False,
+                       'ignore_bridge_sites': False, 'label_sites': False} 
+        self.kwargs.update(kwargs)
+        if self.adsorption_sites is not None:
+            for k in self.kwargs.keys():             
+                self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
+        self.__dict__.update(self.kwargs)
         self.species_forbidden_sites = species_forbidden_sites
         self.species_forbidden_labels = species_forbidden_labels
 
@@ -203,16 +188,6 @@ class StochasticPatternGenerator(object):
                 self.adsorption_sites.get_neighbor_site_list(neighbor_number=1)
             self.site_nblist = \
             self.adsorption_sites.get_neighbor_site_list(neighbor_number=2)
-            self.allow_6fold = self.adsorption_sites.allow_6fold
-            self.composition_effect = self.adsorption_sites.composition_effect
-            if hasattr(self.adsorption_sites, 'both_sides'):
-                self.both_sides = self.adsorption_sites.both_sides
-            else:
-                self.both_sides = both_sides
-        else:
-            self.allow_6fold = allow_6fold
-            self.composition_effect = composition_effect
-            self.both_sides = both_sides
 
     def _add_adsorbate(self, adsorption_sites):
         sas = adsorption_sites
@@ -735,7 +710,7 @@ class StochasticPatternGenerator(object):
         self.labels_list, self.graph_list = [], []
         self.unique = unique
         self.subsurf_effect = subsurf_effect
-        if self.unique and self.append_trajectory:                                 
+        if len(self.traj) > 0 and self.unique and self.append_trajectory:                                 
             if self.logfile is not None:                             
                 self.logfile.write('Loading graphs for existing structures in ' +
                                    '{}. This might take a while.\n'.format(self.trajectory))
@@ -748,13 +723,9 @@ class StochasticPatternGenerator(object):
                 elif True in patoms.pbc:
                     if self.surface is None:
                         raise ValueError('please specify the surface type')
-                    psas = SlabAdsorptionSites(patoms, self.surface,
-                                               self.allow_6fold,
-                                               self.composition_effect, 
-                                               self.both_sides)
+                    psas = SlabAdsorptionSites(patoms, **self.kwargs)
                 else:
-                    psas = ClusterAdsorptionSites(patoms, self.allow_6fold,
-                                                  self.composition_effect) 
+                    psas = ClusterAdsorptionSites(patoms, **self.kwargs) 
                 if True in patoms.pbc:
                     psac = SlabAdsorbateCoverage(patoms, psas, dmax=self.dmax,
                                                  label_occupied_sites=self.unique)           
@@ -793,13 +764,9 @@ class StochasticPatternGenerator(object):
             elif True in self.atoms.pbc:
                 if self.surface is None:
                     raise ValueError('please specify the surface type')
-                sas = SlabAdsorptionSites(self.atoms, self.surface,
-                                          self.allow_6fold,
-                                          self.composition_effect,
-                                          self.both_sides)
+                sas = SlabAdsorptionSites(self.atoms, **self.kwargs)
             else:
-                sas = ClusterAdsorptionSites(self.atoms, self.allow_6fold,
-                                             self.composition_effect)      
+                sas = ClusterAdsorptionSites(self.atoms, **self.kwargs)      
             if site_preference is not None:                                              
                 if not is_list_or_tuple(site_preference):
                     site_preference = [site_preference]
@@ -877,7 +844,7 @@ class StochasticPatternGenerator(object):
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
                             continue
-                    self.graph_list.append(G)   
+                    self.graph_list.append(G)                                          
                 self.labels_list.append(labs)                
 
             if self.logfile is not None:
@@ -896,7 +863,7 @@ class SystematicPatternGenerator(object):
     enumerate all unique patterns at low coverage, but explodes at
     higher coverages. Graph isomorphism is implemented to identify 
     identical adlayer patterns. 4 adsorbate actions are supported: 
-    add, remove, move, replace. The function is generalized for both
+    add, remove, move, replace. The class is generalized for both
     periodic and non-periodic systems (distinguished by atoms.pbc). 
 
     Parameters
@@ -921,35 +888,17 @@ class SystematicPatternGenerator(object):
         pattern generation. Make sure all the structures have the same 
         periodicity and atom indexing. If composition_effect=True, you 
         should only provide adsorption_sites when the surface composition 
-        is fixed.
-
-    surface : str, default None
-        The surface type (crystal structure + Miller indices).
-        Only required if the structure is a periodic surface slab.
+        is fixed. If this is not provided, the arguments for identifying
+        adsorption sites can still be passed in by **kwargs.
 
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    allow_6fold : bool, default False
-        Whether to allow the adsorption on 6-fold subsurf sites 
-        underneath fcc hollow sites.
-
-    composition_effect : bool, default False
-        Whether to consider sites with different elemental 
-        compositions as different sites. It is recommended to 
-        set composition_effect=False for monometallics.
-
-    both_sides : bool, default False
-        Whether to add adsorbate to both top and bottom sides of the slab.
-        Only works if adsorption_sites is not provided, otherwise 
-        consistent with what is specified in adsorption_sites. Only
-        relevant for periodic surface slabs.
-
     dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+        bonding atom that should be considered as an adsorbate.       
 
     species_forbidden_sites : dict, default None
         A dictionary that contains keys of each adsorbate species and 
@@ -985,18 +934,15 @@ class SystematicPatternGenerator(object):
                  adsorbate_species,
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
-                 surface=None,
                  heights=site_heights,
-                 allow_6fold=False,
-                 composition_effect=True,
-                 both_sides=False,
                  dmax=3.,
                  species_forbidden_sites=None,
                  species_forbidden_labels=None,
                  enumerate_orientations=True,
                  trajectory='patterns.traj',
                  append_trajectory=False,
-                 logfile='patterns.log'):
+                 logfile='patterns.log', 
+                 **kwargs):
 
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
@@ -1015,12 +961,17 @@ class SystematicPatternGenerator(object):
 
         self.min_adsorbate_distance = min_adsorbate_distance
         self.adsorption_sites = adsorption_sites
-        self.surface = surface
-        self.heights = site_heights
+        self.heights = site_heights 
         for k, v in heights.items():
             self.heights[k] = v
-
         self.dmax = dmax
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False,
+                       'ignore_bridge_sites': False, 'label_sites': False} 
+        self.kwargs.update(kwargs)
+        if self.adsorption_sites is not None:
+            for k in self.kwargs.keys():             
+                self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
+        self.__dict__.update(self.kwargs)
         self.species_forbidden_sites = species_forbidden_sites
         self.species_forbidden_labels = species_forbidden_labels
                                                                                            
@@ -1043,16 +994,6 @@ class SystematicPatternGenerator(object):
                 self.adsorption_sites.get_neighbor_site_list(neighbor_number=1)
             self.site_nblist = \
             self.adsorption_sites.get_neighbor_site_list(neighbor_number=2)
-            self.allow_6fold = self.adsorption_sites.allow_6fold
-            self.composition_effect = self.adsorption_sites.composition_effect
-            if hasattr(self.adsorption_sites, 'both_sides'):
-                self.both_sides = self.adsorption_sites.both_sides
-            else:
-                self.both_sides = both_sides
-        else:
-            self.allow_6fold = allow_6fold
-            self.composition_effect = composition_effect
-            self.both_sides = both_sides
 
     def _exhaustive_add_adsorbate(self, atoms, adsorption_sites):
         if self.add_species_composition is not None:
@@ -1733,7 +1674,7 @@ class SystematicPatternGenerator(object):
         self.labels_list, self.graph_list = [], []
         self.unique = unique
         self.subsurf_effect = subsurf_effect
-        if self.unique and self.append_trajectory:                                 
+        if len(self.traj) > 0 and self.unique and self.append_trajectory:                                 
             if self.logfile is not None:                             
                 self.logfile.write('Loading graphs for existing structures in ' +
                                    '{}. This might take a while.\n'.format(self.trajectory))
@@ -1746,13 +1687,9 @@ class SystematicPatternGenerator(object):
                 elif True in patoms.pbc:
                     if self.surface is None:
                         raise ValueError('please specify the surface type')
-                    psas = SlabAdsorptionSites(patoms, self.surface,
-                                               self.allow_6fold,
-                                               self.composition_effect,
-                                               self.both_sides)
+                    psas = SlabAdsorptionSites(patoms, **self.kwargs)
                 else:
-                    psas = ClusterAdsorptionSites(patoms, self.allow_6fold,
-                                                  self.composition_effect)      
+                    psas = ClusterAdsorptionSites(patoms, **self.kwargs)      
                 if True in patoms.pbc:
                     psac = SlabAdsorbateCoverage(patoms, psas, dmax=self.dmax,
                                                  label_occupied_sites=self.unique)      
@@ -1780,13 +1717,9 @@ class SystematicPatternGenerator(object):
             elif True in atoms.pbc:
                 if self.surface is None:
                     raise ValueError('please specify the surface type')
-                sas = SlabAdsorptionSites(atoms, self.surface,
-                                          self.allow_6fold,
-                                          self.composition_effect,
-                                          self.both_sides)
+                sas = SlabAdsorptionSites(atoms, **self.kwargs)
             else:
-                sas = ClusterAdsorptionSites(atoms, self.allow_6fold,
-                                             self.composition_effect)     
+                sas = ClusterAdsorptionSites(atoms, **self.kwargs)     
             if site_preference is not None:                                              
                 if not is_list_or_tuple(site_preference):
                     site_preference = [site_preference]
@@ -1823,14 +1756,256 @@ class SystematicPatternGenerator(object):
                 self.logfile.flush()
 
 
-def ordered_coverage_pattern(atoms, adsorbate_species, 
+class SymmetricPatternGenerator(object):
+    """`SymmetricPatternGenerator` is a class for generating 
+    adsorbate overlayer patterns stochastically. Graph isomorphism
+    is implemented to identify identical adlayer patterns. 4 
+    adsorbate actions are supported: add, remove, move, replace. 
+    The class is generalized for both periodic and non-periodic 
+    systems (distinguished by atoms.pbc). 
+
+    Parameters
+    ----------
+    images : ase.Atoms object or list of ase.Atoms objects
+        The structure to perform the adsorbate actions on. 
+        If a list of structures is provided, perform one 
+        adsorbate action on one of the structures in each step. 
+        Accept any ase.Atoms object. No need to be built-in.
+
+    adsorbate_species : str or list of strs 
+        A list of possible adsorbate species to be added to the surface.
+
+    repeating_distance : float
+        The pairwise distance (in Angstrom) between two symmetry-equivalent 
+        adsorption sites.
+
+    max_species : int, default None
+        The maximum allowed adsorbate species (excluding vacancies) for a 
+        single structure. Allow all adsorbatae species if not specified.
+
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, you 
+        should only provide adsorption_sites when the surface composition 
+        is fixed. If this is not provided, the arguments for identifying
+        adsorption sites can still be passed in by **kwargs.
+
+    remove_neighbor_sites : bool, default True
+        Whether to remove the neighboring sites around each occupied site.
+
+    heights : dict, default acat.settings.site_heights
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site 
+        type is not specified.
+
+    site_groups : list of lists, default None                                 
+        Provide the user defined symmetry equivalent site groups as a list 
+        of lists of site indices (of the site list). Useful for generating 
+        structures with symmetries that are not supported.
+
+    fragmentation : bool, default True                                  
+        Whether to cut multidentate species into fragments. This ensures
+        that multidentate species with different orientations are
+        considered as different adlayer patterns.
+
+    dmax : float, default 3.
+        The maximum bond length (in Angstrom) between the site and the
+        bonding atom that should be considered as an adsorbate.       
+
+    trajectory : str, default 'patterns.traj'
+        The name of the output ase trajectory file.
+
+    append_trajectory : bool, default False
+        Whether to append structures to the existing trajectory. 
+        If only unique patterns are accepted, the code will also check 
+        graph isomorphism for the existing structures in the trajectory.
+
+    """
+    def __init__(self, images, 
+                 adsorbate_species, 
+                 repeating_distance,
+                 max_species=None,
+                 adsorption_sites=None,
+                 remove_neighbor_sites=True,
+                 heights=site_heights, 
+                 site_groups=None,
+                 fragmentation=True,
+                 dmax=3.,
+                 trajectory='patterns.traj',
+                 append_trajectory=False, 
+                 **kwargs):
+
+        self.images = images if is_list_or_tuple(images) else [images]                     
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(
+                                 adsorbate_species) else [adsorbate_species]
+        self.repeating_distance = repeating_distance
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False,
+                       'ignore_bridge_sites': True, 'label_sites': False} 
+        self.kwargs.update(kwargs)
+        if adsorption_sites is None:
+            if True in self.images[0].pbc:
+                self.adsorption_sites = SlabAdsorptionSites(self.images[0],
+                                                            **self.kwargs)
+            else: 
+                self.adsorption_sites = ClusterAdsorptionSites(self.images[0], 
+                                                               **self.kwargs)
+        else:
+            self.adsorption_sites = adsorption_sites
+            for k in self.kwargs.keys():             
+                self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
+        self.__dict__.update(self.kwargs)
+
+        self.remove_neighbor_sites = remove_neighbor_sites
+        self.heights = site_heights 
+        self.fragmentation = fragmentation
+        self.dmax = dmax
+        for k, v in heights.items():
+            self.heights[k] = v
+
+        if max_species is None:
+            self.max_species = len(set(self.adsorbate_species)) 
+        else: 
+            self.max_species = max_species
+        if isinstance(trajectory, str):            
+            self.trajectory = trajectory 
+        self.append_trajectory = append_trajectory
+
+        self.site_list = self.adsorption_sites.site_list
+        if site_groups is None:                  
+            self.site_groups = self.get_site_groups()
+        else:
+            self.site_groups = site_groups
+
+    def get_site_groups(self):
+        """Get the groups (a list of lists of site indices) of all
+        pairs of symmetry-equivalent sites."""
+
+        sl = self.site_list
+        pt1 = sl[0]['position']
+        pts = np.asarray([s['position'] for s in sl])
+        tup = find_mic(pts - pt1, cell=self.images[0].cell, 
+                       pbc=(True in self.images[0].pbc))
+        i2 = (np.abs(tup[1] - self.repeating_distance)).argmin()
+        pt2 = sl[i2]['position']
+        vec = tup[0][i2]
+
+        seen = {0, i2}
+        groups = [[0, i2]]
+        for i, st in enumerate(sl):
+            if i in [0, i2]:
+                continue
+            if i in seen:
+                continue
+            pt = st['position']
+            repeat_pt = pt + vec
+            j = find_mic(pts - repeat_pt, cell=self.images[0].cell,
+                         pbc=(True in self.images[0].pbc))[1].argmin()
+            if j in seen:
+                continue
+            seen.update([i, j])
+            groups.append([i, j])
+
+        return groups
+ 
+    def run(self, max_gen=None, unique=True):
+        """Run the symmetric pattern generator.
+
+        Parameters
+        ----------
+        max_gen : int, default None
+            Maximum number of chemical orderings to generate. Running
+            forever (until exhaustive for systematic search) if not 
+            specified. 
+
+        unique : bool, default True 
+            Whether to discard duplicate patterns based on graph isomorphism.
+
+        """
+
+        traj_mode = 'a' if self.append_trajectory else 'w'
+        traj = Trajectory(self.trajectory, mode=traj_mode)
+        sas = self.adsorption_sites
+        sl = self.site_list
+        groups = self.site_groups
+        if self.remove_neighbor_sites:
+            nsl = sas.get_neighbor_site_list()
+        ngroups = len(groups)
+        labels_list, graph_list = [], []
+        if len(traj) > 0 and unique and self.append_trajectory:                                
+            prev_images = read(self.trajectory, index=':')
+            for patoms in prev_images:
+                psac = SlabAdsorbateCoverage(patoms, sas, dmax=self.dmax)
+                plabs = psac.get_occupied_labels(fragmentation=self.fragmentation)
+                pG = psac.get_graph(fragmentation=self.fragmentation)
+                labels_list.append(plabs)
+                graph_list.append(pG)
+
+        n_write = 0
+        combos = set()
+        too_few = (2**ngroups * 0.95 <= max_gen)
+        while True:
+            specs = random.sample(self.adsorbate_species, self.max_species) + ['vacancy']
+            combo = [None] * ngroups                                 
+            indices = list(range(ngroups))
+            random.shuffle(indices)
+            newvs = set()
+            for idx in indices:
+                group = groups[idx]
+                if not set(group).isdisjoint(newvs):
+                    spec = 'vacancy'
+                else:
+                    spec = random.choice(specs)
+                    if self.remove_neighbor_sites:
+                        newvs.update([i for k in group for i in nsl[k]])
+                combo[idx] = spec
+            combo = tuple(combo)
+            if not all(sp == 'vacancy' for sp in combo):
+                if combo not in combos or too_few:
+                    atoms = random.choice(self.images).copy()
+                    dup = False
+                    for j, spec in enumerate(combo):
+                        if spec == 'vacancy':
+                            continue
+                        sites = [sl[si] for si in groups[j]]
+                        for st in sites:
+                            height = self.heights[st['site']]
+                            add_adsorbate_to_site(atoms, spec, st, height)
+                        if unique:
+                            nsac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax) 
+                            labs = nsac.get_occupied_labels(fragmentation=self.fragmentation)
+                            if labs in labels_list:
+                                G = nsac.get_graph(fragmentation=self.fragmentation)
+                                if graph_list:
+                                    # Skip duplicates based on isomorphism 
+                                    nm = iso.categorical_node_match('symbol', 'X')
+                                    potential_graphs = [g for i, g in enumerate(graph_list) 
+                                                        if labels_list[i] == labs]
+                                    if any(H for H in potential_graphs if 
+                                    nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                        dup = True
+                                        break
+                                graph_list.append(G)
+                            labels_list.append(labs)
+                    if dup:
+                        continue                   
+                    combos.add(combo)
+                    traj.write(atoms)
+                    n_write += 1
+                    if max_gen is not None:
+                        if n_write == max_gen:
+                            break
+
+
+def special_coverage_pattern(atoms, adsorbate_species, 
                              coverage=1., 
                              species_probabilities=None,
                              adsorption_sites=None,
                              surface=None, 
                              height=None, 
-                             min_adsorbate_distance=0.,
-                             both_sides=False):
+                             min_adsorbate_distance=0., 
+                             **kwargs):
     """A function for generating representative ordered adsorbate 
     overlayer patterns. The function is generalized for both periodic 
     and non-periodic systems (distinguished by atoms.pbc).
@@ -1865,7 +2040,8 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
         or acat.adsorption_sites.SlabAdsorptionSites object, default None
         Provide the built-in adsorption sites class to accelerate the 
-        pattern generation.
+        pattern generation. If this is not provided, the arguments for 
+        identifying adsorption sites can still be passed in by **kwargs.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices).
@@ -1883,10 +2059,6 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
         The minimum distance between two atoms that belongs to two 
         adsorbates.
 
-    both_sides : bool, default False
-        Whether to add adsorbate to both top and bottom sides of the slab.
-        Only relvevant for periodic surface slabs.
-    
     """
 
     assert coverage in [0.25, 0.5, 0.75, 1., 2.], 'coverage not supported' 
@@ -1901,19 +2073,20 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
         if surface is None:
             surface = ['fcc100', 'fcc111'] 
         if adsorption_sites is None:       
-            sas = ClusterAdsorptionSites(atoms)
+            sas = ClusterAdsorptionSites(atoms, **kwargs)
         else:
             sas = adsorption_sites
         site_list = sas.site_list
     else:
         if adsorption_sites is None:
-            sas = SlabAdsorptionSites(atoms, surface=surface, both_sides=both_sides)
+            sas = SlabAdsorptionSites(atoms, surface=surface, **kwargs)
         else:
             sas = adsorption_sites
         site_list = sas.site_list
-        if both_sides:
-            bot_site_list = site_list[len(site_list)//2:]
-            site_list = site_list[:len(site_list)//2]
+        if 'both_sides' in kwargs:
+            if kwargs['both_sides']:
+                bot_site_list = site_list[len(site_list)//2:]
+                site_list = site_list[:len(site_list)//2]
 
     if not isinstance(surface, list):
         surface = [surface] 
@@ -2174,8 +2347,9 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
     final_sites = find_ordered_sites(site_list)
     if True in atoms.pbc:
-        if both_sides:
-            final_sites += find_ordered_sites(bot_site_list)
+        if 'both_sides' in kwargs:
+            if kwargs['both_sides']:
+                final_sites += find_ordered_sites(bot_site_list)
     # Add edge coverage for nanoparticles
     else:
         if coverage in [1, 2]:
@@ -2236,6 +2410,9 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
         if coverage == 2/4:            
             occupied_sites = final_sites.copy()
+            hcp_sites = [s for s in site_list if 
+                         s['site'] == 'hcp' and
+                         s['surface'] == 'fcc111']
             edge_sites = [s for s in site_list if 
                           s['site'] == 'bridge' and
                           s['surface'] == 'edge']
@@ -2320,7 +2497,6 @@ def ordered_coverage_pattern(atoms, adsorbate_species,
 
         if height is None:
             height = site_heights[site['site']]
-
         add_adsorbate_to_site(atoms, adsorbate, site, height)       
         if min_adsorbate_distance > 0:
             if atoms_too_close_after_addition(atoms[natoms:], nads,
@@ -2335,8 +2511,8 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
                               species_probabilities=None,
                               adsorption_sites=None,
                               surface=None,
-                              heights=site_heights, 
-                              both_sides=False):
+                              heights=site_heights,
+                              **kwargs):
     """A function for generating random adlayer patterns with 
     a certain surface adsorbate coverage (i.e. fixed number of 
     adsorbates N) and trying to even the adsorbate density. The 
@@ -2370,7 +2546,8 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
         or acat.adsorption_sites.SlabAdsorptionSites object, default None
         Provide the built-in adsorption sites class to accelerate the 
-        pattern generation.
+        pattern generation. If this is not provided, the arguments for 
+        identifying adsorption sites can still be passed in by **kwargs.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices). 
@@ -2384,10 +2561,6 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    both_sides : bool, default False
-        Whether to add adsorbate to both top and bottom sides of the slab.
-        Only relvevant for periodic surface slabs.
-    
     """
     from pyclustering.cluster.kmedoids import kmedoids
 
@@ -2406,7 +2579,7 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
  
     if True not in atoms.pbc:                                
         if adsorption_sites is None:
-            sas = ClusterAdsorptionSites(atoms, allow_6fold=False)
+            sas = ClusterAdsorptionSites(atoms, **kwargs)
         else:
             sas = adsorption_sites
         site_list = sas.site_list
@@ -2414,9 +2587,7 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
             site_list = [s for s in site_list if s['surface'] == surface]
     else:
         if adsorption_sites is None:
-            sas = SlabAdsorptionSites(atoms, surface=surface,
-                                      allow_6fold=False,
-                                      both_sides=both_sides)
+            sas = SlabAdsorptionSites(atoms, surface=surface, **kwargs)
         else:
             sas = adsorption_sites
         site_list = sas.site_list
@@ -2461,9 +2632,8 @@ def min_dist_coverage_pattern(atoms, adsorbate_species,
                               min_adsorbate_distance=1.5, 
                               site_types=None,
                               heights=site_heights,
-                              allow_6fold=False,
                               site_preference=None,
-                              both_sides=False):
+                              **kwargs):
     """A function for generating random adlayer patterns with a 
     minimum distance constraint and trying to maximize the adsorbate
     density. The function is generalized for both periodic and 
@@ -2486,7 +2656,8 @@ def min_dist_coverage_pattern(atoms, adsorbate_species,
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
         or acat.adsorption_sites.SlabAdsorptionSites object, default None
         Provide the built-in adsorption sites class to accelerate the 
-        pattern generation.
+        pattern generation. If this is not provided, the arguments for 
+        identifying adsorption sites can still be passed in by **kwargs.
 
     surface : str, default None
         The surface type (crystal structure + Miller indices).
@@ -2508,17 +2679,9 @@ def min_dist_coverage_pattern(atoms, adsorbate_species,
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    allow_6fold : bool, default False
-        Whether to allow the adsorption on 6-fold subsurf sites 
-        underneath fcc hollow sites.
-
     site_preference : str of list of strs, defualt None
         The site type(s) that has higher priority to attach adsorbates.
     
-    both_sides : bool, default False
-        Whether to add adsorbate to both top and bottom sides of the slab.
-        Only relvevant for periodic surface slabs.
-
     """
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]
@@ -2535,17 +2698,15 @@ def min_dist_coverage_pattern(atoms, adsorbate_species,
  
     if True not in atoms.pbc:                                
         if adsorption_sites is None:
-            sas = ClusterAdsorptionSites(atoms, allow_6fold=allow_6fold)
+            sas = ClusterAdsorptionSites(atoms, **kwargs)
         else:
             sas = adsorption_sites
         site_list = sas.site_list
         if surface is not None:
             site_list = [s for s in site_list if s['surface'] == surface]
     else:
-        if adsorption_sites is None:
-            sas = SlabAdsorptionSites(atoms, surface=surface,
-                                      allow_6fold=allow_6fold,
-                                      both_sides=both_sides)
+        if adsorption_sites is None:                           
+            sas = SlabAdsorptionSites(atoms, surface=surface, **kwargs)
         else:
             sas = adsorption_sites
         site_list = sas.site_list

@@ -195,13 +195,13 @@ The remove_adsorbates_too_close function
     To remove unphysically close adsorbates on the edges of a Marks 
     decahedron with 0.75 ML ordered CO coverage:
 
-        >>> from acat.build.adlayer import ordered_coverage_pattern
+        >>> from acat.build.adlayer import special_coverage_pattern
         >>> from acat.build.action import remove_adsorbates_too_close
         >>> from ase.cluster import Decahedron
         >>> from ase.visualize import view
         >>> atoms = Decahedron('Pt', p=4, q=3, r=1)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = ordered_coverage_pattern(atoms, adsorbate='CO', 
+        >>> pattern = special_coverage_pattern(atoms, adsorbate='CO', 
         ...                                    coverage=0.75)
         >>> remove_adsorbates_too_close(pattern, min_adsorbate_distance=1.)
         >>> view(pattern)
@@ -217,7 +217,7 @@ Generate adsorbate overlayer patterns
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, ordered_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
+    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, SymmetricPatternGenerator, special_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
 
 The StochasticPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -339,7 +339,6 @@ The StochasticPatternGenerator class
 
     .. image:: ../images/StochasticPatternGenerator3.gif
 
-
 The SystematicPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -374,7 +373,7 @@ The SystematicPatternGenerator class
 
     Output:
 
-    .. image:: ../images/SystematicPatternGenerator1.gif
+    .. image:: ../images/SystematicPatternGenerator1.gif                     
 
     **Example2**
 
@@ -410,45 +409,89 @@ The SystematicPatternGenerator class
     .. image:: ../images/SystematicPatternGenerator2.gif
        :scale: 40 %
        :align: center
- 
-The ordered_coverage_pattern function
+
+The SymmetricPatternGenerator class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. autoclass:: SymmetricPatternGenerator
+
+        .. automethod:: get_site_groups
+
+        .. automethod:: run
+
+    **Example1**
+
+    The following example illustrates how to generate symmetry adlayer
+    patterns on a fcc111 surface slab with possilbe adsorbates of C, N, 
+    O, OH with a repeating distance of 5.026 Angstrom, where each 
+    structure is limited to have at most 2 different adsorbate species, 
+    and the neighbor sites around each occupied site must be removed: 
+
+        >>> from acat.build.adlayer import SymmetricPatternGenerator as SPG 
+        >>> from acat.adsorption_sites import SlabAdsorptionSites
+        >>> from ase.io import read
+        >>> from ase.build import fcc111
+        >>> from ase.visualize import view
+        >>> atoms = fcc111('Ni', (4, 4, 4), vacuum=5.)
+        >>> for atom in atoms:
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Cu'
+        >>> atoms.center()
+        >>> sas = SlabAdsorptionSites(atoms, surface='fcc111',
+        ...                           allow_6fold=False,
+        ...                           ignore_bridge_sites=True)
+        >>> spg = SPG(atoms, adsorbate_species=['C', 'N', 'O', 'OH'],
+        ...           surface='fcc111',
+        ...           repeating_distance=5.026,
+        ...           max_species=2,
+        ...           adsorption_sites=sas,
+        ...           remove_neighbor_sites=True)
+        >>> spg.run(max_gen=50, unique=True)
+        >>> images = read('patterns.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+    .. image:: ../images/SymmetricPatternGenerator1.gif                     
+
+The special_coverage_pattern function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autofunction:: ordered_coverage_pattern
+    .. autofunction:: special_coverage_pattern
 
     **Example1**
 
     To add a 0.5 ML CO adlayer pattern on a cuboctahedron:
 
-        >>> from acat.build.adlayer import ordered_coverage_pattern
+        >>> from acat.build.adlayer import special_coverage_pattern
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = ordered_coverage_pattern(atoms, adsorbate_species='CO', 
+        >>> pattern = special_coverage_pattern(atoms, adsorbate_species='CO', 
         ...                                    coverage=0.5)
         >>> view(pattern)
 
     Output:
 
-    .. image:: ../images/ordered_coverage_pattern_1.png
+    .. image:: ../images/special_coverage_pattern_1.png
 
     **Example2**
 
     To add a 0.5 ML CO adlayer pattern on a fcc111 surface slab:
 
-        >>> from acat.build.adlayer import ordered_coverage_pattern
+        >>> from acat.build.adlayer import special_coverage_pattern
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
         >>> atoms = fcc111('Cu', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = ordered_coverage_pattern(atoms, adsorbate_species='CO',
+        >>> pattern = special_coverage_pattern(atoms, adsorbate_species='CO',
         ...                                    coverage=0.5, surface='fcc111')
         >>> view(pattern)
 
     Output:
 
-    .. image:: ../images/ordered_coverage_pattern_2.png
+    .. image:: ../images/special_coverage_pattern_2.png
 
 The max_dist_coverage_pattern function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -581,7 +624,7 @@ Generate alloy chemical orderings
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: SymmetricClusterOrderingGenerator, RandomOrderingGenerator
+    :exclude-members: SymmetricClusterOrderingGenerator, SymmetricSlabOrderingGenerator, RandomOrderingGenerator
 
 The SymmetricClusterOrderingGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -693,10 +736,10 @@ The SymmetricClusterOrderingGenerator class
        :scale: 60 %
        :align: center
 
-The OrderedSlabOrderingGenerator class
+The SymmetricSlabOrderingGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autoclass:: OrderedSlabOrderingGenerator
+    .. autoclass:: SymmetricSlabOrderingGenerator
 
         .. automethod:: get_groups
 
@@ -704,81 +747,116 @@ The OrderedSlabOrderingGenerator class
 
     **Example1**
 
-    To stochastically generate 50 ordered chemical orderings for
-    ternary NixPtyAu1-x-y fcc111 surface slabs:
+    To stochastically generate 50 chemical orderings with
+    rotational symmetry around the vector [11.2, 6.467, 0]
+    for binary NixPt1-x fcc111 surface slabs:
 
-        >>> from acat.build.ordering import OrderedSlabOrderingGenerator as OSOG 
+        >>> from acat.build.ordering import SymmetricSlabOrderingGenerator as SSOG
+        >>> from ase.build import fcc111
+        >>> from ase.io import read
+        >>> from ase.visualize import view
+        >>> import numpy as np
+        >>> atoms = fcc111('Ni', (4, 4, 5), vacuum=5.)
+        >>> atoms.center()
+        >>> ssog = SSOG(atoms, elements=['Ni', 'Pt'],
+        ...             symmetry='rotational',
+        ...             symmetry_axis=np.array([11.2, 6.467, 0]))
+        >>> ssog.run(max_gen=50, mode='stochastic', verbose=True)
+        >>> images = read('orderings.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+        | 50 symmetry-equivalent groups classified           
+        | 50 symmetric chemical orderings generated 
+
+    .. image:: ../images/SymmetricSlabOrderingGenerator1.gif
+       :scale: 60 %
+       :align: center
+
+    **Example2**
+
+    To stochastically generate 50 chemical orderings with 
+    translational symmetry for ternary NixPtyAu1-x-y fcc111 
+    surface slabs:
+
+        >>> from acat.build.ordering import SymmetricSlabOrderingGenerator as SSOG 
         >>> from ase.build import fcc111
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = fcc111('Ni', (6, 6, 4), vacuum=5.)
         >>> atoms.center()
-        >>> osog = OSOG(atoms, elements=['Ni', 'Pt', 'Au'],
+        >>> ssog = SSOG(atoms, elements=['Ni', 'Pt', 'Au'],
+        ...             symmetry='translational',
         ...             repeating_size=(3, 3)) 
-        >>> osog.run(max_gen=50, mode='stochastic', verbose=True)
+        >>> ssog.run(max_gen=50, mode='stochastic', verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
 
     Output:
 
-        | 16 symmetry-equivalent groups classified
-        | 50 ordered chemical orderings generated 
+        | 16 symmetry-equivalent groups classified           
+        | 50 symmetric chemical orderings generated 
 
-    .. image:: ../images/OrderedSlabOrderingGenerator1.gif
-       :scale: 60 %
-       :align: center
-
-    **Example2**
-               
-    To systematically generate 50 ordered chemical orderings for 
-    Ni0.75Pt0.25 fcc110 surface slabs:
-
-        >>> from acat.build.ordering import OrderedSlabOrderingGenerator as OSOG 
-        >>> from ase.build import fcc110
-        >>> from ase.io import read
-        >>> from ase.visualize import view
-        >>> atoms = fcc110('Ni', (4, 4, 4), vacuum=5.)
-        >>> atoms.center()
-        >>> osog = OSOG(atoms, elements=['Ni', 'Pt'],
-        ...             composition={'Ni': 0.75, 'Pt': 0.25},
-        ...             repeating_size=(2, 2)) 
-        >>> osog.run(max_gen=50, mode='systematic', verbose=True)
-        >>> images = read('orderings.traj', index=':')
-        >>> view(images)
-
-    Output:
-
-        | 16 symmetry-equivalent groups classified
-        | 50 ordered chemical orderings generated
-
-    .. image:: ../images/OrderedSlabOrderingGenerator2.gif
+    .. image:: ../images/SymmetricSlabOrderingGenerator2.gif
        :scale: 60 %
        :align: center
 
     **Example3**
+               
+    To systematically generate 50 chemical orderings with 
+    translational symmetry for Ni0.75Pt0.25 fcc110 surface  
+    slabs:
 
-    To stochastically generate 50 ordered chemical orderings for 
-    Ni0.75Pt0.25 fcc110 surface slabs:
-
-        >>> from acat.build.ordering import OrderedSlabOrderingGenerator as OSOG 
+        >>> from acat.build.ordering import SymmetricSlabOrderingGenerator as SSOG 
         >>> from ase.build import fcc110
         >>> from ase.io import read
         >>> from ase.visualize import view
         >>> atoms = fcc110('Ni', (4, 4, 4), vacuum=5.)
         >>> atoms.center()
-        >>> osog = OSOG(atoms, elements=['Ni', 'Pt'],
+        >>> ssog = SSOG(atoms, elements=['Ni', 'Pt'],
+        ...             symmetry='translational', 
         ...             composition={'Ni': 0.75, 'Pt': 0.25},
         ...             repeating_size=(2, 2)) 
-        >>> osog.run(max_gen=50, mode='stochastic', verbose=True)
+        >>> ssog.run(max_gen=50, mode='systematic', verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
 
     Output:
 
         | 16 symmetry-equivalent groups classified
-        | 50 ordered chemical orderings generated
+        | 50 symmetric chemical orderings generated
 
-    .. image:: ../images/OrderedSlabOrderingGenerator3.gif
+    .. image:: ../images/SymmetricSlabOrderingGenerator3.gif
+       :scale: 60 %
+       :align: center
+
+    **Example4**
+
+    To stochastically generate 50 chemical orderings with 
+    translational symmetry for Ni0.75Pt0.25 fcc110 surface 
+    slabs:
+
+        >>> from acat.build.ordering import SymmetricSlabOrderingGenerator as SSOG 
+        >>> from ase.build import fcc110
+        >>> from ase.io import read
+        >>> from ase.visualize import view
+        >>> atoms = fcc110('Ni', (4, 4, 4), vacuum=5.)
+        >>> atoms.center()
+        >>> ssog = SSOG(atoms, elements=['Ni', 'Pt'],
+        ...             symmetry='translational',
+        ...             composition={'Ni': 0.75, 'Pt': 0.25},
+        ...             repeating_size=(2, 2)) 
+        >>> ssog.run(max_gen=50, mode='stochastic', verbose=True)
+        >>> images = read('orderings.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+        | 16 symmetry-equivalent groups classified
+        | 50 symmetric chemical orderings generated
+
+    .. image:: ../images/SymmetricSlabOrderingGenerator4.gif
        :scale: 60 %
        :align: center
 

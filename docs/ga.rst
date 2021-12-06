@@ -58,7 +58,7 @@ The script for a parallel genetic algorithm looks as follows:
     # Define population
     # Recommend to choose a number that is a multiple of the number of cpu
     pop_size = 50
-    
+        
     # Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings
     particle = Icosahedron('Ni', noshells=4)
     particle.center(vacuum=5.)
@@ -181,16 +181,17 @@ The script for a parallel genetic algorithm looks as follows:
             atoms.info['data'] = {}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
-        relax(atoms, single_point=True) # Single point only for testing
-        db.add_relaxed_step(atoms)
-    
+
+        return relax(atoms, single_point=True) # Single point only for testing
+        
     # Create a multiprocessing Pool
     pool = Pool(os.cpu_count())
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles
-    pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
+    relaxed_candidates = pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
     pool.close()
     pool.join()
+    db.add_more_relaxed_candidates(relaxed_candidates)
     pop.update()
     
     # Number of generations
@@ -226,18 +227,19 @@ The script for a parallel genetic algorithm looks as follows:
             print('Relaxing ' + nncomp)
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
-            relax(offspring, single_point=True) # Single point only for testing
-            db.add_relaxed_candidate(offspring)
-    
+
+            return relax(offspring, single_point=True) # Single point only for testing
+            
         # Create a multiprocessing Pool
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially useful when
         # using adsorbate operators which requires site identification
-        pool.map(procreation, range(pop_size))
+        relaxed_candidates = pool.map(procreation, range(pop_size))
         pool.close()
         pool.join()
+        db.add_more_relaxed_candidates(relaxed_candidates)
     
-        # update the population to allow new candidates to enter
+        # Update the population to allow new candidates to enter
         pop.update()
 
 **Example2**
@@ -281,7 +283,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     # Define population
     # Recommand to choose a number that is a multiple of the number of cpu
     pop_size = 50
-    
+       
     # Generate 50 icosahedral Ni110Pt37 nanoparticles with random orderings
     particle = Icosahedron('Ni', noshells=4)
     particle.center(vacuum=5.)
@@ -405,16 +407,17 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
             atoms.info['data'] = {}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
-        relax(atoms, single_point=True) # Single point only for testing
-        db.add_relaxed_step(atoms)
+
+        return relax(atoms, single_point=True) # Single point only for testing
     
     # Create a multiprocessing Pool
     pool = Pool(os.cpu_count())
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles
-    pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
+    relaxed_candidates = pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())
     pool.close()
     pool.join()
+    db.add_more_relaxed_candidates(relaxed_candidates)
     pop.update()
     
     # Number of generations
@@ -452,7 +455,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
                 offspring.info['data'] = {}
             relax(offspring, single_point=True) # Single point only for testing
             db.add_relaxed_candidate(offspring)
-    
+            
         # Create a multiprocessing Pool
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially useful when
@@ -461,7 +464,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
         pool.close()
         pool.join()
     
-        # update the population to allow new candidates to enter
+        # Update the population to allow new candidates to enter
         pop.update()
 
 Symmetry-constrained genetic algorithm for nanoalloys
@@ -511,7 +514,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     # Define population. 
     # Recommend to choose a number that is a multiple of the number of cpu
     pop_size = 100
-    
+        
     # Build and rotate the particle so that C3 axis is aligned to z direction
     particle = Octahedron('Ni', length=9, cutoff=3)
     particle.rotate(45, 'x')     
@@ -610,16 +613,17 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
             atoms.info['data'] = {}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
-        relax(atoms)
-        db.add_relaxed_step(atoms)
+
+        return relax(atoms)
     
     # Create a multiprocessing Pool
     pool = Pool(os.cpu_count())
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles  
-    pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
+    relaxed_candidates = pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
     pool.close()
     pool.join()
+    db.add_more_relaxed_candidates(relaxed_candidates)
     pop.update()
 
     # Number of generations
@@ -658,7 +662,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
                 offspring.info['data'] = {}
             relax(offspring)
             db.add_relaxed_candidate(offspring)
-    
+            
         # Create a multiprocessing Pool
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially
@@ -667,7 +671,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         pool.close()
         pool.join()
     
-        # update the population to allow new candidates to enter
+        # Update the population to allow new candidates to enter
         pop.update()
 
 **Example2**
@@ -702,7 +706,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
     # Define population. 
     # Recommend to choose a number that is a multiple of the number of cpu
     pop_size = 100
-    
+ 
     # Build and rotate the particle so that C3 axis is aligned to z direction
     particle = Octahedron('Ni', length=9, cutoff=3)
     particle.rotate(45, 'x')     
@@ -830,16 +834,17 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
             atoms.info['data'] = {}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
-        relax(atoms)
-        db.add_relaxed_step(atoms)
+
+        return relax(atoms)
     
     # Create a multiprocessing Pool
     pool = Pool(os.cpu_count())
     # Perform relaxations in parallel. Especially
     # useful when running GA on large nanoparticles  
-    pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
+    relaxed_candidates = pool.map(relax_an_unrelaxed_candidate, db.get_all_unrelaxed_candidates())  
     pool.close()
     pool.join()
+    db.add_more_relaxed_candidates(relaxed_candidates)
     pop.update()
 
     # Number of generations
@@ -876,16 +881,17 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
             print('Relaxing ' + nncomp)        
             if 'data' not in offspring.info:
                 offspring.info['data'] = {}
-            relax(offspring)
-            db.add_relaxed_candidate(offspring)
-    
+
+            return relax(offspring)
+            
         # Create a multiprocessing Pool
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially
         # useful when running GA on large nanoparticles  
-        pool.map(procreation, range(pop_size))  
+        relaxed_candidates = pool.map(procreation, range(pop_size))  
         pool.close()
         pool.join()
-    
-        # update the population to allow new candidates to enter
+        db.add_more_relaxed_candidates(relaxed_candidates)    
+
+        # Update the population to allow new candidates to enter
         pop.update()

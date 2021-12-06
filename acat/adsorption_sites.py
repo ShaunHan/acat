@@ -78,6 +78,9 @@ class ClusterAdsorptionSites(object):
         compositions as different sites. It is recommended to 
         set composition_effect=False for monometallics.
 
+    ignore_bridge_sites : bool, default False
+        Whether to ignore bridge sites.
+
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
@@ -133,6 +136,7 @@ class ClusterAdsorptionSites(object):
                  allow_6fold=False, 
                  composition_effect=False, 
                  label_sites=False,
+                 ignore_bridge_sites=False,
                  proxy_metal=None,
                  tol=.5):
 
@@ -153,6 +157,7 @@ class ClusterAdsorptionSites(object):
         self.indices = list(range(len(self.atoms)))
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
+        self.ignore_bridge_sites = ignore_bridge_sites
         self.proxy_metal = proxy_metal
         self.tol = tol
         
@@ -184,6 +189,9 @@ class ClusterAdsorptionSites(object):
         self.populate_site_list()
         if self.label_sites:
             self.get_labels()
+        if self.ignore_bridge_sites:
+            self.site_list = [s for s in self.site_list if 'bridge' not in s['site']]
+        self.site_list.sort(key=lambda x: x['indices'])
  
     def populate_site_list(self):
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
@@ -867,12 +875,15 @@ class ClusterAdsorptionSites(object):
 
         return G
 
-    def get_neighbor_site_list(self, neighbor_number=1, span=True):           
+    def get_neighbor_site_list(self, dx=0.1, neighbor_number=1, span=True):           
         """Returns the site_list index of all neighbor shell sites 
         for each site.
 
         Parameters
         ----------
+        dx : float, default 0.1
+            Buffer to calculate nearest neighbor pairs.
+
         neighbor_number : int, default 1
             Neighbor shell number. 
 
@@ -892,8 +903,9 @@ class ClusterAdsorptionSites(object):
         cr = 0.55 
         if neighbor_number == 1:
             cr += 0.1
-                                                                   
-        nbslist = neighbor_shell_list(statoms, 0.1, neighbor_number,
+        if self.ignore_bridge_sites:
+            cr *= 1.5                                             
+        nbslist = neighbor_shell_list(statoms, dx, neighbor_number,
                                       mic=False, radius=cr, span=span)
         if neighbor_number == 1:
             topi_dict = {}
@@ -1077,6 +1089,9 @@ class SlabAdsorptionSites(object):
         Whether to consider sites on both top and bottom sides
         of the slab.
 
+    ignore_bridge_sites : bool, default False
+        Whether to ignore bridge sites.
+
     label_sites : bool, default False
         Whether to assign a numerical label to each site.
         Labels for different sites are listed in acat.labels.
@@ -1133,6 +1148,7 @@ class SlabAdsorptionSites(object):
                  allow_6fold=False, 
                  composition_effect=False, 
                  both_sides=False,
+                 ignore_bridge_sites=False,
                  label_sites=False,
                  proxy_metal=None,
                  tol=.5):
@@ -1164,6 +1180,7 @@ class SlabAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.both_sides = both_sides
+        self.ignore_bridge_sites = ignore_bridge_sites
         self.label_sites = label_sites
 
         if self.composition_effect:
@@ -1186,8 +1203,11 @@ class SlabAdsorptionSites(object):
 
         if self.both_sides:
             self.populate_opposite_site_list()
+        if self.ignore_bridge_sites:
+            self.site_list = [s for s in self.site_list if 'bridge' not in s['site']]
         if self.label_sites:
             self.get_labels()
+        self.site_list.sort(key=lambda x: x['indices'])
         
     def populate_site_list(self, allow_obtuse=True, cutoff=5., _bot_side=False):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
@@ -2557,12 +2577,15 @@ class SlabAdsorptionSites(object):
 
         return G
 
-    def get_neighbor_site_list(self, neighbor_number=1, span=True):           
+    def get_neighbor_site_list(self, dx=0.1, neighbor_number=1, span=True):           
         """Returns the site_list index of all neighbor shell sites 
         for each site.
 
         Parameters
         ----------
+        dx : float, default 0.1
+            Buffer to calculate nearest neighbor pairs.
+
         neighbor_number : int, default 1
             Neighbor shell number. 
 
@@ -2584,8 +2607,9 @@ class SlabAdsorptionSites(object):
         cr = 0.55 
         if neighbor_number == 1:
             cr += 0.1
-
-        nbslist = neighbor_shell_list(statoms, 0.1, neighbor_number,
+        if self.ignore_bridge_sites:
+            cr *= 1.5
+        nbslist = neighbor_shell_list(statoms, dx, neighbor_number,
                                       mic=True, radius=cr, span=span)
         if neighbor_number == 1:
             top_set = set(self.surf_ids)
@@ -2703,11 +2727,7 @@ def get_adsorption_site(atoms, indices,
 
 
 def enumerate_adsorption_sites(atoms, surface=None, 
-                               morphology=None, 
-                               allow_6fold=False,
-                               composition_effect=False,
-                               both_sides=False,
-                               label_sites=False):
+                               morphology=None, **kwargs):
     """A function that enumerates all adsorption sites of the 
     input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -2726,25 +2746,6 @@ def enumerate_adsorption_sites(atoms, surface=None,
     morphology : str, default None
         The function enumerates only the sites of the specified 
         local surface morphology. Only available for surface slabs.
-
-    allow_6fold : bool, default False
-        Whether to allow the adsorption on 6-fold subsurf sites 
-        underneath fcc hollow sites.
- 
-    composition_effect : bool, default False
-        Whether to consider sites with different elemental 
-        compositions as different sites. It is recommended to 
-        set composition_effect=False for monometallics.
-
-    both_sides : bool, default False
-        Whether to consider sites on both top and bottom sides
-        of the slab. Only relevant for periodic surface slabs.
-
-    label_sites : bool, default False
-        Whether to assign a numerical label to each site.
-        Labels for different sites are listed in acat.labels.
-        Use the bimetallic labels if composition_effect=True,
-        otherwise use the monometallic labels.
 
     Example
     -------
@@ -2775,20 +2776,14 @@ def enumerate_adsorption_sites(atoms, surface=None,
     """
 
     if True not in atoms.pbc:
-        cas = ClusterAdsorptionSites(atoms, allow_6fold,
-                                     composition_effect,
-                                     label_sites)
+        cas = ClusterAdsorptionSites(atoms, **kwargs)
         all_sites = cas.site_list
-        if surface:
+        if surface is not None:
             all_sites = [s for s in all_sites if 
                          s['surface'] == surface] 
 
     else:
-        sas = SlabAdsorptionSites(atoms, surface,
-                                  allow_6fold, 
-                                  composition_effect,
-                                  both_sides,
-                                  label_sites)            
+        sas = SlabAdsorptionSites(atoms, surface, **kwargs)
         all_sites = sas.site_list
         if morphology:
             all_sites = [s for s in all_sites if 

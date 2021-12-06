@@ -1,8 +1,18 @@
 """Procreation operators meant to be used in symmetry-constrained
 genetic algorithm (SCGA)."""
+from ..settings import adsorbate_elements, site_heights
+from ..adsorption_sites import (ClusterAdsorptionSites,    
+                                SlabAdsorptionSites)
+from ..adsorbate_coverage import (ClusterAdsorbateCoverage,
+                                  SlabAdsorbateCoverage)
+from ..build.action import (add_adsorbate_to_site, 
+                            remove_adsorbate_from_site, 
+                            remove_adsorbates_from_sites)
 from ase.ga.offspring_creator import OffspringCreator
-from itertools import tee, product, filterfalse
+from ase.formula import Formula
 from collections import defaultdict
+from operator import attrgetter
+import warnings
 import random
 
 
@@ -22,10 +32,14 @@ class GroupSubstitute(Mutation):
 
     Parameters
     ----------
-    groups : list of lists
+    groups : list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
-        or `acat.build.ordering.OrderedSlabOrderingGenerator`.
+        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.
+        If not provided here, please provide the groups in
+        atoms.info['data']['groups'] in all intial structures. This
+        is useful to mix structures with different group divisions in 
+        one GA run. 
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -36,12 +50,11 @@ class GroupSubstitute(Mutation):
 
     """
 
-    def __init__(self, groups, 
+    def __init__(self, groups=None, 
                  elements=None,
                  num_muts=1):
         Mutation.__init__(self, num_muts=num_muts)
 
-        assert len(elements) >= 2
         self.descriptor = 'GroupSubstitute'
         self.elements = elements
         self.groups = groups
@@ -50,7 +63,10 @@ class GroupSubstitute(Mutation):
         """Does the actual substitution"""
 
         atoms = atoms.copy() 
-
+        if self.groups is None:
+            groups = atoms.info['data']['groups']
+        else: 
+            groups = self.groups
         if self.elements is None:
             e = list(set(atoms.get_chemical_symbols()))
         else:
@@ -58,7 +74,7 @@ class GroupSubstitute(Mutation):
 
         sorted_elems = sorted(set(atoms.get_chemical_symbols()))
         if e is not None and sorted(e) != sorted_elems:
-            for group in self.groups:
+            for group in groups:
                 torem = []
                 for i in group:
                     if atoms[i].symbol not in e:
@@ -66,10 +82,10 @@ class GroupSubstitute(Mutation):
                 for i in torem:
                     group.remove(i)
 
-        itbms = random.sample(range(len(self.groups)), self.num_muts)
+        itbms = random.sample(range(len(groups)), self.num_muts)
         
         for itbm in itbms:
-            mut_group = self.groups[itbm]
+            mut_group = groups[itbm]
             other_elements = [e for e in self.elements if 
                               e != atoms[mut_group[0]].symbol]
             to_element = random.choice(other_elements)
@@ -94,10 +110,14 @@ class GroupPermutation(Mutation):
 
     Parameters
     ----------
-    groups : list of lists
+    groups : list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
-        or `acat.build.ordering.OrderedSlabOrderingGenerator`.
+        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.
+        If not provided here, please provide the groups in
+        atoms.info['data']['groups'] in all intial structures. This
+        is useful to mix structures with different group divisions in 
+        one GA run. 
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -112,13 +132,12 @@ class GroupPermutation(Mutation):
 
     """
 
-    def __init__(self, groups,
+    def __init__(self, groups=None,
                  elements=None,
                  keep_composition=False, 
                  num_muts=1):
         Mutation.__init__(self, num_muts=num_muts)
 
-        assert len(elements) >= 2
         self.descriptor = 'GroupPermutation'
         self.elements = elements
         self.keep_composition = keep_composition
@@ -132,11 +151,13 @@ class GroupPermutation(Mutation):
 
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
-
+        if self.groups is None:
+            groups = indi.info['data']['groups']
+        else:
+            groups = self.groups
         for _ in range(self.num_muts):
-            GroupPermutation.mutate(f, self.groups, self.elements,
+            GroupPermutation.mutate(f, groups, self.elements,
                                     self.keep_composition)
-
         for atom in f:
             indi.append(atom)
 
@@ -186,13 +207,366 @@ class GroupPermutation(Mutation):
             mut_group1 = groups[i1]
             options = [i for i in range(0, len(groups)) if atoms[mut_group1[0]].symbol 
                        != atoms[groups[i][0]].symbol]
-
         if not options:
             return
+
         i2 = random.choice(options)
         mut_group2 = groups[i2]
         atoms.symbols[mut_group1+mut_group2] = len(mut_group1) * atoms[
-        mut_group2[0]].symbol + len(mut_group2) * atoms[mut_group1[0]].symbol
+        mut_group2[0]].symbol + len(mut_group2) * atoms[mut_group1[0]].symbol            
+
+
+class AdsorbateGroupSubstitute(Mutation):
+    """Substitute all the adsorbates (or vacancies) in a site group 
+    with a different element.
+
+    Parameters
+    ----------
+    adsorbate_species : str or list of strs 
+        A list of possible adsorbate species to be added to the surface.
+
+    site_groups : list of lists, default None
+        The site indices in each user-divided group. Can be obtained 
+        by `acat.build.ordering.SymmetricPatternGenerator`.
+        If not provided here, please provide the groups in
+        atoms.info['data']['groups'] in all intial structures. This
+        is useful to mix structures with different group divisions in 
+        one GA run. 
+
+    max_species : int, default None
+        The maximum allowed adsorbate species (excluding vacancies) for a
+        single structure. Allow all adsorbatae species if not specified.
+
+    heights : dict, default acat.settings.site_heights                
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site
+        type is not specified.
+
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object 
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, you 
+        should only provide adsorption_sites when the surface composition 
+        is fixed. If this is not provided, the arguments for identifying
+        adsorption sites can still be passed in by **kwargs.
+
+    remove_neighbor_sites : bool, default True
+        Whether to remove the neighboring sites around each occupied site. 
+
+    num_muts : int, default 1
+        The number of times to perform this operation.
+
+    """
+
+    def __init__(self, adsorbate_species,
+                 site_groups=None, 
+                 max_species=None,
+                 heights=site_heights,
+                 adsorption_sites=None,
+                 remove_neighbor_sites=True,
+                 num_muts=1, **kwargs):
+        Mutation.__init__(self, num_muts=num_muts)
+
+        self.descriptor = 'AdsorbateGroupSubstitute'
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(
+                                 adsorbate_species) else [adsorbate_species]
+        self.site_groups = site_groups
+        self.max_species = max_species
+        self.heights = heights
+        self.adsorption_sites = adsorption_sites
+        self.remove_neighbor_sites = remove_neighbor_sites
+
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
+                       'ignore_bridge_sites': True, 'label_sites': False}
+        self.kwargs.update(kwargs)
+        if self.adsorption_sites is not None:
+            for k in self.kwargs.keys():             
+                self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
+        self.__dict__.update(self.kwargs)                                  
+
+    def substitute(self, atoms):
+        """Does the actual substitution of the adsorbates"""
+
+        atoms = atoms.copy() 
+        if True in atoms.pbc:                                          
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(atoms)
+            else:
+                sas = SlabAdsorptionSites(atoms, **self.kwargs)
+            sac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax)
+        else:
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(atoms)
+            else:
+                sas = ClusterAdsorptionSites(atoms, **self.kwargs)
+            sac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax) 
+
+        hsl = sac.hetero_site_list
+        if self.site_groups is None:
+            groups = atoms.info['data']['groups']
+        else:
+            groups = self.site_groups
+        ngroups = len(groups)
+        indices = list(range(ngroups))
+        if self.remove_neighbor_sites:
+            nsl = sas.get_neighbor_site_list()
+            indexes = indices.copy()
+            random.shuffle(indexes)
+            itbms = set()
+            for j in range(len(indexes)):
+                itbms.add(j)
+                if hsl[groups[j][0]]['occupied']:
+                    inset = {nsl[i] for i in groups[j]}
+                    ings = [nj for nj in indexes if not set(groups[nj]).isdisjoint(inset)]
+                    itbms = set(itbms) - set(ings)
+                if len(itbms) == self.num_muts:
+                    break
+            itbms = list(itbms) 
+        else:
+            itbms = random.sample(indices, self.num_muts)
+        not_mut = [j for j in indices if j not in itbms]
+        random.shuffle(not_mut)
+        if self.max_species is None:                      
+            options = self.adsorbate_species + ['vacancy']
+        else:
+            not_mut_specs = {hsl[j][0]['fragment'] for j in not_mut
+                             if hsl[j][0]['occupied']}
+            diff = self.max_species - len(not_mut_specs)
+            if diff > 0:
+                others = [sp for sp in self.adsorbate_species if sp not in not_mut_specs]
+                options = list(not_mut_specs) + random.sample(others, diff) + ['vacancy'] 
+            elif diff == 0:
+                options = list(not_mut_specs) + ['vacancy']
+            else:
+                options = list(not_mut_specs) + ['vacancy']
+                warnings.warn('The number of adsorbate species exceeds ' +
+                              'the maximum allowed number.')
+
+        changes = [None] * ngroups                                 
+        newvs = set()
+        indices = itbms + not_mut
+        for idx in indices:
+            group = groups[idx]
+            st0 = hsl[group[0]]
+            if not set(group).isdisjoint(newvs):
+                if st0['occupied']:
+                    changes[idx] = 'vacancy'
+            elif idx in itbms:
+                if st0['occupied']:
+                    spec = st0['fragment']
+                else:
+                    spec = 'vacancy'     
+                other_specs = [sp for sp in options if sp != spec]
+                to_spec = random.choice(other_specs)
+                changes[idx] = to_spec
+                if to_spec == 'vacancy':
+                    newvs.update(group)
+                elif self.remove_neighbor_sites:
+                    newvs.update([i for k in group for i in nsl[k]])
+
+        rmsites = [hsl[j] for idx, to_spec in enumerate(changes)                  
+                   if to_spec is not None for j in groups[idx]]
+        remove_adsorbates_from_sites(atoms, sites=rmsites, remove_fragments=True)
+        for idx, to_spec in enumerate(changes):
+            if to_spec not in [None, 'vacancy']:
+                for j in groups[idx]:
+                    st = hsl[j]
+                    height = self.heights[st['site']]
+                    add_adsorbate_to_site(atoms, to_spec, st, height)
+
+        if True in atoms.pbc:
+            nsac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax)
+        else:
+            nsac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax)
+        atoms.info['data']['adsorbates'] = nsac.get_adsorbates(self.adsorbate_species)
+
+        return atoms
+
+    def get_new_individual(self, parents):
+        f = parents[0]
+
+        indi = self.substitute(f)
+        indi = self.initialize_individual(f, indi) 
+        indi.info['data']['parents'] = [f.info['confid']] 
+
+        return (self.finalize_individual(indi),
+                self.descriptor + ':Parent {0}'.format(f.info['confid']))
+
+
+class AdsorbateGroupPermutation(Mutation):
+    """Permutes the elements in two random site groups.
+
+    Parameters
+    ----------
+    adsorbate_species : str or list of strs 
+        A list of possible adsorbate species to be added to the surface.
+
+    site_groups : list of lists, default None
+        The site indices in each user-divided group. Can be obtained 
+        by `acat.build.ordering.SymmetricPatternGenerator`.
+        If not provided here, please provide the groups in
+        atoms.info['data']['groups'] in all intial structures. This
+        is useful to mix structures with different group divisions in 
+        one GA run. 
+
+    heights : dict, default acat.settings.site_heights                
+        A dictionary that contains the adsorbate height for each site 
+        type. Use the default height settings if the height for a site
+        type is not specified.
+
+    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object 
+        or acat.adsorption_sites.SlabAdsorptionSites object, default None
+        Provide the built-in adsorption sites class to accelerate the 
+        pattern generation. Make sure all the structures have the same 
+        periodicity and atom indexing. If composition_effect=True, you 
+        should only provide adsorption_sites when the surface composition 
+        is fixed. If this is not provided, the arguments for identifying
+        adsorption sites can still be passed in by **kwargs.
+
+    remove_neighbor_sites : bool, default True
+        Whether to remove the neighboring sites around each occupied site. 
+
+    num_muts : int, default 1
+        The number of times to perform this operation.
+
+    """
+
+    def __init__(self, adsorbate_species, 
+                 site_groups,
+                 heights=site_heights,
+                 adsorption_sites=None,
+                 remove_neighbor_sites=True,
+                 num_muts=1):
+        Mutation.__init__(self, num_muts=num_muts)
+
+        self.descriptor = 'AdsorbateGroupPermutation'
+        self.adsorbate_species = adsorbate_species if is_list_or_tuple(       
+                                 adsorbate_species) else [adsorbate_species]
+        self.site_groups = site_groups
+        self.heights = heights
+        self.adsorption_sites = adsorption_sites
+        self.remove_neighbor_sites = remove_neighbor_sites
+
+        self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
+                       'ignore_bridge_sites': True, 'label_sites': False}
+        self.kwargs.update(kwargs)
+        if self.adsorption_sites is not None:
+            for k in self.kwargs.keys():             
+                self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
+        self.__dict__.update(self.kwargs)                                  
+
+    def get_new_individual(self, parents):
+
+        f = parents[0].copy()
+        diffatoms = len(set(f.numbers))
+        assert diffatoms > 1, 'Permutations with one atomic type is not valid'
+
+        indi = self.initialize_individual(f)
+        indi.info['data']['parents'] = [f.info['confid']]
+        if self.site_groups is None:
+            site_groups = indi.info['data']['groups']
+        else:
+            site_groups = self.site_groups
+
+        if True in indi.pbc:                                          
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = SlabAdsorptionSites(indi, **self.kwargs)
+        else:
+            if self.adsorption_sites is not None:
+                sas = self.adsorption_sites
+                sas.update(indi)
+            else:
+                sas = ClusterAdsorptionSites(indi, **self.kwargs)
+        
+        for _ in range(self.num_muts):
+            GroupPermutation.mutate(f, site_groups, self.heights, sas, 
+                                    self.remove_neighbor_sites, self.dmax)
+        for atom in f:
+            indi.append(atom)
+
+        if True in indi.pbc:
+            nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        else:
+            nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        indi.info['data']['adsorbates'] = nsac.get_adsorbates(self.adsorbate_species)
+
+        return (self.finalize_individual(indi),
+                self.descriptor + ':Parent {0}'.format(f.info['confid']))
+
+    @classmethod
+    def mutate(cls, atoms, groups, heights, adsorption_sites, 
+               remove_neighbor_sites, dmax):
+        """Do the actual permutation of the adsorbates."""
+
+        if True in atoms.pbc:
+            sac = SlabAdsorbateCoverage(atoms, sas, dmax=dmax) 
+        else:
+            sac = ClusterAdsorbateCoverage(atoms, sas, dmax=dmax)
+        hsl = sac.hetero_site_list
+ 
+        ngroup = len(groups)
+        i1 = random.randint(0, len(groups) - 1)
+        st01 = hsl[groups[i1][0]]
+        ings = []
+        if remove_neighbor_sites:                                                   
+            nsl = sas.get_neighbor_site_list()
+            if st01['occupied']:
+                ings += [nj for nj in indices if not set(groups[nj]).isdisjoint(nsl[i1])]
+        options = [j for j in range(ngroup) if (j not in ings) and 
+                   (st01['fragment'] != hsl[groups[j][0]]['fragment'])]
+        if not options:
+            return
+        i2 = random.choice(options)
+        st02 = hsl[groups[i2][0]]
+        if st01['occupied']:
+            to_spec2 = st01['fragment']
+        else: 
+            to_spec2 = 'vacancy'
+        if st02['occupied']:
+            to_spec1 = st02['fragment']
+        else:
+            to_spec1 = 'vacancy'
+        indices = list(range(ngroups))
+        not_mut = [j for j in indices if j not in [i1, i2]]
+        random.shuffle(not_mut)
+
+        changes = [None] * ngroup 
+        newvs = set()
+        indices = [i1, i2] + not_mut
+        for idx in indices:
+            group = groups[idx]
+            st0 = hsl[group[0]]
+            if not set(group).isdisjoint(newvs): 
+                if st0['occupied']:
+                    changes[idx] = 'vacancy'
+            elif idx == i1:
+                changes[idx] = to_spec1
+                if to_spec1 == 'vacancy':
+                    newvs.update(group)
+                elif remove_neighbor_sites:
+                    newvs.update([i for k in group for i in nsl[k]])
+            elif idx == i2:
+                changes[idx] = to_spec2
+                if to_spec2 == 'vacancy':
+                    newvs.update(group)
+                elif remove_neighbor_sites:
+                    newvs.update([i for k in group for i in nsl[k]])
+
+        rmsites = [hsl[j] for idx, to_spec in enumerate(changes)                 
+                   if to_spec is not None for j in groups[idx]]
+        remove_adsorbates_from_sites(atoms, sites=rmsites, remove_fragments=True)
+        for idx, to_spec in enumerate(changes):
+            if to_spec not in [None, 'vacancy']:
+                for j in groups[idx]:
+                    st = hsl[j]
+                    height = heights[st['site']]
+                    add_adsorbate_to_site(atoms, to_spec, st, height)
 
 
 class Crossover(OffspringCreator):
@@ -211,10 +585,15 @@ class GroupCrossover(Crossover):
 
     Parameters
     ----------
-    groups : list of lists
+    groups : list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
-        or `acat.build.ordering.OrderedSlabOrderingGenerator`.
+        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.
+        If not provided here, please provide the groups in
+        atoms.info['data']['groups'] in all intial structures. This
+        is useful to mix structures with different group divisions in 
+        one GA run. Note that for crossover please ensure the parents 
+        always have the same groups
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -226,7 +605,7 @@ class GroupCrossover(Crossover):
 
     """
 
-    def __init__(self, groups, elements=None, keep_composition=False):
+    def __init__(self, groups=None, elements=None, keep_composition=False):
         Crossover.__init__(self)
         self.groups = groups
         self.elements = elements
@@ -237,7 +616,11 @@ class GroupCrossover(Crossover):
 
         f, m = parents
         indi = f.copy()
-        groups = self.groups.copy()
+        if self.groups is None:
+            assert f.info['data']['groups'] == m.info['data']['groups']
+            groups = indi.info['data']['groups']
+        else:
+            groups = self.groups.copy()
         if self.elements is None:
             e = list(set(f.get_chemical_symbols()))
         else:

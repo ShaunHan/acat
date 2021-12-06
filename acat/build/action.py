@@ -382,9 +382,11 @@ def remove_adsorbates_from_sites(atoms, sites, remove_fragments=False):
     """
 
     if not remove_fragments:
-        si = [i for s in sites for i in s['adsorbate_indices']]
+        si = [i for s in sites if s['occupied'] for 
+              i in s['adsorbate_indices']]
     else:
-        si = [i for s in sites for i in s['fragment_indices']]
+        si = [i for s in sites if s['occupied'] for 
+              i in s['fragment_indices']]
     del atoms[si]
 
 

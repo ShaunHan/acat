@@ -3,6 +3,7 @@ from ase.geometry.geometry import _row_col_from_pdist
 from ase.geometry import find_mic
 from ase.formula import Formula
 from itertools import product, permutations, combinations
+from scipy.spatial.distance import cdist, euclidean
 from collections import abc, Counter
 import networkx as nx
 import numpy as np

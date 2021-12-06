@@ -69,9 +69,6 @@ docs/_build/html/sitemap.xml
 docs/_build/html/utilities.html
 docs/_build/html/_downloads/2323b5636c7c7624f7124ca37b2d01b9/table_of_adsorption_sites.pdf
 docs/_build/html/_downloads/d4db2def8832c660c65d58623887badd/water_bulk.xyz
-docs/_build/html/_images/OrderedSlabOrderingGenerator1.gif
-docs/_build/html/_images/OrderedSlabOrderingGenerator2.gif
-docs/_build/html/_images/OrderedSlabOrderingGenerator3.gif
 docs/_build/html/_images/RandomOrderingGenerator1.gif
 docs/_build/html/_images/RandomOrderingGenerator2.gif
 docs/_build/html/_images/StochasticPatternGenerator1.gif
@@ -94,8 +91,6 @@ docs/_build/html/_images/max_dist_coverage_pattern_2.png
 docs/_build/html/_images/min_dist_coverage_pattern_1.png
 docs/_build/html/_images/min_dist_coverage_pattern_2.png
 docs/_build/html/_images/min_dist_coverage_pattern_3.png
-docs/_build/html/_images/ordered_coverage_pattern_1.png
-docs/_build/html/_images/ordered_coverage_pattern_2.png
 docs/_build/html/_images/remove_adsorbate_from_site.png
 docs/_build/html/_images/remove_adsorbates_from_sites.png
 docs/_build/html/_images/remove_adsorbates_too_close.png
@@ -207,9 +202,6 @@ docs/latex/.doctrees/utilities.doctree
 examples/.gitkeep
 examples/prepare_sites.py
 images/.gitkeep
-images/OrderedSlabOrderingGenerator1.gif
-images/OrderedSlabOrderingGenerator2.gif
-images/OrderedSlabOrderingGenerator3.gif
 images/RandomOrderingGenerator1.gif
 images/RandomOrderingGenerator2.gif
 images/StochasticPatternGenerator1.gif
@@ -237,8 +229,6 @@ images/max_dist_coverage_pattern_2.png
 images/min_dist_coverage_pattern_1.png
 images/min_dist_coverage_pattern_2.png
 images/min_dist_coverage_pattern_3.png
-images/ordered_coverage_pattern_1.png
-images/ordered_coverage_pattern_2.png
 images/random_NiPt_111_surface_with_OH.png
 images/random_cuboctahedron_NiPt_309_with_random_O_coverage.png
 images/random_icosahedron_NiPt_309_with_OH.png
