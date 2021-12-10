@@ -14,6 +14,7 @@ from ase.data import atomic_numbers
 from ase.formula import Formula
 from ase import Atoms, Atom
 import numpy as np
+import warnings
 import re
 
 
@@ -354,11 +355,14 @@ def remove_adsorbate_from_site(atoms, site, remove_fragment=False):
 
     """
 
-    if not remove_fragment:
-        si = list(site['adsorbate_indices'])
+    if site['occupied']:
+        if not remove_fragment:
+            si = list(site['adsorbate_indices'])
+        else:
+            si = list(site['fragment_indices'])
+        del atoms[si]
     else:
-        si = list(site['fragment_indices'])
-    del atoms[si]
+        warnings.warn('This site is not occupied.')
 
 
 def remove_adsorbates_from_sites(atoms, sites, remove_fragments=False):

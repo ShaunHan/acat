@@ -105,6 +105,10 @@ class SymmetricClusterOrderingGenerator(object):
         lists of atom indices. Useful for generating structures with
         symmetries that are not supported.
 
+    save_groups : bool, default False
+        Whether to save the site groups in atoms.info['data']['groups'] 
+        for each generated structure.
+
     trajectory : str, default 'orderings.traj'
         The name of the output ase trajectory file.
 
@@ -120,6 +124,7 @@ class SymmetricClusterOrderingGenerator(object):
                  secondary_cutoff=1.,
                  composition=None,
                  groups=None,
+                 save_groups=False,
                  trajectory='orderings.traj',
                  append_trajectory=False):
 
@@ -135,6 +140,7 @@ class SymmetricClusterOrderingGenerator(object):
         if self.composition is not None:
             ks = list(self.composition.keys())
             assert set(ks) == set(self.elements)
+        self.save_groups = save_groups
  
         if isinstance(trajectory, str):
             self.trajectory = trajectory                        
@@ -389,6 +395,10 @@ class SymmetricClusterOrderingGenerator(object):
                         for j in range(len(totals)):
                             ids = [i for group in part[j] for i in group] 
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
                         if n_write == max_gen:
@@ -441,6 +451,10 @@ class SymmetricClusterOrderingGenerator(object):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
 
@@ -459,6 +473,10 @@ class SymmetricClusterOrderingGenerator(object):
                     for combo in combos:
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
                         if max_gen is not None:
@@ -476,6 +494,10 @@ class SymmetricClusterOrderingGenerator(object):
                         combos.add(combo)
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        if self.save_groups:                      
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
                         if max_gen is not None:
@@ -543,6 +565,10 @@ class SymmetricSlabOrderingGenerator(object):
         lists of atom indices. Useful for generating structures with
         symmetries that are not supported.
 
+    save_groups : bool, default False
+        Whether to save the site groups in atoms.info['data']['groups'] 
+        for each generated structure.
+
     dtol : float, default 0.01
         The distance tolerance (in Angstrom) when comparing distances. 
         Use a larger value if the structure is distorted.
@@ -565,6 +591,7 @@ class SymmetricSlabOrderingGenerator(object):
                  repeating_size=(1, 1),
                  composition=None,
                  groups=None,
+                 save_groups=False,
                  dtol=0.01,
                  ztol=0.1,
                  trajectory='orderings.traj',
@@ -580,6 +607,7 @@ class SymmetricSlabOrderingGenerator(object):
         assert is_list_or_tuple(repeating_size) 
         assert len(repeating_size) == 2
         self.repeating_size = repeating_size
+        self.save_groups = save_groups
         self.dtol = dtol
         self.ztol = ztol
 
@@ -786,6 +814,10 @@ class SymmetricSlabOrderingGenerator(object):
                         for j in range(len(totals)):
                             ids = [i for group in part[j] for i in group] 
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
                         if n_write == max_gen:
@@ -838,6 +870,10 @@ class SymmetricSlabOrderingGenerator(object):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
 
@@ -856,6 +892,10 @@ class SymmetricSlabOrderingGenerator(object):
                     for combo in combos:
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
                         if max_gen is not None:
@@ -873,6 +913,10 @@ class SymmetricSlabOrderingGenerator(object):
                         combos.add(combo)
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        if self.save_groups:
+                            if 'data' not in atoms.info:
+                                atoms.info['data'] = {}
+                            atoms.info['data']['groups'] = groups
                         traj.write(atoms)
                         n_write += 1
                         if max_gen is not None:

@@ -78,6 +78,11 @@ docs/_build/html/_images/SymmetricClusterOrderingGenerator1.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator2.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator3.gif
 docs/_build/html/_images/SymmetricClusterOrderingGenerator4.gif
+docs/_build/html/_images/SymmetricPatternGenerator1.gif
+docs/_build/html/_images/SymmetricSlabOrderingGenerator1.gif
+docs/_build/html/_images/SymmetricSlabOrderingGenerator2.gif
+docs/_build/html/_images/SymmetricSlabOrderingGenerator3.gif
+docs/_build/html/_images/SymmetricSlabOrderingGenerator4.gif
 docs/_build/html/_images/SystematicPatternGenerator1.gif
 docs/_build/html/_images/SystematicPatternGenerator2.gif
 docs/_build/html/_images/add_adsorbate.png
@@ -94,6 +99,8 @@ docs/_build/html/_images/min_dist_coverage_pattern_3.png
 docs/_build/html/_images/remove_adsorbate_from_site.png
 docs/_build/html/_images/remove_adsorbates_from_sites.png
 docs/_build/html/_images/remove_adsorbates_too_close.png
+docs/_build/html/_images/special_coverage_pattern_1.png
+docs/_build/html/_images/special_coverage_pattern_2.png
 docs/_build/html/_images/unique_sites.png
 docs/_build/html/_modules/index.html
 docs/_build/html/_modules/acat/adsorbate_coverage.html
@@ -211,6 +218,11 @@ images/SymmetricClusterOrderingGenerator1.gif
 images/SymmetricClusterOrderingGenerator2.gif
 images/SymmetricClusterOrderingGenerator3.gif
 images/SymmetricClusterOrderingGenerator4.gif
+images/SymmetricPatternGenerator1.gif
+images/SymmetricSlabOrderingGenerator1.gif
+images/SymmetricSlabOrderingGenerator2.gif
+images/SymmetricSlabOrderingGenerator3.gif
+images/SymmetricSlabOrderingGenerator4.gif
 images/SystematicPatternGenerator1.gif
 images/SystematicPatternGenerator2.gif
 images/add_adsorbate.png
@@ -235,6 +247,8 @@ images/random_icosahedron_NiPt_309_with_OH.png
 images/remove_adsorbate_from_site.png
 images/remove_adsorbates_from_sites.png
 images/remove_adsorbates_too_close.png
+images/special_coverage_pattern_1.png
+images/special_coverage_pattern_2.png
 images/tagged_sites.png
 images/unique_sites.png
 tests/water_bulk.xyz

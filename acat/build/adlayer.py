@@ -75,7 +75,7 @@ class StochasticPatternGenerator(object):
         The maximum bond length (in Angstrom) between the site and the 
         bonding atom that should be considered as an adsorbate.
 
-    species_forbidden_sites : dict, default None
+    species_forbidden_sites : dict, default None                       
         A dictionary that contains keys of each adsorbate species and 
         values of the site (can be one or multiple site types) that the 
         speices is not allowed to add to. All sites are availabe for a
@@ -221,7 +221,7 @@ class StochasticPatternGenerator(object):
             adsorbate = self.adsorbates_to_add.pop(random.randint(0, len(
                                                    self.adsorbates_to_add)-1))
         else:
-            if not self.species_probabilities:
+            if self.species_probabilities is None:
                 adsorbate = random.choice(self.adsorbate_species)
             else: 
                 adsorbate = random.choices(k=1, population=self.adsorbate_species,
@@ -565,7 +565,7 @@ class StochasticPatternGenerator(object):
         if self.allow_6fold and rpst['site'] == '6fold':
             new_options = [o for o in new_options if len(o) == 1]
 
-        if not self.species_probabilities:
+        if self.species_probabilities is None:
             adsorbate = random.choice(new_options)
         else:
             new_probabilities = [self.species_probabilities[a] for a in new_options]
@@ -752,7 +752,7 @@ class StochasticPatternGenerator(object):
                     self.logfile.flush()
                 n_old += 1
             # Select image with probability 
-            if not self.species_probabilities:
+            if self.species_probabilities is None:
                 self.atoms = random.choice(self.images).copy()
             else: 
                 self.atoms = random.choices(k=1, population=self.images, 
@@ -1779,6 +1779,10 @@ class SymmetricPatternGenerator(object):
         The pairwise distance (in Angstrom) between two symmetry-equivalent 
         adsorption sites.
 
+    species_probabilities : dict, default None
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of adding onto the surface.
+
     max_species : int, default None
         The maximum allowed adsorbate species (excluding vacancies) for a 
         single structure. Allow all adsorbatae species if not specified.
@@ -1795,6 +1799,14 @@ class SymmetricPatternGenerator(object):
     remove_neighbor_sites : bool, default True
         Whether to remove the neighboring sites around each occupied site.
 
+    neighbor_number : int, default 1
+        The neighbor shell number within which the neighbors should be 
+        removed. Only relevant when remove_neighbor_sites=True.
+
+    populate_isolated_sites : bool, default False
+        Whether to add adsorbates to low symmetry sites that are not grouped 
+        with any other sites.
+
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
@@ -1805,6 +1817,11 @@ class SymmetricPatternGenerator(object):
         of lists of site indices (of the site list). Useful for generating 
         structures with symmetries that are not supported.
 
+    save_groups : bool, default False
+        Whether to save the site groups in atoms.info['data']['groups'] for
+        each generated structure. If there is groups present (e.g. the groups 
+        of the slab atoms), append the site groups to it.
+
     fragmentation : bool, default True                                  
         Whether to cut multidentate species into fragments. This ensures
         that multidentate species with different orientations are
@@ -1813,6 +1830,9 @@ class SymmetricPatternGenerator(object):
     dmax : float, default 3.
         The maximum bond length (in Angstrom) between the site and the
         bonding atom that should be considered as an adsorbate.       
+
+    dtol : float, default 0.3
+        The tolerance (in Angstrom) when calculating the repeating distance.
 
     trajectory : str, default 'patterns.traj'
         The name of the output ase trajectory file.
@@ -1826,13 +1846,18 @@ class SymmetricPatternGenerator(object):
     def __init__(self, images, 
                  adsorbate_species, 
                  repeating_distance,
+                 species_probabilities=None,
                  max_species=None,
                  adsorption_sites=None,
                  remove_neighbor_sites=True,
+                 neighbor_number=1,
+                 populate_isolated_sites=False,
                  heights=site_heights, 
                  site_groups=None,
+                 save_groups=False,
                  fragmentation=True,
                  dmax=3.,
+                 dtol=.3,
                  trajectory='patterns.traj',
                  append_trajectory=False, 
                  **kwargs):
@@ -1841,6 +1866,12 @@ class SymmetricPatternGenerator(object):
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
                                  adsorbate_species) else [adsorbate_species]
         self.repeating_distance = repeating_distance
+        self.species_probabilities = species_probabilities
+        if self.species_probabilities is not None:
+            assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
+            self.species_probability_list = [self.species_probabilities[a] for 
+                                             a in self.adsorbate_species]               
+
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
                        'ignore_bridge_sites': True, 'label_sites': False} 
         self.kwargs.update(kwargs)
@@ -1858,11 +1889,15 @@ class SymmetricPatternGenerator(object):
         self.__dict__.update(self.kwargs)
 
         self.remove_neighbor_sites = remove_neighbor_sites
+        self.neighbor_number = neighbor_number
+        self.populate_isolated_sites = populate_isolated_sites
         self.heights = site_heights 
-        self.fragmentation = fragmentation
-        self.dmax = dmax
         for k, v in heights.items():
             self.heights[k] = v
+        self.save_groups = save_groups
+        self.fragmentation = fragmentation
+        self.dmax = dmax
+        self.dtol = dtol
 
         if max_species is None:
             self.max_species = len(set(self.adsorbate_species)) 
@@ -1883,25 +1918,34 @@ class SymmetricPatternGenerator(object):
         pairs of symmetry-equivalent sites."""
 
         sl = self.site_list
-        pt1 = sl[0]['position']
+        i1 = 0
         pts = np.asarray([s['position'] for s in sl])
-        tup = find_mic(pts - pt1, cell=self.images[0].cell, 
-                       pbc=(True in self.images[0].pbc))
-        i2 = (np.abs(tup[1] - self.repeating_distance)).argmin()
+        for i, st in enumerate(sl):
+            pt1 = sl[i]['position']
+            tup = find_mic(pts - pt1, cell=self.images[0].cell, 
+                           pbc=(True in self.images[0].pbc))
+            i2a = np.argwhere(np.abs(tup[1] - self.repeating_distance) < self.dtol)
+            if i2a.size != 0:
+                i1 = i
+                i2 = np.min(i2a)
+                break
         pt2 = sl[i2]['position']
         vec = tup[0][i2]
 
-        seen = {0, i2}
-        groups = [[0, i2]]
+        seen = {i1, i2}
+        groups = [[i1, i2]]
         for i, st in enumerate(sl):
-            if i in [0, i2]:
-                continue
-            if i in seen:
+            if (i in [i1, i2]) or (i in seen):
                 continue
             pt = st['position']
             repeat_pt = pt + vec
-            j = find_mic(pts - repeat_pt, cell=self.images[0].cell,
-                         pbc=(True in self.images[0].pbc))[1].argmin()
+            ja = np.argwhere(find_mic(pts - repeat_pt, cell=self.images[0].cell,
+                             pbc=(True in self.images[0].pbc))[1] < self.dtol)
+            if ja.size == 0:
+                if self.populate_isolated_sites:
+                    groups.append([i])
+                continue
+            j = np.min(ja)
             if j in seen:
                 continue
             seen.update([i, j])
@@ -1930,7 +1974,7 @@ class SymmetricPatternGenerator(object):
         sl = self.site_list
         groups = self.site_groups
         if self.remove_neighbor_sites:
-            nsl = sas.get_neighbor_site_list()
+            nsl = sas.get_neighbor_site_list(neighbor_number=self.neighbor_number)
         ngroups = len(groups)
         labels_list, graph_list = [], []
         if len(traj) > 0 and unique and self.append_trajectory:                                
@@ -1946,7 +1990,11 @@ class SymmetricPatternGenerator(object):
         combos = set()
         too_few = (2**ngroups * 0.95 <= max_gen)
         while True:
-            specs = random.sample(self.adsorbate_species, self.max_species) + ['vacancy']
+            if self.species_probabilities is None:
+                specs = random.sample(self.adsorbate_species, self.max_species) + ['vacancy']
+            else:
+                specs = random.choices(k=self.max_species, population=self.adsorbate_species,                  
+                                       weights=self.species_probability_list) + ['vacancy']
             combo = [None] * ngroups                                 
             indices = list(range(ngroups))
             random.shuffle(indices)
@@ -1956,7 +2004,11 @@ class SymmetricPatternGenerator(object):
                 if not set(group).isdisjoint(newvs):
                     spec = 'vacancy'
                 else:
-                    spec = random.choice(specs)
+                    if self.species_probabilities is None:
+                        spec = random.choice(specs)
+                    else:
+                        specs = random.choices(k=1, population=self.adsorbate_species,
+                                               weights=self.species_probability_list)[0]
                     if self.remove_neighbor_sites:
                         newvs.update([i for k in group for i in nsl[k]])
                 combo[idx] = spec
@@ -1991,6 +2043,13 @@ class SymmetricPatternGenerator(object):
                     if dup:
                         continue                   
                     combos.add(combo)
+                    if self.save_groups:
+                        if 'data' not in atoms.info:
+                            atoms.info['data'] = {}
+                        if 'groups' in atoms.info['data']:
+                            atoms.info['data']['groups'] += groups
+                        else:
+                            atoms.info['data']['groups'] = groups
                     traj.write(atoms)
                     n_write += 1
                     if max_gen is not None:
