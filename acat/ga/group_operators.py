@@ -1,12 +1,12 @@
 """Procreation operators meant to be used in symmetry-constrained
 genetic algorithm (SCGA)."""
 from ..settings import adsorbate_elements, site_heights
+from ..utilities import is_list_or_tuple
 from ..adsorption_sites import (ClusterAdsorptionSites,    
                                 SlabAdsorptionSites)
 from ..adsorbate_coverage import (ClusterAdsorbateCoverage,
                                   SlabAdsorbateCoverage)
 from ..build.action import (add_adsorbate_to_site, 
-                            remove_adsorbate_from_site, 
                             remove_adsorbates_from_sites)
 from ase.ga.offspring_creator import OffspringCreator
 from ase.formula import Formula
@@ -98,6 +98,8 @@ class GroupSubstitute(Mutation):
 
         indi = self.substitute(f)
         indi = self.initialize_individual(f, indi)
+        if 'groups' in f.info['data']:
+            indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [f.info['confid']]
 
         return (self.finalize_individual(indi),
@@ -152,9 +154,12 @@ class GroupPermutation(Mutation):
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
         if self.groups is None:
-            groups = indi.info['data']['groups']
+            groups = f.info['data']['groups']
+            indi.info['data']['groups'] = groups
         else:
             groups = self.groups
+            if 'groups' in f.info['data']:
+                indi.info['data']['groups'] = f.info['data']['groups']
         for _ in range(self.num_muts):
             GroupPermutation.mutate(f, groups, self.elements,
                                     self.keep_composition)
@@ -257,6 +262,10 @@ class AdsorbateGroupSubstitute(Mutation):
     num_muts : int, default 1
         The number of times to perform this operation.
 
+    dmax : float, default 3.
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
     """
 
     def __init__(self, adsorbate_species,
@@ -265,7 +274,8 @@ class AdsorbateGroupSubstitute(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_neighbor_sites=True,
-                 num_muts=1, **kwargs):
+                 num_muts=1, 
+                 dmax=3., **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
         self.descriptor = 'AdsorbateGroupSubstitute'
@@ -276,6 +286,7 @@ class AdsorbateGroupSubstitute(Mutation):
         self.heights = heights
         self.adsorption_sites = adsorption_sites
         self.remove_neighbor_sites = remove_neighbor_sites
+        self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
                        'ignore_bridge_sites': True, 'label_sites': False}
@@ -309,6 +320,7 @@ class AdsorbateGroupSubstitute(Mutation):
             groups = atoms.info['data']['groups']
         else:
             groups = self.site_groups
+
         ngroups = len(groups)
         indices = list(range(ngroups))
         if self.remove_neighbor_sites:
@@ -319,7 +331,7 @@ class AdsorbateGroupSubstitute(Mutation):
             for j in range(len(indexes)):
                 itbms.add(j)
                 if hsl[groups[j][0]]['occupied']:
-                    inset = {nsl[i] for i in groups[j]}
+                    inset = {ni for i in groups[j] for ni in nsl[i]}
                     ings = [nj for nj in indexes if not set(groups[nj]).isdisjoint(inset)]
                     itbms = set(itbms) - set(ings)
                 if len(itbms) == self.num_muts:
@@ -332,8 +344,8 @@ class AdsorbateGroupSubstitute(Mutation):
         if self.max_species is None:                      
             options = self.adsorbate_species + ['vacancy']
         else:
-            not_mut_specs = {hsl[j][0]['fragment'] for j in not_mut
-                             if hsl[j][0]['occupied']}
+            not_mut_specs = {hsl[groups[j][0]]['fragment'] for j in not_mut
+                             if hsl[groups[j][0]]['occupied']}
             diff = self.max_species - len(not_mut_specs)
             if diff > 0:
                 others = [sp for sp in self.adsorbate_species if sp not in not_mut_specs]
@@ -390,6 +402,8 @@ class AdsorbateGroupSubstitute(Mutation):
 
         indi = self.substitute(f)
         indi = self.initialize_individual(f, indi) 
+        if 'groups' in f.info['data']:
+            indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [f.info['confid']] 
 
         return (self.finalize_individual(indi),
@@ -432,14 +446,19 @@ class AdsorbateGroupPermutation(Mutation):
     num_muts : int, default 1
         The number of times to perform this operation.
 
+    dmax : float, default 3.
+        The maximum bond length (in Angstrom) between the site and the 
+        bonding atom  that should be considered as an adsorbate.
+
     """
 
     def __init__(self, adsorbate_species, 
-                 site_groups,
+                 site_groups=None,
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_neighbor_sites=True,
-                 num_muts=1):
+                 num_muts=1, 
+                 dmax=3., **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
         self.descriptor = 'AdsorbateGroupPermutation'
@@ -449,6 +468,7 @@ class AdsorbateGroupPermutation(Mutation):
         self.heights = heights
         self.adsorption_sites = adsorption_sites
         self.remove_neighbor_sites = remove_neighbor_sites
+        self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
                        'ignore_bridge_sites': True, 'label_sites': False}
@@ -467,26 +487,29 @@ class AdsorbateGroupPermutation(Mutation):
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
         if self.site_groups is None:
-            site_groups = indi.info['data']['groups']
+            site_groups = f.info['data']['groups']
+            indi.info['data']['groups'] = site_groups
         else:
             site_groups = self.site_groups
+            if 'groups' in f.info['data']:
+                indi.info['data']['groups'] = f.info['data']['groups']
 
-        if True in indi.pbc:                                          
+        if True in f.pbc:                                          
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
-                sas.update(indi)
+                sas.update(f)
             else:
-                sas = SlabAdsorptionSites(indi, **self.kwargs)
+                sas = SlabAdsorptionSites(f, **self.kwargs)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
-                sas.update(indi)
+                sas.update(f)
             else:
-                sas = ClusterAdsorptionSites(indi, **self.kwargs)
+                sas = ClusterAdsorptionSites(f, **self.kwargs)
         
         for _ in range(self.num_muts):
-            GroupPermutation.mutate(f, site_groups, self.heights, sas, 
-                                    self.remove_neighbor_sites, self.dmax)
+            AdsorbateGroupPermutation.mutate(f, site_groups, self.heights, sas, 
+                                             self.remove_neighbor_sites, self.dmax)
         for atom in f:
             indi.append(atom)
 
@@ -504,21 +527,23 @@ class AdsorbateGroupPermutation(Mutation):
                remove_neighbor_sites, dmax):
         """Do the actual permutation of the adsorbates."""
 
+        sas = adsorption_sites
         if True in atoms.pbc:
             sac = SlabAdsorbateCoverage(atoms, sas, dmax=dmax) 
         else:
             sac = ClusterAdsorbateCoverage(atoms, sas, dmax=dmax)
-        hsl = sac.hetero_site_list
- 
-        ngroup = len(groups)
-        i1 = random.randint(0, len(groups) - 1)
+        hsl = sac.hetero_site_list 
+
+        ngroups = len(groups)
+        indices = list(range(ngroups))
+        i1 = random.randint(0, ngroups - 1)
         st01 = hsl[groups[i1][0]]
         ings = []
         if remove_neighbor_sites:                                                   
             nsl = sas.get_neighbor_site_list()
             if st01['occupied']:
                 ings += [nj for nj in indices if not set(groups[nj]).isdisjoint(nsl[i1])]
-        options = [j for j in range(ngroup) if (j not in ings) and 
+        options = [j for j in range(ngroups) if (j not in ings) and 
                    (st01['fragment'] != hsl[groups[j][0]]['fragment'])]
         if not options:
             return
@@ -532,11 +557,10 @@ class AdsorbateGroupPermutation(Mutation):
             to_spec1 = st02['fragment']
         else:
             to_spec1 = 'vacancy'
-        indices = list(range(ngroups))
         not_mut = [j for j in indices if j not in [i1, i2]]
         random.shuffle(not_mut)
 
-        changes = [None] * ngroup 
+        changes = [None] * ngroups 
         newvs = set()
         indices = [i1, i2] + not_mut
         for idx in indices:
@@ -638,7 +662,6 @@ class GroupCrossover(Crossover):
         random.shuffle(groups)
 
         if self.keep_composition:
-
             def fix_composition_swaps(groups1, groups2):
                 indices = sorted([i for j in groups1 for i in j])                                
                 zipped = list(map(list, zip(groups1, groups2)))
@@ -673,6 +696,8 @@ class GroupCrossover(Crossover):
 
         indi.symbols[mids] = m.symbols[mids]
         indi = self.initialize_individual(f, indi)
+        if 'groups' in f.info['data']:
+            indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],

@@ -237,7 +237,7 @@
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
 <span class="sd">        bonding atom that should be considered as an adsorbate.</span>
 
-<span class="sd">    species_forbidden_sites : dict, default None</span>
+<span class="sd">    species_forbidden_sites : dict, default None                       </span>
 <span class="sd">        A dictionary that contains keys of each adsorbate species and </span>
 <span class="sd">        values of the site (can be one or multiple site types) that the </span>
 <span class="sd">        speices is not allowed to add to. All sites are availabe for a</span>
@@ -383,7 +383,7 @@
             <span class="n">adsorbate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbates_to_add</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span>
                                                    <span class="bp">self</span><span class="o">.</span><span class="n">adsorbates_to_add</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span> 
                 <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">,</span>
@@ -727,7 +727,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="ow">and</span> <span class="n">rpst</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;6fold&#39;</span><span class="p">:</span>
             <span class="n">new_options</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">new_options</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">adsorbate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">new_options</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">new_probabilities</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">new_options</span><span class="p">]</span>
@@ -914,7 +914,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
                 <span class="n">n_old</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="c1"># Select image with probability </span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span> 
                 <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> 
@@ -1941,6 +1941,10 @@
 <span class="sd">        The pairwise distance (in Angstrom) between two symmetry-equivalent </span>
 <span class="sd">        adsorption sites.</span>
 
+<span class="sd">    species_probabilities : dict, default None</span>
+<span class="sd">        A dictionary that contains keys of each adsorbate species and </span>
+<span class="sd">        values of their probabilities of adding onto the surface.</span>
+
 <span class="sd">    max_species : int, default None</span>
 <span class="sd">        The maximum allowed adsorbate species (excluding vacancies) for a </span>
 <span class="sd">        single structure. Allow all adsorbatae species if not specified.</span>
@@ -1957,6 +1961,14 @@
 <span class="sd">    remove_neighbor_sites : bool, default True</span>
 <span class="sd">        Whether to remove the neighboring sites around each occupied site.</span>
 
+<span class="sd">    neighbor_number : int, default 1</span>
+<span class="sd">        The neighbor shell number within which the neighbors should be </span>
+<span class="sd">        removed. Only relevant when remove_neighbor_sites=True.</span>
+
+<span class="sd">    populate_isolated_sites : bool, default False</span>
+<span class="sd">        Whether to add adsorbates to low symmetry sites that are not grouped </span>
+<span class="sd">        with any other sites.</span>
+
 <span class="sd">    heights : dict, default acat.settings.site_heights</span>
 <span class="sd">        A dictionary that contains the adsorbate height for each site </span>
 <span class="sd">        type. Use the default height settings if the height for a site </span>
@@ -1967,6 +1979,11 @@
 <span class="sd">        of lists of site indices (of the site list). Useful for generating </span>
 <span class="sd">        structures with symmetries that are not supported.</span>
 
+<span class="sd">    save_groups : bool, default False</span>
+<span class="sd">        Whether to save the site groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] for</span>
+<span class="sd">        each generated structure. If there is groups present (e.g. the groups </span>
+<span class="sd">        of the slab atoms), append the site groups to it.</span>
+
 <span class="sd">    fragmentation : bool, default True                                  </span>
 <span class="sd">        Whether to cut multidentate species into fragments. This ensures</span>
 <span class="sd">        that multidentate species with different orientations are</span>
@@ -1975,6 +1992,9 @@
 <span class="sd">    dmax : float, default 3.</span>
 <span class="sd">        The maximum bond length (in Angstrom) between the site and the</span>
 <span class="sd">        bonding atom that should be considered as an adsorbate.       </span>
+
+<span class="sd">    dtol : float, default 0.3</span>
+<span class="sd">        The tolerance (in Angstrom) when calculating the repeating distance.</span>
 
 <span class="sd">    trajectory : str, default &#39;patterns.traj&#39;</span>
 <span class="sd">        The name of the output ase trajectory file.</span>
@@ -1988,13 +2008,18 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> 
                  <span class="n">adsorbate_species</span><span class="p">,</span> 
                  <span class="n">repeating_distance</span><span class="p">,</span>
+                 <span class="n">species_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">max_species</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">populate_isolated_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span> 
                  <span class="n">site_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">save_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">fragmentation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span>
+                 <span class="n">dtol</span><span class="o">=</span><span class="mf">.3</span><span class="p">,</span>
                  <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span>
                  <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -2003,6 +2028,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="o">=</span> <span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span>
                                  <span class="n">adsorbate_species</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">adsorbate_species</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">repeating_distance</span> <span class="o">=</span> <span class="n">repeating_distance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="o">=</span> <span class="n">species_probabilities</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">species_probability_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> 
+                                             <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">]</span>               
+
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                        <span class="s1">&#39;ignore_bridge_sites&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;label_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2020,11 +2051,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span> <span class="o">=</span> <span class="n">remove_neighbor_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_number</span> <span class="o">=</span> <span class="n">neighbor_number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">populate_isolated_sites</span> <span class="o">=</span> <span class="n">populate_isolated_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">site_heights</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span> <span class="o">=</span> <span class="n">fragmentation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span> <span class="o">=</span> <span class="n">save_groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span> <span class="o">=</span> <span class="n">fragmentation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span> <span class="o">=</span> <span class="n">dtol</span>
 
         <span class="k">if</span> <span class="n">max_species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">))</span> 
@@ -2045,25 +2080,34 @@
 <span class="sd">        pairs of symmetry-equivalent sites.&quot;&quot;&quot;</span>
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="n">pt1</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
+        <span class="n">i1</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
-        <span class="n">tup</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">pts</span> <span class="o">-</span> <span class="n">pt1</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> 
-                       <span class="n">pbc</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pbc</span><span class="p">))</span>
-        <span class="n">i2</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_distance</span><span class="p">))</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
+            <span class="n">pt1</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
+            <span class="n">tup</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">pts</span> <span class="o">-</span> <span class="n">pt1</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> 
+                           <span class="n">pbc</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pbc</span><span class="p">))</span>
+            <span class="n">i2a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_distance</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i2a</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i1</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">i2a</span><span class="p">)</span>
+                <span class="k">break</span>
         <span class="n">pt2</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="n">i2</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
         <span class="n">vec</span> <span class="o">=</span> <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i2</span><span class="p">]</span>
 
-        <span class="n">seen</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="n">i2</span><span class="p">}</span>
-        <span class="n">groups</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i2</span><span class="p">]]</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="p">{</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">}</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">]]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i2</span><span class="p">]:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="n">pt</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
             <span class="n">repeat_pt</span> <span class="o">=</span> <span class="n">pt</span> <span class="o">+</span> <span class="n">vec</span>
-            <span class="n">j</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">pts</span> <span class="o">-</span> <span class="n">repeat_pt</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
-                         <span class="n">pbc</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pbc</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+            <span class="n">ja</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">find_mic</span><span class="p">(</span><span class="n">pts</span> <span class="o">-</span> <span class="n">repeat_pt</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
+                             <span class="n">pbc</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pbc</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ja</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">populate_isolated_sites</span><span class="p">:</span>
+                    <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ja</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">seen</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
@@ -2092,7 +2136,7 @@
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">:</span>
-            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">()</span>
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbor_number</span><span class="p">)</span>
         <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
         <span class="n">labels_list</span><span class="p">,</span> <span class="n">graph_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">unique</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span><span class="p">:</span>                                
@@ -2108,7 +2152,11 @@
         <span class="n">combos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">too_few</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ngroups</span> <span class="o">*</span> <span class="mf">0.95</span> <span class="o">&lt;=</span> <span class="n">max_gen</span><span class="p">)</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">specs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">specs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">specs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_species</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">,</span>                  
+                                       <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">species_probability_list</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span>
             <span class="n">combo</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">ngroups</span>                                 
             <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
             <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
@@ -2118,7 +2166,11 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">newvs</span><span class="p">):</span>
                     <span class="n">spec</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">spec</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_probabilities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">spec</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">specs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">population</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">,</span>
+                                               <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">species_probability_list</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">:</span>
                         <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
                 <span class="n">combo</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span>
@@ -2153,6 +2205,13 @@
                     <span class="k">if</span> <span class="n">dup</span><span class="p">:</span>
                         <span class="k">continue</span>                   
                     <span class="n">combos</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">combo</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">groups</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
                     <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
                     <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

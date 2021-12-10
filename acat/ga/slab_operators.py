@@ -373,6 +373,8 @@ class RandomCompositionMutation(SlabOperator):
                 indi = tmp.copy()
                 indi.info = info
 
+        if 'groups' in f.info['data']:
+            indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [i.info['confid'] for i in parents]
 
         return (self.finalize_individual(indi),
@@ -468,6 +470,8 @@ class RandomSlabPermutation(SlabOperator):
                 indi = tmp.copy()
                 indi.info = info
 
+        if 'groups' in f.info['data']:
+            indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [i.info['confid'] for i in parents]
         parent_message = ': Parent {0}'.format(f.info['confid'])
 
