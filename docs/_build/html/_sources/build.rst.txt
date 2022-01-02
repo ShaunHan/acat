@@ -421,8 +421,8 @@ The SymmetricPatternGenerator class
 
     **Example1**
 
-    The following example illustrates how to generate symmetry adlayer
-    patterns on a fcc111 NiCu surface slab with possilbe adsorbates of 
+    The following example illustrates how to generate symmetric adlayer
+    patterns on a fcc111 NiCu surface slab with possible adsorbates of 
     C, N, O, OH with a repeating distance of 5.026 Angstrom, where each 
     structure is limited to have at most 2 different adsorbate species, 
     and the neighbor sites around each occupied site must be removed: 

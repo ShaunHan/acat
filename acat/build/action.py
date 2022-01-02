@@ -22,7 +22,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
                   morphology=None, indices=None, height=None, 
                   composition=None, orientation=None, 
                   tilt_angle=0., subsurf_element=None, 
-                  both_sides=False, all_sites=None):
+                  all_sites=None, **kwargs):
     """A general function for adding one adsorbate to the surface.
     Note that this function adds one adsorbate to a random site
     that meets the specified condition regardless of it is already 
@@ -72,10 +72,6 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
         The subsurface element of the hcp or 4fold hollow site that 
         should be added to.
 
-    both_sides : bool, default False
-        Whether to consider sites on both top and bottom sides
-        of the slab. Only relevant for periodic surface slabs.
-
     all_sites : list of dicts, default None
         The list of all sites. Provide this to make the function
         much faster. Useful when the function is called many times.
@@ -106,10 +102,8 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
         scomp = None
 
     if all_sites is None:
-        all_sites = enumerate_adsorption_sites(atoms, surface, 
-                                               morphology, True, 
-                                               composition_effect, 
-                                               both_sides)    
+        all_sites = enumerate_adsorption_sites(atoms, surface, morphology, 
+                        composition_effect=composition_effect, **kwargs)
 
     if indices is not None:
         indices = indices if is_list_or_tuple(indices) else [indices]
@@ -245,8 +239,7 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
                            orientation=None, 
                            tilt_angle=0.,
                            composition_effect=False,
-                           both_sides=False,
-                           all_sites=None):
+                           all_sites=None, **kwargs):
     """Same as add_adsorbate function, except that the site type is 
     represented by a numerical label. The function is generalized for 
     both periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -281,10 +274,6 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
 
     composition_effect : bool, default False
         Whether the label is defined in bimetallic labels or not.
-
-    both_sides : bool, default False
-        Whether to consider sites on both top and bottom sides
-        of the slab. Only relevant for periodic surface slabs.
 
     all_sites : list of dicts, default None
         The list of all sites. Provide this to make the function
@@ -323,13 +312,11 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
         else:
             site, surface, composition = sigs[0], sigs[1], sigs[2]
 
-    add_adsorbate(atoms, adsorbate, site, 
-                  surface, morphology, 
-                  height=height,
+    add_adsorbate(atoms, adsorbate, site, surface, 
+                  morphology, height=height,
                   composition=composition, 
                   orientation=orientation, 
-                  both_sides=both_sides,
-                  all_sites=all_sites)
+                  all_sites=all_sites, **kwargs)
 
 
 def remove_adsorbate_from_site(atoms, site, remove_fragment=False):

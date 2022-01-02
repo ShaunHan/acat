@@ -122,8 +122,10 @@ class ClusterAdsorbateCoverage(object):
         self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
-        assert self.ads_ids, 'cannot find any adsorbate'  
-        self.ads_atoms = atoms[self.ads_ids]
+        if self.ads_ids:
+            self.ads_atoms = atoms[self.ads_ids]
+        else:
+            self.ads_atoms = None
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
@@ -132,9 +134,12 @@ class ClusterAdsorbateCoverage(object):
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
                        'ignore_bridge_sites': False, 'label_sites': False} 
         self.kwargs.update(kwargs)
-        self.make_ads_neighbor_list()
-        self.ads_adj_matrix = self.get_ads_connectivity() 
-        self.identify_adsorbates()
+        if self.ads_ids:
+            self.make_ads_neighbor_list()
+            self.ads_adj_matrix = self.get_ads_connectivity() 
+            self.identify_adsorbates()
+        else:
+            self.ads_list = []
 
         if adsorption_sites:
             cas = adsorption_sites
@@ -146,8 +151,6 @@ class ClusterAdsorbateCoverage(object):
         self.cas = cas
         self.slab_ids = cas.indices
         self.metals = cas.metals
-        if len(self.metals) == 1 and self.composition_effect:
-            self.metals *= 2
         self.surf_ids = cas.surf_ids
         self.label_dict = cas.label_dict 
         self.hetero_site_list = deepcopy(cas.site_list)
@@ -155,7 +158,10 @@ class ClusterAdsorbateCoverage(object):
         self.label_list = ['0'] * len(self.hetero_site_list)
         self.populate_occupied_sites()
 
-        self.labels = self.get_occupied_labels()
+        if self.ads_ids:
+            self.labels = self.get_occupied_labels()
+        else:
+            self.labels = []
 
     def identify_adsorbates(self):
 
@@ -721,20 +727,24 @@ class SlabAdsorbateCoverage(object):
         self.symbols = atoms.symbols
         self.ads_ids = [a.index for a in atoms if 
                         a.symbol in adsorbate_elements]
-        assert self.ads_ids, 'cannot find any adsorbate' 
-        self.ads_atoms = atoms[self.ads_ids]
+        if self.ads_ids:
+            self.ads_atoms = atoms[self.ads_ids]
+        else:
+            self.ads_atoms = None
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
-
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
                        'ignore_bridge_sites': False, 'label_sites': False} 
         self.kwargs.update(kwargs)
-        self.make_ads_neighbor_list()
-        self.ads_adj_matrix = self.get_ads_connectivity() 
-        self.identify_adsorbates()
+        if self.ads_ids:
+            self.make_ads_neighbor_list()
+            self.ads_adj_matrix = self.get_ads_connectivity() 
+            self.identify_adsorbates()
+        else:
+            self.ads_list = []
 
         if adsorption_sites:
             sas = adsorption_sites
@@ -746,8 +756,6 @@ class SlabAdsorbateCoverage(object):
         self.sas = sas
         self.slab_ids = sas.indices
         self.metals = sas.metals
-        if len(self.metals) == 1 and self.composition_effect:
-            self.metals *= 2
         self.surf_ids = sas.surf_ids
         self.subsurf_ids = sas.subsurf_ids
         self.adj_matrix = sas.adj_matrix
@@ -757,7 +765,10 @@ class SlabAdsorbateCoverage(object):
         self.label_list = ['0'] * len(self.hetero_site_list)
         self.populate_occupied_sites()
 
-        self.labels = self.get_occupied_labels() 
+        if self.ads_ids:
+            self.labels = self.get_occupied_labels() 
+        else:
+            self.labels = []
 
     def identify_adsorbates(self):
 

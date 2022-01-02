@@ -241,7 +241,7 @@ def hash_composition(nodes):
     composition considering self-symmetry. Note that this function 
     only accepts a sequence of connected nodes.
     """
-    start  = min(nodes)
+    start = min(nodes)
     starts = [i for i,v in enumerate(nodes) if v == start]
     return min([*nodes[i::d],*nodes[:i:d]] for d in (1,-1) for i in starts)
 
@@ -464,6 +464,12 @@ def is_list_or_tuple(obj):
             and not isinstance(obj, str))
 
 
+def get_depth(l):
+    if isinstance(l, list):
+        return 1 + max(get_depth(i) for i in l)
+    else:
+        return 0
+
 def string_fragmentation(adsorbate):
     """A function for generating a fragment list (list of strings) 
     from a given adsorbate (string).
@@ -624,7 +630,7 @@ def sort_atoms_by_ref_atoms(atoms, ref_atoms, mic=False):
 #    return lensim * cossim
 
 
-def draw_graph(G, savefig='graph.png', *args, **kwargs):               
+def draw_graph(G, savefig='graph.png', layout='spring', *args, **kwargs):               
     """Draw the graph using matplotlib.pyplot.
 
     Parameters
@@ -634,6 +640,10 @@ def draw_graph(G, savefig='graph.png', *args, **kwargs):
 
     savefig : str, default 'graph.png'
         The name of the figure to be saved.
+
+    layout : str, default 'spring'
+        The graph layout supported by networkx. E.g. 'spring',
+        'graphviz', 'random', etc.
 
     """
 
@@ -647,8 +657,12 @@ def draw_graph(G, savefig='graph.png', *args, **kwargs):
     colors = [mapping[G.nodes[n]['symbol']] for n in nodes]
 
     # Drawing nodes, edges and labels separately
-    pos = nx.spring_layout(G)
-    nx.draw_networkx_edges(G, pos, alpha=0.5)
+    if layout in ['graphviz', 'pygraphviz']:
+        layout_to_call = getattr(nx.drawing.nx_agraph, layout + '_layout')
+    else:
+        layout_to_call = getattr(nx, layout + '_layout')
+    pos = layout_to_call(G)
+    nx.draw_networkx_edges(G, pos, alpha=0.5, width=1.5)
     nx.draw_networkx_nodes(G, pos, 
                            nodelist=nodes, 
                            node_color=colors, 

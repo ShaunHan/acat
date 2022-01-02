@@ -434,13 +434,15 @@ cells of the two periodic structures must be the same.</p>
 
 <dl class="py function">
 <dt id="acat.utilities.draw_graph">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">draw_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">'graph.png'</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#draw_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.draw_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">draw_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">'graph.png'</span></em>, <em class="sig-param"><span class="n">layout</span><span class="o">=</span><span class="default_value">'spring'</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#draw_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.draw_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw the graph using matplotlib.pyplot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>networkx.Graph object</em>) – The graph object</p></li>
 <li><p><strong>savefig</strong> (<em>str</em><em>, </em><em>default 'graph.png'</em>) – The name of the figure to be saved.</p></li>
+<li><p><strong>layout</strong> (<em>str</em><em>, </em><em>default 'spring'</em>) – The graph layout supported by networkx. E.g. ‘spring’,
+‘graphviz’, ‘random’, etc.</p></li>
 </ul>
 </dd>
 </dl>

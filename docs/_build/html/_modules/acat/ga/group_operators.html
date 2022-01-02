@@ -163,7 +163,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;Procreation operators meant to be used in symmetry-constrained</span>
 <span class="sd">genetic algorithm (SCGA).&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span>
-<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">is_list_or_tuple</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">is_list_or_tuple</span><span class="p">,</span> <span class="n">get_depth</span>
 <span class="kn">from</span> <span class="nn">..adsorption_sites</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorptionSites</span><span class="p">,</span>    
                                 <span class="n">SlabAdsorptionSites</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorbateCoverage</span><span class="p">,</span>
@@ -171,7 +171,6 @@
 <span class="kn">from</span> <span class="nn">..build.action</span> <span class="kn">import</span> <span class="p">(</span><span class="n">add_adsorbate_to_site</span><span class="p">,</span> 
                             <span class="n">remove_adsorbates_from_sites</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OffspringCreator</span>
-<span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -194,14 +193,17 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    groups : list of lists, default None</span>
+<span class="sd">    groups : list of lists or list of list of lists, default None</span>
 <span class="sd">        The atom indices in each user-divided group. Can be obtained </span>
 <span class="sd">        by `acat.build.ordering.SymmetricClusterOrderingGenerator` </span>
 <span class="sd">        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.</span>
-<span class="sd">        If not provided here, please provide the groups in</span>
-<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. This</span>
-<span class="sd">        is useful to mix structures with different group divisions in </span>
-<span class="sd">        one GA run. </span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of </span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the atoms in each </span>
+<span class="sd">        group are of the same type. If not provided here, please </span>
+<span class="sd">        provide the groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] in all </span>
+<span class="sd">        intial structures. </span>
 
 <span class="sd">    elements : list of strs, default None</span>
 <span class="sd">        Only take into account the elements specified in this list. </span>
@@ -227,8 +229,20 @@
         <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">groups</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span> 
-            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                  
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -274,14 +288,17 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    groups : list of lists, default None</span>
+<span class="sd">    groups : list of lists or list of list of lists, default None</span>
 <span class="sd">        The atom indices in each user-divided group. Can be obtained </span>
 <span class="sd">        by `acat.build.ordering.SymmetricClusterOrderingGenerator` </span>
 <span class="sd">        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.</span>
-<span class="sd">        If not provided here, please provide the groups in</span>
-<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. This</span>
-<span class="sd">        is useful to mix structures with different group divisions in </span>
-<span class="sd">        one GA run. </span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the atoms in each </span>
+<span class="sd">        group are of the same type. If not provided here, please </span>
+<span class="sd">        provide the groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] in all </span>
+<span class="sd">        intial structures. </span>
 
 <span class="sd">    elements : list of strs, default None</span>
 <span class="sd">        Only take into account the elements specified in this list. </span>
@@ -319,7 +336,19 @@
             <span class="n">groups</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
             <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
             <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
                 <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
@@ -392,13 +421,16 @@
 <span class="sd">    adsorbate_species : str or list of strs </span>
 <span class="sd">        A list of possible adsorbate species to be added to the surface.</span>
 
-<span class="sd">    site_groups : list of lists, default None</span>
+<span class="sd">    site_groups : list of lists or list of list of lists, default None</span>
 <span class="sd">        The site indices in each user-divided group. Can be obtained </span>
 <span class="sd">        by `acat.build.ordering.SymmetricPatternGenerator`.</span>
-<span class="sd">        If not provided here, please provide the groups in</span>
-<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. This</span>
-<span class="sd">        is useful to mix structures with different group divisions in </span>
-<span class="sd">        one GA run. </span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the adsorbate / </span>
+<span class="sd">        vacancy occupations in each site group are of the same type. </span>
+<span class="sd">        If not provided here, please provide the groups in </span>
+<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. </span>
 
 <span class="sd">    max_species : int, default None</span>
 <span class="sd">        The maximum allowed adsorbate species (excluding vacancies) for a</span>
@@ -421,6 +453,10 @@
 <span class="sd">    remove_neighbor_sites : bool, default True</span>
 <span class="sd">        Whether to remove the neighboring sites around each occupied site. </span>
 
+<span class="sd">    remove_neighbor_number : int, default 1</span>
+<span class="sd">        The neighbor shell number within which the neighbors should be</span>
+<span class="sd">        removed. Only relevant when remove_neighbor_sites=True.       </span>
+
 <span class="sd">    num_muts : int, default 1</span>
 <span class="sd">        The number of times to perform this operation.</span>
 
@@ -436,8 +472,8 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">remove_neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;AdsorbateGroupSubstitute&#39;</span>
@@ -448,6 +484,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span> <span class="o">=</span> <span class="n">remove_neighbor_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span> <span class="o">=</span> <span class="n">remove_neighbor_number</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
@@ -481,12 +518,24 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">groups</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">hsl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                     
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
 
         <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">:</span>
-            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">()</span>
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span><span class="p">)</span>
             <span class="n">indexes</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span>
             <span class="n">itbms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -541,7 +590,7 @@
                 <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">:</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
 
-        <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>                  
+        <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> 
                    <span class="k">if</span> <span class="n">to_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
         <span class="n">remove_adsorbates_from_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">rmsites</span><span class="p">,</span> <span class="n">remove_fragments</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">):</span>
@@ -580,13 +629,16 @@
 <span class="sd">    adsorbate_species : str or list of strs </span>
 <span class="sd">        A list of possible adsorbate species to be added to the surface.</span>
 
-<span class="sd">    site_groups : list of lists, default None</span>
+<span class="sd">    site_groups : list of lists or list of list of lists, default None</span>
 <span class="sd">        The site indices in each user-divided group. Can be obtained </span>
 <span class="sd">        by `acat.build.ordering.SymmetricPatternGenerator`.</span>
-<span class="sd">        If not provided here, please provide the groups in</span>
-<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. This</span>
-<span class="sd">        is useful to mix structures with different group divisions in </span>
-<span class="sd">        one GA run. </span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the adsorbate / </span>
+<span class="sd">        vacancy occupations in each site group are of the same type.</span>
+<span class="sd">        If not provided here, please provide the groups in </span>
+<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. </span>
 
 <span class="sd">    heights : dict, default acat.settings.site_heights                </span>
 <span class="sd">        A dictionary that contains the adsorbate height for each site </span>
@@ -605,6 +657,10 @@
 <span class="sd">    remove_neighbor_sites : bool, default True</span>
 <span class="sd">        Whether to remove the neighboring sites around each occupied site. </span>
 
+<span class="sd">    remove_neighbor_number : int, default 1</span>
+<span class="sd">        The neighbor shell number within which the neighbors should be</span>
+<span class="sd">        removed. Only relevant when remove_neighbor_sites=True.       </span>
+
 <span class="sd">    num_muts : int, default 1</span>
 <span class="sd">        The number of times to perform this operation.</span>
 
@@ -619,8 +675,8 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">remove_neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;AdsorbateGroupPermutation&#39;</span>
@@ -630,6 +686,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span> <span class="o">=</span> <span class="n">remove_neighbor_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span> <span class="o">=</span> <span class="n">remove_neighbor_number</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
@@ -648,13 +705,6 @@
 
         <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">site_groups</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
-            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_groups</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">site_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
-            <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
-                <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>                                          
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -662,47 +712,67 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-        
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
+        <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">site_groups</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_groups</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">hsl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">site_groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                     
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">site_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
+            <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+                <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
             <span class="n">AdsorbateGroupPermutation</span><span class="o">.</span><span class="n">mutate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">site_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> 
-                                             <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                                             <span class="n">hsl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">,</span> 
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span><span class="p">)</span>
+            <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+                <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">hsl</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+
         <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">indi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-            <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="s1">&#39;:Parent </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]))</span></div>
 
 <div class="viewcode-block" id="AdsorbateGroupPermutation.mutate"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupPermutation.mutate">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">heights</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> 
-               <span class="n">remove_neighbor_sites</span><span class="p">,</span> <span class="n">dmax</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">heights</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">hetero_site_list</span><span class="p">,</span> 
+               <span class="n">remove_neighbor_sites</span><span class="p">,</span> <span class="n">remove_neighbor_number</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Do the actual permutation of the adsorbates.&quot;&quot;&quot;</span>
 
-        <span class="n">sas</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
-        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="n">dmax</span><span class="p">)</span> 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="n">dmax</span><span class="p">)</span>
-        <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span> 
-
+        <span class="n">sas</span><span class="p">,</span> <span class="n">hsl</span> <span class="o">=</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">hetero_site_list</span>
         <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
         <span class="n">i1</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngroups</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">st01</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
         <span class="n">ings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">remove_neighbor_sites</span><span class="p">:</span>                                                   
-            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">()</span>
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="n">remove_neighbor_number</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">st01</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="n">ings</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nj</span> <span class="k">for</span> <span class="n">nj</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="n">nj</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">nsl</span><span class="p">[</span><span class="n">i1</span><span class="p">])]</span>
         <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ings</span><span class="p">)</span> <span class="ow">and</span> 
@@ -744,7 +814,7 @@
                 <span class="k">elif</span> <span class="n">remove_neighbor_sites</span><span class="p">:</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
 
-        <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span>                 
+        <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> 
                    <span class="k">if</span> <span class="n">to_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
         <span class="n">remove_adsorbates_from_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">rmsites</span><span class="p">,</span> <span class="n">remove_fragments</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">):</span>
@@ -771,15 +841,17 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    groups : list of lists, default None</span>
+<span class="sd">    groups : list of lists or list of list of lists, default None</span>
 <span class="sd">        The atom indices in each user-divided group. Can be obtained </span>
 <span class="sd">        by `acat.build.ordering.SymmetricClusterOrderingGenerator` </span>
 <span class="sd">        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.</span>
-<span class="sd">        If not provided here, please provide the groups in</span>
-<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. This</span>
-<span class="sd">        is useful to mix structures with different group divisions in </span>
-<span class="sd">        one GA run. Note that for crossover please ensure the parents </span>
-<span class="sd">        always have the same groups</span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the atoms in each </span>
+<span class="sd">        group are of the same type. If not provided here, please </span>
+<span class="sd">        provide the groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] in all </span>
+<span class="sd">        intial structures. </span>
 
 <span class="sd">    elements : list of strs, default None</span>
 <span class="sd">        Only take into account the elements specified in this list. </span>
@@ -806,7 +878,19 @@
             <span class="k">assert</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">m</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
             <span class="n">groups</span> <span class="o">=</span> <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
         <span class="k">else</span><span class="p">:</span>
