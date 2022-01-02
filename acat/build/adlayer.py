@@ -1787,6 +1787,11 @@ class SymmetricPatternGenerator(object):
         The maximum allowed adsorbate species (excluding vacancies) for a 
         single structure. Allow all adsorbatae species if not specified.
 
+    sorting_axis : numpy.array, default numpy.array([1, 0, 0])
+        The vector to sort the sites based on the distance from the site 
+        to that vector before grouping. Use the x-axis by default. Recommand
+        using default or the diagonal vector.
+
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
         or acat.adsorption_sites.SlabAdsorptionSites object, default None
         Provide the built-in adsorption sites class to accelerate the 
@@ -1799,9 +1804,9 @@ class SymmetricPatternGenerator(object):
     remove_neighbor_sites : bool, default True
         Whether to remove the neighboring sites around each occupied site.
 
-    neighbor_number : int, default 1
+    remove_neighbor_number : int, default 1
         The neighbor shell number within which the neighbors should be 
-        removed. Only relevant when remove_neighbor_sites=True.
+        removed. Only relevant when remove_neighbor_sites=True.       
 
     populate_isolated_sites : bool, default False
         Whether to add adsorbates to low symmetry sites that are not grouped 
@@ -1848,9 +1853,10 @@ class SymmetricPatternGenerator(object):
                  repeating_distance,
                  species_probabilities=None,
                  max_species=None,
+                 sorting_axis=np.array([1, 0, 0]), 
                  adsorption_sites=None,
                  remove_neighbor_sites=True,
-                 neighbor_number=1,
+                 remove_neighbor_number=1,
                  populate_isolated_sites=False,
                  heights=site_heights, 
                  site_groups=None,
@@ -1888,8 +1894,9 @@ class SymmetricPatternGenerator(object):
                 self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
         self.__dict__.update(self.kwargs)
 
+        self.sorting_axis = sorting_axis
         self.remove_neighbor_sites = remove_neighbor_sites
-        self.neighbor_number = neighbor_number
+        self.remove_neighbor_number = remove_neighbor_number
         self.populate_isolated_sites = populate_isolated_sites
         self.heights = site_heights 
         for k, v in heights.items():
@@ -1913,45 +1920,85 @@ class SymmetricPatternGenerator(object):
         else:
             self.site_groups = site_groups
 
-    def get_site_groups(self):
+    def get_site_groups(self, return_all_site_groups=False):
         """Get the groups (a list of lists of site indices) of all
-        pairs of symmetry-equivalent sites."""
+        pairs of symmetry-equivalent sites.
 
+        Parameters
+        ----------
+        return_all_site_groups : bool, default False
+            Whether to return all possible symmetric groupings of 
+            the adsorption sites.
+
+        """
+
+        atoms = self.images[0].copy()
+        u = self.sorting_axis
         sl = self.site_list
         i1 = 0
+        pt1 = sl[i1]['position']
+
+        def get_signed_distance(pt):
+            v = get_mic(pt, pt1, cell=atoms.cell, pbc=atoms.pbc)[:2]
+            cross = u[0] * v[1] - u[1] * v[0]
+            dist = abs(cross) / np.linalg.norm(u[:2])
+            sign = (cross > 0).astype(np.float32) - (cross < 0).astype(np.float32)
+            return sign * dist
+
+        sorted_indices = sorted(range(len(sl)), key=lambda x: 
+                                get_signed_distance(sl[x]['position']))
         pts = np.asarray([s['position'] for s in sl])
-        for i, st in enumerate(sl):
-            pt1 = sl[i]['position']
-            tup = find_mic(pts - pt1, cell=self.images[0].cell, 
-                           pbc=(True in self.images[0].pbc))
-            i2a = np.argwhere(np.abs(tup[1] - self.repeating_distance) < self.dtol)
-            if i2a.size != 0:
+        for i in sorted_indices:
+            st = sl[i]
+            pt1 = st['position']
+            tup = find_mic(pts - pt1, cell=atoms.cell, 
+                           pbc=(True in atoms.pbc))
+            i2a = np.argwhere(np.abs(tup[1] - self.repeating_distance) 
+                              < self.dtol).ravel().tolist()
+            if i2a:
                 i1 = i
-                i2 = np.min(i2a)
                 break
-        pt2 = sl[i2]['position']
-        vec = tup[0][i2]
 
-        seen = {i1, i2}
-        groups = [[i1, i2]]
-        for i, st in enumerate(sl):
-            if (i in [i1, i2]) or (i in seen):
-                continue
-            pt = st['position']
-            repeat_pt = pt + vec
-            ja = np.argwhere(find_mic(pts - repeat_pt, cell=self.images[0].cell,
-                             pbc=(True in self.images[0].pbc))[1] < self.dtol)
-            if ja.size == 0:
-                if self.populate_isolated_sites:
-                    groups.append([i])
-                continue
-            j = np.min(ja)
-            if j in seen:
-                continue
-            seen.update([i, j])
-            groups.append([i, j])
+        all_groups = set()
+        for i2 in i2a:
+            pt2 = sl[i2]['position']
+            vec = tup[0][i2]
+            seen = {i1, i2}
+            groups = [[i1, i2]]
+            for i in sorted_indices:
+                if (i in [i1, i2]) or (i in seen):
+                    continue
+                st = sl[i]
+                pt = st['position']
+                repeat_pt = pt + vec
+                ja = np.argwhere(find_mic(pts - repeat_pt, cell=atoms.cell,
+                                 pbc=(True in atoms.pbc))[1] < self.dtol)
+                if ja.size == 0:
+                    if self.populate_isolated_sites:
+                        seen.add(i)
+                        groups.append([i])
+                    continue
+                j = np.min(ja)
+                if j in seen:
+                    continue
+                res = sorted([i, j])
+                seen.update(res)
+                groups.append(res)
 
-        return groups
+            if len(groups) == len(sl) / 2:
+                groups.sort(key=lambda x: x[0])
+                if return_all_site_groups:
+                    groups = tuple(tuple(g) for g in groups)
+                    all_groups.add(groups)
+                else:
+                    return groups
+
+        all_sorted_groups = []
+        for groups in all_groups:
+            sorted_groups = [list(g) for g in groups]
+            all_sorted_groups.append(sorted_groups)
+ 
+        return all_sorted_groups
  
     def run(self, max_gen=None, unique=True):
         """Run the symmetric pattern generator.
@@ -1974,7 +2021,7 @@ class SymmetricPatternGenerator(object):
         sl = self.site_list
         groups = self.site_groups
         if self.remove_neighbor_sites:
-            nsl = sas.get_neighbor_site_list(neighbor_number=self.neighbor_number)
+            nsl = sas.get_neighbor_site_list(neighbor_number=self.remove_neighbor_number)
         ngroups = len(groups)
         labels_list, graph_list = [], []
         if len(traj) > 0 and unique and self.append_trajectory:                                
@@ -2004,11 +2051,7 @@ class SymmetricPatternGenerator(object):
                 if not set(group).isdisjoint(newvs):
                     spec = 'vacancy'
                 else:
-                    if self.species_probabilities is None:
-                        spec = random.choice(specs)
-                    else:
-                        specs = random.choices(k=1, population=self.adsorbate_species,
-                                               weights=self.species_probability_list)[0]
+                    spec = random.choice(specs)
                     if self.remove_neighbor_sites:
                         newvs.update([i for k in group for i in nsl[k]])
                 combo[idx] = spec

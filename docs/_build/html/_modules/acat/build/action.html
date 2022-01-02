@@ -184,7 +184,7 @@
                   <span class="n">morphology</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                   <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                   <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">subsurf_element</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                  <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                  <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A general function for adding one adsorbate to the surface.</span>
 <span class="sd">    Note that this function adds one adsorbate to a random site</span>
 <span class="sd">    that meets the specified condition regardless of it is already </span>
@@ -234,10 +234,6 @@
 <span class="sd">        The subsurface element of the hcp or 4fold hollow site that </span>
 <span class="sd">        should be added to.</span>
 
-<span class="sd">    both_sides : bool, default False</span>
-<span class="sd">        Whether to consider sites on both top and bottom sides</span>
-<span class="sd">        of the slab. Only relevant for periodic surface slabs.</span>
-
 <span class="sd">    all_sites : list of dicts, default None</span>
 <span class="sd">        The list of all sites. Provide this to make the function</span>
 <span class="sd">        much faster. Useful when the function is called many times.</span>
@@ -268,10 +264,8 @@
         <span class="n">scomp</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">all_sites</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">all_sites</span> <span class="o">=</span> <span class="n">enumerate_adsorption_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
-                                               <span class="n">morphology</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> 
-                                               <span class="n">composition_effect</span><span class="p">,</span> 
-                                               <span class="n">both_sides</span><span class="p">)</span>    
+        <span class="n">all_sites</span> <span class="o">=</span> <span class="n">enumerate_adsorption_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> <span class="n">morphology</span><span class="p">,</span> 
+                        <span class="n">composition_effect</span><span class="o">=</span><span class="n">composition_effect</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
@@ -407,8 +401,7 @@
                            <span class="n">orientation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                            <span class="n">tilt_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                            <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                           <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                           <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                           <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Same as add_adsorbate function, except that the site type is </span>
 <span class="sd">    represented by a numerical label. The function is generalized for </span>
 <span class="sd">    both periodic and non-periodic systems (distinguished by atoms.pbc).</span>
@@ -443,10 +436,6 @@
 
 <span class="sd">    composition_effect : bool, default False</span>
 <span class="sd">        Whether the label is defined in bimetallic labels or not.</span>
-
-<span class="sd">    both_sides : bool, default False</span>
-<span class="sd">        Whether to consider sites on both top and bottom sides</span>
-<span class="sd">        of the slab. Only relevant for periodic surface slabs.</span>
 
 <span class="sd">    all_sites : list of dicts, default None</span>
 <span class="sd">        The list of all sites. Provide this to make the function</span>
@@ -485,13 +474,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">site</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> <span class="n">composition</span> <span class="o">=</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
-    <span class="n">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> 
-                  <span class="n">surface</span><span class="p">,</span> <span class="n">morphology</span><span class="p">,</span> 
-                  <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+    <span class="n">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
+                  <span class="n">morphology</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
                   <span class="n">composition</span><span class="o">=</span><span class="n">composition</span><span class="p">,</span> 
                   <span class="n">orientation</span><span class="o">=</span><span class="n">orientation</span><span class="p">,</span> 
-                  <span class="n">both_sides</span><span class="o">=</span><span class="n">both_sides</span><span class="p">,</span>
-                  <span class="n">all_sites</span><span class="o">=</span><span class="n">all_sites</span><span class="p">)</span></div>
+                  <span class="n">all_sites</span><span class="o">=</span><span class="n">all_sites</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="remove_adsorbate_from_site"><a class="viewcode-back" href="../../../build.html#acat.build.action.remove_adsorbate_from_site">[docs]</a><span class="k">def</span> <span class="nf">remove_adsorbate_from_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">remove_fragment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>

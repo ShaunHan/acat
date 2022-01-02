@@ -1,7 +1,7 @@
 """Procreation operators meant to be used in symmetry-constrained
 genetic algorithm (SCGA)."""
 from ..settings import adsorbate_elements, site_heights
-from ..utilities import is_list_or_tuple
+from ..utilities import is_list_or_tuple, get_depth
 from ..adsorption_sites import (ClusterAdsorptionSites,    
                                 SlabAdsorptionSites)
 from ..adsorbate_coverage import (ClusterAdsorbateCoverage,
@@ -9,7 +9,6 @@ from ..adsorbate_coverage import (ClusterAdsorbateCoverage,
 from ..build.action import (add_adsorbate_to_site, 
                             remove_adsorbates_from_sites)
 from ase.ga.offspring_creator import OffspringCreator
-from ase.formula import Formula
 from collections import defaultdict
 from operator import attrgetter
 import warnings
@@ -32,14 +31,17 @@ class GroupSubstitute(Mutation):
 
     Parameters
     ----------
-    groups : list of lists, default None
+    groups : list of lists or list of list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
         or `acat.build.ordering.SymmetricSlabOrderingGenerator`.
-        If not provided here, please provide the groups in
-        atoms.info['data']['groups'] in all intial structures. This
-        is useful to mix structures with different group divisions in 
-        one GA run. 
+        You can also mix structures with different groupings in one 
+        GA run by providing all possible groups in a list of list of 
+        lists, so that the algorithm will randomly assign a grouping
+        to the structure, where for each grouping the atoms in each 
+        group are of the same type. If not provided here, please 
+        provide the groups in atoms.info['data']['groups'] in all 
+        intial structures. 
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -65,8 +67,20 @@ class GroupSubstitute(Mutation):
         atoms = atoms.copy() 
         if self.groups is None:
             groups = atoms.info['data']['groups']
-        else: 
-            groups = self.groups
+        else:
+            depth = get_depth(self.groups)
+            if depth > 2:
+                random.shuffle(self.groups)
+                found = False
+                for gs in self.groups:  
+                    if all(len(set([atoms[i].symbol for i in g])) == 1 for g in gs):
+                        groups = gs
+                        found = True
+                        break
+                assert found, 'Some structures have broken the symmetry' +\
+                              ' so that no groups can be assigned.'                  
+            else:
+                groups = self.groups
         if self.elements is None:
             e = list(set(atoms.get_chemical_symbols()))
         else:
@@ -112,14 +126,17 @@ class GroupPermutation(Mutation):
 
     Parameters
     ----------
-    groups : list of lists, default None
+    groups : list of lists or list of list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
         or `acat.build.ordering.SymmetricSlabOrderingGenerator`.
-        If not provided here, please provide the groups in
-        atoms.info['data']['groups'] in all intial structures. This
-        is useful to mix structures with different group divisions in 
-        one GA run. 
+        You can also mix structures with different groupings in one 
+        GA run by providing all possible groups in a list of list of
+        lists, so that the algorithm will randomly assign a grouping
+        to the structure, where for each grouping the atoms in each 
+        group are of the same type. If not provided here, please 
+        provide the groups in atoms.info['data']['groups'] in all 
+        intial structures. 
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -157,7 +174,19 @@ class GroupPermutation(Mutation):
             groups = f.info['data']['groups']
             indi.info['data']['groups'] = groups
         else:
-            groups = self.groups
+            depth = get_depth(self.groups)
+            if depth > 2:
+                random.shuffle(self.groups)
+                found = False
+                for gs in self.groups:  
+                    if all(len(set([f[i].symbol for i in g])) == 1 for g in gs):
+                        groups = gs
+                        found = True
+                        break
+                assert found, 'Some structures have broken the symmetry' +\
+                              ' so that no groups can be assigned.'                 
+            else:
+                groups = self.groups
             if 'groups' in f.info['data']:
                 indi.info['data']['groups'] = f.info['data']['groups']
         for _ in range(self.num_muts):
@@ -230,13 +259,16 @@ class AdsorbateGroupSubstitute(Mutation):
     adsorbate_species : str or list of strs 
         A list of possible adsorbate species to be added to the surface.
 
-    site_groups : list of lists, default None
+    site_groups : list of lists or list of list of lists, default None
         The site indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricPatternGenerator`.
-        If not provided here, please provide the groups in
-        atoms.info['data']['groups'] in all intial structures. This
-        is useful to mix structures with different group divisions in 
-        one GA run. 
+        You can also mix structures with different groupings in one 
+        GA run by providing all possible groups in a list of list of
+        lists, so that the algorithm will randomly assign a grouping
+        to the structure, where for each grouping the adsorbate / 
+        vacancy occupations in each site group are of the same type. 
+        If not provided here, please provide the groups in 
+        atoms.info['data']['groups'] in all intial structures. 
 
     max_species : int, default None
         The maximum allowed adsorbate species (excluding vacancies) for a
@@ -259,6 +291,10 @@ class AdsorbateGroupSubstitute(Mutation):
     remove_neighbor_sites : bool, default True
         Whether to remove the neighboring sites around each occupied site. 
 
+    remove_neighbor_number : int, default 1
+        The neighbor shell number within which the neighbors should be
+        removed. Only relevant when remove_neighbor_sites=True.       
+
     num_muts : int, default 1
         The number of times to perform this operation.
 
@@ -274,8 +310,8 @@ class AdsorbateGroupSubstitute(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_neighbor_sites=True,
-                 num_muts=1, 
-                 dmax=3., **kwargs):
+                 remove_neighbor_number=1,
+                 num_muts=1, dmax=3., **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
         self.descriptor = 'AdsorbateGroupSubstitute'
@@ -286,6 +322,7 @@ class AdsorbateGroupSubstitute(Mutation):
         self.heights = heights
         self.adsorption_sites = adsorption_sites
         self.remove_neighbor_sites = remove_neighbor_sites
+        self.remove_neighbor_number = remove_neighbor_number
         self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -319,12 +356,24 @@ class AdsorbateGroupSubstitute(Mutation):
         if self.site_groups is None:
             groups = atoms.info['data']['groups']
         else:
-            groups = self.site_groups
+            depth = get_depth(self.site_groups)
+            if depth > 2:
+                random.shuffle(self.site_groups)
+                found = False
+                for gs in self.site_groups:  
+                    if all(len(set([hsl[i]['fragment'] for i in g])) == 1 for g in gs):
+                        groups = gs
+                        found = True
+                        break
+                assert found, 'Some structures have broken the symmetry' +\
+                              ' so that no groups can be assigned.'                     
+            else:
+                groups = self.site_groups
 
         ngroups = len(groups)
         indices = list(range(ngroups))
         if self.remove_neighbor_sites:
-            nsl = sas.get_neighbor_site_list()
+            nsl = sas.get_neighbor_site_list(neighbor_number=self.remove_neighbor_number)
             indexes = indices.copy()
             random.shuffle(indexes)
             itbms = set()
@@ -379,7 +428,7 @@ class AdsorbateGroupSubstitute(Mutation):
                 elif self.remove_neighbor_sites:
                     newvs.update([i for k in group for i in nsl[k]])
 
-        rmsites = [hsl[j] for idx, to_spec in enumerate(changes)                  
+        rmsites = [hsl[j] for idx, to_spec in enumerate(changes) 
                    if to_spec is not None for j in groups[idx]]
         remove_adsorbates_from_sites(atoms, sites=rmsites, remove_fragments=True)
         for idx, to_spec in enumerate(changes):
@@ -418,13 +467,16 @@ class AdsorbateGroupPermutation(Mutation):
     adsorbate_species : str or list of strs 
         A list of possible adsorbate species to be added to the surface.
 
-    site_groups : list of lists, default None
+    site_groups : list of lists or list of list of lists, default None
         The site indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricPatternGenerator`.
-        If not provided here, please provide the groups in
-        atoms.info['data']['groups'] in all intial structures. This
-        is useful to mix structures with different group divisions in 
-        one GA run. 
+        You can also mix structures with different groupings in one 
+        GA run by providing all possible groups in a list of list of
+        lists, so that the algorithm will randomly assign a grouping
+        to the structure, where for each grouping the adsorbate / 
+        vacancy occupations in each site group are of the same type.
+        If not provided here, please provide the groups in 
+        atoms.info['data']['groups'] in all intial structures. 
 
     heights : dict, default acat.settings.site_heights                
         A dictionary that contains the adsorbate height for each site 
@@ -443,6 +495,10 @@ class AdsorbateGroupPermutation(Mutation):
     remove_neighbor_sites : bool, default True
         Whether to remove the neighboring sites around each occupied site. 
 
+    remove_neighbor_number : int, default 1
+        The neighbor shell number within which the neighbors should be
+        removed. Only relevant when remove_neighbor_sites=True.       
+
     num_muts : int, default 1
         The number of times to perform this operation.
 
@@ -457,8 +513,8 @@ class AdsorbateGroupPermutation(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_neighbor_sites=True,
-                 num_muts=1, 
-                 dmax=3., **kwargs):
+                 remove_neighbor_number=1,
+                 num_muts=1, dmax=3., **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
         self.descriptor = 'AdsorbateGroupPermutation'
@@ -468,6 +524,7 @@ class AdsorbateGroupPermutation(Mutation):
         self.heights = heights
         self.adsorption_sites = adsorption_sites
         self.remove_neighbor_sites = remove_neighbor_sites
+        self.remove_neighbor_number = remove_neighbor_number
         self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -486,13 +543,6 @@ class AdsorbateGroupPermutation(Mutation):
 
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
-        if self.site_groups is None:
-            site_groups = f.info['data']['groups']
-            indi.info['data']['groups'] = site_groups
-        else:
-            site_groups = self.site_groups
-            if 'groups' in f.info['data']:
-                indi.info['data']['groups'] = f.info['data']['groups']
 
         if True in f.pbc:                                          
             if self.adsorption_sites is not None:
@@ -500,47 +550,67 @@ class AdsorbateGroupPermutation(Mutation):
                 sas.update(f)
             else:
                 sas = SlabAdsorptionSites(f, **self.kwargs)
+            sac = SlabAdsorbateCoverage(f, sas, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(f)
             else:
                 sas = ClusterAdsorptionSites(f, **self.kwargs)
-        
+            sac = ClusterAdsorbateCoverage(f, sas, dmax=self.dmax) 
+        hsl = sac.hetero_site_list
+
+        if self.site_groups is None:
+            site_groups = f.info['data']['groups']
+            indi.info['data']['groups'] = site_groups
+        else:
+            depth = get_depth(self.site_groups)
+            if depth > 2:
+                random.shuffle(self.site_groups)
+                found = False
+                for gs in self.site_groups:  
+                    if all(len(set([hsl[i]['fragment'] for i in g])) == 1 for g in gs):
+                        site_groups = gs
+                        found = True
+                        break
+                assert found, 'Some structures have broken the symmetry' +\
+                              ' so that no groups can be assigned.'                     
+            else:
+                site_groups = self.site_groups
+            if 'groups' in f.info['data']:
+                indi.info['data']['groups'] = f.info['data']['groups']
+
         for _ in range(self.num_muts):
             AdsorbateGroupPermutation.mutate(f, site_groups, self.heights, sas, 
-                                             self.remove_neighbor_sites, self.dmax)
+                                             hsl, self.remove_neighbor_sites, 
+                                             self.remove_neighbor_number)
+            if True in indi.pbc:
+                nsac = SlabAdsorbateCoverage(f, sas, dmax=self.dmax)
+            else:
+                nsac = ClusterAdsorbateCoverage(f, sas, dmax=self.dmax)
+            hsl = nsac.hetero_site_list
+
         for atom in f:
             indi.append(atom)
-
-        if True in indi.pbc:
-            nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
-        else:
-            nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+        
         indi.info['data']['adsorbates'] = nsac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
 
     @classmethod
-    def mutate(cls, atoms, groups, heights, adsorption_sites, 
-               remove_neighbor_sites, dmax):
+    def mutate(cls, atoms, groups, heights, adsorption_sites, hetero_site_list, 
+               remove_neighbor_sites, remove_neighbor_number):
         """Do the actual permutation of the adsorbates."""
 
-        sas = adsorption_sites
-        if True in atoms.pbc:
-            sac = SlabAdsorbateCoverage(atoms, sas, dmax=dmax) 
-        else:
-            sac = ClusterAdsorbateCoverage(atoms, sas, dmax=dmax)
-        hsl = sac.hetero_site_list 
-
+        sas, hsl = adsorption_sites, hetero_site_list
         ngroups = len(groups)
         indices = list(range(ngroups))
         i1 = random.randint(0, ngroups - 1)
         st01 = hsl[groups[i1][0]]
         ings = []
         if remove_neighbor_sites:                                                   
-            nsl = sas.get_neighbor_site_list()
+            nsl = sas.get_neighbor_site_list(neighbor_number=remove_neighbor_number)
             if st01['occupied']:
                 ings += [nj for nj in indices if not set(groups[nj]).isdisjoint(nsl[i1])]
         options = [j for j in range(ngroups) if (j not in ings) and 
@@ -582,7 +652,7 @@ class AdsorbateGroupPermutation(Mutation):
                 elif remove_neighbor_sites:
                     newvs.update([i for k in group for i in nsl[k]])
 
-        rmsites = [hsl[j] for idx, to_spec in enumerate(changes)                 
+        rmsites = [hsl[j] for idx, to_spec in enumerate(changes) 
                    if to_spec is not None for j in groups[idx]]
         remove_adsorbates_from_sites(atoms, sites=rmsites, remove_fragments=True)
         for idx, to_spec in enumerate(changes):
@@ -609,15 +679,17 @@ class GroupCrossover(Crossover):
 
     Parameters
     ----------
-    groups : list of lists, default None
+    groups : list of lists or list of list of lists, default None
         The atom indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricClusterOrderingGenerator` 
         or `acat.build.ordering.SymmetricSlabOrderingGenerator`.
-        If not provided here, please provide the groups in
-        atoms.info['data']['groups'] in all intial structures. This
-        is useful to mix structures with different group divisions in 
-        one GA run. Note that for crossover please ensure the parents 
-        always have the same groups
+        You can also mix structures with different groupings in one 
+        GA run by providing all possible groups in a list of list of
+        lists, so that the algorithm will randomly assign a grouping
+        to the structure, where for each grouping the atoms in each 
+        group are of the same type. If not provided here, please 
+        provide the groups in atoms.info['data']['groups'] in all 
+        intial structures. 
 
     elements : list of strs, default None
         Only take into account the elements specified in this list. 
@@ -644,7 +716,19 @@ class GroupCrossover(Crossover):
             assert f.info['data']['groups'] == m.info['data']['groups']
             groups = indi.info['data']['groups']
         else:
-            groups = self.groups.copy()
+            depth = get_depth(self.groups)
+            if depth > 2:
+                random.shuffle(self.groups)
+                found = False
+                for gs in self.groups:  
+                    if all(len(set([atoms[i].symbol for i in g])) == 1 for g in gs):
+                        groups = gs
+                        found = True
+                        break
+                assert found, 'Some structures have broken the symmetry' +\
+                              ' so that no groups can be assigned.'                 
+            else:
+                groups = self.groups.copy()
         if self.elements is None:
             e = list(set(f.get_chemical_symbols()))
         else:
