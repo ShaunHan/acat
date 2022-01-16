@@ -1,6 +1,7 @@
 from ase.formula import Formula
 from ase.io import read, write
 from ase.build import molecule
+from ase import Atoms
 
 
 # Adsorbate elements must be different from catalyst elements
@@ -176,11 +177,13 @@ def adsorbate_molecule(adsorbate):
         ads.rotate(180, 'x')
     elif adsorbate == 'CHCHCHCHCHCH':
         ads = molecule('C6H6')[[0,6,1,7,2,8,3,9,4,10,5,11]] 
+    elif adsorbate == 'X':
+        ads = Atoms('X', positions=[[0, 0, 0]])
     else:
         try:
             ads = molecule(adsorbate)
         except:
-            print('Molecule {} is not supported in the database'.format(adsorbate))
+            print('Molecule {} is not supported in the database.'.format(adsorbate))
             return 
     return ads
 

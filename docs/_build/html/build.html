@@ -105,7 +105,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.build.adlayer">Generate adsorbate overlayer patterns</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#the-stochasticpatterngenerator-class">The StochasticPatternGenerator class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-systematicpatterngenerator-class">The SystematicPatternGenerator class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-symmetricpatterngenerator-class">The SymmetricPatternGenerator class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-orderedpatterngenerator-class">The OrderedPatternGenerator class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-special-coverage-pattern-function">The special_coverage_pattern function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-max-dist-coverage-pattern-function">The max_dist_coverage_pattern function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-min-dist-coverage-pattern-function">The min_dist_coverage_pattern function</a></li>
@@ -872,13 +872,13 @@ bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom
 <a class="reference internal image-reference" href="_images/SystematicPatternGenerator2.gif"><img alt="_images/SystematicPatternGenerator2.gif" class="align-center" src="_images/SystematicPatternGenerator2.gif" style="width: 256.0px; height: 192.0px;" /></a>
 </div></blockquote>
 </div>
-<div class="section" id="the-symmetricpatterngenerator-class">
-<h3>The SymmetricPatternGenerator class<a class="headerlink" href="#the-symmetricpatterngenerator-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-orderedpatterngenerator-class">
+<h3>The OrderedPatternGenerator class<a class="headerlink" href="#the-orderedpatterngenerator-class" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.adlayer.SymmetricPatternGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">SymmetricPatternGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">repeating_distance</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_species</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sorting_axis</span><span class="o">=</span><span class="default_value">array([1, 0, 0])</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">remove_neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">populate_isolated_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">site_groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">3.0</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.3</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'patterns.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SymmetricPatternGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SymmetricPatternGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p><cite>SymmetricPatternGenerator</cite> is a class for generating
+<dt id="acat.build.adlayer.OrderedPatternGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">OrderedPatternGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">repeating_distance</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_species</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sorting_axis</span><span class="o">=</span><span class="default_value">array([1, 0, 0])</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">remove_neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">populate_isolated_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">site_groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">3.0</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.3</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'patterns.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>OrderedPatternGenerator</cite> is a class for generating
 adsorbate overlayer patterns stochastically. Graph isomorphism
 is implemented to identify identical adlayer patterns. 4
 adsorbate actions are supported: add, remove, move, replace.
@@ -899,7 +899,7 @@ values of their probabilities of adding onto the surface.</p></li>
 <li><p><strong>max_species</strong> (<em>int</em><em>, </em><em>default None</em>) – The maximum allowed adsorbate species (excluding vacancies) for a
 single structure. Allow all adsorbatae species if not specified.</p></li>
 <li><p><strong>sorting_axis</strong> (<em>numpy.array</em><em>, </em><em>default numpy.array</em><em>(</em><em>[</em><em>1</em><em>, </em><em>0</em><em>, </em><em>0</em><em>]</em><em>)</em>) – The vector to sort the sites based on the distance from the site
-to that vector before grouping. Use the x-axis by default. Recommand
+to that vector before grouping. Use the x-axis by default. Recommend
 using default or the diagonal vector.</p></li>
 <li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
 pattern generation. Make sure all the structures have the same
@@ -908,9 +908,9 @@ should only provide adsorption_sites when the surface composition
 is fixed. If this is not provided, the arguments for identifying
 adsorption sites can still be passed in by <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs.</p></li>
 <li><p><strong>remove_neighbor_sites</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to remove the neighboring sites around each occupied site.</p></li>
-<li><p><strong>remove_neighbor_number</strong> (<em>int</em><em>, </em><em>default 1</em>) – The neighbor shell number within which the neighbors should be
+<li><p><strong>remove_neighbor_number</strong> (<em>int</em><em>, </em><em>default 1</em>) – The neighbor shell number within which the neighbor sites should be
 removed. Only relevant when remove_neighbor_sites=True.</p></li>
-<li><p><strong>populate_isolated_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to add adsorbates to low symmetry sites that are not grouped
+<li><p><strong>populate_isolated_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to add adsorbates to low-symmetry sites that are not grouped
 with any other sites.</p></li>
 <li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
 type. Use the default height settings if the height for a site
@@ -935,22 +935,22 @@ graph isomorphism for the existing structures in the trajectory.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.adlayer.SymmetricPatternGenerator.get_site_groups">
-<code class="sig-name descname">get_site_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_all_site_groups</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SymmetricPatternGenerator.get_site_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SymmetricPatternGenerator.get_site_groups" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.build.adlayer.OrderedPatternGenerator.get_site_groups">
+<code class="sig-name descname">get_site_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_all_site_groups</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.get_site_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.get_site_groups" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the groups (a list of lists of site indices) of all
 pairs of symmetry-equivalent sites.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>return_all_site_groups</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return all possible symmetric groupings of
+<dd class="field-odd"><p><strong>return_all_site_groups</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return all possible high-symmetry groupings of
 the adsorption sites.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.adlayer.SymmetricPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SymmetricPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SymmetricPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run the symmetric pattern generator.</p>
+<dt id="acat.build.adlayer.OrderedPatternGenerator.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the ordered pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -966,12 +966,13 @@ specified.</p></li>
 </dd></dl>
 
 <p><strong>Example1</strong></p>
-<p>The following example illustrates how to generate symmetric adlayer
-patterns on a fcc111 NiCu surface slab with possible adsorbates of
-C, N, O, OH with a repeating distance of 5.026 Angstrom, where each
-structure is limited to have at most 2 different adsorbate species,
-and the neighbor sites around each occupied site must be removed:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">SymmetricPatternGenerator</span> <span class="k">as</span> <span class="n">SPG</span>
+<p>The following example illustrates how to generate 50 unique
+ordered adlayer patterns on a fcc111 NiCu surface slab with
+possible adsorbates of C, N, O, OH with a repeating distance
+of 5.026 Angstrom, where each structure is limited to have at
+most 2 different adsorbate species, and the neighbor sites
+around each occupied site must be removed:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">OrderedPatternGenerator</span> <span class="k">as</span> <span class="n">OPG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
@@ -984,19 +985,56 @@ and the neighbor sites around each occupied site must be removed:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span> <span class="o">=</span> <span class="n">SPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opg</span> <span class="o">=</span> <span class="n">OPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">repeating_distance</span><span class="o">=</span><span class="mf">5.026</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">max_species</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<a class="reference internal image-reference" href="_images/SymmetricPatternGenerator1.gif"><img alt="_images/SymmetricPatternGenerator1.gif" class="align-center" src="_images/SymmetricPatternGenerator1.gif" style="width: 384.0px; height: 288.0px;" /></a>
+<a class="reference internal image-reference" href="_images/OrderedPatternGenerator1.gif"><img alt="_images/OrderedPatternGenerator1.gif" class="align-center" src="_images/OrderedPatternGenerator1.gif" style="width: 384.0px; height: 288.0px;" /></a>
+<p><strong>Example2</strong></p>
+<p>The following example illustrates how to generate 50 unique
+ordered adlayer patterns on a fcc100 NiCu surface slab with
+possible adsorbates of C, N, O, OH with a repeating distance
+of 5.026 Angstrom, where each structure is limited to have at
+most 2 different adsorbate species, the 1st and 2nd neighbor
+sites around each occupied site must be removed, and the sites
+are sorted according to the diagonal vector:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">OrderedPatternGenerator</span> <span class="k">as</span> <span class="n">OPG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc100</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Cu&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagonal_vec</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">63</span><span class="p">]</span><span class="o">.</span><span class="n">position</span> <span class="o">-</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">48</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opg</span> <span class="o">=</span> <span class="n">OPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">],</span>
+<span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">repeating_distance</span><span class="o">=</span><span class="mf">5.026</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">max_species</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">sorting_axis</span><span class="o">=</span><span class="n">diagonal_vec</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">remove_neighbor_number</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<a class="reference internal image-reference" href="_images/OrderedPatternGenerator2.gif"><img alt="_images/OrderedPatternGenerator2.gif" class="align-center" src="_images/OrderedPatternGenerator2.gif" style="width: 384.0px; height: 288.0px;" /></a>
 </div></blockquote>
 </div>
 <div class="section" id="the-special-coverage-pattern-function">
