@@ -1918,8 +1918,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="SymmetricPatternGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.SymmetricPatternGenerator">[docs]</a><span class="k">class</span> <span class="nc">SymmetricPatternGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;`SymmetricPatternGenerator` is a class for generating </span>
+<div class="viewcode-block" id="OrderedPatternGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.OrderedPatternGenerator">[docs]</a><span class="k">class</span> <span class="nc">OrderedPatternGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`OrderedPatternGenerator` is a class for generating </span>
 <span class="sd">    adsorbate overlayer patterns stochastically. Graph isomorphism</span>
 <span class="sd">    is implemented to identify identical adlayer patterns. 4 </span>
 <span class="sd">    adsorbate actions are supported: add, remove, move, replace. </span>
@@ -1951,7 +1951,7 @@
 
 <span class="sd">    sorting_axis : numpy.array, default numpy.array([1, 0, 0])</span>
 <span class="sd">        The vector to sort the sites based on the distance from the site </span>
-<span class="sd">        to that vector before grouping. Use the x-axis by default. Recommand</span>
+<span class="sd">        to that vector before grouping. Use the x-axis by default. Recommend</span>
 <span class="sd">        using default or the diagonal vector.</span>
 
 <span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \</span>
@@ -1967,11 +1967,11 @@
 <span class="sd">        Whether to remove the neighboring sites around each occupied site.</span>
 
 <span class="sd">    remove_neighbor_number : int, default 1</span>
-<span class="sd">        The neighbor shell number within which the neighbors should be </span>
+<span class="sd">        The neighbor shell number within which the neighbor sites should be </span>
 <span class="sd">        removed. Only relevant when remove_neighbor_sites=True.       </span>
 
 <span class="sd">    populate_isolated_sites : bool, default False</span>
-<span class="sd">        Whether to add adsorbates to low symmetry sites that are not grouped </span>
+<span class="sd">        Whether to add adsorbates to low-symmetry sites that are not grouped </span>
 <span class="sd">        with any other sites.</span>
 
 <span class="sd">    heights : dict, default acat.settings.site_heights</span>
@@ -2082,14 +2082,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="o">=</span> <span class="n">site_groups</span>
 
-<div class="viewcode-block" id="SymmetricPatternGenerator.get_site_groups"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.SymmetricPatternGenerator.get_site_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_all_site_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="OrderedPatternGenerator.get_site_groups"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.OrderedPatternGenerator.get_site_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_all_site_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the groups (a list of lists of site indices) of all</span>
 <span class="sd">        pairs of symmetry-equivalent sites.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        return_all_site_groups : bool, default False</span>
-<span class="sd">            Whether to return all possible symmetric groupings of </span>
+<span class="sd">            Whether to return all possible high-symmetry groupings of </span>
 <span class="sd">            the adsorption sites.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -2097,11 +2097,11 @@
         <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorting_axis</span>
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="n">i1</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">pt1</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
+        <span class="n">pt0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">get_signed_distance</span><span class="p">(</span><span class="n">pt</span><span class="p">):</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">get_mic</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">pt1</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">get_mic</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">pt0</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
             <span class="n">cross</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">dist</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">u</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
             <span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="n">cross</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">cross</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
@@ -2109,7 +2109,7 @@
 
         <span class="n">sorted_indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
                                 <span class="n">get_signed_distance</span><span class="p">(</span><span class="n">sl</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]))</span>
-        <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
+        <span class="n">i1</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_indices</span><span class="p">:</span>
             <span class="n">st</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="n">pt1</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
@@ -2162,8 +2162,8 @@
  
         <span class="k">return</span> <span class="n">all_sorted_groups</span></div>
  
-<div class="viewcode-block" id="SymmetricPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.SymmetricPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Run the symmetric pattern generator.</span>
+<div class="viewcode-block" id="OrderedPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.OrderedPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the ordered pattern generator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

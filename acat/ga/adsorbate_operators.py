@@ -866,7 +866,8 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
 class ReplaceAdsorbateSpecies(AdsorbateOperator):                                           
     """This operator replace all adsorbates of a certain species with 
-    another species at the same sites.
+    another species at the same sites. Return None if there is no
+    adsorbate present on the surface.
 
     The operator is generalized for both periodic and non-periodic systems 
     (distinguished by atoms.pbc).
@@ -875,6 +876,13 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
     ----------
     adsorbate_species : str or list of strs 
         One or a list of adsorbate species to be added to the surface.
+
+    vacancy_replacement : bool, default False
+        Whether to allow replacing adsorbates with vacancies, i.e., 
+        effectively removing all adsorbates of a certain species.
+        Note that if you want to specify species_probabilties, you
+        then need to also provide the probability for vacancy
+        replacement using the keyword 'vacancy'.
 
     species_probabilities : dict, default None
         A dictionary that contains keys of each adsorbate species and 
@@ -904,6 +912,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
     """
 
     def __init__(self, adsorbate_species,
+                 vacancy_replacement=False,
                  species_probabilities=None,
                  heights=site_heights,
                  adsorption_sites=None,
@@ -914,6 +923,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         self.descriptor = 'ReplaceAdsorbateSpecies'
 
         assert len(set(self.adsorbate_species)) > 1
+        self.vacancy_replacement = vacancy_replacement
         self.heights = heights
         self.adsorption_sites = adsorption_sites
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -952,10 +962,20 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
             sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+
         ads_sites = sac.hetero_site_list
-        specs = sac.get_adsorbates(self.adsorbate_species)
+        specs = [t[0] for t in sac.get_adsorbates(self.adsorbate_species)]
+        # Return None if no adsorbate is present
+        if not specs:
+            return None, '{1} not possible in {0}'.format(f.info['confid'],
+                                                          self.descriptor)
         spec = random.choice(specs)
-        other_specs = [sp for sp in self.adsorbate_species if sp != spec]
+        all_specs = self.adsorbate_species.copy()
+        if self.vacancy_replacement:
+            if 'vacancy' not in all_specs:
+                all_specs.append('vacancy')
+
+        other_specs = [sp for sp in all_specs if sp != spec]
         if self.species_probabilities is None:
             to_spec = random.choice(other_specs)
         else:
@@ -975,10 +995,12 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
                     rmsis.append(st['indices'])
                     rmfrags = False
         remove_adsorbates_from_sites(indi, sites=rmsites, remove_fragments=rmfrags)
-        for st in ads_sites:
-            if st['indices'] in rmsis:
-                height = self.heights[st['site']]
-                add_adsorbate_to_site(indi, to_spec, st, height, tilt_angle=self.tilt_angle) 
+
+        if to_spec != 'vacancy':
+            for st in ads_sites:
+                if st['indices'] in rmsis:
+                    height = self.heights[st['site']]
+                    add_adsorbate_to_site(indi, to_spec, st, height, tilt_angle=self.tilt_angle) 
         
         if True in indi.pbc:
             nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)

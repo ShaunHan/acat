@@ -96,9 +96,9 @@ class WL(object):
                 return dists
         else:
             dicts = dists[0]
-            print('length: {}'.format(self.hp['length']))
+#            print('length: {}'.format(self.hp['length']))
 #            print('alpha: {}'.format(self.hp['alpha']))
-            print('noise: {}'.format(self.hp['noise']))
+#            print('noise: {}'.format(self.hp['noise']))
 
         # Initialize the similarity kernel
         K = np.zeros(shape=(len(images), len(images)))

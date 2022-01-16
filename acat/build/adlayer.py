@@ -1756,8 +1756,8 @@ class SystematicPatternGenerator(object):
                 self.logfile.flush()
 
 
-class SymmetricPatternGenerator(object):
-    """`SymmetricPatternGenerator` is a class for generating 
+class OrderedPatternGenerator(object):
+    """`OrderedPatternGenerator` is a class for generating 
     adsorbate overlayer patterns stochastically. Graph isomorphism
     is implemented to identify identical adlayer patterns. 4 
     adsorbate actions are supported: add, remove, move, replace. 
@@ -1789,7 +1789,7 @@ class SymmetricPatternGenerator(object):
 
     sorting_axis : numpy.array, default numpy.array([1, 0, 0])
         The vector to sort the sites based on the distance from the site 
-        to that vector before grouping. Use the x-axis by default. Recommand
+        to that vector before grouping. Use the x-axis by default. Recommend
         using default or the diagonal vector.
 
     adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
@@ -1805,11 +1805,11 @@ class SymmetricPatternGenerator(object):
         Whether to remove the neighboring sites around each occupied site.
 
     remove_neighbor_number : int, default 1
-        The neighbor shell number within which the neighbors should be 
+        The neighbor shell number within which the neighbor sites should be 
         removed. Only relevant when remove_neighbor_sites=True.       
 
     populate_isolated_sites : bool, default False
-        Whether to add adsorbates to low symmetry sites that are not grouped 
+        Whether to add adsorbates to low-symmetry sites that are not grouped 
         with any other sites.
 
     heights : dict, default acat.settings.site_heights
@@ -1927,7 +1927,7 @@ class SymmetricPatternGenerator(object):
         Parameters
         ----------
         return_all_site_groups : bool, default False
-            Whether to return all possible symmetric groupings of 
+            Whether to return all possible high-symmetry groupings of 
             the adsorption sites.
 
         """
@@ -1935,11 +1935,11 @@ class SymmetricPatternGenerator(object):
         atoms = self.images[0].copy()
         u = self.sorting_axis
         sl = self.site_list
-        i1 = 0
-        pt1 = sl[i1]['position']
+        pts = np.asarray([s['position'] for s in sl])
+        pt0 = np.mean(pts, axis=0)
 
         def get_signed_distance(pt):
-            v = get_mic(pt, pt1, cell=atoms.cell, pbc=atoms.pbc)[:2]
+            v = get_mic(pt, pt0, cell=atoms.cell, pbc=atoms.pbc)[:2]
             cross = u[0] * v[1] - u[1] * v[0]
             dist = abs(cross) / np.linalg.norm(u[:2])
             sign = (cross > 0).astype(np.float32) - (cross < 0).astype(np.float32)
@@ -1947,7 +1947,7 @@ class SymmetricPatternGenerator(object):
 
         sorted_indices = sorted(range(len(sl)), key=lambda x: 
                                 get_signed_distance(sl[x]['position']))
-        pts = np.asarray([s['position'] for s in sl])
+        i1 = 0
         for i in sorted_indices:
             st = sl[i]
             pt1 = st['position']
@@ -2001,7 +2001,7 @@ class SymmetricPatternGenerator(object):
         return all_sorted_groups
  
     def run(self, max_gen=None, unique=True):
-        """Run the symmetric pattern generator.
+        """Run the ordered pattern generator.
 
         Parameters
         ----------

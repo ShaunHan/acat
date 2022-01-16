@@ -217,7 +217,7 @@ Generate adsorbate overlayer patterns
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, SymmetricPatternGenerator, special_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
+    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, OrderedPatternGenerator, special_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
 
 The StochasticPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,24 +410,25 @@ The SystematicPatternGenerator class
        :scale: 40 %
        :align: center
 
-The SymmetricPatternGenerator class
+The OrderedPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autoclass:: SymmetricPatternGenerator
+    .. autoclass:: OrderedPatternGenerator
 
         .. automethod:: get_site_groups
 
         .. automethod:: run
 
-    **Example1**
+    **Example1**                                                             
 
-    The following example illustrates how to generate symmetric adlayer
-    patterns on a fcc111 NiCu surface slab with possible adsorbates of 
-    C, N, O, OH with a repeating distance of 5.026 Angstrom, where each 
-    structure is limited to have at most 2 different adsorbate species, 
-    and the neighbor sites around each occupied site must be removed: 
+    The following example illustrates how to generate 50 unique 
+    ordered adlayer patterns on a fcc111 NiCu surface slab with 
+    possible adsorbates of C, N, O, OH with a repeating distance 
+    of 5.026 Angstrom, where each structure is limited to have at 
+    most 2 different adsorbate species, and the neighbor sites 
+    around each occupied site must be removed: 
 
-        >>> from acat.build.adlayer import SymmetricPatternGenerator as SPG 
+        >>> from acat.build.adlayer import OrderedPatternGenerator as OPG 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from ase.io import read
         >>> from ase.build import fcc111
@@ -440,19 +441,61 @@ The SymmetricPatternGenerator class
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc111',
         ...                           allow_6fold=False,
         ...                           ignore_bridge_sites=True)
-        >>> spg = SPG(atoms, adsorbate_species=['C', 'N', 'O', 'OH'],
+        >>> opg = OPG(atoms, adsorbate_species=['C', 'N', 'O', 'OH'],
         ...           surface='fcc111',
         ...           repeating_distance=5.026,
         ...           max_species=2,
         ...           adsorption_sites=sas,
         ...           remove_neighbor_sites=True)
-        >>> spg.run(max_gen=50, unique=True)
+        >>> opg.run(max_gen=50, unique=True)
         >>> images = read('patterns.traj', index=':')
         >>> view(images)
 
     Output:
 
-    .. image:: ../images/SymmetricPatternGenerator1.gif                     
+    .. image:: ../images/OrderedPatternGenerator1.gif                     
+       :scale: 60 %
+       :align: center
+
+    **Example2**                                                             
+
+    The following example illustrates how to generate 50 unique 
+    ordered adlayer patterns on a fcc100 NiCu surface slab with 
+    possible adsorbates of C, N, O, OH with a repeating distance 
+    of 5.026 Angstrom, where each structure is limited to have at 
+    most 2 different adsorbate species, the 1st and 2nd neighbor 
+    sites around each occupied site must be removed, and the sites
+    are sorted according to the diagonal vector: 
+
+        >>> from acat.build.adlayer import OrderedPatternGenerator as OPG
+        >>> from acat.adsorption_sites import SlabAdsorptionSites
+        >>> from ase.io import read
+        >>> from ase.build import fcc100
+        >>> from ase.visualize import view
+        >>> atoms = fcc100('Ni', (4, 4, 4), vacuum=5.)
+        ... for atom in atoms:
+        ...     if atom.index % 2 == 0:
+        ...         atom.symbol = 'Cu'
+        >>> atoms.center()
+        >>> diagonal_vec = atoms[63].position - atoms[48].position
+        >>> sas = SlabAdsorptionSites(atoms, surface='fcc100',
+        ...                           allow_6fold=False,
+        ...                           ignore_bridge_sites=False)
+        >>> opg = OPG(atoms, adsorbate_species=['C', 'N', 'O', 'OH'],
+        ...           surface='fcc100',
+        ...           repeating_distance=5.026,
+        ...           max_species=2,
+        ...           sorting_axis=diagonal_vec,
+        ...           adsorption_sites=sas,
+        ...           remove_neighbor_sites=True,
+        ...           remove_neighbor_number=2)
+        >>> opg.run(max_gen=50, unique=True)
+        >>> images = read('patterns.traj', index=':')
+        >>> view(images)
+
+    Output:
+
+    .. image:: ../images/OrderedPatternGenerator2.gif                     
        :scale: 60 %
        :align: center
 

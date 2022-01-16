@@ -166,8 +166,11 @@ class GroupPermutation(Mutation):
 
         f = parents[0].copy()
         diffatoms = len(set(f.numbers))
-        assert diffatoms > 1, 'Permutations with one atomic type is not valid'
 
+        # Return None if there is only one atomic type
+        if diffatoms == 1:
+            return None, '{1} not possible in {0}'.format(f.info['confid'],
+                                                          self.descriptor)
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
         if self.groups is None:
@@ -538,9 +541,7 @@ class AdsorbateGroupPermutation(Mutation):
     def get_new_individual(self, parents):
 
         f = parents[0].copy()
-        diffatoms = len(set(f.numbers))
-        assert diffatoms > 1, 'Permutations with one atomic type is not valid'
-
+        
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
 
@@ -580,6 +581,10 @@ class AdsorbateGroupPermutation(Mutation):
             if 'groups' in f.info['data']:
                 indi.info['data']['groups'] = f.info['data']['groups']
 
+        # Return None if there is only one adsorbate (vacancy) type
+        if set([hsl[g[0]]['fragment'] for g in site_groups]) == 1:
+            return None, '{1} not possible in {0}'.format(f.info['confid'],
+                                                          self.descriptor)
         for _ in range(self.num_muts):
             AdsorbateGroupPermutation.mutate(f, site_groups, self.heights, sas, 
                                              hsl, self.remove_neighbor_sites, 
