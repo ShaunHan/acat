@@ -808,7 +808,7 @@ considered as different adlayer patterns.</p>
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-        <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()]</span>
 
     <span class="k">return</span> <span class="n">adsorbates</span>
 
@@ -1030,7 +1030,7 @@ considered as different adlayer patterns.</p>
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-        <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()</span>
+        <span class="n">adsorbates</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">()]</span>
 
     <span class="k">return</span> <span class="n">adsorbates</span>
 

@@ -1974,6 +1974,10 @@
 <span class="sd">        Whether to add adsorbates to low-symmetry sites that are not grouped </span>
 <span class="sd">        with any other sites.</span>
 
+<span class="sd">    allow_odd : bool, default False</span>
+<span class="sd">        Whether to allow odd number of adsorbates. This is done by singling</span>
+<span class="sd">        out one site for each symmetry-inequivalent site.</span>
+
 <span class="sd">    heights : dict, default acat.settings.site_heights</span>
 <span class="sd">        A dictionary that contains the adsorbate height for each site </span>
 <span class="sd">        type. Use the default height settings if the height for a site </span>
@@ -2020,6 +2024,7 @@
                  <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">remove_neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">populate_isolated_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">allow_odd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span> 
                  <span class="n">site_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">save_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -2060,6 +2065,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span> <span class="o">=</span> <span class="n">remove_neighbor_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span> <span class="o">=</span> <span class="n">remove_neighbor_number</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">populate_isolated_sites</span> <span class="o">=</span> <span class="n">populate_isolated_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_odd</span> <span class="o">=</span> <span class="n">allow_odd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">site_heights</span> 
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
@@ -2097,6 +2103,14 @@
         <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorting_axis</span>
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_odd</span><span class="p">:</span>
+            <span class="n">seen_labs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">odd_site_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
+                <span class="n">lab</span> <span class="o">=</span> <span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;morphology&#39;</span><span class="p">],</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">lab</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_labs</span><span class="p">:</span>
+                    <span class="n">odd_site_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="n">seen_labs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lab</span><span class="p">)</span>
         <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
         <span class="n">pt0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
@@ -2148,7 +2162,15 @@
                 <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">groups</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_odd</span><span class="p">:</span>
+                    <span class="n">new_groups</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">odd_site_indices</span><span class="p">):</span>
+                            <span class="n">new_groups</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">new_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+                    <span class="n">groups</span> <span class="o">=</span> <span class="n">new_groups</span>
+                <span class="n">groups</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">return_all_site_groups</span><span class="p">:</span>
                     <span class="n">groups</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">)</span>
                     <span class="n">all_groups</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
@@ -2160,7 +2182,7 @@
             <span class="n">sorted_groups</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
             <span class="n">all_sorted_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sorted_groups</span><span class="p">)</span>
  
-        <span class="k">return</span> <span class="n">all_sorted_groups</span></div>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_sorted_groups</span><span class="p">)</span></div>
  
 <div class="viewcode-block" id="OrderedPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.OrderedPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the ordered pattern generator.</span>
