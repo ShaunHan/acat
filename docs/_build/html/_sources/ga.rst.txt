@@ -120,7 +120,7 @@ The script for a parallel genetic algorithm looks as follows:
             adsorbates = atoms.info['data']['adsorbates']
         else:
             cac = ClusterAdsorbateCoverage(atoms)
-            adsorbates = cac.get_adsorbates()
+            adsorbates = [t[0] for t in cac.get_adsorbates()]
     
         return adsorbates
     
@@ -346,7 +346,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
             adsorbates = atoms.info['data']['adsorbates']
         else:
             cac = ClusterAdsorbateCoverage(atoms)
-            adsorbates = cac.get_adsorbates()
+            adsorbates = [t[0] for t in cac.get_adsorbates()]
     
         return adsorbates
     

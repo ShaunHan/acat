@@ -1812,6 +1812,10 @@ class OrderedPatternGenerator(object):
         Whether to add adsorbates to low-symmetry sites that are not grouped 
         with any other sites.
 
+    allow_odd : bool, default False
+        Whether to allow odd number of adsorbates. This is done by singling
+        out one site for each symmetry-inequivalent site.
+
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
         type. Use the default height settings if the height for a site 
@@ -1858,6 +1862,7 @@ class OrderedPatternGenerator(object):
                  remove_neighbor_sites=True,
                  remove_neighbor_number=1,
                  populate_isolated_sites=False,
+                 allow_odd=False,
                  heights=site_heights, 
                  site_groups=None,
                  save_groups=False,
@@ -1898,6 +1903,7 @@ class OrderedPatternGenerator(object):
         self.remove_neighbor_sites = remove_neighbor_sites
         self.remove_neighbor_number = remove_neighbor_number
         self.populate_isolated_sites = populate_isolated_sites
+        self.allow_odd = allow_odd
         self.heights = site_heights 
         for k, v in heights.items():
             self.heights[k] = v
@@ -1935,6 +1941,14 @@ class OrderedPatternGenerator(object):
         atoms = self.images[0].copy()
         u = self.sorting_axis
         sl = self.site_list
+        if self.allow_odd:
+            seen_labs = set()
+            odd_site_indices = set()
+            for i, st in enumerate(sl):
+                lab = (st['morphology'], st['site'])
+                if lab not in seen_labs:
+                    odd_site_indices.add(i)
+                    seen_labs.add(lab)
         pts = np.asarray([s['position'] for s in sl])
         pt0 = np.mean(pts, axis=0)
 
@@ -1986,7 +2000,15 @@ class OrderedPatternGenerator(object):
                 groups.append(res)
 
             if len(groups) == len(sl) / 2:
-                groups.sort(key=lambda x: x[0])
+                if self.allow_odd:
+                    new_groups = []
+                    for g in groups:
+                        if not set(g).isdisjoint(odd_site_indices):
+                            new_groups += [[g[0]], [g[1]]]
+                        else:
+                            new_groups.append(g)
+                    groups = new_groups
+                groups.sort()
                 if return_all_site_groups:
                     groups = tuple(tuple(g) for g in groups)
                     all_groups.add(groups)
@@ -1998,7 +2020,7 @@ class OrderedPatternGenerator(object):
             sorted_groups = [list(g) for g in groups]
             all_sorted_groups.append(sorted_groups)
  
-        return all_sorted_groups
+        return sorted(all_sorted_groups)
  
     def run(self, max_gen=None, unique=True):
         """Run the ordered pattern generator.

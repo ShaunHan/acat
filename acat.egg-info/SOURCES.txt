@@ -69,6 +69,8 @@ docs/_build/html/sitemap.xml
 docs/_build/html/utilities.html
 docs/_build/html/_downloads/2323b5636c7c7624f7124ca37b2d01b9/table_of_adsorption_sites.pdf
 docs/_build/html/_downloads/d4db2def8832c660c65d58623887badd/water_bulk.xyz
+docs/_build/html/_images/OrderedPatternGenerator1.gif
+docs/_build/html/_images/OrderedPatternGenerator2.gif
 docs/_build/html/_images/RandomOrderingGenerator1.gif
 docs/_build/html/_images/RandomOrderingGenerator2.gif
 docs/_build/html/_images/StochasticPatternGenerator1.gif
@@ -208,6 +210,8 @@ docs/latex/.doctrees/utilities.doctree
 examples/.gitkeep
 examples/prepare_sites.py
 images/.gitkeep
+images/OrderedPatternGenerator1.gif
+images/OrderedPatternGenerator2.gif
 images/RandomOrderingGenerator1.gif
 images/RandomOrderingGenerator2.gif
 images/StochasticPatternGenerator1.gif
