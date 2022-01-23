@@ -403,8 +403,7 @@ class AddAdsorbate(AdsorbateOperator):
                 sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
         
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            sac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -532,8 +531,7 @@ class RemoveAdsorbate(AdsorbateOperator):
                 sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
 
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            sac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -703,8 +701,7 @@ class MoveAdsorbate(AdsorbateOperator):
                 sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
 
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            sac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -861,8 +858,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
                 sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
 
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            sac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = sac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -1011,8 +1007,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         else:
             nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
 
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            nsac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = nsac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0}'.format(f.info['confid']))
@@ -1324,8 +1319,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                         indi.pop(i)                
             cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
 
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            cac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = cac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ': {0} {1}'.format(f.info['confid'],
@@ -1573,8 +1567,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            cac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = cac.get_adsorbates(self.adsorbate_species)
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],
                                                    m.info['confid'])
         return (self.finalize_individual(indi),
@@ -1699,8 +1692,7 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
                 indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            msac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = msac.get_adsorbates(self.adsorbate_species)
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],
                                                    m.info['confid'])
         return (self.finalize_individual(indi),

@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ACAT: Alloy Catalysis Automated Toolkit &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/acat_favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>ACAT: Alloy Catalysis Automated Toolkit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="acat-alloy-catalysis-automated-toolkit">
+<h1>ACAT: Alloy Catalysis Automated Toolkit<a class="headerlink" href="#acat-alloy-catalysis-automated-toolkit" title="Permalink to this headline">¶</a></h1>
+<p>Welcome to ACAT documentation!</p>
+<p>ACAT is a Python package for atomistic modelling of metal or alloy catalysts used in heterogeneous catalysis. The package is based on automatic identifications of adsorption sites and adsorbate coverages on surface slabs and nanoparticles. Synergized with ASE, ACAT provides useful tools for building atomistic models of alloy catalysts with and without adsorbates. The goal is to automate workflows so that the structure generations can be readily adapted in a high-throughput screening.</p>
+<p>ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials Modelling, Department of Energy Conversion and Storage, Technical University of Denmark (DTU) in Lyngby, Denmark. The development is hosted on <a class="reference external" href="https://gitlab.com/asm-dtu/acat.git">gitlab</a>.</p>
+</div>
+<div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-via-pip">Installing via pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#cloning-the-repository">Cloning the repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#adsorption-sites">Adsorption sites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-acat.adsorbate_coverage">Adsorbate coverage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="build.html#module-acat.build.action">Operate adsorbate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#module-acat.build.adlayer">Generate adsorbate overlayer patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#module-acat.build.ordering">Generate alloy chemical orderings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ga.html">Genetic algorithm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ga.html#module-acat.ga.adsorbate_operators">Optimize adsorbate overlayer pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ga.html#module-acat.ga.group_operators">Symmetry-constrained genetic algorithm for nanoalloys</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="gallery">
+<h1>Gallery<a class="headerlink" href="#gallery" title="Permalink to this headline">¶</a></h1>
+<p>Various shapes and facets of nanoparticles identified by ACAT:</p>
+<img alt="_images/color_facets.png" class="align-center" src="_images/color_facets.png" />
+<p>All symmetry-inequivalent adsorptions sites (in red) identified by ACAT on truncated octahedron (top left), fcc(311) surface (top right), hcp(10-10) surface (bottom left) and bcc(110) surface (bottom right):</p>
+<a class="reference internal image-reference" href="_images/unique_sites.png"><img alt="_images/unique_sites.png" class="align-center" src="_images/unique_sites.png" style="width: 407.5px; height: 325.5px;" /></a>
+<p>Well-defined ordered adsorbate overlayer patterns at various coverages for various surfaces and nanoparticles generated by ACAT:</p>
+<img alt="_images/all_ordered_coverage_patterns.png" class="align-center" src="_images/all_ordered_coverage_patterns.png" />
+</div>
+<div class="section" id="acknowledgement">
+<h1>Acknowledgement<a class="headerlink" href="#acknowledgement" title="Permalink to this headline">¶</a></h1>
+<p>The ACAT code is developed as part of the project BIKE: BImetallic catalysts Knowledge-based development for Energy applications. The BIKE project has received funding from the European Union’s Horizon 2020 Research and Innovation programme under the Marie Skłodowska-Curie Action – International Training Network (MSCA-ITN), grant agreement 813748</p>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+</ul>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

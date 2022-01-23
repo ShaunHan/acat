@@ -445,8 +445,7 @@ class AdsorbateGroupSubstitute(Mutation):
             nsac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax)
         else:
             nsac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax)
-        atoms.info['data']['adsorbates'] = [t[0] for t in 
-            nsac.get_adsorbates(self.adsorbate_species)]
+        atoms.info['data']['adsorbates'] = nsac.get_adsorbates(self.adsorbate_species)
 
         return atoms
 
@@ -599,8 +598,7 @@ class AdsorbateGroupPermutation(Mutation):
         for atom in f:
             indi.append(atom)
         
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            nsac.get_adsorbates(self.adsorbate_species)]
+        indi.info['data']['adsorbates'] = nsac.get_adsorbates(self.adsorbate_species)
 
         return (self.finalize_individual(indi),
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))

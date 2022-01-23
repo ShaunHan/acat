@@ -1,0 +1,1234 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>acat.build.ordering &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/table_styling.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/acat_favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>acat.build.ordering</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for acat.build.ordering</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">bipartitions</span><span class="p">,</span> <span class="n">get_mic</span><span class="p">,</span>
+                         <span class="n">partitions_into_totals</span><span class="p">,</span> 
+                         <span class="n">numbers_from_ratios</span><span class="p">,</span> 
+                         <span class="n">is_list_or_tuple</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">get_distances</span><span class="p">,</span> <span class="n">find_mic</span><span class="p">,</span> <span class="n">get_layers</span>
+<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">Trajectory</span><span class="p">,</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
+<span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
+<span class="kn">from</span> <span class="nn">asap3.Internal.BuiltinPotentials</span> <span class="kn">import</span> <span class="n">Gupta</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.components.connected</span> <span class="kn">import</span> <span class="n">connected_components</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+
+<div class="viewcode-block" id="SymmetricClusterOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricClusterOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">SymmetricClusterOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`SymmetricClusterOrderingGenerator` is a class for generating </span>
+<span class="sd">    symmetric chemical orderings for a **nanoalloy**. There is no </span>
+<span class="sd">    limitation of the number of metal components. Please always align </span>
+<span class="sd">    the z direction to the symmetry axis of the nanocluster.</span>
+<span class="sd"> </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        The nanoparticle to use as a template to generate symmetric</span>
+<span class="sd">        chemical orderings. Accept any ase.Atoms object. No need to be </span>
+<span class="sd">        built-in.</span>
+
+<span class="sd">    elements : list of strs </span>
+<span class="sd">        The metal elements of the nanoalloy.</span>
+
+<span class="sd">    symmetry : str, default &#39;spherical&#39;</span>
+<span class="sd">        Support 9 symmetries: </span>
+
+<span class="sd">        **&#39;spherical&#39;**: spherical symmetry (groups defined by the </span>
+<span class="sd">        distances to the geometric center);</span>
+
+<span class="sd">        **&#39;cylindrical&#39;**: cylindrical symmetry around z axis (groups </span>
+<span class="sd">        defined by the distances to the z axis);</span>
+
+<span class="sd">        **&#39;planar&#39;**: planar symmetry around z axis (groups defined by </span>
+<span class="sd">        the z coordinates), common for phase-separated nanoalloys;</span>
+
+<span class="sd">        **&#39;mirror_planar&#39;**: mirror planar symmetry around both</span>
+<span class="sd">        z and xy plane (groups defined by the absolute z coordinate), </span>
+<span class="sd">        high symmetry subset of &#39;planar&#39;;</span>
+<span class="sd">        &#39;circular&#39; = ring symmetry around z axis (groups defined by</span>
+<span class="sd">        both z coordinate and distance to z axis);</span>
+
+<span class="sd">        **&#39;mirror_circular&#39;**: mirror ring symmetry around both</span>
+<span class="sd">        z and xy plane (groups defined by both absolute z coordinate </span>
+<span class="sd">        and distance to z axis);</span>
+
+<span class="sd">        **&#39;chemical&#39;**: symmetry w.r.t chemical environment (groups </span>
+<span class="sd">        defined by the atomic energies given by a Gupta potential)</span>
+
+<span class="sd">        **&#39;geometrical&#39;**: symmetry w.r.t geometrical environment (groups </span>
+<span class="sd">        defined by vertex / edge / fcc111 / fcc100 / bulk identified</span>
+<span class="sd">        by CNA analysis);</span>
+
+<span class="sd">        **&#39;concentric&#39;**: conventional definition of the concentric </span>
+<span class="sd">        shells (surface / subsurface, subsubsurface, ..., core).</span>
+
+<span class="sd">    cutoff : float, default 1.0</span>
+<span class="sd">        Maximum thickness (in Angstrom) of a single group. The thickness</span>
+<span class="sd">        is calculated as the difference between the &quot;distances&quot; of the </span>
+<span class="sd">        closest-to-center atoms in two neighbor groups. Note that the</span>
+<span class="sd">        criterion of &quot;distance&quot; depends on the symmetry. This parameter </span>
+<span class="sd">        works differently if the symmetry is &#39;chemical&#39;, &#39;geometrical&#39; or </span>
+<span class="sd">        &#39;concentric&#39;. For &#39;chemical&#39; it is defined as the maximum atomic</span>
+<span class="sd">        energy difference (in eV) of a single group predicted by a Gupta</span>
+<span class="sd">        potential. For &#39;geometrical&#39; and &#39;concentric&#39; it is defined as </span>
+<span class="sd">        the cutoff radius (in Angstrom) for CNA, and a reasonable cutoff </span>
+<span class="sd">        based on the lattice constant of the material will automatically </span>
+<span class="sd">        be used if cutoff &lt;= 1. Use a larger cutoff if the structure is </span>
+<span class="sd">        distorted. </span>
+
+<span class="sd">    secondary_symmetry : str, default None</span>
+<span class="sd">        Add a secondary symmetry check to define groups hierarchically. </span>
+<span class="sd">        For example, even if two atoms are classifed in the same group</span>
+<span class="sd">        defined by the primary symmetry, they can still end up in </span>
+<span class="sd">        different groups if they fall into two different groups defined </span>
+<span class="sd">        by the secondary symmetry. Support 7 symmetries: &#39;spherical&#39;,</span>
+<span class="sd">        &#39;cylindrical&#39;, &#39;planar&#39;, &#39;mirror_planar&#39;, &#39;chemical&#39;, &#39;geometrical&#39; </span>
+<span class="sd">        and &#39;concentric&#39;. Note that secondary symmetry has the same </span>
+<span class="sd">        importance as the primary symmetry, so you can set either of the </span>
+<span class="sd">        two symmetries of interest as the secondary symmetry. Useful for </span>
+<span class="sd">        combining symmetries of different types (e.g. circular + chemical) </span>
+<span class="sd">        or combining symmetries with different cutoffs.</span>
+
+<span class="sd">    secondary_cutoff : float, default 1.0</span>
+<span class="sd">        Same as cutoff, except that it is for the secondary symmetry.</span>
+
+<span class="sd">    composition : dict, default None</span>
+<span class="sd">        Generate symmetric orderings only at a certain composition.</span>
+<span class="sd">        The dictionary contains the metal elements as keys and their </span>
+<span class="sd">        concentrations as values. Generate orderings at all compositions </span>
+<span class="sd">        if not specified. </span>
+
+<span class="sd">    groups : list of lists, default None</span>
+<span class="sd">        Provide the user defined symmetry equivalent groups as a list of </span>
+<span class="sd">        lists of atom indices. Useful for generating structures with</span>
+<span class="sd">        symmetries that are not supported.</span>
+
+<span class="sd">    save_groups : bool, default False</span>
+<span class="sd">        Whether to save the site groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] </span>
+<span class="sd">        for each generated structure.</span>
+
+<span class="sd">    trajectory : str, default &#39;orderings.traj&#39;</span>
+<span class="sd">        The name of the output ase trajectory file.</span>
+
+<span class="sd">    append_trajectory : bool, default False</span>
+<span class="sd">        Whether to append structures to the existing trajectory. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span>
+                 <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">,</span>
+                 <span class="n">cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>       
+                 <span class="n">secondary_symmetry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">secondary_cutoff</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                 <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">save_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
+                 <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="n">symmetry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">=</span> <span class="n">cutoff</span>
+        <span class="k">assert</span> <span class="n">secondary_symmetry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;circular&#39;</span><span class="p">,</span> <span class="s1">&#39;mirror_circular&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">=</span> <span class="n">secondary_symmetry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">secondary_cutoff</span> <span class="o">=</span> <span class="n">secondary_cutoff</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">ks</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span> <span class="o">=</span> <span class="n">save_groups</span>
+ 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span> <span class="o">=</span> <span class="n">trajectory</span>                        
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="o">=</span> <span class="n">append_trajectory</span>
+
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_groups</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+
+<div class="viewcode-block" id="SymmetricClusterOrderingGenerator.get_sorted_indices"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_sorted_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="p">):</span>                               
+        <span class="sd">&quot;&quot;&quot;Returns the indices sorted by the metric that defines different </span>
+<span class="sd">        groups, together with the corresponding vlues, given a specific </span>
+<span class="sd">        symmetry. Returns the indices sorted by geometrical environment if </span>
+<span class="sd">        symmetry=&#39;geometrical&#39;. Returns the indices sorted by surface, </span>
+<span class="sd">        subsurface, subsubsurface, ..., core if symmetry=&#39;concentric&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        symmetry : str</span>
+<span class="sd">            Support 7 symmetries: spherical, cylindrical, planar, </span>
+<span class="sd">            mirror_planar, chemical, geometrical, concentric.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+        <span class="n">geo_mid</span> <span class="o">=</span> <span class="p">[(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> 
+                   <span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;spherical&#39;</span><span class="p">:</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="n">get_distances</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> <span class="p">[</span><span class="n">geo_mid</span><span class="p">])[</span><span class="mi">1</span><span class="p">][:,</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;cylindrical&#39;</span><span class="p">:</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> 
+                               <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;planar&#39;</span><span class="p">:</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;mirror_planar&#39;</span><span class="p">:</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;chemical&#39;</span><span class="p">:</span>
+            <span class="n">gupta_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">10.960</span><span class="p">,</span> <span class="mf">2.2780</span><span class="p">,</span> <span class="mf">0.0855</span><span class="p">,</span> <span class="mf">1.224</span><span class="p">,</span> <span class="mf">2.556</span><span class="p">]}</span>
+            <span class="n">calc</span> <span class="o">=</span> <span class="n">Gupta</span><span class="p">(</span><span class="n">gupta_parameters</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Cu&#39;</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">calc</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_potential_energies</span><span class="p">()</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;geometrical&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;geometrical&#39;</span><span class="p">:</span>
+                <span class="n">rCut</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">&lt;=</span> <span class="mf">1.</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">==</span> <span class="s1">&#39;geometrical&#39;</span><span class="p">:</span>
+                <span class="n">rCut</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_cutoff</span> <span class="o">&lt;=</span> <span class="mf">1.</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_cutoff</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+            <span class="n">fcna</span> <span class="o">=</span> <span class="n">FullCNA</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">rCut</span><span class="o">=</span><span class="n">rCut</span><span class="p">)</span><span class="o">.</span><span class="n">get_normal_cna</span><span class="p">()</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fcna</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="s1">&#39;bulk&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span>
+
+        <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;concentric&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;concentric&#39;</span><span class="p">:</span>
+                <span class="n">rCut</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">&lt;=</span> <span class="mf">1.</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">==</span> <span class="s1">&#39;concentric&#39;</span><span class="p">:</span>
+                <span class="n">rCut</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_cutoff</span> <span class="o">&lt;=</span> <span class="mf">1.</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_cutoff</span>
+
+            <span class="k">def</span> <span class="nf">view1D</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span> <span class="c1"># a, b are arrays</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                <span class="n">void_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">void_dt</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>  <span class="n">b</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">void_dt</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">argwhere_nd_searchsorted</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+                <span class="n">A</span><span class="p">,</span><span class="n">B</span> <span class="o">=</span> <span class="n">view1D</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+                <span class="n">sidxB</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">)</span>
+                <span class="n">cm</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+                <span class="n">idx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+                <span class="n">idx1</span> <span class="o">=</span> <span class="n">sidxB</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">cm</span><span class="p">,</span> <span class="n">sorter</span><span class="o">=</span><span class="n">sidxB</span><span class="p">)]</span>
+                <span class="k">return</span> <span class="n">idx0</span><span class="p">,</span> <span class="n">idx1</span> <span class="c1"># idx0 : indices in A, idx1 : indices in B</span>
+
+            <span class="k">def</span> <span class="nf">get_surf_ids</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+                <span class="n">fcna</span> <span class="o">=</span> <span class="n">FullCNA</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">rCut</span><span class="o">=</span><span class="n">rCut</span><span class="p">)</span><span class="o">.</span><span class="n">get_normal_cna</span><span class="p">()</span> 
+                <span class="n">surf_ids</span><span class="p">,</span> <span class="n">bulk_ids</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">fcna</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
+                        <span class="n">surf_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">bulk_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">group_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">argwhere_nd_searchsorted</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> 
+                                 <span class="n">a</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">surf_ids</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">conv_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group_ids</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">bulk_ids</span><span class="p">:</span>
+                    <span class="k">return</span> 
+                <span class="n">get_surf_ids</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">bulk_ids</span><span class="p">])</span>
+
+            <span class="n">conv_groups</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+            <span class="n">get_surf_ids</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">conv_groups</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Symmetry &#39;</span><span class="si">{}</span><span class="s2">&#39; is not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">symmetry</span><span class="p">))</span>
+
+        <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">dists</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">sorted_indices</span><span class="p">,</span> <span class="n">dists</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>    </div>
+    
+<div class="viewcode-block" id="SymmetricClusterOrderingGenerator.get_groups"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the groups (a list of lists of atom indices) of all</span>
+<span class="sd">        symmetry-equivalent atoms.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;circular&#39;</span><span class="p">:</span>
+            <span class="n">symmetry</span> <span class="o">=</span> <span class="s1">&#39;planar&#39;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;mirror_circular&#39;</span><span class="p">:</span>
+            <span class="n">symmetry</span> <span class="o">=</span> <span class="s1">&#39;mirror_planar&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">symmetry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span>
+        <span class="n">indices</span><span class="p">,</span> <span class="n">dists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sorted_indices</span><span class="p">(</span><span class="n">symmetry</span><span class="o">=</span><span class="n">symmetry</span><span class="p">)</span> 
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;geometrical&#39;</span><span class="p">,</span> <span class="s1">&#39;concentric&#39;</span><span class="p">]:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">indices</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">old_dist</span> <span class="o">=</span> <span class="o">-</span><span class="mf">10.</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dists</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dist</span> <span class="o">-</span> <span class="n">old_dist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span><span class="p">:</span>
+                    <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">old_dist</span> <span class="o">=</span> <span class="n">dist</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">groups</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;circular&#39;</span><span class="p">,</span> <span class="s1">&#39;mirror_circular&#39;</span><span class="p">]:</span>
+            <span class="n">indices0</span><span class="p">,</span> <span class="n">dists0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sorted_indices</span><span class="p">(</span><span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;cylindrical&#39;</span><span class="p">)</span>
+            <span class="n">groups0</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">old_dist0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">10.</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">dist0</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices0</span><span class="p">,</span> <span class="n">dists0</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dist0</span> <span class="o">-</span> <span class="n">old_dist0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span><span class="p">:</span>
+                    <span class="n">groups0</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">j</span><span class="p">])</span>
+                    <span class="n">old_dist0</span> <span class="o">=</span> <span class="n">dist0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">groups0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="n">res0</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">group0</span> <span class="ow">in</span> <span class="n">groups0</span><span class="p">:</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                        <span class="n">res0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="n">res0</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">res</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">indices2</span><span class="p">,</span> <span class="n">dists2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sorted_indices</span><span class="p">(</span><span class="n">symmetry</span><span class="o">=</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;geometrical&#39;</span><span class="p">,</span> <span class="s1">&#39;concentric&#39;</span><span class="p">]:</span>
+                <span class="n">groups2</span> <span class="o">=</span> <span class="n">indices2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups2</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">old_dist2</span> <span class="o">=</span> <span class="o">-</span><span class="mf">10.</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">dist2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices2</span><span class="p">,</span> <span class="n">dists2</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dist2</span> <span class="o">-</span> <span class="n">old_dist2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_cutoff</span><span class="p">:</span>
+                        <span class="n">groups2</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">j</span><span class="p">])</span>
+                        <span class="n">old_dist2</span> <span class="o">=</span> <span class="n">dist2</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">groups2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="n">res2</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">group2</span> <span class="ow">in</span> <span class="n">groups2</span><span class="p">:</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group2</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                        <span class="n">res2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="n">res2</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">res</span>
+ 
+        <span class="k">return</span> <span class="n">groups</span></div>
+
+<div class="viewcode-block" id="SymmetricClusterOrderingGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricClusterOrderingGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;systematic&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the chemical ordering generator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_gen : int, default None</span>
+<span class="sd">            Maximum number of chemical orderings to generate. Running</span>
+<span class="sd">            forever (until exhaustive for systematic search) if not </span>
+<span class="sd">            specified. </span>
+
+<span class="sd">        mode : str, default &#39;systematic&#39;</span>
+<span class="sd">            **&#39;systematic&#39;**: enumerate all possible unique chemical </span>
+<span class="sd">            orderings. Recommended when there are not many groups. Switch</span>
+<span class="sd">            to stochastic mode automatically if the number of groups is</span>
+<span class="sd">            more than 20 (30 if composition is fixed since there are much</span>
+<span class="sd">            fewer structures).</span>
+
+<span class="sd">            **&#39;stochastic&#39;**: sample chemical orderings stochastically.</span>
+<span class="sd">            Duplicate structures can be generated. Recommended when there </span>
+<span class="sd">            are many groups. A greedy algorithm is employed if the </span>
+<span class="sd">            composition is fixed, which might result in slightly different</span>
+<span class="sd">            compositions. This can be controled by eps.</span>
+
+<span class="sd">        eps : float, default 0.01</span>
+<span class="sd">            The tolerance of the concentration for each element (the target </span>
+<span class="sd">            concentration range is [c-eps, c+eps]). Only relevant for </span>
+<span class="sd">            generating fixed-composition symmetric nanoalloys using </span>
+<span class="sd">            &#39;stochastic&#39; mode. Set to a small value, e.g. 0.005, if you </span>
+<span class="sd">            want the exact composition accurate to one atom. Please use a </span>
+<span class="sd">            larger eps if the concentrations you specified in compositions </span>
+<span class="sd">            are not accurate enough.</span>
+
+<span class="sd">        verbose : bool, default False </span>
+<span class="sd">            Whether to print out information about number of groups and</span>
+<span class="sd">            number of generated structures.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">traj_mode</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="k">else</span> <span class="s1">&#39;w&#39;</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="n">Trajectory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">traj_mode</span><span class="p">)</span>
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
+        <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">n_write</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> symmetry-equivalent groups classified&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">ratios</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;systematic&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ngroups</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> groups is infeasible for systematic&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngroups</span><span class="p">),</span> 
+                              <span class="s1">&#39;generator. Use stochastic generator instead&#39;</span><span class="p">)</span>
+                    <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">totals</span> <span class="o">=</span> <span class="n">numbers_from_ratios</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">ratios</span><span class="p">)</span> 
+                    <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">max_gen</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>               
+
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">partitions_into_totals</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">totals</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">totals</span><span class="p">)):</span>
+                            <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">part</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]</span> 
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">*</span> <span class="n">keys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
+                            <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;stochastic&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">max_gen</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+                <span class="n">nele</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span>
+                <span class="n">sor</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span>
+
+                <span class="k">while</span> <span class="n">n_write</span> <span class="o">&lt;</span> <span class="n">max_gen</span><span class="p">:</span>
+                    <span class="c1"># get a new random permutation</span>
+                    <span class="n">lst</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+                    <span class="n">partition</span> <span class="o">=</span> <span class="p">[]</span>                    
+                    <span class="c1"># starting index (in the permutation) of the current sublist</span>
+                    <span class="n">lo</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># permutation partial sum</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># index of sublist we are currently generating (i.e. what ratio we are on)</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># ratio partial sum</span>
+                    <span class="n">rs</span> <span class="o">=</span> <span class="n">ratios</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">):</span>
+                        <span class="n">s</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        
+                        <span class="c1"># if ratio of permutation partial sum exceeds ratio of ratio partial sum,</span>
+                        <span class="c1"># the current sublist is &quot;complete&quot;</span>
+                        <span class="k">if</span> <span class="n">s</span> <span class="o">/</span> <span class="n">natoms</span> <span class="o">&gt;=</span> <span class="n">rs</span> <span class="o">/</span> <span class="n">sor</span> <span class="o">-</span> <span class="n">eps</span><span class="p">:</span>
+                            <span class="n">partition</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="c1"># start creating new sublist from next element</span>
+                            <span class="n">lo</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">nele</span><span class="p">:</span>
+                                <span class="c1"># done with partition</span>
+                                <span class="c1"># remaining elements will always all be zeroes </span>
+                                <span class="n">partition</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+                                <span class="k">break</span>
+                            <span class="n">rs</span> <span class="o">+=</span> <span class="n">ratios</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    
+                    <span class="c1"># continue if there is any empty subset</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nele</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">partition</span> <span class="o">=</span> <span class="p">[[</span><span class="n">i</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">part</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">partition</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">sor</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="o">/</span> <span class="n">natoms</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="n">eps</span><span class="p">)</span> 
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">partition</span><span class="p">)):</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nele</span><span class="p">):</span>
+                            <span class="n">ids</span> <span class="o">=</span> <span class="n">partition</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">*</span> <span class="n">keys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="c1"># When the number of groups is too large (&gt; 20), systematic enumeration </span>
+            <span class="c1"># is not feasible. Stochastic sampling is the only option</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;systematic&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ngroups</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> groups is infeasible for systematic&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngroups</span><span class="p">),</span> 
+                              <span class="s1">&#39;generator. Use stochastic generator instead&#39;</span><span class="p">)</span>
+                    <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+                <span class="k">else</span><span class="p">:</span>    
+                    <span class="n">combos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="n">ngroups</span><span class="p">))</span>
+                    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">combos</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">combos</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">combo</span><span class="p">):</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spec</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
+                                <span class="k">break</span>
+ 
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;stochastic&#39;</span><span class="p">:</span>
+                <span class="n">combos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">too_few</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ngroups</span> <span class="o">*</span> <span class="mf">0.95</span> <span class="o">&lt;=</span> <span class="n">max_gen</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">too_few</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too few groups. Will generate duplicate images.&#39;</span><span class="p">)</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">combo</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngroups</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">combo</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">combos</span> <span class="ow">or</span> <span class="n">too_few</span><span class="p">:</span> 
+                        <span class="n">combos</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">combo</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">combo</span><span class="p">):</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spec</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>                      
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
+                                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> symmetric chemical orderings generated&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_write</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="SymmetricSlabOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricSlabOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">SymmetricSlabOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`SymmetricSlabOrderingGenerator` is a class for generating </span>
+<span class="sd">    symmetric chemical orderings for a **alloy surface slab**. </span>
+<span class="sd">    There is no limitation of the number of metal components.</span>
+<span class="sd"> </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        The surface slab to use as a template to generate symmetric </span>
+<span class="sd">        chemical orderings. Accept any ase.Atoms object. No need to </span>
+<span class="sd">        be built-in.</span>
+
+<span class="sd">    elements : list of strs </span>
+<span class="sd">        The metal elements of the alloy catalyst.</span>
+
+<span class="sd">    symmetry : str, default &#39;rotational&#39;</span>
+<span class="sd">        Support 4 symmetries: </span>
+
+<span class="sd">        **&#39;rotational&#39;**: rotational symmetry with symmetry</span>
+<span class="sd">        equivalent groups depending on the symmetry_axis.</span>
+
+<span class="sd">        **&#39;translational&#39;**: translational symmetry with symmetry </span>
+<span class="sd">        equivalent groups depending on repeating_size.</span>
+
+<span class="sd">        **&#39;inversion&#39;**: centrosymmetry with symmetry equivalent </span>
+<span class="sd">        groups depending on the distance to the geometric center.</span>
+<span class="sd">        Only works for certain number of slab layers (e.g. 5) and </span>
+<span class="sd">        orthogonal cell.</span>
+
+<span class="sd">        **&#39;mirror&#39;**: mirror plane symmetry with symmetry equivalent</span>
+<span class="sd">        groups depeneding on the xy plane bisecting the slab. Only</span>
+<span class="sd">        works for certain number of slab layers (e.g. 5) and orthogonal </span>
+<span class="sd">        cell.</span>
+
+<span class="sd">    symmetry_axis : numpy.array or list, default None</span>
+<span class="sd">        The symmetry axis (3d vector) to form symmetric ordering </span>
+<span class="sd">        around. Only relevant for rotational symmetry.</span>
+
+<span class="sd">    repeating_size : list of ints or tuple of ints, default (1, 1)</span>
+<span class="sd">        The multiples that describe the size of the repeating pattern</span>
+<span class="sd">        on the surface. Symmetry-equivalent atoms are grouped by </span>
+<span class="sd">        the multiples in the x and y directions. The x or y length of </span>
+<span class="sd">        the cell must be this multiple of the distance between each </span>
+<span class="sd">        pair of symmetry-equivalent atoms. Larger reducing size </span>
+<span class="sd">        generates fewer structures. For translational symmetry please</span>
+<span class="sd">        change repeating_size to larger numbers.</span>
+
+<span class="sd">    composition : dict, default None</span>
+<span class="sd">        Generate symmetric orderings only at a certain composition. </span>
+<span class="sd">        The dictionary contains the metal elements as keys and their </span>
+<span class="sd">        concentrations as values. Generate orderings at all compositions </span>
+<span class="sd">        if not specified. </span>
+
+<span class="sd">    groups : list of lists, default None</span>
+<span class="sd">        Provide the user defined symmetry equivalent groups as a list of </span>
+<span class="sd">        lists of atom indices. Useful for generating structures with</span>
+<span class="sd">        symmetries that are not supported.</span>
+
+<span class="sd">    save_groups : bool, default False</span>
+<span class="sd">        Whether to save the site groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] </span>
+<span class="sd">        for each generated structure.</span>
+
+<span class="sd">    dtol : float, default 0.01</span>
+<span class="sd">        The distance tolerance (in Angstrom) when comparing distances. </span>
+<span class="sd">        Use a larger value if the structure is distorted.</span>
+
+<span class="sd">    ztol : float, default 0.1</span>
+<span class="sd">        The tolerance (in Angstrom) when comparing z values. Use a </span>
+<span class="sd">        larger ztol if the structure is distorted.</span>
+
+<span class="sd">    trajectory : str, default &#39;orderings.traj&#39;</span>
+<span class="sd">        The name of the output ase trajectory file.</span>
+
+<span class="sd">    append_trajectory : bool, default False</span>
+<span class="sd">        Whether to append structures to the existing trajectory. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span>
+                 <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;rotational&#39;</span><span class="p">,</span>
+                 <span class="n">symmetry_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">repeating_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">save_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">dtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                 <span class="n">ztol</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                 <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
+                 <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="n">symmetry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="o">=</span> <span class="n">symmetry_axis</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">repeating_size</span><span class="p">)</span> 
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">repeating_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span> <span class="o">=</span> <span class="n">repeating_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span> <span class="o">=</span> <span class="n">save_groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span> <span class="o">=</span> <span class="n">dtol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ztol</span> <span class="o">=</span> <span class="n">ztol</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">ks</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span> <span class="o">=</span> <span class="n">trajectory</span>                        
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="o">=</span> <span class="n">append_trajectory</span>
+
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>                  
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_groups</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+
+    <span class="k">def</span> <span class="nf">get_symmetric_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>                               
+        <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">get_layers</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ztol</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span> 
+            <span class="n">dd</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span>
+        <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="n">indices</span><span class="p">,</span> <span class="n">sym_pts</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">dd</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">geo_mid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sa2</span> <span class="o">=</span> <span class="n">sa</span> <span class="o">@</span> <span class="n">sa</span>
+            <span class="n">projs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">)</span> <span class="o">*</span> <span class="n">sa</span><span class="p">,</span> 
+                            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">sa</span> <span class="o">/</span> <span class="n">sa2</span>
+            <span class="n">norms</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span> <span class="o">-</span> <span class="n">projs</span>
+            <span class="n">indices</span> <span class="o">+=</span> <span class="n">idxs</span>
+            <span class="n">sym_pts</span> <span class="o">+=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">norms</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">sym_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">pt</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">pt</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">sym_pts</span><span class="p">))])</span>
+        <span class="n">new_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">))))</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">new_indices</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">sym_pts</span><span class="p">[</span><span class="n">new_indices</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ds</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">p1</span> <span class="o">-</span> <span class="n">p2</span><span class="p">,</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">),</span> <span class="n">natoms</span><span class="p">):</span>
+            <span class="n">idx1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">natoms</span><span class="p">)]</span>
+            <span class="n">idx2</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">natoms</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">):</span>
+                    <span class="n">idx2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">idx1</span> <span class="o">+</span> <span class="n">idx2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pairs</span>
+
+    <span class="k">def</span> <span class="nf">get_x_y_identical_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
+        <span class="n">xy_atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">xy_atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">xy_atoms</span><span class="o">.</span><span class="n">get_all_distances</span><span class="p">(</span><span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ds</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> 
+
+    <span class="k">def</span> <span class="nf">get_lx_ly_identical_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_all_distances</span><span class="p">(</span><span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
+        <span class="n">x_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                                                                              
+        <span class="n">ref_x_dist</span> <span class="o">=</span> <span class="n">x_cell</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ref_y_dist</span> <span class="o">=</span> <span class="n">y_cell</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">x_pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ds</span> <span class="o">-</span> <span class="n">ref_x_dist</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">))</span>
+        <span class="n">y_pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ds</span> <span class="o">-</span> <span class="n">ref_y_dist</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x_pairs</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">y_pairs</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_collinear_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+        <span class="n">geo_mid</span> <span class="o">=</span> <span class="p">[(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>                
+                   <span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">vecs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">geo_mid</span><span class="p">]),</span> 
+                           <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Generate the i, j indices</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vecs</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Find the cross products using numpy indexing on vecs</span>
+        <span class="n">cross</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vecs</span><span class="p">[</span><span class="n">rows</span><span class="p">],</span> <span class="n">vecs</span><span class="p">[</span><span class="n">cols</span><span class="p">])</span>
+        <span class="c1"># Find the values that are close </span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">cross</span> <span class="o">*</span> <span class="n">cross</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> 
+                          <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">))</span>
+        <span class="c1"># Get the i, j indices where is close to 0</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">rows</span><span class="p">[</span><span class="n">arg</span><span class="p">],</span> <span class="n">cols</span><span class="p">[</span><span class="n">arg</span><span class="p">]])</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">geo_mid</span>            
+
+<div class="viewcode-block" id="SymmetricSlabOrderingGenerator.get_groups"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricSlabOrderingGenerator.get_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the groups (a list of lists of atom indices) of all</span>
+<span class="sd">        symmetry-equivalent atoms.&quot;&quot;&quot;</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;rotational&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetric_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;translational&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Please set repeating_size larger than (1, 1) &#39;</span> <span class="o">+</span> 
+                                 <span class="s1">&#39;for translational symmetry&#39;</span><span class="p">)</span> 
+            <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_lx_ly_identical_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>  
+            <span class="n">z_positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pairs</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z_positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-</span>
+                     <span class="n">z_positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ztol</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;inversion&#39;</span><span class="p">:</span>
+            <span class="n">pairs</span><span class="p">,</span> <span class="n">geo_mid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collinear_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pairs</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">get_mic</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">geo_mid</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> 
+                     <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">get_mic</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> 
+                     <span class="n">geo_mid</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;mirror&#39;</span><span class="p">:</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_x_y_identical_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
+            <span class="n">z_positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">mid_z</span> <span class="o">=</span> <span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">/</span><span class="mf">2.</span><span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pairs</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">z_positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mid_z</span><span class="p">)</span> <span class="o">-</span> 
+                     <span class="nb">abs</span><span class="p">(</span><span class="n">z_positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mid_z</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ztol</span><span class="p">]</span>
+            
+        <span class="k">def</span> <span class="nf">to_edges</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">last</span><span class="p">,</span> <span class="n">current</span>
+                <span class="n">last</span> <span class="o">=</span> <span class="n">current</span>    
+        <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">to_edges</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span> <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">))]</span>
+        <span class="n">uni</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">}</span>
+        <span class="n">addition</span> <span class="o">=</span> <span class="p">[[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)))</span> <span class="o">-</span> <span class="n">uni</span><span class="p">]</span>
+        <span class="n">groups</span> <span class="o">+=</span> <span class="n">addition</span>
+
+        <span class="k">return</span> <span class="n">groups</span></div>
+
+<div class="viewcode-block" id="SymmetricSlabOrderingGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.SymmetricSlabOrderingGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;systematic&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the chemical ordering generator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_gen : int, default None</span>
+<span class="sd">            Maximum number of chemical orderings to generate. Running</span>
+<span class="sd">            forever (until exhaustive for systematic search) if not </span>
+<span class="sd">            specified. </span>
+
+<span class="sd">        mode : str, default &#39;systematic&#39;</span>
+<span class="sd">            **&#39;systematic&#39;**: enumerate all possible unique chemical </span>
+<span class="sd">            orderings. Recommended when there are not many groups. Switch</span>
+<span class="sd">            to stochastic mode automatically if the number of groups is</span>
+<span class="sd">            more than 20 (30 if composition is fixed since there are much</span>
+<span class="sd">            fewer structures).</span>
+
+<span class="sd">            **&#39;stochastic&#39;**: sample chemical orderings stochastically.</span>
+<span class="sd">            Duplicate structures can be generated. Recommended when there </span>
+<span class="sd">            are many groups. A greedy algorithm is employed if the </span>
+<span class="sd">            composition is fixed, which might result in slightly different</span>
+<span class="sd">            compositions. This can be controled by eps.</span>
+
+<span class="sd">        eps : float, default 0.01</span>
+<span class="sd">            The tolerance of the concentration for each element (the target </span>
+<span class="sd">            concentration range is [c-eps, c+eps]). Only relevant for </span>
+<span class="sd">            generating fixed-composition symmetric nanoalloys using </span>
+<span class="sd">            &#39;stochastic&#39; mode. Set to a small value, e.g. 0.005, if you </span>
+<span class="sd">            want the exact composition accurate to one atom. Please use a </span>
+<span class="sd">            larger eps if the concentrations you specified in compositions </span>
+<span class="sd">            are not accurate enough.</span>
+
+<span class="sd">        verbose : bool, default False </span>
+<span class="sd">            Whether to print out information about number of groups and</span>
+<span class="sd">            number of generated structures.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">traj_mode</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="k">else</span> <span class="s1">&#39;w&#39;</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="n">Trajectory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">traj_mode</span><span class="p">)</span>
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
+        <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">n_write</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> symmetry-equivalent groups classified&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">ratios</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;systematic&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ngroups</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> groups is infeasible for systematic&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngroups</span><span class="p">),</span> 
+                              <span class="s1">&#39;generator. Use stochastic generator instead&#39;</span><span class="p">)</span>
+                    <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">totals</span> <span class="o">=</span> <span class="n">numbers_from_ratios</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">ratios</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">max_gen</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>             
+   
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">partitions_into_totals</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">totals</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">totals</span><span class="p">)):</span>
+                            <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">part</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]</span> 
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">*</span> <span class="n">keys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
+                            <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;stochastic&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">max_gen</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+                <span class="n">nele</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span>
+                <span class="n">sor</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span>
+
+                <span class="k">while</span> <span class="n">n_write</span> <span class="o">&lt;</span> <span class="n">max_gen</span><span class="p">:</span>
+                    <span class="c1"># get a new random permutation</span>
+                    <span class="n">lst</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+                    <span class="n">partition</span> <span class="o">=</span> <span class="p">[]</span>                    
+                    <span class="c1"># starting index (in the permutation) of the current sublist</span>
+                    <span class="n">lo</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># permutation partial sum</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># index of sublist we are currently generating (i.e. what ratio we are on)</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="c1"># ratio partial sum</span>
+                    <span class="n">rs</span> <span class="o">=</span> <span class="n">ratios</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">):</span>
+                        <span class="n">s</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        
+                        <span class="c1"># if ratio of permutation partial sum exceeds ratio of ratio partial sum,</span>
+                        <span class="c1"># the current sublist is &quot;complete&quot;</span>
+                        <span class="k">if</span> <span class="n">s</span> <span class="o">/</span> <span class="n">natoms</span> <span class="o">&gt;=</span> <span class="n">rs</span> <span class="o">/</span> <span class="n">sor</span> <span class="o">-</span> <span class="n">eps</span><span class="p">:</span>
+                            <span class="n">partition</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">lo</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="c1"># start creating new sublist from next element</span>
+                            <span class="n">lo</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">nele</span><span class="p">:</span>
+                                <span class="c1"># done with partition</span>
+                                <span class="c1"># remaining elements will always all be zeroes </span>
+                                <span class="n">partition</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+                                <span class="k">break</span>
+                            <span class="n">rs</span> <span class="o">+=</span> <span class="n">ratios</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    
+                    <span class="c1"># continue if there is any empty subset</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nele</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">partition</span> <span class="o">=</span> <span class="p">[[</span><span class="n">i</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">part</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">partition</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ratios</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">sor</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="o">/</span> <span class="n">natoms</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="n">eps</span><span class="p">)</span> 
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">partition</span><span class="p">)):</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nele</span><span class="p">):</span>
+                            <span class="n">ids</span> <span class="o">=</span> <span class="n">partition</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">*</span> <span class="n">keys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="c1"># When the number of groups is too large (&gt; 20), systematic enumeration </span>
+            <span class="c1"># is not feasible. Stochastic sampling is the only option</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;systematic&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ngroups</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> groups is infeasible for systematic&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ngroups</span><span class="p">),</span> 
+                              <span class="s1">&#39;generator. Use stochastic generator instead&#39;</span><span class="p">)</span>
+                    <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;stochastic&#39;</span>
+                <span class="k">else</span><span class="p">:</span>    
+                    <span class="n">combos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="n">ngroups</span><span class="p">))</span>
+                    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">combos</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">combos</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">combo</span><span class="p">):</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spec</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
+                                <span class="k">break</span>
+ 
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;stochastic&#39;</span><span class="p">:</span>
+                <span class="n">combos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">too_few</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">ngroups</span> <span class="o">*</span> <span class="mf">0.95</span> <span class="o">&lt;=</span> <span class="n">max_gen</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">too_few</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too few groups. Will generate duplicate images.&#39;</span><span class="p">)</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">combo</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngroups</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">combo</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">combos</span> <span class="ow">or</span> <span class="n">too_few</span><span class="p">:</span> 
+                        <span class="n">combos</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">combo</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">combo</span><span class="p">):</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spec</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+                                <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+                        <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+                        <span class="n">n_write</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">max_gen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">n_write</span> <span class="o">==</span> <span class="n">max_gen</span><span class="p">:</span>
+                                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> symmetric chemical orderings generated&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_write</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="RandomOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.RandomOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">RandomOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`RandomOrderingGenerator` is a class for generating random </span>
+<span class="sd">    chemical orderings for an alloy catalyst. The function is </span>
+<span class="sd">    generalized for both periodic and non-periodic systems, and </span>
+<span class="sd">    there is no limitation of the number of metal components.</span>
+<span class="sd"> </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    atoms : ase.Atoms object</span>
+<span class="sd">        The nanoparticle or surface slab to use as a template to</span>
+<span class="sd">        generate random chemical orderings. Accept any ase.Atoms </span>
+<span class="sd">        object. No need to be built-in.</span>
+
+<span class="sd">    elements : list of strs </span>
+<span class="sd">        The metal elements of the alloy catalyst.</span>
+
+<span class="sd">    composition : dict, default None</span>
+<span class="sd">        Generate random orderings only at a certain composition.</span>
+<span class="sd">        The dictionary contains the metal elements as keys and </span>
+<span class="sd">        their concentrations as values. Generate orderings at all </span>
+<span class="sd">        compositions if not specified.</span>
+
+<span class="sd">    trajectory : str, default &#39;orderings.traj&#39;</span>
+<span class="sd">        The name of the output ase trajectory file.</span>
+
+<span class="sd">    append_trajectory : bool, default False</span>
+<span class="sd">        Whether to append structures to the existing trajectory. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span>
+                 <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">trajectory</span><span class="o">=</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span>
+                 <span class="n">append_trajectory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="o">=</span> <span class="n">composition</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">ks</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+            <span class="n">vs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">nums</span> <span class="o">=</span> <span class="n">numbers_from_ratios</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">),</span> <span class="n">vs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">ks</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ks</span><span class="p">))}</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span> <span class="o">=</span> <span class="n">trajectory</span>                        
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="o">=</span> <span class="n">append_trajectory</span>
+
+<div class="viewcode-block" id="RandomOrderingGenerator.randint_with_sum"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.RandomOrderingGenerator.randint_with_sum">[docs]</a>    <span class="k">def</span> <span class="nf">randint_with_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a randomly chosen list of N positive integers i</span>
+<span class="sd">        summing to the number of atoms. N is the number of elements.</span>
+<span class="sd">        Each such list is equally likely to occur.&quot;&quot;&quot;</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span>
+        <span class="n">dividers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total</span><span class="p">),</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dividers</span> <span class="o">+</span> <span class="p">[</span><span class="n">total</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dividers</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="RandomOrderingGenerator.random_split_indices"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.RandomOrderingGenerator.random_split_indices">[docs]</a>    <span class="k">def</span> <span class="nf">random_split_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate random chunks of indices given sizes of each </span>
+<span class="sd">        chunk.&quot;&quot;&quot;</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)))</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">pointer</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">pointer</span><span class="p">:</span><span class="n">pointer</span><span class="o">+</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">pointer</span> <span class="o">+=</span> <span class="n">v</span>
+
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="RandomOrderingGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.RandomOrderingGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_gen</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the chemical ordering generator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_gen : int</span>
+<span class="sd">            Number of chemical orderings to generate.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">traj_mode</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span> <span class="k">else</span> <span class="s1">&#39;w&#39;</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="n">Trajectory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">traj_mode</span><span class="p">)</span>
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span>
+        <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_gen</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rands</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">randint_with_sum</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="n">rands</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> 
+                                 <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)}</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_split_indices</span><span class="p">()</span>    
+            <span class="n">indi</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">chunks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">indi</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="n">traj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

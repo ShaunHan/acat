@@ -1,0 +1,1004 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>acat.ga.group_operators &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/table_styling.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/acat_favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>acat.ga.group_operators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for acat.ga.group_operators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Procreation operators meant to be used in symmetry-constrained</span>
+<span class="sd">genetic algorithm (SCGA).&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">is_list_or_tuple</span><span class="p">,</span> <span class="n">get_depth</span>
+<span class="kn">from</span> <span class="nn">..adsorption_sites</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorptionSites</span><span class="p">,</span>    
+                                <span class="n">SlabAdsorptionSites</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorbateCoverage</span><span class="p">,</span>
+                                  <span class="n">SlabAdsorbateCoverage</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..build.action</span> <span class="kn">import</span> <span class="p">(</span><span class="n">add_adsorbate_to_site</span><span class="p">,</span> 
+                            <span class="n">remove_adsorbates_from_sites</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">ase.ga.offspring_creator</span> <span class="kn">import</span> <span class="n">OffspringCreator</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+
+<div class="viewcode-block" id="Mutation"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.Mutation">[docs]</a><span class="k">class</span> <span class="nc">Mutation</span><span class="p">(</span><span class="n">OffspringCreator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all particle mutation type operators.</span>
+<span class="sd">    Do not call this class directly.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">OffspringCreator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;Mutation&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="GroupSubstitute"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupSubstitute">[docs]</a><span class="k">class</span> <span class="nc">GroupSubstitute</span><span class="p">(</span><span class="n">Mutation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Substitute all the atoms in a group with a different element. </span>
+<span class="sd">    The elemental composition cannot be fixed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    groups : list of lists or list of list of lists, default None</span>
+<span class="sd">        The atom indices in each user-divided group. Can be obtained </span>
+<span class="sd">        by `acat.build.ordering.SymmetricClusterOrderingGenerator` </span>
+<span class="sd">        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.</span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of </span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the atoms in each </span>
+<span class="sd">        group are of the same type. If not provided here, please </span>
+<span class="sd">        provide the groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] in all </span>
+<span class="sd">        intial structures. </span>
+
+<span class="sd">    elements : list of strs, default None</span>
+<span class="sd">        Only take into account the elements specified in this list. </span>
+<span class="sd">        Default is to take all elements into account.</span>
+
+<span class="sd">    num_muts : int, default 1</span>
+<span class="sd">        The number of times to perform this operation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;GroupSubstitute&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+
+<div class="viewcode-block" id="GroupSubstitute.substitute"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupSubstitute.substitute">[docs]</a>    <span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does the actual substitution&quot;&quot;&quot;</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                  
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span>
+
+        <span class="n">sorted_elems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">!=</span> <span class="n">sorted_elems</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="n">torem</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">torem</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">torem</span><span class="p">:</span>
+                    <span class="n">group</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">itbms</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">itbm</span> <span class="ow">in</span> <span class="n">itbms</span><span class="p">:</span>
+            <span class="n">mut_group</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">itbm</span><span class="p">]</span>
+            <span class="n">other_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="k">if</span> 
+                              <span class="n">e</span> <span class="o">!=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">mut_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span>
+            <span class="n">to_element</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">other_elements</span><span class="p">)</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">mut_group</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mut_group</span><span class="p">)</span> <span class="o">*</span> <span class="n">to_element</span>
+
+        <span class="k">return</span> <span class="n">atoms</span></div>
+
+<div class="viewcode-block" id="GroupSubstitute.get_new_individual"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupSubstitute.get_new_individual">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parents</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">indi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="s1">&#39;:Parent </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="GroupPermutation"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupPermutation">[docs]</a><span class="k">class</span> <span class="nc">GroupPermutation</span><span class="p">(</span><span class="n">Mutation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Permutes the elements in two random groups. The elemental </span>
+<span class="sd">    composition can be fixed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    groups : list of lists or list of list of lists, default None</span>
+<span class="sd">        The atom indices in each user-divided group. Can be obtained </span>
+<span class="sd">        by `acat.build.ordering.SymmetricClusterOrderingGenerator` </span>
+<span class="sd">        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.</span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the atoms in each </span>
+<span class="sd">        group are of the same type. If not provided here, please </span>
+<span class="sd">        provide the groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] in all </span>
+<span class="sd">        intial structures. </span>
+
+<span class="sd">    elements : list of strs, default None</span>
+<span class="sd">        Only take into account the elements specified in this list. </span>
+<span class="sd">        Default is to take all elements into account.</span>
+
+<span class="sd">    keep_composition : bool, defulat False</span>
+<span class="sd">        Whether the elemental composition should be the same as in</span>
+<span class="sd">        the parents.</span>
+
+<span class="sd">    num_muts : int, default 1</span>
+<span class="sd">        The number of times to perform this operation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">keep_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;GroupPermutation&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_composition</span> <span class="o">=</span> <span class="n">keep_composition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+
+<div class="viewcode-block" id="GroupPermutation.get_new_individual"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupPermutation.get_new_individual">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parents</span><span class="p">):</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">diffatoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">numbers</span><span class="p">))</span>
+
+        <span class="c1"># Return None if there is only one atomic type</span>
+        <span class="k">if</span> <span class="n">diffatoms</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
+            <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+                <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
+            <span class="n">GroupPermutation</span><span class="o">.</span><span class="n">mutate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">keep_composition</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="s1">&#39;:Parent </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="GroupPermutation.mutate"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupPermutation.mutate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do the actual permutation.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">elements</span>
+
+        <span class="n">sorted_elems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">!=</span> <span class="n">sorted_elems</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="n">torem</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">torem</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">torem</span><span class="p">:</span>
+                    <span class="n">group</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">keep_composition</span><span class="p">:</span>
+            <span class="n">dd</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gi</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
+                <span class="n">dd</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gi</span><span class="p">)</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dd</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+            <span class="n">mut_gis</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">mut_gis</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">mut_gis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">mut_gis</span><span class="p">)</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="n">mut_gis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">mut_group1</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>           
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">mut_gis</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">atoms</span><span class="p">[</span><span class="n">mut_group1</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span> 
+                       <span class="o">!=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">mut_group1</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">))</span> <span class="k">if</span> <span class="n">atoms</span><span class="p">[</span><span class="n">mut_group1</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span> 
+                       <span class="o">!=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">i2</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">mut_group2</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">i2</span><span class="p">]</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">mut_group1</span><span class="o">+</span><span class="n">mut_group2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mut_group1</span><span class="p">)</span> <span class="o">*</span> <span class="n">atoms</span><span class="p">[</span>
+        <span class="n">mut_group2</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">mut_group2</span><span class="p">)</span> <span class="o">*</span> <span class="n">atoms</span><span class="p">[</span><span class="n">mut_group1</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span>            </div></div>
+
+
+<div class="viewcode-block" id="AdsorbateGroupSubstitute"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupSubstitute">[docs]</a><span class="k">class</span> <span class="nc">AdsorbateGroupSubstitute</span><span class="p">(</span><span class="n">Mutation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Substitute all the adsorbates (or vacancies) in a site group </span>
+<span class="sd">    with a different element.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adsorbate_species : str or list of strs </span>
+<span class="sd">        A list of possible adsorbate species to be added to the surface.</span>
+
+<span class="sd">    site_groups : list of lists or list of list of lists, default None</span>
+<span class="sd">        The site indices in each user-divided group. Can be obtained </span>
+<span class="sd">        by `acat.build.ordering.SymmetricPatternGenerator`.</span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the adsorbate / </span>
+<span class="sd">        vacancy occupations in each site group are of the same type. </span>
+<span class="sd">        If not provided here, please provide the groups in </span>
+<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. </span>
+
+<span class="sd">    max_species : int, default None</span>
+<span class="sd">        The maximum allowed adsorbate species (excluding vacancies) for a</span>
+<span class="sd">        single structure. Allow all adsorbatae species if not specified.</span>
+
+<span class="sd">    heights : dict, default acat.settings.site_heights                </span>
+<span class="sd">        A dictionary that contains the adsorbate height for each site </span>
+<span class="sd">        type. Use the default height settings if the height for a site</span>
+<span class="sd">        type is not specified.</span>
+
+<span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object </span>
+<span class="sd">        or acat.adsorption_sites.SlabAdsorptionSites object, default None</span>
+<span class="sd">        Provide the built-in adsorption sites class to accelerate the </span>
+<span class="sd">        pattern generation. Make sure all the structures have the same </span>
+<span class="sd">        periodicity and atom indexing. If composition_effect=True, you </span>
+<span class="sd">        should only provide adsorption_sites when the surface composition </span>
+<span class="sd">        is fixed. If this is not provided, the arguments for identifying</span>
+<span class="sd">        adsorption sites can still be passed in by **kwargs.</span>
+
+<span class="sd">    remove_neighbor_sites : bool, default True</span>
+<span class="sd">        Whether to remove the neighboring sites around each occupied site. </span>
+
+<span class="sd">    remove_neighbor_number : int, default 1</span>
+<span class="sd">        The neighbor shell number within which the neighbors should be</span>
+<span class="sd">        removed. Only relevant when remove_neighbor_sites=True.       </span>
+
+<span class="sd">    num_muts : int, default 1</span>
+<span class="sd">        The number of times to perform this operation.</span>
+
+<span class="sd">    dmax : float, default 3.</span>
+<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
+<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
+                 <span class="n">site_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">max_species</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
+                 <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">remove_neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;AdsorbateGroupSubstitute&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="o">=</span> <span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span>
+                                 <span class="n">adsorbate_species</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">adsorbate_species</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="o">=</span> <span class="n">site_groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span> <span class="o">=</span> <span class="n">max_species</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span> <span class="o">=</span> <span class="n">remove_neighbor_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span> <span class="o">=</span> <span class="n">remove_neighbor_number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
+                       <span class="s1">&#39;ignore_bridge_sites&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;label_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>             
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">k</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>                                  
+
+<div class="viewcode-block" id="AdsorbateGroupSubstitute.substitute"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupSubstitute.substitute">[docs]</a>    <span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does the actual substitution of the adsorbates&quot;&quot;&quot;</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>                                          
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
+                <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
+                <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
+
+        <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">hsl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                     
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
+
+        <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">:</span>
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span><span class="p">)</span>
+            <span class="n">indexes</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span>
+            <span class="n">itbms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indexes</span><span class="p">)):</span>
+                <span class="n">itbms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                    <span class="n">inset</span> <span class="o">=</span> <span class="p">{</span><span class="n">ni</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span>
+                    <span class="n">ings</span> <span class="o">=</span> <span class="p">[</span><span class="n">nj</span> <span class="k">for</span> <span class="n">nj</span> <span class="ow">in</span> <span class="n">indexes</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="n">nj</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">inset</span><span class="p">)]</span>
+                    <span class="n">itbms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">itbms</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ings</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">itbms</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">itbms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itbms</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">itbms</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">)</span>
+        <span class="n">not_mut</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">itbms</span><span class="p">]</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">not_mut</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>                      
+            <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">not_mut_specs</span> <span class="o">=</span> <span class="p">{</span><span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">not_mut</span>
+                             <span class="k">if</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="s1">&#39;occupied&#39;</span><span class="p">]}</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">not_mut_specs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">others</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">sp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">not_mut_specs</span><span class="p">]</span>
+                <span class="n">options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">not_mut_specs</span><span class="p">)</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">others</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span> 
+            <span class="k">elif</span> <span class="n">diff</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">not_mut_specs</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">not_mut_specs</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;vacancy&#39;</span><span class="p">]</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The number of adsorbate species exceeds &#39;</span> <span class="o">+</span>
+                              <span class="s1">&#39;the maximum allowed number.&#39;</span><span class="p">)</span>
+
+        <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">ngroups</span>                                 
+        <span class="n">newvs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">itbms</span> <span class="o">+</span> <span class="n">not_mut</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">st0</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">newvs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">st0</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                    <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>
+            <span class="k">elif</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">itbms</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st0</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                    <span class="n">spec</span> <span class="o">=</span> <span class="n">st0</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">spec</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>     
+                <span class="n">other_specs</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">options</span> <span class="k">if</span> <span class="n">sp</span> <span class="o">!=</span> <span class="n">spec</span><span class="p">]</span>
+                <span class="n">to_spec</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">other_specs</span><span class="p">)</span>
+                <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_spec</span>
+                <span class="k">if</span> <span class="n">to_spec</span> <span class="o">==</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">:</span>
+                    <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">:</span>
+                    <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+
+        <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> 
+                   <span class="k">if</span> <span class="n">to_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+        <span class="n">remove_adsorbates_from_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">rmsites</span><span class="p">,</span> <span class="n">remove_fragments</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">to_spec</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                    <span class="n">st</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+                    <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">to_spec</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+            <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">atoms</span></div>
+
+<div class="viewcode-block" id="AdsorbateGroupSubstitute.get_new_individual"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupSubstitute.get_new_individual">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parents</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">indi</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]]</span> 
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="s1">&#39;:Parent </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="AdsorbateGroupPermutation"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupPermutation">[docs]</a><span class="k">class</span> <span class="nc">AdsorbateGroupPermutation</span><span class="p">(</span><span class="n">Mutation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Permutes the elements in two random site groups.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adsorbate_species : str or list of strs </span>
+<span class="sd">        A list of possible adsorbate species to be added to the surface.</span>
+
+<span class="sd">    site_groups : list of lists or list of list of lists, default None</span>
+<span class="sd">        The site indices in each user-divided group. Can be obtained </span>
+<span class="sd">        by `acat.build.ordering.SymmetricPatternGenerator`.</span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the adsorbate / </span>
+<span class="sd">        vacancy occupations in each site group are of the same type.</span>
+<span class="sd">        If not provided here, please provide the groups in </span>
+<span class="sd">        atoms.info[&#39;data&#39;][&#39;groups&#39;] in all intial structures. </span>
+
+<span class="sd">    heights : dict, default acat.settings.site_heights                </span>
+<span class="sd">        A dictionary that contains the adsorbate height for each site </span>
+<span class="sd">        type. Use the default height settings if the height for a site</span>
+<span class="sd">        type is not specified.</span>
+
+<span class="sd">    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object </span>
+<span class="sd">        or acat.adsorption_sites.SlabAdsorptionSites object, default None</span>
+<span class="sd">        Provide the built-in adsorption sites class to accelerate the </span>
+<span class="sd">        pattern generation. Make sure all the structures have the same </span>
+<span class="sd">        periodicity and atom indexing. If composition_effect=True, you </span>
+<span class="sd">        should only provide adsorption_sites when the surface composition </span>
+<span class="sd">        is fixed. If this is not provided, the arguments for identifying</span>
+<span class="sd">        adsorption sites can still be passed in by **kwargs.</span>
+
+<span class="sd">    remove_neighbor_sites : bool, default True</span>
+<span class="sd">        Whether to remove the neighboring sites around each occupied site. </span>
+
+<span class="sd">    remove_neighbor_number : int, default 1</span>
+<span class="sd">        The neighbor shell number within which the neighbors should be</span>
+<span class="sd">        removed. Only relevant when remove_neighbor_sites=True.       </span>
+
+<span class="sd">    num_muts : int, default 1</span>
+<span class="sd">        The number of times to perform this operation.</span>
+
+<span class="sd">    dmax : float, default 3.</span>
+<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
+<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span> 
+                 <span class="n">site_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
+                 <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">remove_neighbor_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">remove_neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;AdsorbateGroupPermutation&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="o">=</span> <span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span>       
+                                 <span class="n">adsorbate_species</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">adsorbate_species</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="o">=</span> <span class="n">site_groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span> <span class="o">=</span> <span class="n">remove_neighbor_sites</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span> <span class="o">=</span> <span class="n">remove_neighbor_number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
+                       <span class="s1">&#39;ignore_bridge_sites&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;label_sites&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>             
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">k</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>                                  
+
+<div class="viewcode-block" id="AdsorbateGroupPermutation.get_new_individual"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupPermutation.get_new_individual">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parents</span><span class="p">):</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>                                          
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
+                <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
+                <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
+        <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">site_groups</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_groups</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">hsl</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">site_groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                     
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">site_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
+            <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+                <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Return None if there is only one adsorbate (vacancy) type</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">([</span><span class="n">hsl</span><span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">site_groups</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
+            <span class="n">AdsorbateGroupPermutation</span><span class="o">.</span><span class="n">mutate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">site_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> 
+                                             <span class="n">hsl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_sites</span><span class="p">,</span> 
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">remove_neighbor_number</span><span class="p">)</span>
+            <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
+                <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">hsl</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">hetero_site_list</span>
+
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
+        
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="s1">&#39;:Parent </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="AdsorbateGroupPermutation.mutate"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupPermutation.mutate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">heights</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">hetero_site_list</span><span class="p">,</span> 
+               <span class="n">remove_neighbor_sites</span><span class="p">,</span> <span class="n">remove_neighbor_number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do the actual permutation of the adsorbates.&quot;&quot;&quot;</span>
+
+        <span class="n">sas</span><span class="p">,</span> <span class="n">hsl</span> <span class="o">=</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">hetero_site_list</span>
+        <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
+        <span class="n">i1</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngroups</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">st01</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">ings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">remove_neighbor_sites</span><span class="p">:</span>                                                   
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="n">remove_neighbor_number</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">st01</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                <span class="n">ings</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nj</span> <span class="k">for</span> <span class="n">nj</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="n">nj</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">nsl</span><span class="p">[</span><span class="n">i1</span><span class="p">])]</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ings</span><span class="p">)</span> <span class="ow">and</span> 
+                   <span class="p">(</span><span class="n">st01</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="s1">&#39;fragment&#39;</span><span class="p">])]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">i2</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">st02</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i2</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">st01</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+            <span class="n">to_spec2</span> <span class="o">=</span> <span class="n">st01</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">to_spec2</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>
+        <span class="k">if</span> <span class="n">st02</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+            <span class="n">to_spec1</span> <span class="o">=</span> <span class="n">st02</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">to_spec1</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>
+        <span class="n">not_mut</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">]]</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">not_mut</span><span class="p">)</span>
+
+        <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">ngroups</span> 
+        <span class="n">newvs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">]</span> <span class="o">+</span> <span class="n">not_mut</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">st0</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">newvs</span><span class="p">):</span> 
+                <span class="k">if</span> <span class="n">st0</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
+                    <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>
+            <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="n">i1</span><span class="p">:</span>
+                <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_spec1</span>
+                <span class="k">if</span> <span class="n">to_spec1</span> <span class="o">==</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">:</span>
+                    <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">remove_neighbor_sites</span><span class="p">:</span>
+                    <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+            <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="n">i2</span><span class="p">:</span>
+                <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_spec2</span>
+                <span class="k">if</span> <span class="n">to_spec2</span> <span class="o">==</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">:</span>
+                    <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">remove_neighbor_sites</span><span class="p">:</span>
+                    <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+
+        <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> 
+                   <span class="k">if</span> <span class="n">to_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+        <span class="n">remove_adsorbates_from_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">rmsites</span><span class="p">,</span> <span class="n">remove_fragments</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">to_spec</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                    <span class="n">st</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="n">height</span> <span class="o">=</span> <span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+                    <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">to_spec</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Crossover"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.Crossover">[docs]</a><span class="k">class</span> <span class="nc">Crossover</span><span class="p">(</span><span class="n">OffspringCreator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all particle crossovers.</span>
+<span class="sd">    Do not call this class directly.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">OffspringCreator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;Crossover&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="GroupCrossover"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupCrossover">[docs]</a><span class="k">class</span> <span class="nc">GroupCrossover</span><span class="p">(</span><span class="n">Crossover</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merge the elemental distributions in two half groups from </span>
+<span class="sd">    different structures together. The elemental composition can be </span>
+<span class="sd">    fixed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    groups : list of lists or list of list of lists, default None</span>
+<span class="sd">        The atom indices in each user-divided group. Can be obtained </span>
+<span class="sd">        by `acat.build.ordering.SymmetricClusterOrderingGenerator` </span>
+<span class="sd">        or `acat.build.ordering.SymmetricSlabOrderingGenerator`.</span>
+<span class="sd">        You can also mix structures with different groupings in one </span>
+<span class="sd">        GA run by providing all possible groups in a list of list of</span>
+<span class="sd">        lists, so that the algorithm will randomly assign a grouping</span>
+<span class="sd">        to the structure, where for each grouping the atoms in each </span>
+<span class="sd">        group are of the same type. If not provided here, please </span>
+<span class="sd">        provide the groups in atoms.info[&#39;data&#39;][&#39;groups&#39;] in all </span>
+<span class="sd">        intial structures. </span>
+
+<span class="sd">    elements : list of strs, default None</span>
+<span class="sd">        Only take into account the elements specified in this list. </span>
+<span class="sd">        Default is to take all elements into account.</span>
+
+<span class="sd">    keep_composition : bool, defulat False</span>
+<span class="sd">        Whether the elemental composition should be the same as in</span>
+<span class="sd">        the parents.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">Crossover</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_composition</span> <span class="o">=</span> <span class="n">keep_composition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;GroupCrossover&#39;</span>
+        
+<div class="viewcode-block" id="GroupCrossover.get_new_individual"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.GroupCrossover.get_new_individual">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parents</span><span class="p">):</span>
+
+        <span class="n">f</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">parents</span>
+        <span class="n">indi</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">m</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">get_depth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">gs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  
+                    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">):</span>
+                        <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
+                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span>
+
+        <span class="n">sorted_elems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_chemical_symbols</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">!=</span> <span class="n">sorted_elems</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="n">torem</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">torem</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">torem</span><span class="p">:</span>
+                    <span class="n">group</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_composition</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">fix_composition_swaps</span><span class="p">(</span><span class="n">groups1</span><span class="p">,</span> <span class="n">groups2</span><span class="p">):</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">groups1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">j</span><span class="p">])</span>                                
+                <span class="n">zipped</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">groups1</span><span class="p">,</span> <span class="n">groups2</span><span class="p">)))</span>
+                <span class="n">gids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">groups1</span><span class="p">,</span> <span class="n">groups2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">zipped</span><span class="p">)</span> 
+                        <span class="k">if</span> <span class="n">groups1</span> <span class="o">!=</span> <span class="n">groups2</span><span class="p">]</span>
+
+                <span class="c1"># If solution not found in 1000 iterations, we say there</span>
+                <span class="c1"># is no possible solution at all</span>
+                <span class="n">gids_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>        
+                    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">gids</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">gids</span> <span class="ow">in</span> <span class="n">gids_list</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">gids_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gids</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+                    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gids</span><span class="p">):</span>
+                        <span class="n">zipped</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">indices</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">idx</span> <span class="k">for</span> <span class="n">groups1</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">zipped</span> 
+                        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">groups1</span><span class="p">):</span>
+                            <span class="k">return</span> <span class="n">gids</span><span class="p">[:</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">zipped</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">groups1</span><span class="p">,</span> <span class="n">groups2</span><span class="p">)))</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+            <span class="n">fsyms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">g</span><span class="p">])</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
+            <span class="n">msyms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">g</span><span class="p">])</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">]</span>
+            <span class="n">swap_ids</span> <span class="o">=</span> <span class="n">fix_composition_swaps</span><span class="p">(</span><span class="n">fsyms</span><span class="p">,</span> <span class="n">msyms</span><span class="p">)</span>
+            <span class="n">mids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">swap_ids</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> 
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mgroups</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">mids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">mgroups</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]</span>
+
+        <span class="n">indi</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">mids</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">mids</span><span class="p">]</span>
+        <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">indi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+            <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">]</span> 
+        <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;operation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;crossover&#39;</span>
+        <span class="n">parent_message</span> <span class="o">=</span> <span class="s1">&#39;:Parents </span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span>
+                                                   <span class="n">m</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">])</span> 
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finalize_individual</span><span class="p">(</span><span class="n">indi</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">+</span> <span class="n">parent_message</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
