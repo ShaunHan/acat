@@ -1,3 +1,4 @@
+from acat.adsorbate_coverage import SlabAdsorbateCoverage
 from acat.utilities import (neighbor_shell_list, 
                             get_adj_matrix, 
                             hash_composition)
@@ -14,13 +15,19 @@ class WL(object):
     def __init__(self,
                  hp={'length': np.array([.75, .25]), 't': 2},
                  normalize=False,
+                 atom_wise=True,
+                 dx=0.5,
                  connect_nn=False,
-                 n_jobs=os.cpu_count()):
+                 n_jobs=os.cpu_count(),
+                 **kwargs):
         self.hp = hp
         self.set_hyperparams(hp)
         self.normalize = normalize
+        self.atom_wise = atom_wise
+        self.dx = dx
         self.connect_nn = connect_nn
         self.n_jobs = n_jobs
+        self.kwargs = kwargs
 
     def set_hyperparams(self, new_params):
         """Set or update the hyperparameters for the Kernel.
@@ -96,9 +103,9 @@ class WL(object):
                 return dists
         else:
             dicts = dists[0]
-#            print('length: {}'.format(self.hp['length']))
+            print('length: {}'.format(self.hp['length']))
 #            print('alpha: {}'.format(self.hp['alpha']))
-#            print('noise: {}'.format(self.hp['noise']))
+            print('noise: {}'.format(self.hp['noise']))
 
         # Initialize the similarity kernel
         K = np.zeros(shape=(len(images), len(images)))
@@ -131,10 +138,16 @@ class WL(object):
     def get_dict(self, atoms):
         d = {} 
         numbers = atoms.numbers
-        nblist = neighbor_shell_list(atoms, dx=0.3, neighbor_number=1, 
-                                     mic=(True in atoms.pbc))
-        A = get_adj_matrix(nblist)
-        G = nx.from_numpy_matrix(A) 
+        if self.atom_wise:
+            nblist = neighbor_shell_list(atoms, dx=self.dx, neighbor_number=1, 
+                                         mic=(True in atoms.pbc))                      
+            A = get_adj_matrix(nblist)                                                     
+        else:            
+            sac = SlabAdsorbateCoverage(atoms, **self.kwargs)
+            A = sac.get_graph(atom_wise=False, return_adj_matrix=True, 
+                              full_effect=True, connect_dentates=True)                  
+        G = nx.from_numpy_matrix(A)
+
         if 't' in self.hp:
             t = self.hp['t']
         else:
@@ -187,7 +200,7 @@ class WL(object):
                     d[lab1] += self.hp['length'][0] 
                 else:
                     d[lab1] = self.hp['length'][0]
-#            print(sorted(d.keys()))
+#        print(sorted(d.keys()))
 
         if t > 1: 
             for k in range(1, t):
@@ -206,8 +219,13 @@ class WL(object):
                         d[lab] += self.hp['length'][k]
                     else:
                         d[lab] = self.hp['length'][k]
+#                    print('Atom{}: '.format(i))
+#                    dic = {'28:28,28,28,28': '3', '28:8,28,28,28,28': '4', 
+#                           '28:8,8,28,28,28,28': '5', '8:28,28,28,28': '6'}
+#                    for ki, kj in dic.items():
+#                        lab = lab.replace(ki, kj)
+#                        print(lab)
                 nnlabs = nnnlabs 
-#                print(sorted(d.keys()))
 
         return d
 

@@ -1297,7 +1297,7 @@ different labels.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atom_wise</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atom_wise</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle with adsorbates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1312,6 +1312,8 @@ different graphs.</p></li>
 <li><p><strong>return_adj_matrix</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return adjacency matrix instead of the networkx.Graph
 object.</p></li>
 <li><p><strong>connect_dentates</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to add edges between the fragments of multidentate species.</p></li>
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – Buffer to calculate nearest neighbor pairs. Only relevent when
+atom_wise=True.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1492,7 +1494,7 @@ different labels.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph">
-<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atom_wise</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atom_wise</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_adj_matrix</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">connect_dentates</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the graph representation of the nanoparticle with adsorbates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1507,6 +1509,8 @@ different graphs.</p></li>
 <li><p><strong>return_adj_matrix</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return adjacency matrix instead of the networkx.Graph
 object.</p></li>
 <li><p><strong>connect_dentates</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to add edges between the fragments of multidentate species.</p></li>
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – Buffer to calculate nearest neighbor pairs. Only relevent when
+atom_wise=True.</p></li>
 </ul>
 </dd>
 </dl>
