@@ -473,7 +473,8 @@ class ClusterAdsorbateCoverage(object):
                   subsurf_effect=False, 
                   full_effect=False,
                   return_adj_matrix=False,
-                  connect_dentates=True):                                         
+                  connect_dentates=True,
+                  dx=0.5):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -499,6 +500,10 @@ class ClusterAdsorbateCoverage(object):
 
         connect_dentates : bool, default True
             Whether to add edges between the fragments of multidentate species.
+
+        dx : float, default 0.5
+            Buffer to calculate nearest neighbor pairs. Only relevent when
+            atom_wise=True.
 
         """
 
@@ -582,7 +587,7 @@ class ClusterAdsorbateCoverage(object):
                     G.add_edge(i + len(surf_ids), j + len(surf_ids))
         # Atom-wise
         else:
-            nblist = neighbor_shell_list(self.atoms, dx=0.3, 
+            nblist = neighbor_shell_list(self.atoms, dx=dx, 
                                          neighbor_number=1, mic=False)
             cm = get_adj_matrix(nblist)
             if full_effect:
@@ -1080,7 +1085,8 @@ class SlabAdsorbateCoverage(object):
                   subsurf_effect=False,
                   full_effect=False,
                   return_adj_matrix=False,
-                  connect_dentates=True):                                         
+                  connect_dentates=True,
+                  dx=0.5):                                         
         """Get the graph representation of the nanoparticle with adsorbates.
 
         Parameters
@@ -1106,6 +1112,10 @@ class SlabAdsorbateCoverage(object):
 
         connect_dentates : bool, default True
             Whether to add edges between the fragments of multidentate species.
+
+        dx : float, default 0.5
+            Buffer to calculate nearest neighbor pairs. Only relevent when
+            atom_wise=True.
 
         """
 
@@ -1189,7 +1199,7 @@ class SlabAdsorbateCoverage(object):
                     G.add_edge(i + len(surf_ids), j + len(surf_ids))
         # Atom-wise
         else:
-            nblist = neighbor_shell_list(self.atoms, dx=0.3, 
+            nblist = neighbor_shell_list(self.atoms, dx=dx, 
                                          neighbor_number=1, mic=True)
             cm = get_adj_matrix(nblist)
             if full_effect:

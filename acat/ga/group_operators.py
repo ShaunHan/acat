@@ -262,6 +262,12 @@ class AdsorbateGroupSubstitute(Mutation):
     adsorbate_species : str or list of strs 
         A list of possible adsorbate species to be added to the surface.
 
+    species_probabilities : dict, default None                         
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of replacing an adsorbate on the 
+        surface. Choosing adsorbate species with equal probability if 
+        not specified.
+
     site_groups : list of lists or list of list of lists, default None
         The site indices in each user-divided group. Can be obtained 
         by `acat.build.ordering.SymmetricPatternGenerator`.
@@ -308,6 +314,7 @@ class AdsorbateGroupSubstitute(Mutation):
     """
 
     def __init__(self, adsorbate_species,
+                 species_probabilities=None,
                  site_groups=None, 
                  max_species=None,
                  heights=site_heights,
@@ -319,7 +326,11 @@ class AdsorbateGroupSubstitute(Mutation):
 
         self.descriptor = 'AdsorbateGroupSubstitute'
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
-                                 adsorbate_species) else [adsorbate_species]
+                                 adsorbate_species) else [adsorbate_species] 
+        self.species_probabilities = species_probabilities
+        if self.species_probabilities is not None:
+            assert len(self.species_probabilities.keys()) == len(self.adsorbate_species) 
+                                                     
         self.site_groups = site_groups
         self.max_species = max_species
         self.heights = heights
@@ -401,7 +412,12 @@ class AdsorbateGroupSubstitute(Mutation):
             diff = self.max_species - len(not_mut_specs)
             if diff > 0:
                 others = [sp for sp in self.adsorbate_species if sp not in not_mut_specs]
-                options = list(not_mut_specs) + random.sample(others, diff) + ['vacancy'] 
+                if self.species_probabilities is None:
+                    dspecs = random.sample(others, diff)
+                else:
+                    probs = [self.species_probabilities[osp] for osp in others]      
+                    dspecs = random.choices(k=diff, population=others, weights=probs) 
+                options = list(not_mut_specs) + dspecs + ['vacancy']
             elif diff == 0:
                 options = list(not_mut_specs) + ['vacancy']
             else:

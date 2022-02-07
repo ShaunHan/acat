@@ -36,8 +36,7 @@ class AdsorbateOperator(OffspringCreator):
         self.species_probabilities = species_probabilities
         if self.species_probabilities is not None:
             assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
-            self.species_probability_list = [self.species_probabilities[a] for 
-                                             a in self.adsorbate_species]        
+
         self.descriptor = 'AdsorbateOperator'
 
     @classmethod
@@ -114,7 +113,7 @@ class AdsorbateOperator(OffspringCreator):
             if self.species_probabilities is None:
                 adsorbate = random.choice(adsorbate_species)
             else:
-                probs = [self.species_probability_list[a] for a in adsorbate_species]
+                probs = [self.species_probabilities[a] for a in adsorbate_species]
                 adsorbate = random.choices(k=1, population=adsorbate_species,
                                            weights=probs)[0]                   
             height = heights[this_site]
@@ -725,8 +724,8 @@ class ReplaceAdsorbate(AdsorbateOperator):
     species_probabilities : dict, default None
         A dictionary that contains keys of each adsorbate species and 
         values of their probabilities of replacing an adsorbate on the 
-        surface. Adding adsorbate species with equal probability if not 
-        specified.
+        surface. Choosing adsorbate species with equal probability if 
+        not specified.
 
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
@@ -881,18 +880,18 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
     adsorbate_species : str or list of strs 
         One or a list of adsorbate species to be added to the surface.
 
+    species_probabilities : dict, default None                         
+        A dictionary that contains keys of each adsorbate species and 
+        values of their probabilities of replacing an adsorbate on the 
+        surface. Choosing adsorbate species with equal probability if 
+        not specified.
+
     vacancy_replacement : bool, default False
         Whether to allow replacing adsorbates with vacancies, i.e., 
         effectively removing all adsorbates of a certain species.
         Note that if you want to specify species_probabilties, you
         then need to also provide the probability for vacancy
         replacement using the keyword 'vacancy'.
-
-    species_probabilities : dict, default None
-        A dictionary that contains keys of each adsorbate species and 
-        values of their probabilities of replacing an adsorbate on the 
-        surface. Adding adsorbate species with equal probability if not 
-        specified.
 
     heights : dict, default acat.settings.site_heights
         A dictionary that contains the adsorbate height for each site 
@@ -983,8 +982,16 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         if self.species_probabilities is None:
             to_spec = random.choice(other_specs)
         else:
-            probs = [self.species_probability_list[a] for a in other_specs]
+            probs = []
+            for osp in other_specs:
+                if (osp == 'vacancy') and ('vacancy' not in self.species_probabilities):
+                    vs = self.species_probabilities.values()
+                    prob = sum(vs) / len(vs)
+                else:
+                    prob = self.species_probabilities[osp]
+                probs.append(prob)
             to_spec = random.choices(k=1, population=other_specs, weights=probs)[0]  
+
         rmsites = []
         rmsis = []
         rmfrags = True

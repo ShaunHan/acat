@@ -1775,13 +1775,14 @@ class OrderedPatternGenerator(object):
     adsorbate_species : str or list of strs 
         A list of possible adsorbate species to be added to the surface.
 
-    repeating_distance : float
-        The pairwise distance (in Angstrom) between two symmetry-equivalent 
-        adsorption sites.
-
     species_probabilities : dict, default None
-        A dictionary that contains keys of each adsorbate species and 
-        values of their probabilities of adding onto the surface.
+        A dictionary that contains keys of each adsorbate species and
+        values of their probabilities of adding onto the surface.    
+
+    repeating_distance : float, default None
+        The pairwise distance (in Angstrom) between two symmetry-equivalent 
+        adsorption sites. If repeating_distance is not provided, all
+        possible repeating distances are considered.
 
     max_species : int, default None
         The maximum allowed adsorbate species (excluding vacancies) for a 
@@ -1854,8 +1855,8 @@ class OrderedPatternGenerator(object):
     """
     def __init__(self, images, 
                  adsorbate_species, 
-                 repeating_distance,
                  species_probabilities=None,
+                 repeating_distance=None,
                  max_species=None,
                  sorting_axis=np.array([1, 0, 0]), 
                  adsorption_sites=None,
@@ -1876,13 +1877,12 @@ class OrderedPatternGenerator(object):
         self.images = images if is_list_or_tuple(images) else [images]                     
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(
                                  adsorbate_species) else [adsorbate_species]
-        self.repeating_distance = repeating_distance
         self.species_probabilities = species_probabilities
         if self.species_probabilities is not None:
             assert len(self.species_probabilities.keys()) == len(self.adsorbate_species)
             self.species_probability_list = [self.species_probabilities[a] for 
                                              a in self.adsorbate_species]               
-
+        self.repeating_distance = repeating_distance
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
                        'ignore_bridge_sites': True, 'label_sites': False} 
         self.kwargs.update(kwargs)
@@ -1967,8 +1967,12 @@ class OrderedPatternGenerator(object):
             pt1 = st['position']
             tup = find_mic(pts - pt1, cell=atoms.cell, 
                            pbc=(True in atoms.pbc))
-            i2a = np.argwhere(np.abs(tup[1] - self.repeating_distance) 
-                              < self.dtol).ravel().tolist()
+            if self.repeating_distance is None:
+                lmin = np.min(atoms.cell.lengths()) 
+                i2a = np.argwhere((tup[1] <= lmin / 2) & (tup[1] > 1e-5)).ravel().tolist()
+            else:
+                i2a = np.argwhere(np.abs(tup[1] - self.repeating_distance) 
+                                  < self.dtol).ravel().tolist()
             if i2a:
                 i1 = i
                 break
@@ -1978,7 +1982,7 @@ class OrderedPatternGenerator(object):
             pt2 = sl[i2]['position']
             vec = tup[0][i2]
             seen = {i1, i2}
-            groups = [[i1, i2]]
+            groups = [sorted([i1, i2])]
             for i in sorted_indices:
                 if (i in [i1, i2]) or (i in seen):
                     continue
@@ -2063,7 +2067,7 @@ class OrderedPatternGenerator(object):
                 specs = random.sample(self.adsorbate_species, self.max_species) + ['vacancy']
             else:
                 specs = random.choices(k=self.max_species, population=self.adsorbate_species,                  
-                                       weights=self.species_probability_list) + ['vacancy']
+                                       weights=self.species_probability_list) + ['vacancy']  
             combo = [None] * ngroups                                 
             indices = list(range(ngroups))
             random.shuffle(indices)
