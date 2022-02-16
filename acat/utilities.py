@@ -191,6 +191,12 @@ def get_mic(p1, p2, cell, pbc=[1,1,0],
         return np.sum(min_dr**2)
 
 
+def cart_to_frac(atoms):
+    """Convert Cartesian coordinates to fractional coordinates."""
+
+    return atoms.positions @ np.linalg.pinv(atoms.cell)
+
+
 def expand_cell(atoms, cutoff=None, padding=None):
 
     #Return Cartesian coordinates atoms within a supercell

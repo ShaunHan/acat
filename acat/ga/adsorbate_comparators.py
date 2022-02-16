@@ -157,7 +157,12 @@ class AdsorptionGraphComparator(object):
         Whether to consider sites with different elemental compositions as 
         different sites. It is recommended to set composition_effet=False 
         for monometallics.
-    
+
+    fragmentation : bool, default True
+        Whether to cut multidentate species into fragments. This ensures
+        that multidentate species with different orientations are
+        considered as different adlayer patterns.                       
+
     subsurf_effect : bool, default False
         Whether to take subsurface atoms into consideration when checking 
         uniqueness. Could be important for surfaces like fcc100.
@@ -165,14 +170,16 @@ class AdsorptionGraphComparator(object):
     full_effect : bool, default False
         Take the whole catalyst into consideration when generating graph.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
 
-    fragmentation : bool, default True
-        Whether to cut multidentate species into fragments. This ensures 
-        that multidentate species with different orientations are
-        considered as different adlayer patterns.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -181,13 +188,15 @@ class AdsorptionGraphComparator(object):
                  fragmentation=True,
                  subsurf_effect=False, 
                  full_effect=False,
-                 dmax=3.):
+                 subtract_height=False,
+                 dmax=2.5):
         
         self.adsorption_sites = adsorption_sites
         self.composition_effect = composition_effect
         self.fragmentation = fragmentation
         self.subsurf_effect = subsurf_effect
         self.full_effect = full_effect
+        self.subtract_height = subtract_height
         self.dmax = dmax
 
     def looks_like(self, a1, a2):
@@ -202,18 +211,26 @@ class AdsorptionGraphComparator(object):
  
             if hasattr(sas, 'surface'):
                 sas.update(a1, update_composition=self.composition_effect)
-                sac1 = SlabAdsorbateCoverage(a1, sas, dmax=self.dmax,
-                                             label_occupied_sites=True) 
+                sac1 = SlabAdsorbateCoverage(a1, sas, subtract_height=
+                                             self.subtract_height, 
+                                             label_occupied_sites=True, 
+                                             dmax=self.dmax)
                 sas.update(a2, update_composition=self.composition_effect)
-                sac2 = SlabAdsorbateCoverage(a2, sas, dmax=self.dmax,
-                                             label_occupied_sites=True) 
+                sac2 = SlabAdsorbateCoverage(a2, sas, subtract_height=
+                                             self.subtract_height, 
+                                             label_occupied_sites=True, 
+                                             dmax=self.dmax)
             else:
                 sas.update(a1, update_composition=self.composition_effect)
-                sac1 = ClusterAdsorbateCoverage(a1, sas, dmax=self.dmax, 
-                                                label_occupied_sites=True)
+                sac1 = ClusterAdsorbateCoverage(a1, sas, subtract_height=
+                                                self.subtract_height, 
+                                                label_occupied_sites=True,
+                                                dmax=self.dmax)
                 sas.update(a2, update_composition=self.composition_effect)
-                sac2 = ClusterAdsorbateCoverage(a2, sas, dmax=self.dmax, 
-                                                label_occupied_sites=True)
+                sac2 = ClusterAdsorbateCoverage(a2, sas, subtract_height=
+                                                self.subtract_height, 
+                                                label_occupied_sites=True,
+                                                dmax=self.dmax)
             labs1 = sac1.get_occupied_labels(fragmentation=self.fragmentation)
             labs2 = sac2.get_occupied_labels(fragmentation=self.fragmentation)       
  

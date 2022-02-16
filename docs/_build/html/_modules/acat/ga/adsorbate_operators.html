@@ -460,12 +460,19 @@
 <span class="sd">        Tilt the adsorbate with an angle (in degress) relative to the </span>
 <span class="sd">        surface normal.</span>
 
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
 <span class="sd">    num_muts : int, default 1</span>
 <span class="sd">        The number of times to perform this operation.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -478,8 +485,9 @@
                  <span class="n">surface_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">max_coverage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tilt_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
                                    <span class="n">species_probabilities</span><span class="p">,</span>
                                    <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
@@ -504,6 +512,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">max_coverage</span> <span class="o">=</span> <span class="n">max_coverage</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">tilt_angle</span> <span class="o">=</span> <span class="n">tilt_angle</span> <span class="ow">or</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
@@ -523,14 +532,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
@@ -559,9 +570,11 @@
 
             <span class="n">indi</span> <span class="o">=</span> <span class="n">nindi</span>
             <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>                          
         
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
@@ -601,12 +614,19 @@
 <span class="sd">        as (number of surface occupied sites / number of surface atoms).</span>
 <span class="sd">        The minimum coverage is 0 if min_coverage is not specified.</span>
 
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
 <span class="sd">    num_muts : int, default 1</span>
 <span class="sd">        The number of times to perform this operation.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -615,8 +635,9 @@
                  <span class="n">site_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">surface_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">min_coverage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
                                    <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;RemoveAdsorbate&#39;</span>
@@ -637,6 +658,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">min_coverage</span> <span class="o">=</span> <span class="n">min_coverage</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_preference</span> <span class="o">=</span> <span class="n">surface_preference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
@@ -655,14 +677,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
@@ -688,9 +712,11 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">indi</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">adsorbate_elements</span><span class="p">]:</span>
                 <span class="k">break</span>
             <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>                          
 
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
@@ -745,12 +771,19 @@
 <span class="sd">        Tilt the adsorbate with an angle (in degress) relative to the </span>
 <span class="sd">        surface normal.</span>
 
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
 <span class="sd">    num_muts : int, default 1</span>
 <span class="sd">        The number of times to perform this operation.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -763,8 +796,9 @@
                  <span class="n">site_preference_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">surface_preference_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tilt_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
                                    <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;MoveAdsorbate&#39;</span>
@@ -810,14 +844,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> 
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
@@ -859,9 +895,11 @@
 
             <span class="n">indi</span> <span class="o">=</span> <span class="n">nindi</span>
             <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>                          
 
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
@@ -915,12 +953,19 @@
 <span class="sd">        Tilt the adsorbate with an angle (in degress) relative to the </span>
 <span class="sd">        surface normal.</span>
 
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
 <span class="sd">    num_muts : int, default 1</span>
 <span class="sd">        The number of times to perform this operation.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -932,8 +977,9 @@
                  <span class="n">site_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">surface_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tilt_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
                                    <span class="n">species_probabilities</span><span class="p">,</span>
                                    <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
@@ -957,6 +1003,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_preference</span> <span class="o">=</span> <span class="n">surface_preference</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tilt_angle</span> <span class="o">=</span> <span class="n">tilt_angle</span> <span class="ow">or</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
@@ -975,14 +1022,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> 
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
@@ -1017,9 +1066,11 @@
 
             <span class="n">indi</span> <span class="o">=</span> <span class="n">nindi</span>
             <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>                          
 
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
@@ -1066,13 +1117,20 @@
 <span class="sd">        genetic algorithm. Make sure all the operators used with this</span>
 <span class="sd">        operator preserve the indexing of the atoms.</span>
 
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
 <span class="sd">    tilt_angle : float, default 0.</span>
 <span class="sd">        Tilt the adsorbate with an angle (in degress) relative to the </span>
 <span class="sd">        surface normal.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1082,7 +1140,8 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tilt_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">,</span>
                                    <span class="n">species_probabilities</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;ReplaceAdsorbateSpecies&#39;</span>
@@ -1100,6 +1159,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tilt_angle</span> <span class="o">=</span> <span class="n">tilt_angle</span> <span class="ow">or</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
@@ -1119,14 +1179,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> 
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
 
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="n">specs</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)]</span>
@@ -1176,9 +1238,11 @@
                     <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">to_spec</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">tilt_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tilt_angle</span><span class="p">)</span> 
         
         <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-            <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
 
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
             <span class="n">nsac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)]</span>
@@ -1237,9 +1301,16 @@
 <span class="sd">        vector being rotated around is set in rotate_vectors. Default </span>
 <span class="sd">        None meaning no rotation is performed.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1250,7 +1321,8 @@
                  <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
                  <span class="n">rotate_vectors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                  <span class="n">rotate_angles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;CutSpliceCrossoverWithAdsorbates&#39;</span>
 
@@ -1261,6 +1333,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">min_adsorbate_distance</span> <span class="o">=</span> <span class="n">min_adsorbate_distance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rvecs</span> <span class="o">=</span> <span class="n">rotate_vectors</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rangs</span> <span class="o">=</span> <span class="n">rotate_angles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
@@ -1434,7 +1507,8 @@
             <span class="n">indi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
 
         <span class="n">pcas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> 
-        <span class="n">pcac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">pcas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">pcac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">pcas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">pads_sites</span> <span class="o">=</span> <span class="n">pcac</span><span class="o">.</span><span class="n">hetero_site_list</span>       
 
         <span class="n">adsi_dict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1472,7 +1546,8 @@
             <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">ads_spec</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="n">st</span><span class="p">,</span> 
                                   <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]])</span>
 
-        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_coverage</span><span class="p">:</span>
@@ -1491,7 +1566,8 @@
                 <span class="k">for</span> <span class="n">adsorbate_indices</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tbr</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">adsorbate_indices</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
                         <span class="n">indi</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>                
-            <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
 
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
             <span class="n">cac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)]</span>
@@ -1567,9 +1643,16 @@
 <span class="sd">        genetic algorithm. Make sure all the operators used with this</span>
 <span class="sd">        operator preserve the indexing of the atoms.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1579,7 +1662,8 @@
                  <span class="n">fix_coverage</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                  <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;SimpleCutSpliceCrossoverWithAdsorbates&#39;</span>
 
@@ -1595,7 +1679,7 @@
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>             
                 <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">k</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
         
@@ -1668,9 +1752,11 @@
             <span class="n">cas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> 
-        <span class="n">fcac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">fcac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">fhsl</span> <span class="o">=</span> <span class="n">fcac</span><span class="o">.</span><span class="n">hetero_site_list</span>
-        <span class="n">mcac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">mcac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">mhsl</span> <span class="o">=</span> <span class="n">mcac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="n">rmset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">rmids</span><span class="p">)</span>
@@ -1718,7 +1804,8 @@
             <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">ads_spec</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="n">st</span><span class="p">,</span> 
                                   <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]])</span>
 
-        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">ads_sites</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_coverage</span><span class="p">:</span>
@@ -1737,7 +1824,8 @@
                 <span class="k">for</span> <span class="n">adsorbate_indices</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tbr</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">adsorbate_indices</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
                         <span class="n">indi</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>                
-            <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">cas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
 
         <span class="n">indi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_individual</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">indi</span><span class="p">)</span>
         <span class="n">indi</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;parents&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">]</span> 
@@ -1794,9 +1882,16 @@
 <span class="sd">        if the groups is for adsorption sites, so that the offspring will</span>
 <span class="sd">        inheritate the site groups. The default is grouping by slab atoms.</span>
 
-<span class="sd">    dmax : float, default 3.</span>
-<span class="sd">        The maximum bond length (in Angstrom) between the site and the </span>
-<span class="sd">        bonding atom  that should be considered as an adsorbate.</span>
+<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
+<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
+<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
+<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
+<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+
+<span class="sd">    dmax : float, default 2.5</span>
+<span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
+<span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1804,7 +1899,8 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">group_by_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">AdsorbateOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="s1">&#39;AdsorbateCatalystCrossover&#39;</span>
 
@@ -1818,7 +1914,7 @@
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>             
                 <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">k</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_inputs</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
         
@@ -1833,14 +1929,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> 
-            <span class="n">msac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">msac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">indi</span><span class="p">)</span>                
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">msac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">msac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">indi</span> <span class="o">=</span> <span class="n">indi</span><span class="p">[</span><span class="n">sas</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span>
         <span class="n">mhsl</span> <span class="o">=</span> <span class="n">msac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 

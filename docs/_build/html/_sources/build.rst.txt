@@ -446,7 +446,7 @@ The OrderedPatternGenerator class
         ...           repeating_distance=5.026,
         ...           max_species=2,
         ...           adsorption_sites=sas,
-        ...           remove_neighbor_sites=True)
+        ...           remove_site_shells=1)
         >>> opg.run(max_gen=50, unique=True)
         >>> images = read('patterns.traj', index=':')
         >>> view(images)
@@ -485,10 +485,9 @@ The OrderedPatternGenerator class
         ...           surface='fcc100',
         ...           repeating_distance=5.026,
         ...           max_species=2,
-        ...           sorting_axis=diagonal_vec,
+        ...           sorting_vector=diagonal_vec,
         ...           adsorption_sites=sas,
-        ...           remove_neighbor_sites=True,
-        ...           remove_neighbor_number=2)
+        ...           remove_site_shells=2)
         >>> opg.run(max_gen=50, unique=True)
         >>> images = read('patterns.traj', index=':')
         >>> view(images)

@@ -297,19 +297,24 @@ class AdsorbateGroupSubstitute(Mutation):
         is fixed. If this is not provided, the arguments for identifying
         adsorption sites can still be passed in by **kwargs.
 
-    remove_neighbor_sites : bool, default True
-        Whether to remove the neighboring sites around each occupied site. 
+    remove_site_shells : int, default 1                                    
+        The neighbor shell number within which the neighbor sites should be
+        removed. Remove the 1st neighbor site shell by default. Set to 0 if
+        no site should be removed.
 
-    remove_neighbor_number : int, default 1
-        The neighbor shell number within which the neighbors should be
-        removed. Only relevant when remove_neighbor_sites=True.       
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
 
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -319,9 +324,9 @@ class AdsorbateGroupSubstitute(Mutation):
                  max_species=None,
                  heights=site_heights,
                  adsorption_sites=None,
-                 remove_neighbor_sites=True,
-                 remove_neighbor_number=1,
-                 num_muts=1, dmax=3., **kwargs):
+                 remove_site_shells=1,
+                 subtract_height=False,
+                 num_muts=1, dmax=2.5, **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
         self.descriptor = 'AdsorbateGroupSubstitute'
@@ -335,8 +340,8 @@ class AdsorbateGroupSubstitute(Mutation):
         self.max_species = max_species
         self.heights = heights
         self.adsorption_sites = adsorption_sites
-        self.remove_neighbor_sites = remove_neighbor_sites
-        self.remove_neighbor_number = remove_neighbor_number
+        self.remove_site_shells = remove_site_shells
+        self.subtract_height = subtract_height
         self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -357,14 +362,16 @@ class AdsorbateGroupSubstitute(Mutation):
                 sas.update(atoms)
             else:
                 sas = SlabAdsorptionSites(atoms, **self.kwargs)
-            sac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(atoms)
             else:
                 sas = ClusterAdsorptionSites(atoms, **self.kwargs)
-            sac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax) 
+            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax) 
 
         hsl = sac.hetero_site_list
         if self.site_groups is None:
@@ -386,8 +393,8 @@ class AdsorbateGroupSubstitute(Mutation):
 
         ngroups = len(groups)
         indices = list(range(ngroups))
-        if self.remove_neighbor_sites:
-            nsl = sas.get_neighbor_site_list(neighbor_number=self.remove_neighbor_number)
+        if self.remove_site_shells > 0:
+            nsl = sas.get_neighbor_site_list(neighbor_number=self.remove_site_shells)
             indexes = indices.copy()
             random.shuffle(indexes)
             itbms = set()
@@ -444,7 +451,7 @@ class AdsorbateGroupSubstitute(Mutation):
                 changes[idx] = to_spec
                 if to_spec == 'vacancy':
                     newvs.update(group)
-                elif self.remove_neighbor_sites:
+                elif self.remove_site_shells > 0:
                     newvs.update([i for k in group for i in nsl[k]])
 
         rmsites = [hsl[j] for idx, to_spec in enumerate(changes) 
@@ -458,9 +465,11 @@ class AdsorbateGroupSubstitute(Mutation):
                     add_adsorbate_to_site(atoms, to_spec, st, height)
 
         if True in atoms.pbc:
-            nsac = SlabAdsorbateCoverage(atoms, sas, dmax=self.dmax)
+            nsac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
+                                         self.subtract_height, dmax=self.dmax)
         else:
-            nsac = ClusterAdsorbateCoverage(atoms, sas, dmax=self.dmax)
+            nsac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
         atoms.info['data']['adsorbates'] = [t[0] for t in 
             nsac.get_adsorbates(self.adsorbate_species)]
 
@@ -512,19 +521,24 @@ class AdsorbateGroupPermutation(Mutation):
         is fixed. If this is not provided, the arguments for identifying
         adsorption sites can still be passed in by **kwargs.
 
-    remove_neighbor_sites : bool, default True
-        Whether to remove the neighboring sites around each occupied site. 
+    remove_site_shells : int, default 1                                    
+        The neighbor shell number within which the neighbor sites should be
+        removed. Remove the 1st neighbor site shell by default. Set to 0 if
+        no site should be removed.
 
-    remove_neighbor_number : int, default 1
-        The neighbor shell number within which the neighbors should be
-        removed. Only relevant when remove_neighbor_sites=True.       
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
 
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -532,9 +546,9 @@ class AdsorbateGroupPermutation(Mutation):
                  site_groups=None,
                  heights=site_heights,
                  adsorption_sites=None,
-                 remove_neighbor_sites=True,
-                 remove_neighbor_number=1,
-                 num_muts=1, dmax=3., **kwargs):
+                 remove_site_shells=1,
+                 subtract_height=False,
+                 num_muts=1, dmax=2.5, **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
         self.descriptor = 'AdsorbateGroupPermutation'
@@ -543,8 +557,8 @@ class AdsorbateGroupPermutation(Mutation):
         self.site_groups = site_groups
         self.heights = heights
         self.adsorption_sites = adsorption_sites
-        self.remove_neighbor_sites = remove_neighbor_sites
-        self.remove_neighbor_number = remove_neighbor_number
+        self.remove_site_shells = remove_site_shells
+        self.subtract_height = subtract_height
         self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -568,14 +582,16 @@ class AdsorbateGroupPermutation(Mutation):
                 sas.update(f)
             else:
                 sas = SlabAdsorptionSites(f, **self.kwargs)
-            sac = SlabAdsorbateCoverage(f, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(f, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(f)
             else:
                 sas = ClusterAdsorptionSites(f, **self.kwargs)
-            sac = ClusterAdsorbateCoverage(f, sas, dmax=self.dmax) 
+            sac = ClusterAdsorbateCoverage(f, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax) 
         hsl = sac.hetero_site_list
 
         if self.site_groups is None:
@@ -604,12 +620,13 @@ class AdsorbateGroupPermutation(Mutation):
                                                           self.descriptor)
         for _ in range(self.num_muts):
             AdsorbateGroupPermutation.mutate(f, site_groups, self.heights, sas, 
-                                             hsl, self.remove_neighbor_sites, 
-                                             self.remove_neighbor_number)
+                                             hsl, self.remove_site_shells)
             if True in indi.pbc:
-                nsac = SlabAdsorbateCoverage(f, sas, dmax=self.dmax)
+                nsac = SlabAdsorbateCoverage(f, sas, subtract_height=
+                                             self.subtract_height, dmax=self.dmax)
             else:
-                nsac = ClusterAdsorbateCoverage(f, sas, dmax=self.dmax)
+                nsac = ClusterAdsorbateCoverage(f, sas, subtract_height=
+                                                self.subtract_height, dmax=self.dmax)
             hsl = nsac.hetero_site_list
 
         for atom in f:
@@ -622,8 +639,8 @@ class AdsorbateGroupPermutation(Mutation):
                 self.descriptor + ':Parent {0}'.format(f.info['confid']))
 
     @classmethod
-    def mutate(cls, atoms, groups, heights, adsorption_sites, hetero_site_list, 
-               remove_neighbor_sites, remove_neighbor_number):
+    def mutate(cls, atoms, groups, heights, adsorption_sites, 
+               hetero_site_list, remove_site_shells):
         """Do the actual permutation of the adsorbates."""
 
         sas, hsl = adsorption_sites, hetero_site_list
@@ -632,8 +649,8 @@ class AdsorbateGroupPermutation(Mutation):
         i1 = random.randint(0, ngroups - 1)
         st01 = hsl[groups[i1][0]]
         ings = []
-        if remove_neighbor_sites:                                                   
-            nsl = sas.get_neighbor_site_list(neighbor_number=remove_neighbor_number)
+        if remove_site_shells > 0:                                                   
+            nsl = sas.get_neighbor_site_list(neighbor_number=remove_site_shells)
             if st01['occupied']:
                 ings += [nj for nj in indices if not set(groups[nj]).isdisjoint(nsl[i1])]
         options = [j for j in range(ngroups) if (j not in ings) and 
@@ -666,13 +683,13 @@ class AdsorbateGroupPermutation(Mutation):
                 changes[idx] = to_spec1
                 if to_spec1 == 'vacancy':
                     newvs.update(group)
-                elif remove_neighbor_sites:
+                elif remove_site_shells > 0:
                     newvs.update([i for k in group for i in nsl[k]])
             elif idx == i2:
                 changes[idx] = to_spec2
                 if to_spec2 == 'vacancy':
                     newvs.update(group)
-                elif remove_neighbor_sites:
+                elif remove_site_shells > 0:
                     newvs.update([i for k in group for i in nsl[k]])
 
         rmsites = [hsl[j] for idx, to_spec in enumerate(changes) 
