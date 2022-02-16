@@ -298,12 +298,19 @@ class AddAdsorbate(AdsorbateOperator):
         Tilt the adsorbate with an angle (in degress) relative to the 
         surface normal.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -316,8 +323,9 @@ class AddAdsorbate(AdsorbateOperator):
                  surface_preference=None,
                  max_coverage=None,
                  tilt_angle=None,
+                 subtract_height=False,
                  num_muts=1,
-                 dmax=3., **kwargs):
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    species_probabilities,
                                    num_muts=num_muts)
@@ -342,6 +350,7 @@ class AddAdsorbate(AdsorbateOperator):
 
         self.max_coverage = max_coverage        
         self.tilt_angle = tilt_angle or 0.
+        self.subtract_height = subtract_height
         self.min_inputs = 1
         self.dmax = dmax
 
@@ -361,14 +370,16 @@ class AddAdsorbate(AdsorbateOperator):
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
-            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs)
-            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
@@ -397,9 +408,11 @@ class AddAdsorbate(AdsorbateOperator):
 
             indi = nindi
             if True in indi.pbc:
-                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
             else:
-                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                               self.subtract_height, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
         
         indi.info['data']['adsorbates'] = [t[0] for t in 
@@ -439,12 +452,19 @@ class RemoveAdsorbate(AdsorbateOperator):
         as (number of surface occupied sites / number of surface atoms).
         The minimum coverage is 0 if min_coverage is not specified.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -453,8 +473,9 @@ class RemoveAdsorbate(AdsorbateOperator):
                  site_preference=None,
                  surface_preference=None,
                  min_coverage=None,
+                 subtract_height=False,
                  num_muts=1,
-                 dmax=3., **kwargs):
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'RemoveAdsorbate'
@@ -475,6 +496,7 @@ class RemoveAdsorbate(AdsorbateOperator):
 
         self.min_coverage = min_coverage
         self.surface_preference = surface_preference
+        self.subtract_height = subtract_height
         self.min_inputs = 1
         self.dmax = dmax
 
@@ -493,14 +515,16 @@ class RemoveAdsorbate(AdsorbateOperator):
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
-            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs)
-            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
@@ -526,9 +550,11 @@ class RemoveAdsorbate(AdsorbateOperator):
             if not [a for a in indi if a.symbol in adsorbate_elements]:
                 break
             if True in indi.pbc:
-                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
             else:
-                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                               self.subtract_height, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
 
         indi.info['data']['adsorbates'] = [t[0] for t in 
@@ -583,12 +609,19 @@ class MoveAdsorbate(AdsorbateOperator):
         Tilt the adsorbate with an angle (in degress) relative to the 
         surface normal.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -601,8 +634,9 @@ class MoveAdsorbate(AdsorbateOperator):
                  site_preference_to=None,
                  surface_preference_to=None,
                  tilt_angle=None,
+                 subtract_height=False,
                  num_muts=1,
-                 dmax=3., **kwargs):
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    num_muts=num_muts)
         self.descriptor = 'MoveAdsorbate'
@@ -648,14 +682,16 @@ class MoveAdsorbate(AdsorbateOperator):
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
-            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
-            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
@@ -697,9 +733,11 @@ class MoveAdsorbate(AdsorbateOperator):
 
             indi = nindi
             if True in indi.pbc:
-                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
             else:
-                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                               self.subtract_height, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
 
         indi.info['data']['adsorbates'] = [t[0] for t in 
@@ -753,12 +791,19 @@ class ReplaceAdsorbate(AdsorbateOperator):
         Tilt the adsorbate with an angle (in degress) relative to the 
         surface normal.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     num_muts : int, default 1
         The number of times to perform this operation.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -770,8 +815,9 @@ class ReplaceAdsorbate(AdsorbateOperator):
                  site_preference=None,
                  surface_preference=None,
                  tilt_angle=None,
+                 subtract_height=False,
                  num_muts=1,
-                 dmax=3., **kwargs):
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    species_probabilities,
                                    num_muts=num_muts)
@@ -795,6 +841,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
         self.surface_preference = surface_preference
 
         self.tilt_angle = tilt_angle or 0.
+        self.subtract_height = subtract_height
         self.min_inputs = 1
         self.dmax = dmax
 
@@ -813,14 +860,16 @@ class ReplaceAdsorbate(AdsorbateOperator):
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
-            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
-            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
         ads_sites = sac.hetero_site_list
 
         for _ in range(self.num_muts):
@@ -855,9 +904,11 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
             indi = nindi
             if True in indi.pbc:
-                sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
             else:
-                sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+                sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                               self.subtract_height, dmax=self.dmax)
             ads_sites = sac.hetero_site_list                          
 
         indi.info['data']['adsorbates'] = [t[0] for t in 
@@ -904,13 +955,20 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         genetic algorithm. Make sure all the operators used with this
         operator preserve the indexing of the atoms.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     tilt_angle : float, default 0.
         Tilt the adsorbate with an angle (in degress) relative to the 
         surface normal.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -920,7 +978,8 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
                  heights=site_heights,
                  adsorption_sites=None,
                  tilt_angle=None,
-                 dmax=3., **kwargs):
+                 subtract_height=False, 
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species,
                                    species_probabilities)
         self.descriptor = 'ReplaceAdsorbateSpecies'
@@ -938,6 +997,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         self.__dict__.update(self.kwargs)
 
         self.tilt_angle = tilt_angle or 0.
+        self.subtract_height = subtract_height
         self.min_inputs = 1
         self.dmax = dmax
 
@@ -957,14 +1017,16 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
-            sac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
-            sac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            sac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
 
         ads_sites = sac.hetero_site_list
         specs = [t[0] for t in sac.get_adsorbates(self.adsorbate_species)]
@@ -1014,9 +1076,11 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
                     add_adsorbate_to_site(indi, to_spec, st, height, tilt_angle=self.tilt_angle) 
         
         if True in indi.pbc:
-            nsac = SlabAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            nsac = SlabAdsorbateCoverage(indi, sas, subtract_height=
+                                         self.subtract_height, dmax=self.dmax)
         else:
-            nsac = ClusterAdsorbateCoverage(indi, sas, dmax=self.dmax)
+            nsac = ClusterAdsorbateCoverage(indi, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
 
         indi.info['data']['adsorbates'] = [t[0] for t in 
             nsac.get_adsorbates(self.adsorbate_species)]
@@ -1075,9 +1139,16 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         vector being rotated around is set in rotate_vectors. Default 
         None meaning no rotation is performed.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -1088,7 +1159,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                  min_adsorbate_distance=2.,
                  rotate_vectors=None, 
                  rotate_angles=None,
-                 dmax=3., **kwargs):
+                 subtract_height=False,
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'CutSpliceCrossoverWithAdsorbates'
 
@@ -1099,6 +1171,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         self.min_adsorbate_distance = min_adsorbate_distance
         self.rvecs = rotate_vectors
         self.rangs = rotate_angles
+        self.subtract_height = subtract_height
         self.min_inputs = 2
         self.dmax = dmax
 
@@ -1272,7 +1345,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             indi.append(atom)
 
         pcas = ClusterAdsorptionSites(indi, **self.kwargs) 
-        pcac = ClusterAdsorbateCoverage(indi, pcas, dmax=self.dmax)
+        pcac = ClusterAdsorbateCoverage(indi, pcas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         pads_sites = pcac.hetero_site_list       
 
         adsi_dict = {}
@@ -1310,7 +1384,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             add_adsorbate_to_site(indi, ads_spec, site=st, 
                                   height=self.heights[st['site']])
 
-        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        cac = ClusterAdsorbateCoverage(indi, cas, subtract_height=
+                                       self.subtract_height, dmax=self.dmax)
         ads_sites = cac.hetero_site_list
 
         if self.fix_coverage:
@@ -1329,7 +1404,8 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                 for adsorbate_indices in sorted(tbr, reverse=True):
                     for i in adsorbate_indices[::-1]:
                         indi.pop(i)                
-            cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+            cac = ClusterAdsorbateCoverage(indi, cas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
 
         indi.info['data']['adsorbates'] = [t[0] for t in 
             cac.get_adsorbates(self.adsorbate_species)]
@@ -1405,9 +1481,16 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         genetic algorithm. Make sure all the operators used with this
         operator preserve the indexing of the atoms.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -1417,7 +1500,8 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                  fix_coverage=False, 
                  min_adsorbate_distance=2.,
                  adsorption_sites=None, 
-                 dmax=3., **kwargs):
+                 subtract_height=False,
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'SimpleCutSpliceCrossoverWithAdsorbates'
 
@@ -1433,7 +1517,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             for k in self.kwargs.keys():             
                 self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
         self.__dict__.update(self.kwargs)
-
+        self.subtract_height = subtract_height
         self.min_inputs = 2
         self.dmax = dmax
         
@@ -1506,9 +1590,11 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             cas.update(indi)
         else:
             cas = ClusterAdsorptionSites(indi, **self.kwargs) 
-        fcac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        fcac = ClusterAdsorbateCoverage(indi, cas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         fhsl = fcac.hetero_site_list
-        mcac = ClusterAdsorbateCoverage(m, cas, dmax=self.dmax)
+        mcac = ClusterAdsorbateCoverage(m, cas, subtract_height=
+                                        self.subtract_height, dmax=self.dmax)
         mhsl = mcac.hetero_site_list
 
         rmset = set(rmids)
@@ -1556,7 +1642,8 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
             add_adsorbate_to_site(indi, ads_spec, site=st, 
                                   height=self.heights[st['site']])
 
-        cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+        cac = ClusterAdsorbateCoverage(indi, cas, subtract_height=
+                                       self.subtract_height, dmax=self.dmax)
         ads_sites = cac.hetero_site_list
 
         if self.fix_coverage:
@@ -1575,7 +1662,8 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
                 for adsorbate_indices in sorted(tbr, reverse=True):
                     for i in adsorbate_indices[::-1]:
                         indi.pop(i)                
-            cac = ClusterAdsorbateCoverage(indi, cas, dmax=self.dmax)
+            cac = ClusterAdsorbateCoverage(indi, cas, subtract_height=
+                                           self.subtract_height, dmax=self.dmax)
 
         indi = self.initialize_individual(f, indi)
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
@@ -1632,9 +1720,16 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
         if the groups is for adsorption sites, so that the offspring will
         inheritate the site groups. The default is grouping by slab atoms.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     """
 
@@ -1642,7 +1737,8 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
                  heights=site_heights,
                  adsorption_sites=None,
                  group_by_sites=False,
-                 dmax=3., **kwargs):
+                 subtract_height=False,
+                 dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species)
         self.descriptor = 'AdsorbateCatalystCrossover'
 
@@ -1656,7 +1752,7 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
             for k in self.kwargs.keys():             
                 self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
         self.__dict__.update(self.kwargs)
-
+        self.subtract_height = subtract_height
         self.min_inputs = 2
         self.dmax = dmax
         
@@ -1671,14 +1767,16 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs) 
-            msac = SlabAdsorbateCoverage(m, sas, dmax=self.dmax)
+            msac = SlabAdsorbateCoverage(m, sas, subtract_height=
+                                         self.subtract_height, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(indi)                
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs)
-            msac = ClusterAdsorbateCoverage(m, sas, dmax=self.dmax)
+            msac = ClusterAdsorbateCoverage(m, sas, subtract_height=
+                                            self.subtract_height, dmax=self.dmax)
         indi = indi[sas.indices]
         mhsl = msac.hetero_site_list
 

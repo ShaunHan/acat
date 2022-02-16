@@ -1,12 +1,16 @@
-from .settings import adsorbate_elements, adsorbate_formulas
+from .settings import (adsorbate_elements,
+                       site_heights,
+                       adsorbate_formulas)
 from .adsorption_sites import (ClusterAdsorptionSites, 
                                SlabAdsorptionSites)
-from .utilities import neighbor_shell_list, get_adj_matrix 
+from .utilities import (neighbor_shell_list, 
+                        get_adj_matrix,
+                        get_mic)
 from ase.data import atomic_numbers
 from ase.geometry import find_mic
 from ase.formula import Formula
 from collections import defaultdict, Counter
-from operator import itemgetter, attrgetter
+from operator import attrgetter
 from copy import deepcopy
 import networkx as nx
 import numpy as np
@@ -59,14 +63,21 @@ class ClusterAdsorbateCoverage(object):
         If this is not provided, the arguments for identifying adsorption 
         sites can still be passed in by **kwargs.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
         label that represents the occpied site.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.    
 
     Example
     -------
@@ -109,8 +120,9 @@ class ClusterAdsorbateCoverage(object):
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
+                 subtract_height=False,
                  label_occupied_sites=False,
-                 dmax=3., **kwargs):
+                 dmax=2.5, **kwargs):
 
         atoms = atoms.copy()
         for dim in range(3):
@@ -129,6 +141,7 @@ class ClusterAdsorbateCoverage(object):
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
+        self.subtract_height = subtract_height
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
@@ -252,10 +265,18 @@ class ClusterAdsorbateCoverage(object):
                         continue
 
             adspos = self.positions[adsid]
-            bls = np.linalg.norm(np.asarray([s['position'] - 
-                                 adspos for s in hsl]), axis=1)
-            stid, bl = min(enumerate(bls), key=itemgetter(1))
-            st = hsl[stid]
+            if self.subtract_height:
+                dls = np.linalg.norm(np.asarray([s['position'] + s['normal'] * 
+                                     site_heights[s['site']] - adspos 
+                                     for s in hsl]), axis=1)
+                stid = np.argmin(dls)
+                st = hsl[stid]
+                bl = np.linalg.norm(st['position'] - adspos)
+            else:
+                bls = np.linalg.norm(np.asarray([s['position'] - 
+                                     adspos for s in hsl]), axis=1)
+                stid = np.argmin(bls)
+                st, bl = hsl[stid], bls[stid]
             if bl > self.dmax:
                 continue
 
@@ -672,14 +693,21 @@ class SlabAdsorbateCoverage(object):
         If this is not provided, the arguments for identifying adsorption 
         sites can still be passed in by **kwargs.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
         label that represents the occpied site.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     Example
     -------
@@ -719,8 +747,9 @@ class SlabAdsorbateCoverage(object):
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
+                 subtract_height=False,
                  label_occupied_sites=False,
-                 dmax=3., **kwargs):
+                 dmax=2.5, **kwargs):
 
         atoms = atoms.copy()
         ptp = np.ptp(atoms.positions[:, 2]) 
@@ -739,6 +768,7 @@ class SlabAdsorbateCoverage(object):
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
+        self.subtract_height = subtract_height
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
@@ -864,10 +894,19 @@ class SlabAdsorbateCoverage(object):
                         continue
 
             adspos = self.positions[adsid]
-            _, bls = find_mic(np.asarray([s['position'] - adspos for s in hsl]), 
-                              cell=self.cell, pbc=True) 
-            stid, bl = min(enumerate(bls), key=itemgetter(1))
-            st = hsl[stid]
+            if self.subtract_height:
+                _, dls = find_mic(np.asarray([s['position'] + s['normal'] * 
+                                  site_heights[s['site']] - adspos for s in hsl]), 
+                                  cell=self.cell, pbc=True)
+                stid = np.argmin(dls) 
+                st = hsl[stid]
+                bl = get_mic(st['position'], adspos, self.cell,
+                             return_squared_distance=True)**0.5
+            else:
+                _, bls = find_mic(np.asarray([s['position'] - adspos for s in hsl]),
+                                  cell=self.cell, pbc=True)                                         
+                stid = np.argmin(bls) 
+                st, bl = hsl[stid], bls[stid]
             if bl > self.dmax:
                 continue
 
@@ -1265,8 +1304,9 @@ class SlabAdsorbateCoverage(object):
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
                              surface=None, 
+                             subtract_height=False,
                              label_occupied_sites=False,                             
-                             dmax=3., **kwargs):
+                             dmax=2.5, **kwargs):
     """A function that enumerates all occupied adsorption sites of
     the input atoms object. The function is generalized for both 
     periodic and non-periodic systems (distinguished by atoms.pbc).
@@ -1289,14 +1329,21 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         If the structure is a nanoparticle, the function enumerates
         only the sites on the specified surface.
 
+    subtract_height : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added. 
+
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
         label that represents the occpied site.
 
-    dmax : float, default 3.
-        The maximum bond length (in Angstrom) between the site and the 
-        bonding atom  that should be considered as an adsorbate.
+    dmax : float, default 2.5
+        The maximum bond length (in Angstrom) between an atom and its
+        nearest site to be considered as the atom being bound to the site.
 
     Example
     -------
@@ -1337,6 +1384,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
 
     if True not in atoms.pbc:
         cac = ClusterAdsorbateCoverage(atoms, adsorption_sites,
+                                       subtract_height,
                                        label_occupied_sites, 
                                        dmax, **kwargs)
         all_sites = cac.hetero_site_list
@@ -1349,6 +1397,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     else:
         sac = SlabAdsorbateCoverage(atoms, surface, 
                                     adsorption_sites,
+                                    subtract_height,
                                     label_occupied_sites, 
                                     dmax, **kwargs)
         all_sites = sac.hetero_site_list
