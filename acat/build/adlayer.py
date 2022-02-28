@@ -8,8 +8,6 @@ from ..adsorbate_coverage import (ClusterAdsorbateCoverage,
                                   SlabAdsorbateCoverage)
 from ..utilities import (get_mic, atoms_too_close_after_addition, 
                          is_list_or_tuple, numbers_from_ratios)
-from ..labels import (get_cluster_signature_from_label, 
-                      get_slab_signature_from_label)
 from .action import (add_adsorbate_to_site, 
                      remove_adsorbate_from_site)
 from ase.io import read, write, Trajectory
@@ -25,13 +23,12 @@ import warnings
 import random
 
 
-class StochasticPatternGenerator(object):
-    """`StochasticPatternGenerator` is a class for generating 
-    adsorbate overlayer patterns stochastically. Graph isomorphism
-    is implemented to identify identical adlayer patterns. 4 
-    adsorbate actions are supported: add, remove, move, replace. 
-    The class is generalized for both periodic and non-periodic 
-    systems (distinguished by atoms.pbc). 
+class RandomPatternGenerator(object):
+    """`RandomPatternGenerator` is a class for generating adsorbate 
+    overlayer patterns stochastically. Graph isomorphism is implemented 
+    to identify identical adlayer patterns. 4 adsorbate actions are 
+    supported: add, remove, move, replace. The class is generalized for 
+    both periodic and non-periodic systems (distinguished by atoms.pbc). 
 
     Parameters
     ----------
@@ -71,7 +68,7 @@ class StochasticPatternGenerator(object):
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    subtract_height : bool, default False
+    subtract_heights : bool, default False
         Whether to subtract the height from the bond length when allocating
         a site to an adsorbate. Default is to allocate the site that is
         closest to the adsorbate's binding atom without subtracting height.
@@ -110,10 +107,10 @@ class StochasticPatternGenerator(object):
         stochastically but for all images systematically, e.g. generating
         10 stochastic adlayer patterns for each image:
 
-        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import RandomPatternGenerator as RPG
         >>> for atoms in images:
-        ...    spg = SPG(atoms, ..., append_trajectory=True)
-        ...    spg.run(num_gen = 10)
+        ...    rpg = RPG(atoms, ..., append_trajectory=True)
+        ...    rpg.run(num_gen = 10)
 
     logfile : str, default 'patterns.log'
         The name of the log file.
@@ -127,7 +124,7 @@ class StochasticPatternGenerator(object):
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
                  heights=site_heights,
-                 subtract_height=False,
+                 subtract_heights=False,
                  dmax=2.5,                 
                  species_forbidden_sites=None,    
                  species_forbidden_labels=None,
@@ -166,7 +163,10 @@ class StochasticPatternGenerator(object):
         self.heights = site_heights 
         for k, v in heights.items():
             self.heights[k] = v
-        self.subtract_height = subtract_height
+        if subtract_heights:
+            self.subtract_heights = self.heights
+        else:
+            self.subtract_heights = None        
         self.dmax = dmax
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
                        'ignore_bridge_sites': False, 'label_sites': False} 
@@ -203,7 +203,7 @@ class StochasticPatternGenerator(object):
         if self.adsorption_sites is not None:                               
             site_nblist = self.site_nblist
         else:
-            site_nblist = sas.get_neighbor_site_list(neighbor_number=2)     
+            site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
          
         if self.clean_slab:
             hsl = sas.site_list
@@ -211,12 +211,12 @@ class StochasticPatternGenerator(object):
             neighbor_site_indices = []
         else:
             if True in self.atoms.pbc:
-                sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax,
+                sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax,
                                             label_occupied_sites=self.unique) 
             else: 
-                sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                               self.subtract_height, dmax=self.dmax, 
+                sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                               self.subtract_heights, dmax=self.dmax, 
                                                label_occupied_sites=self.unique)                                                
             hsl = sac.hetero_site_list
             nbstids, selfids = [], []
@@ -315,12 +315,12 @@ class StochasticPatternGenerator(object):
                                   height=self.heights[nst['site']])                            
 
         if True in self.atoms.pbc:
-            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                         self.subtract_height, dmax=self.dmax,
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                         self.subtract_heights, dmax=self.dmax,
                                          label_occupied_sites=self.unique) 
         else:
-            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax, 
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax, 
                                             label_occupied_sites=self.unique)
         nhsl = nsac.hetero_site_list
                                                                            
@@ -348,12 +348,12 @@ class StochasticPatternGenerator(object):
     def _remove_adsorbate(self, adsorption_sites):
         sas = adsorption_sites 
         if True in self.atoms.pbc:                    
-            sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax,
+            sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax,
                                         label_occupied_sites=self.unique) 
         else: 
-            sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax,
+            sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax,
                                            label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         occupied = [s for s in hsl if s['occupied']]
@@ -375,12 +375,12 @@ class StochasticPatternGenerator(object):
             return
 
         if True in self.atoms.pbc:
-            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                         self.subtract_height, dmax=self.dmax,
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                         self.subtract_heights, dmax=self.dmax,
                                          label_occupied_sites=self.unique) 
         else:
-            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax,
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax,
                                             label_occupied_sites=self.unique)                      
         return nsac 
 
@@ -389,15 +389,15 @@ class StochasticPatternGenerator(object):
         if self.adsorption_sites is not None:
             site_nblist = self.site_nblist
         else:
-            site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
+            site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
 
         if True in self.atoms.pbc:                                                                         
-            sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax,
+            sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax,
                                         label_occupied_sites=self.unique) 
         else: 
-            sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax,
+            sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax,
                                            label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         occupied = [s for s in hsl if s['occupied']]                         
@@ -496,12 +496,12 @@ class StochasticPatternGenerator(object):
                                   height=self.heights[nst['site']])                          
 
         if True in self.atoms.pbc:
-            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                         self.subtract_height, dmax=self.dmax,
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                         self.subtract_heights, dmax=self.dmax,
                                          label_occupied_sites=self.unique) 
         else: 
-            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax,
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax,
                                             label_occupied_sites=self.unique)
         nhsl = nsac.hetero_site_list
                                                                            
@@ -529,12 +529,12 @@ class StochasticPatternGenerator(object):
     def _replace_adsorbate(self, adsorption_sites):
         sas = adsorption_sites                     
         if True in self.atoms.pbc:                                      
-            sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax,
+            sac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax,
                                         label_occupied_sites=self.unique) 
         else: 
-            sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax,
+            sac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax,
                                            label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied']]
@@ -597,7 +597,7 @@ class StochasticPatternGenerator(object):
         if self.adsorption_sites is not None:
             site_nblist = self.site_nblist
         else:
-            site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
+            site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
 
         nbstids, selfids = [], []
         for j, st in enumerate(hsl):
@@ -636,12 +636,12 @@ class StochasticPatternGenerator(object):
                                   height=self.heights[rpst['site']])                 
  
         if True in self.atoms.pbc:   
-            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                         self.subtract_height, dmax=self.dmax,
+            nsac = SlabAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                         self.subtract_heights, dmax=self.dmax,
                                          label_occupied_sites=self.unique) 
         else: 
-            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax,
+            nsac = ClusterAdsorbateCoverage(self.atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax,
                                             label_occupied_sites=self.unique)         
         nhsl = nsac.hetero_site_list                            
                                                                            
@@ -752,12 +752,12 @@ class StochasticPatternGenerator(object):
                 else:
                     psas = ClusterAdsorptionSites(patoms, **self.kwargs) 
                 if True in patoms.pbc:
-                    psac = SlabAdsorbateCoverage(patoms, psas, subtract_height=
-                                                 self.subtract_height, dmax=self.dmax,
+                    psac = SlabAdsorbateCoverage(patoms, psas, subtract_heights=
+                                                 self.subtract_heights, dmax=self.dmax,
                                                  label_occupied_sites=self.unique)           
                 else:
-                    psac = ClusterAdsorbateCoverage(patoms, psas, subtract_height=
-                                                    self.subtract_height, dmax=self.dmax,
+                    psac = ClusterAdsorbateCoverage(patoms, psas, subtract_heights=
+                                                    self.subtract_heights, dmax=self.dmax,
                                                     label_occupied_sites=self.unique)        
 
                 plabs = psac.get_occupied_labels(fragmentation=self.fragmentation)
@@ -923,7 +923,7 @@ class SystematicPatternGenerator(object):
         type. Use the default height settings if the height for a site 
         type is not specified.
 
-    subtract_height : bool, default False
+    subtract_heights : bool, default False
         Whether to subtract the height from the bond length when allocating
         a site to an adsorbate. Default is to allocate the site that is
         closest to the adsorbate's binding atom without subtracting height.
@@ -969,7 +969,7 @@ class SystematicPatternGenerator(object):
                  min_adsorbate_distance=1.5,
                  adsorption_sites=None,
                  heights=site_heights,
-                 subtract_height=False,
+                 subtract_heights=False,
                  dmax=2.5,
                  species_forbidden_sites=None,
                  species_forbidden_labels=None,
@@ -999,7 +999,10 @@ class SystematicPatternGenerator(object):
         self.heights = site_heights 
         for k, v in heights.items():
             self.heights[k] = v
-        self.subtract_height = subtract_height
+        if subtract_heights:
+            self.subtract_heights = self.heights
+        else:
+            self.subtract_heights = None        
         self.dmax = dmax
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
                        'ignore_bridge_sites': False, 'label_sites': False} 
@@ -1042,7 +1045,7 @@ class SystematicPatternGenerator(object):
         if self.adsorption_sites is not None:                                         
             site_nblist = self.site_nblist
         else:
-            site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
+            site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
        
         # Take care of clean surface slab
         if self.clean_slab:
@@ -1051,12 +1054,12 @@ class SystematicPatternGenerator(object):
             neighbor_site_indices = []        
         else:
             if True in atoms.pbc: 
-                sac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax,
+                sac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax,
                                             label_occupied_sites=self.unique) 
             else: 
-                sac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
-                                               self.subtract_height, dmax=self.dmax,
+                sac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                               self.subtract_heights, dmax=self.dmax,
                                                label_occupied_sites=self.unique)
             hsl = sac.hetero_site_list
             nbstids, selfids = [], []
@@ -1140,12 +1143,12 @@ class SystematicPatternGenerator(object):
                                               height=self.heights[nst['site']])        
  
                     if True in final_atoms.pbc:
-                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                     self.subtract_height, dmax=self.dmax,
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                     self.subtract_heights, dmax=self.dmax,
                                                      label_occupied_sites=self.unique) 
                     else: 
-                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                        self.subtract_height, dmax=self.dmax,
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                        self.subtract_heights, dmax=self.dmax,
                                                         label_occupied_sites=self.unique)
                     nhsl = nsac.hetero_site_list
   
@@ -1211,12 +1214,12 @@ class SystematicPatternGenerator(object):
         self.n_duplicate = 0                                                           
         sas = adsorption_sites
         if True in atoms.pbc:
-            sac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax,
+            sac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax,
                                         label_occupied_sites=self.unique) 
         else: 
-            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax,
+            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax,
                                            label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         occupied = [s for s in hsl if s['occupied']]
@@ -1257,12 +1260,12 @@ class SystematicPatternGenerator(object):
                 return
                                                       
             if True in final_atoms.pbc:                                
-                nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                             self.subtract_height, dmax=self.dmax,
+                nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                             self.subtract_heights, dmax=self.dmax,
                                              label_occupied_sites=self.unique) 
             else: 
-                nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                self.subtract_height, dmax=self.dmax,
+                nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                self.subtract_heights, dmax=self.dmax,
                                                 label_occupied_sites=self.unique)
 
             labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
@@ -1304,15 +1307,15 @@ class SystematicPatternGenerator(object):
         if self.adsorption_sites is not None:                            
             site_nblist = self.site_nblist
         else:
-            site_nblist = sas.get_neighbor_site_list(neighbor_number=2) 
+            site_nblist = sas.get_neighbor_site_list(neighbor_number=2)
 
         if True in atoms.pbc:  
-            sac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax,
+            sac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax,
                                         label_occupied_sites=self.unique) 
         else: 
-            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax,
+            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax,
                                            label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         nbstids, selfids, occupied = [], [], []
@@ -1413,12 +1416,12 @@ class SystematicPatternGenerator(object):
                                               height=self.heights[nst['site']])       
 
                     if True in final_atoms.pbc:   
-                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                     self.subtract_height, dmax=self.dmax,
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                     self.subtract_heights, dmax=self.dmax,
                                                      label_occupied_sites=self.unique) 
                     else: 
-                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                        self.subtract_height, dmax=self.dmax,
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                        self.subtract_heights, dmax=self.dmax,
                                                         label_occupied_sites=self.unique)
                     nhsl = nsac.hetero_site_list
       
@@ -1441,12 +1444,12 @@ class SystematicPatternGenerator(object):
                         return
 
                     if True in final_atoms.pbc:
-                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                     self.subtract_height, dmax=self.dmax,
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                     self.subtract_heights, dmax=self.dmax,
                                                      label_occupied_sites=self.unique) 
                     else: 
-                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                        self.subtract_height, dmax=self.dmax,
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                        self.subtract_heights, dmax=self.dmax,
                                                         label_occupied_sites=self.unique)                      
       
                     labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)
@@ -1485,12 +1488,12 @@ class SystematicPatternGenerator(object):
     def _exhaustive_replace_adsorbate(self, atoms, adsorption_sites):
         sas = adsorption_sites
         if True in atoms.pbc:                                                           
-            sac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax,
+            sac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax,
                                         label_occupied_sites=self.unique)
         else: 
-            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax,
+            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax,
                                            label_occupied_sites=self.unique)
         hsl = sac.hetero_site_list
         occupied_stids = [i for i in range(len(hsl)) if hsl[i]['occupied']]
@@ -1598,12 +1601,12 @@ class SystematicPatternGenerator(object):
                                               height=self.heights[rpst['site']])        
 
                     if True in final_atoms.pbc:                                                                              
-                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                     self.subtract_height, dmax=self.dmax,
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                     self.subtract_heights, dmax=self.dmax,
                                                      label_occupied_sites=self.unique)
                     else: 
-                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                        self.subtract_height, dmax=self.dmax,
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                        self.subtract_heights, dmax=self.dmax,
                                                         label_occupied_sites=self.unique)
                     nhsl = nsac.hetero_site_list
                                                                                                   
@@ -1626,12 +1629,12 @@ class SystematicPatternGenerator(object):
                         return
 
                     if True in final_atoms.pbc:
-                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                     self.subtract_height, dmax=self.dmax,
+                        nsac = SlabAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                     self.subtract_heights, dmax=self.dmax,
                                                      label_occupied_sites=self.unique) 
                     else: 
-                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_height=
-                                                        self.subtract_height, dmax=self.dmax,
+                        nsac = ClusterAdsorbateCoverage(final_atoms, sas, subtract_heights=
+                                                        self.subtract_heights, dmax=self.dmax,
                                                         label_occupied_sites=self.unique)                     
       
                     labs = nsac.get_occupied_labels(fragmentation=self.enumerate_orientations)                                                   
@@ -1747,12 +1750,12 @@ class SystematicPatternGenerator(object):
                 else:
                     psas = ClusterAdsorptionSites(patoms, **self.kwargs)      
                 if True in patoms.pbc:
-                    psac = SlabAdsorbateCoverage(patoms, psas, subtract_height=
-                                                 self.subtract_height, dmax=self.dmax,
+                    psac = SlabAdsorbateCoverage(patoms, psas, subtract_heights=
+                                                 self.subtract_heights, dmax=self.dmax,
                                                  label_occupied_sites=self.unique)      
                 else:
-                    psac = ClusterAdsorbateCoverage(patoms, psas, subtract_height=
-                                                    self.subtract_height, dmax=self.dmax,
+                    psac = ClusterAdsorbateCoverage(patoms, psas, subtract_heights=
+                                                    self.subtract_heights, dmax=self.dmax,
                                                     label_occupied_sites=self.unique)        
                                                                                    
                 plabs = psac.get_occupied_labels(fragmentation=self.enumerate_orientations)
@@ -1879,6 +1882,13 @@ class OrderedPatternGenerator(object):
         type. Use the default height settings if the height for a site 
         type is not specified.
 
+    subtract_heights : bool, default False
+        Whether to subtract the height from the bond length when allocating
+        a site to an adsorbate. Default is to allocate the site that is
+        closest to the adsorbate's binding atom without subtracting height.
+        Useful for ensuring the allocated site for each adsorbate is
+        consistent with the site to which the adsorbate was added.         
+
     site_groups : list of lists, default None                                 
         Provide the user defined symmetry equivalent site groups as a list 
         of lists of site indices (of the site list). Useful for generating 
@@ -1893,13 +1903,6 @@ class OrderedPatternGenerator(object):
         Whether to cut multidentate species into fragments. This ensures
         that multidentate species with different orientations are
         considered as different adlayer patterns.
-
-    subtract_height : bool, default False
-        Whether to subtract the height from the bond length when allocating
-        a site to an adsorbate. Default is to allocate the site that is
-        closest to the adsorbate's binding atom without subtracting height.
-        Useful for ensuring the allocated site for each adsorbate is
-        consistent with the site to which the adsorbate was added. 
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between an atom and its
@@ -1928,10 +1931,10 @@ class OrderedPatternGenerator(object):
                  populate_isolated_sites=False,
                  allow_odd=False,
                  heights=site_heights, 
+                 subtract_heights=False,
                  site_groups=None,
                  save_groups=False,
                  fragmentation=True,
-                 subtract_height=False,
                  dmax=2.5,
                  dtol=.3,
                  trajectory='patterns.traj',
@@ -1952,11 +1955,9 @@ class OrderedPatternGenerator(object):
         self.kwargs.update(kwargs)
         if adsorption_sites is None:
             if True in self.images[0].pbc:
-                self.adsorption_sites = SlabAdsorptionSites(self.images[0],
-                                                            **self.kwargs)
+                self.adsorption_sites = SlabAdsorptionSites(self.images[0], **self.kwargs)
             else: 
-                self.adsorption_sites = ClusterAdsorptionSites(self.images[0], 
-                                                               **self.kwargs)
+                self.adsorption_sites = ClusterAdsorptionSites(self.images[0], **self.kwargs)
         else:
             self.adsorption_sites = adsorption_sites
             for k in self.kwargs.keys():             
@@ -1964,18 +1965,21 @@ class OrderedPatternGenerator(object):
         self.__dict__.update(self.kwargs)
 
         self.sorting_vector = sorting_vector
+        self.heights = site_heights 
+        for k, v in heights.items():
+            self.heights[k] = v
+        if subtract_heights:
+            self.subtract_heights = self.heights
+        else:
+            self.subtract_heights = None        
         self.remove_site_shells = remove_site_shells
         if self.remove_site_shells > 0:
             self.nsl = self.adsorption_sites.get_neighbor_site_list(
                        neighbor_number=self.remove_site_shells)
         self.populate_isolated_sites = populate_isolated_sites
         self.allow_odd = allow_odd
-        self.heights = site_heights 
-        for k, v in heights.items():
-            self.heights[k] = v
         self.save_groups = save_groups
         self.fragmentation = fragmentation
-        self.subtract_height = subtract_height
         self.dmax = dmax
         self.dtol = dtol
 
@@ -2073,7 +2077,7 @@ class OrderedPatternGenerator(object):
                 seen.update(res)
                 groups.append(res)
 
-            if (len(groups) == len(sl) / 2) or (self.populate_isolated_sites):
+            if (len(groups) == -(len(sl) // -2)) or (self.populate_isolated_sites):
                 if self.allow_odd:
                     new_groups = []
                     for g in groups:
@@ -2121,8 +2125,12 @@ class OrderedPatternGenerator(object):
         if len(traj) > 0 and unique and self.append_trajectory:                                
             prev_images = read(self.trajectory, index=':')
             for patoms in prev_images:
-                psac = SlabAdsorbateCoverage(patoms, sas, subtract_height=
-                                             self.subtract_height, dmax=self.dmax)
+                if True in self.images[0].pbc:
+                    psac = SlabAdsorbateCoverage(patoms, sas, subtract_heights=
+                                                 self.subtract_heights, dmax=self.dmax)
+                else:
+                    psac = ClusterAdsorbateCoverage(patoms, sas, subtract_heights=
+                                                    self.subtract_heights, dmax=self.dmax)
                 plabs = psac.get_occupied_labels(fragmentation=self.fragmentation)
                 pG = psac.get_graph(fragmentation=self.fragmentation)
                 labels_list.append(plabs)
@@ -2147,9 +2155,10 @@ class OrderedPatternGenerator(object):
                     spec = 'vacancy'
                 else:
                     spec = random.choice(specs)
-                    if self.remove_site_shells > 0:
+                    if (self.remove_site_shells > 0) and (spec != 'vacancy'):
                         newvs.update([i for k in group for i in self.nsl[k]])
                 combo[idx] = spec
+
             combo = tuple(combo)
             if not all(sp == 'vacancy' for sp in combo):
                 if combo not in combos or too_few:
@@ -2163,8 +2172,12 @@ class OrderedPatternGenerator(object):
                             height = self.heights[st['site']]
                             add_adsorbate_to_site(atoms, spec, st, height)
                         if unique:
-                            nsac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                                         self.subtract_height, dmax=self.dmax) 
+                            if True in self.images[0].pbc:
+                                nsac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                                             self.subtract_heights, dmax=self.dmax) 
+                            else:
+                                nsac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                                                self.subtract_heights, dmax=self.dmax)     
                             labs = nsac.get_occupied_labels(fragmentation=self.fragmentation)
                             if labs in labels_list:
                                 G = nsac.get_graph(fragmentation=self.fragmentation)
@@ -2206,7 +2219,8 @@ def special_coverage_pattern(atoms, adsorbate_species,
                              **kwargs):
     """A function for generating representative ordered adsorbate 
     overlayer patterns. The function is generalized for both periodic 
-    and non-periodic systems (distinguished by atoms.pbc).
+    and non-periodic systems (distinguished by atoms.pbc). Note that
+    the algorithm currently does not work for orthogonal fcc111 cells.
 
     Parameters
     ----------

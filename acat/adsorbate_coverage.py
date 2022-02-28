@@ -63,12 +63,13 @@ class ClusterAdsorbateCoverage(object):
         If this is not provided, the arguments for identifying adsorption 
         sites can still be passed in by **kwargs.
 
-    subtract_height : bool, default False
-        Whether to subtract the height from the bond length when allocating
-        a site to an adsorbate. Default is to allocate the site that is
-        closest to the adsorbate's binding atom without subtracting height.
-        Useful for ensuring the allocated site for each adsorbate is
-        consistent with the site to which the adsorbate was added. 
+    subtract_heights : dict, default None
+        A dictionary that contains the height to be subtracted from the bond 
+        length when allocating a type of site to an adsorbate. Default is to 
+        allocate the site that is closest to the adsorbate's binding atom 
+        without subtracting height. Useful for ensuring the allocated site 
+        for each adsorbate is consistent with the site to which the adsorbate
+        was added.                                                           
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -120,7 +121,7 @@ class ClusterAdsorbateCoverage(object):
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
-                 subtract_height=False,
+                 subtract_heights=None,
                  label_occupied_sites=False,
                  dmax=2.5, **kwargs):
 
@@ -141,7 +142,11 @@ class ClusterAdsorbateCoverage(object):
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
-        self.subtract_height = subtract_height
+        self.subtract_heights = subtract_heights
+        if subtract_heights is not None:
+            self.subtract_heights = site_heights
+            for k, v in subtract_heights.items():
+                self.subtract_heights[k] = v      
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
@@ -265,9 +270,9 @@ class ClusterAdsorbateCoverage(object):
                         continue
 
             adspos = self.positions[adsid]
-            if self.subtract_height:
+            if self.subtract_heights is not None:
                 dls = np.linalg.norm(np.asarray([s['position'] + s['normal'] * 
-                                     site_heights[s['site']] - adspos 
+                                     self.subtract_heights[s['site']] - adspos 
                                      for s in hsl]), axis=1)
                 stid = np.argmin(dls)
                 st = hsl[stid]
@@ -277,6 +282,7 @@ class ClusterAdsorbateCoverage(object):
                                      adspos for s in hsl]), axis=1)
                 stid = np.argmin(bls)
                 st, bl = hsl[stid], bls[stid]
+            bl = round(bl, 8)
             if bl > self.dmax:
                 continue
 
@@ -693,12 +699,13 @@ class SlabAdsorbateCoverage(object):
         If this is not provided, the arguments for identifying adsorption 
         sites can still be passed in by **kwargs.
 
-    subtract_height : bool, default False
-        Whether to subtract the height from the bond length when allocating
-        a site to an adsorbate. Default is to allocate the site that is
-        closest to the adsorbate's binding atom without subtracting height.
-        Useful for ensuring the allocated site for each adsorbate is
-        consistent with the site to which the adsorbate was added. 
+    subtract_heights : dict, default None
+        A dictionary that contains the height to be subtracted from the bond 
+        length when allocating a type of site to an adsorbate. Default is to 
+        allocate the site that is closest to the adsorbate's binding atom 
+        without subtracting height. Useful for ensuring the allocated site 
+        for each adsorbate is consistent with the site to which the adsorbate 
+        was added.                                                             
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -747,7 +754,7 @@ class SlabAdsorbateCoverage(object):
 
     def __init__(self, atoms, 
                  adsorption_sites=None, 
-                 subtract_height=False,
+                 subtract_heights=None,
                  label_occupied_sites=False,
                  dmax=2.5, **kwargs):
 
@@ -768,7 +775,11 @@ class SlabAdsorbateCoverage(object):
         self.cell = atoms.cell
         self.pbc = atoms.pbc
 
-        self.subtract_height = subtract_height
+        self.subtract_heights = subtract_heights
+        if subtract_heights is not None:
+            self.subtract_heights = site_heights
+            for k, v in subtract_heights.items():
+                self.subtract_heights[k] = v      
         self.label_occupied_sites = label_occupied_sites
         self.dmax = dmax
         self.kwargs = {'allow_6fold': False, 'composition_effect': False,
@@ -894,10 +905,10 @@ class SlabAdsorbateCoverage(object):
                         continue
 
             adspos = self.positions[adsid]
-            if self.subtract_height:
+            if self.subtract_heights is not None:
                 _, dls = find_mic(np.asarray([s['position'] + s['normal'] * 
-                                  site_heights[s['site']] - adspos for s in hsl]), 
-                                  cell=self.cell, pbc=True)
+                                  self.subtract_heights[s['site']] - adspos 
+                                  for s in hsl]), cell=self.cell, pbc=True)
                 stid = np.argmin(dls) 
                 st = hsl[stid]
                 bl = get_mic(st['position'], adspos, self.cell,
@@ -907,6 +918,7 @@ class SlabAdsorbateCoverage(object):
                                   cell=self.cell, pbc=True)                                         
                 stid = np.argmin(bls) 
                 st, bl = hsl[stid], bls[stid]
+            bl = round(bl, 8)
             if bl > self.dmax:
                 continue
 
@@ -1304,7 +1316,7 @@ class SlabAdsorbateCoverage(object):
 
 def enumerate_occupied_sites(atoms, adsorption_sites=None,
                              surface=None, 
-                             subtract_height=False,
+                             subtract_heights=None,
                              label_occupied_sites=False,                             
                              dmax=2.5, **kwargs):
     """A function that enumerates all occupied adsorption sites of
@@ -1329,12 +1341,13 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         If the structure is a nanoparticle, the function enumerates
         only the sites on the specified surface.
 
-    subtract_height : bool, default False
-        Whether to subtract the height from the bond length when allocating
-        a site to an adsorbate. Default is to allocate the site that is
-        closest to the adsorbate's binding atom without subtracting height.
-        Useful for ensuring the allocated site for each adsorbate is
-        consistent with the site to which the adsorbate was added. 
+    subtract_heights : dict, default None
+        A dictionary that contains the height to be subtracted from the 
+        bond length when allocating a type of site to an adsorbate. 
+        Default is to allocate the site that is closest to the adsorbate's 
+        binding atom without subtracting height. Useful for ensuring the 
+        allocated site for each adsorbate is consistent with the site to 
+        which the adsorbate was added.                                                           
 
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
@@ -1384,7 +1397,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
 
     if True not in atoms.pbc:
         cac = ClusterAdsorbateCoverage(atoms, adsorption_sites,
-                                       subtract_height,
+                                       subtract_heights,
                                        label_occupied_sites, 
                                        dmax, **kwargs)
         all_sites = cac.hetero_site_list
@@ -1397,7 +1410,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     else:
         sac = SlabAdsorbateCoverage(atoms, surface, 
                                     adsorption_sites,
-                                    subtract_height,
+                                    subtract_heights,
                                     label_occupied_sites, 
                                     dmax, **kwargs)
         all_sites = sac.hetero_site_list

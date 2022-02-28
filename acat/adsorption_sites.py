@@ -89,13 +89,13 @@ class ClusterAdsorptionSites(object):
         Use the bimetallic labels if composition_effect=True,
         otherwise use the monometallic labels.
 
-    proxy_metal : str, default None
-        The code is parameterized for pure transition metals.
+    surrogate_metal : str, default None
+        The code is parameterized w.r.t. pure transition metals.
         The generalization of the code is achieved by mapping all 
-        input atoms to a proxy transition metal that is supported 
-        by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt or Au).
-        Try changing the proxy metal when the site identification
-        is not satisfying.
+        input atoms to a surrogate transition metal that is 
+        supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt 
+        or Au). Try changing the surrogate metal when the site 
+        identification is not satisfying.
 
     tol : float, default 0.5
         The tolerence of neighbor distance (in Angstrom).
@@ -139,7 +139,7 @@ class ClusterAdsorptionSites(object):
                  composition_effect=False, 
                  label_sites=False,
                  ignore_bridge_sites=False,
-                 proxy_metal=None,
+                 surrogate_metal=None,
                  tol=.5):
 
         assert True not in atoms.pbc, 'the cell must be non-periodic'
@@ -160,7 +160,7 @@ class ClusterAdsorptionSites(object):
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.ignore_bridge_sites = ignore_bridge_sites
-        self.proxy_metal = proxy_metal
+        self.surrogate_metal = surrogate_metal
         self.tol = tol
         
         self.ref_atoms = self.mapping(atoms)
@@ -256,7 +256,7 @@ class ClusterAdsorptionSites(object):
                             site.update({'site': this_site,
                                          'surface': site_surf,
                                          'position': pos,
-                                         'normal': normal,
+                                         'normal': np.round(normal, 8),
                                          'indices': si})
                             if self.composition_effect:                       
                                 metals = self.metals
@@ -312,7 +312,7 @@ class ClusterAdsorptionSites(object):
                                             site.update({'site': '4fold',
                                                          'surface': site_surf,
                                                          'position': pos,
-                                                         'normal': normal,
+                                                         'normal': np.round(normal, 8),
                                                          'indices': si})
                                             if self.composition_effect:
                                                 metals = self.metals 
@@ -376,14 +376,14 @@ class ClusterAdsorptionSites(object):
             # Add normals to ontop sites
             if t['site'] == 'ontop':
                 n = np.average(normals_for_site[t['indices'][0]], 0)
-                t['normal'] = n / np.linalg.norm(n)
+                t['normal'] = np.round(n / np.linalg.norm(n), 8)
             # Add normals to bridge sites
             elif t['site'] == 'bridge':
                 normals = []
                 for i in t['indices']:
                     normals.extend(normals_for_site[i])
                 n = np.average(normals, 0)
-                t['normal'] = n / np.linalg.norm(n)
+                t['normal'] = np.round(n / np.linalg.norm(n), 8)
             # Add subsurf sites
             if self.allow_6fold:
                 if t['site'] == 'fcc':  
@@ -502,8 +502,10 @@ class ClusterAdsorptionSites(object):
         return all_sites
 
     def get_unique_sites(self, unique_composition=False,         
-                         unique_subsurf=False):
-        """Get all symmetry-inequivalent adsorption sites.
+                         unique_subsurf=False,
+                         return_signatures=False):
+        """Get all symmetry-inequivalent adsorption sites (one
+        site for each type).
         
         Parameters
         ----------
@@ -515,7 +517,11 @@ class ClusterAdsorptionSites(object):
             Take subsurface element into consideration when 
             checking uniqueness. Could be important for 
             surfaces like fcc100.
-        
+
+        return_signatures : bool, default False           
+            Whether to return the unique signatures of the
+            sites instead.
+
         """
 
         sl = self.site_list
@@ -531,9 +537,19 @@ class ClusterAdsorptionSites(object):
             if unique_subsurf:
                 raise ValueError('to include the subsurface element, ' +
                                  'unique_composition also need to be set to True')    
-        sklist = sorted([[s[k] for k in key_list] for s in sl])
- 
-        return sorted(list(sklist for sklist, _ in groupby(sklist)))
+
+        if return_signatures:
+            sklist = sorted([[s[k] for k in key_list] for s in sl])
+            return sorted(list(sklist for sklist, _ in groupby(sklist)))
+        else:
+            seen_tuple = []
+            uni_sites = []
+            for s in sl:
+                sig = tuple(s[k] for k in key_list)
+                if sig not in seen_tuple:
+                    seen_tuple.append(sig)
+                    uni_sites.append(s)
+            return uni_sites                        
 
     def get_labels(self):
         # Assign labels
@@ -551,11 +567,11 @@ class ClusterAdsorptionSites(object):
                 'subsurf_index': None, 'subsurf_element': None, 'label': None}
 
     def mapping(self, atoms):
-        """Map the nanoparticle into a proxy nanoparticle for code
+        """Map the nanoparticle into a surrogate nanoparticle for code
         versatility."""
 
         ref_atoms = atoms.copy()
-        pm = self.proxy_metal
+        pm = self.surrogate_metal
         if pm is not None:
             ref_symbol = pm
         else:
@@ -896,12 +912,10 @@ class ClusterAdsorptionSites(object):
         """
 
         sl = self.site_list
-        adsposs = np.asarray([s['position'] + s['normal'] * \
-                             site_heights[s['site']] for s in sl])
-        statoms = Atoms('X{}'.format(len(sl)), 
-                        positions=adsposs, 
-                        cell=self.cell, 
-                        pbc=self.pbc)
+        adsposs = np.asarray([s['position'] + s['normal'] * 
+                              site_heights[s['site']] for s in sl])
+        statoms = Atoms('X{}'.format(len(sl)), positions=adsposs, 
+                        cell=self.cell, pbc=self.pbc)
         cr = 0.55 
         if neighbor_number == 1:
             cr += 0.1
@@ -1100,21 +1114,21 @@ class SlabAdsorptionSites(object):
         Use the bimetallic labels if composition_effect=True,
         otherwise use the monometallic labels.
 
-    proxy_metal : str, default None
-        The code is parameterized for pure transition metals.
+    surrogate_metal : str, default None
+        The code is parameterized w.r.t. pure transition metals.
         The generalization of the code is achieved by mapping all 
-        input atoms to a proxy transition metal that is supported 
-        by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt or Au).
-        Try changing the proxy metal when the site identification
-        is not satisfying. When the cell is small, Cu is normally 
-        the better choice, while the Pt and Au should be good for 
-        larger cells.
+        input atoms to a surrogate transition metal that is 
+        supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt 
+        or Au). Try changing the surrogate metal when the site 
+        identification is not satisfying. When the cell is small, 
+        Cu is normally the better choice, while the Pt and Au 
+        should be good for larger cells.
 
-    optimize_proxy_cell : bool, default True
+    optimize_surrogate_cell : bool, default True
         Whether to also optimize the cell during the optimization
-        of the proxy slab. Useful for generalizing the code for
+        of the surrogate slab. Useful for generalizing the code for
         alloy slabs of various compositions and lattice constants.
-        Recommand to set to True if the proxy metal is very 
+        Recommand to set to True if the surrogate metal is very 
         different from the composition of the input slab.
 
     tol : float, default 0.5
@@ -1159,8 +1173,8 @@ class SlabAdsorptionSites(object):
                  both_sides=False,
                  ignore_bridge_sites=False,
                  label_sites=False,
-                 proxy_metal=None,
-                 optimize_proxy_cell=True,
+                 surrogate_metal=None,
+                 optimize_surrogate_cell=True,
                  tol=.5):
 
         assert True in atoms.pbc, 'the cell must be periodic in at least one direction'   
@@ -1180,8 +1194,8 @@ class SlabAdsorptionSites(object):
         self.numbers = atoms.numbers
         self.indices = list(range(len(self.atoms)))
         self.surface = surface
-        self.proxy_metal = proxy_metal
-        self.optimize_proxy_cell = optimize_proxy_cell
+        self.surrogate_metal = surrogate_metal
+        self.optimize_surrogate_cell = optimize_surrogate_cell
 
         self.ref_atoms, self.delta_positions = self.mapping(atoms) 
         self.cell = atoms.cell
@@ -1236,7 +1250,7 @@ class SlabAdsorptionSites(object):
         sl = self.site_list
         normals_for_site = dict(list(zip(top_indices, 
                             [[] for _ in top_indices])))
-        if self.optimize_proxy_cell:
+        if self.optimize_surrogate_cell:
             ref_cell = self.ref_atoms.cell
         else:
             ref_cell = self.cell
@@ -1457,8 +1471,7 @@ class SlabAdsorptionSites(object):
             # Make a new neighborlist including sites as dummy atoms
             dummies = Atoms('X{}'.format(reduced_poss.shape[0]), 
                             positions=reduced_poss, 
-                            cell=ref_cell, 
-                            pbc=self.pbc)
+                            cell=ref_cell, pbc=self.pbc)
             ntop1, ntop2 = len(self.surf_ids), len(top2atoms)
             testatoms = top2atoms + dummies
             nblist = neighbor_shell_list(testatoms, dx=self.tol, neighbor_number=1, 
@@ -1479,7 +1492,7 @@ class SlabAdsorptionSites(object):
                                                self.ref_atoms.positions[x], refpos, 
                                                ref_cell, return_squared_distance=True))[:2]
                     si = tuple(sorted(bridgeids))
-                    if self.optimize_proxy_cell:
+                    if self.optimize_surrogate_cell:
                         reffrac = refpos @ np.linalg.pinv(ref_cell)
                         pos = (reffrac + np.average(self.delta_positions[bridgeids], 
                                0)) @ self.cell
@@ -1752,7 +1765,7 @@ class SlabAdsorptionSites(object):
                             continue
                         isub = isub[0]
                         si = tuple(sorted(fold4ids)) 
-                        if self.optimize_proxy_cell:
+                        if self.optimize_surrogate_cell:
                             reffrac = refpos @ np.linalg.pinv(ref_cell)
                             pos = (reffrac + np.average(self.delta_positions[fold4ids], 
                                    0)) @ self.cell
@@ -1770,7 +1783,7 @@ class SlabAdsorptionSites(object):
                                          'surface': self.surface,
                                          'morphology': 'subsurf',
                                          'position': self.positions[isub],
-                                         'normal': normal,
+                                         'normal': np.round(normal, 8),
                                          'indices': tuple(sorted(fold4ids+[isub]))})
                         else:                                                
                             if self.surface in ['fcc211','fcc322','bcc210']:
@@ -1787,7 +1800,7 @@ class SlabAdsorptionSites(object):
                                          'surface': self.surface,
                                          'morphology': morphology,
                                          'position': pos,
-                                         'normal': normal,
+                                         'normal': np.round(normal, 8),
                                          'indices': si})                     
                         if self.composition_effect:                        
                             metals = self.metals
@@ -1871,7 +1884,7 @@ class SlabAdsorptionSites(object):
                         if any(set(fold3ids).issubset(j) for j in fold4_sets):
                             continue
                     si = tuple(sorted(fold3ids))
-                    if self.optimize_proxy_cell:                                           
+                    if self.optimize_surrogate_cell:                                           
                         reffrac = refpos @ np.linalg.pinv(ref_cell)                
                         pos = (reffrac + np.average(self.delta_positions[fold3ids], 
                                0)) @ self.cell
@@ -1935,7 +1948,7 @@ class SlabAdsorptionSites(object):
                                  'surface': self.surface,
                                  'morphology': morphology,
                                  'position': pos,
-                                 'normal': normal,
+                                 'normal': np.round(normal, 8),
                                  'indices': si})
                     if self.composition_effect:                       
                         metals = self.metals                            
@@ -1979,8 +1992,7 @@ class SlabAdsorptionSites(object):
             if n == 1 and self.surface in fold4_surfaces and list(reduced_poss):
                 fold4atoms = Atoms('X{}'.format(len(reduced_poss)), 
                                    positions=np.asarray(reduced_poss),
-                                   cell=ref_cell, 
-                                   pbc=self.pbc)
+                                   cell=ref_cell, pbc=self.pbc)
                 sorted_top = self.surf_ids
                 ntop = len(sorted_top)
                 topatoms = self.ref_atoms[sorted_top]
@@ -2006,7 +2018,7 @@ class SlabAdsorptionSites(object):
                         continue
                     isub = isub[0]
                     si = tuple(sorted(fold4ids))
-                    if self.optimize_proxy_cell:
+                    if self.optimize_surrogate_cell:
                         reffrac = refpos @ np.linalg.pinv(ref_cell)                
                         pos = (reffrac + np.average(self.delta_positions[fold4ids],
                                0)) @ self.cell
@@ -2024,7 +2036,7 @@ class SlabAdsorptionSites(object):
                                      'surface': self.surface,
                                      'morphology': 'subsurf',
                                      'position': self.positions[isub],
-                                     'normal': normal,
+                                     'normal': np.round(normal, 8),
                                      'indices': tuple(sorted(fold4ids+[isub]))})
                     else:
                         if self.surface in ['fcc211','fcc322','bcc210']:
@@ -2040,7 +2052,7 @@ class SlabAdsorptionSites(object):
                                      'surface': self.surface,
                                      'morphology': morphology,
                                      'position': pos,
-                                     'normal': normal,
+                                     'normal': np.round(normal, 8),
                                      'indices': si})
                     if self.composition_effect:                       
                         metals = self.metals
@@ -2111,7 +2123,7 @@ class SlabAdsorptionSites(object):
             # Add normals to ontop sites                                
             if this_site == 'ontop':
                 n = np.average(normals_for_site[stids[0]], 0)
-                t['normal'] = n / np.linalg.norm(n)
+                t['normal'] = np.round(n / np.linalg.norm(n), 8)
                 nstids = len(stids)
                 if nstids > 1:
                     t['site'] = '{}fold'.format(nstids)
@@ -2124,7 +2136,7 @@ class SlabAdsorptionSites(object):
                     for i in stids[:2]:
                         normals.extend(normals_for_site[i])
                     n = np.average(normals, 0)
-                    t['normal'] = n / np.linalg.norm(n)
+                    t['normal'] = np.round(n / np.linalg.norm(n), 8)
                     nstids = len(stids)
                     if nstids > 2:
                         t['site'] = '{}fold'.format(nstids)
@@ -2139,7 +2151,7 @@ class SlabAdsorptionSites(object):
                         normals = [s['normal'] for s in sl if 
                                    s['morphology'][-1] == t['morphology'][-1] and
                                    'bridge' not in s['site']]
-                    t['normal'] = np.average(normals, 0)
+                    t['normal'] = np.round(np.average(normals, 0), 8)
                     nstids = len(stids)
                     if nstids > 2:
                         t['site'] = '{}fold'.format(nstids)
@@ -2215,7 +2227,7 @@ class SlabAdsorptionSites(object):
                     site.update({'site': '6fold',
                                  'position': subpos,
                                  'morphology': 'subsurf',
-                                 'normal': normal,
+                                 'normal': np.round(normal, 8),
                                  'indices': si})
                 elif st['site'] == 'fcc':
                     site = st.copy()
@@ -2305,7 +2317,7 @@ class SlabAdsorptionSites(object):
 
         self.atoms.positions *= [1,1,-1]
         self.ref_atoms.positions *= [1,1,-1]
-        if self.optimize_proxy_cell:
+        if self.optimize_surrogate_cell:
             self.delta_positions = cart_to_frac(self.atoms) - cart_to_frac(self.ref_atoms)
         else:
             self.delta_positions = self.atoms.positions - self.ref_atoms.positions
@@ -2394,8 +2406,10 @@ class SlabAdsorptionSites(object):
         return all_sites
 
     def get_unique_sites(self, unique_composition=False,                
-                         unique_subsurf=False):
-        """Get all symmetry-inequivalent adsorption sites.
+                         unique_subsurf=False, 
+                         return_signatures=False):
+        """Get all symmetry-inequivalent adsorption sites (one
+        site for each type).
         
         Parameters
         ----------
@@ -2406,6 +2420,10 @@ class SlabAdsorptionSites(object):
         unique_subsurf : bool, default False
             Take subsurface element into consideration when 
             checking uniqueness.
+
+        return_signatures : bool, default False           
+            Whether to return the unique signatures of the 
+            sites instead.
         
         """
 
@@ -2422,9 +2440,18 @@ class SlabAdsorptionSites(object):
             if unique_subsurf:
                 raise ValueError('to include the subsurface element, ' +
                                  'unique_composition also need to be set to True') 
-        sklist = sorted([[s[k] for k in key_list] for s in sl])
- 
-        return sorted(list(sklist for sklist, _ in groupby(sklist)))
+        if return_signatures:
+            sklist = sorted([[s[k] for k in key_list] for s in sl])
+            return sorted(list(sklist for sklist, _ in groupby(sklist)))
+        else:
+            seen_tuple = []
+            uni_sites = []
+            for s in sl:
+                sig = tuple(s[k] for k in key_list)
+                if sig not in seen_tuple:
+                    seen_tuple.append(sig)
+                    uni_sites.append(s)
+            return uni_sites                        
 
     def get_labels(self):
         # Assign labels
@@ -2443,10 +2470,10 @@ class SlabAdsorptionSites(object):
                 'subsurf_element': None, 'label': None}
 
     def mapping(self, atoms):
-        """Map the slab into a proxy reference slab for code versatility."""
+        """Map the slab into a surrogate reference slab for code versatility."""
 
         ref_atoms = atoms.copy()
-        pm = self.proxy_metal
+        pm = self.surrogate_metal
         area = np.linalg.norm(np.cross(atoms.cell[0], atoms.cell[1]))
         if self.surface in ['fcc100','fcc110','fcc311','fcc221','fcc331','fcc322',
         'fcc332','bcc210','bcc211']:
@@ -2467,7 +2494,7 @@ class SlabAdsorptionSites(object):
         for a in ref_atoms:
             a.symbol = ref_symbol
         ref_atoms.calc = asapEMT()
-        if self.optimize_proxy_cell:
+        if self.optimize_surrogate_cell:
             ecf = ExpCellFilter(ref_atoms)
             opt = BFGS(ecf, logfile=None)
         else:
@@ -2486,7 +2513,7 @@ class SlabAdsorptionSites(object):
         ref_atoms.positions[top_surf_indices] -= ref_atoms.cell[2]
         ref_atoms.center(vacuum=5., axis=2) 
         ref_atoms.calc = None                      
-        if self.optimize_proxy_cell:
+        if self.optimize_surrogate_cell:
             delta_positions = cart_to_frac(atoms) - cart_to_frac(ref_atoms)
         else:
             delta_positions = atoms.positions - ref_atoms.positions
@@ -2545,11 +2572,11 @@ class SlabAdsorptionSites(object):
 
         if side == 'top':
             surf = list(max(components, 
-                        key=lambda x:np.mean(
+                        key=lambda x: np.mean(
                         self.ref_atoms.positions[list(x),2])))
         elif side == 'bottom':
             surf = list(min(components,
-                        key=lambda x:np.mean(
+                        key=lambda x: np.mean(
                         self.ref_atoms.positions[list(x),2])))
         subsurf = []
         for a_b in bulk:
@@ -2631,25 +2658,20 @@ class SlabAdsorptionSites(object):
         """
 
         sl = self.site_list
-        if self.optimize_proxy_cell:
+        if self.optimize_surrogate_cell:
             refposs = np.asarray([(s['position'] @ np.linalg.pinv(self.cell) 
                                   - np.average(self.delta_positions[list(
                                   s['indices'])], 0)) @ self.ref_atoms.cell + 
-                                  s['normal'] * site_heights[s['site']] 
-                                  for s in sl])
-            statoms = Atoms('X{}'.format(len(sl)), 
-                            positions=refposs, 
-                            cell=self.ref_atoms.cell, 
-                            pbc=self.pbc)
+                                  s['normal'] * site_heights[s['site']] for s in sl])
+            statoms = Atoms('X{}'.format(len(sl)), positions=refposs, 
+                            cell=self.ref_atoms.cell, pbc=self.pbc)
         else:
             refposs = np.asarray([s['position'] - np.average(
                                   self.delta_positions[list(
                                   s['indices'])], 0) + s['normal'] * 
                                   site_heights[s['site']] for s in sl])
-            statoms = Atoms('X{}'.format(len(sl)), 
-                            positions=refposs, 
-                            cell=self.cell, 
-                            pbc=self.pbc)
+            statoms = Atoms('X{}'.format(len(sl)), positions=refposs, 
+                            cell=self.cell, pbc=self.pbc)
         cr = 0.55 
         if neighbor_number == 1:
             cr += 0.1

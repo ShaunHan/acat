@@ -77,8 +77,9 @@ class GroupSubstitute(Mutation):
                         groups = gs
                         found = True
                         break
-                assert found, 'Some structures have broken the symmetry' +\
-                              ' so that no groups can be assigned.'                  
+                if not found:
+                    return None, '{1} not possible in {0} due to broken symmetry'.format(
+                                  f.info['confid'], self.descriptor)                     
             else:
                 groups = self.groups
         if self.elements is None:
@@ -186,8 +187,9 @@ class GroupPermutation(Mutation):
                         groups = gs
                         found = True
                         break
-                assert found, 'Some structures have broken the symmetry' +\
-                              ' so that no groups can be assigned.'                 
+                if not found:
+                    return None, '{1} not possible in {0} due to broken symmetry'.format(
+                                  f.info['confid'], self.descriptor)                     
             else:
                 groups = self.groups
             if 'groups' in f.info['data']:
@@ -302,7 +304,7 @@ class AdsorbateGroupSubstitute(Mutation):
         removed. Remove the 1st neighbor site shell by default. Set to 0 if
         no site should be removed.
 
-    subtract_height : bool, default False
+    subtract_heights : bool, default False
         Whether to subtract the height from the bond length when allocating
         a site to an adsorbate. Default is to allocate the site that is
         closest to the adsorbate's binding atom without subtracting height.
@@ -325,7 +327,7 @@ class AdsorbateGroupSubstitute(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_site_shells=1,
-                 subtract_height=False,
+                 subtract_heights=False,
                  num_muts=1, dmax=2.5, **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
@@ -338,10 +340,15 @@ class AdsorbateGroupSubstitute(Mutation):
                                                      
         self.site_groups = site_groups
         self.max_species = max_species
-        self.heights = heights
+        self.heights = site_heights 
+        for k, v in heights.items():
+            self.heights[k] = v
         self.adsorption_sites = adsorption_sites
         self.remove_site_shells = remove_site_shells
-        self.subtract_height = subtract_height
+        if subtract_heights:
+            self.subtract_heights = self.heights
+        else:
+            self.subtract_heights = None        
         self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -362,16 +369,16 @@ class AdsorbateGroupSubstitute(Mutation):
                 sas.update(atoms)
             else:
                 sas = SlabAdsorptionSites(atoms, **self.kwargs)
-            sac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(atoms)
             else:
                 sas = ClusterAdsorptionSites(atoms, **self.kwargs)
-            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax) 
+            sac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax) 
 
         hsl = sac.hetero_site_list
         if self.site_groups is None:
@@ -386,8 +393,9 @@ class AdsorbateGroupSubstitute(Mutation):
                         groups = gs
                         found = True
                         break
-                assert found, 'Some structures have broken the symmetry' +\
-                              ' so that no groups can be assigned.'                     
+                if not found:
+                    return None, '{1} not possible in {0} due to broken symmetry'.format(
+                                  f.info['confid'], self.descriptor)                     
             else:
                 groups = self.site_groups
 
@@ -465,11 +473,11 @@ class AdsorbateGroupSubstitute(Mutation):
                     add_adsorbate_to_site(atoms, to_spec, st, height)
 
         if True in atoms.pbc:
-            nsac = SlabAdsorbateCoverage(atoms, sas, subtract_height=
-                                         self.subtract_height, dmax=self.dmax)
+            nsac = SlabAdsorbateCoverage(atoms, sas, subtract_heights=
+                                         self.subtract_heights, dmax=self.dmax)
         else:
-            nsac = ClusterAdsorbateCoverage(atoms, sas, subtract_height=
-                                            self.subtract_height, dmax=self.dmax)
+            nsac = ClusterAdsorbateCoverage(atoms, sas, subtract_heights=
+                                            self.subtract_heights, dmax=self.dmax)
         atoms.info['data']['adsorbates'] = [t[0] for t in 
             nsac.get_adsorbates(self.adsorbate_species)]
 
@@ -526,7 +534,7 @@ class AdsorbateGroupPermutation(Mutation):
         removed. Remove the 1st neighbor site shell by default. Set to 0 if
         no site should be removed.
 
-    subtract_height : bool, default False
+    subtract_heights : bool, default False
         Whether to subtract the height from the bond length when allocating
         a site to an adsorbate. Default is to allocate the site that is
         closest to the adsorbate's binding atom without subtracting height.
@@ -547,7 +555,7 @@ class AdsorbateGroupPermutation(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_site_shells=1,
-                 subtract_height=False,
+                 subtract_heights=False,
                  num_muts=1, dmax=2.5, **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
 
@@ -555,10 +563,15 @@ class AdsorbateGroupPermutation(Mutation):
         self.adsorbate_species = adsorbate_species if is_list_or_tuple(       
                                  adsorbate_species) else [adsorbate_species]
         self.site_groups = site_groups
-        self.heights = heights
+        self.heights = site_heights 
+        for k, v in heights.items():
+            self.heights[k] = v
         self.adsorption_sites = adsorption_sites
         self.remove_site_shells = remove_site_shells
-        self.subtract_height = subtract_height
+        if subtract_heights:
+            self.subtract_heights = self.heights
+        else:
+            self.subtract_heights = None        
         self.dmax = dmax
 
         self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
@@ -582,16 +595,16 @@ class AdsorbateGroupPermutation(Mutation):
                 sas.update(f)
             else:
                 sas = SlabAdsorptionSites(f, **self.kwargs)
-            sac = SlabAdsorbateCoverage(f, sas, subtract_height=
-                                        self.subtract_height, dmax=self.dmax)
+            sac = SlabAdsorbateCoverage(f, sas, subtract_heights=
+                                        self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
                 sas = self.adsorption_sites
                 sas.update(f)
             else:
                 sas = ClusterAdsorptionSites(f, **self.kwargs)
-            sac = ClusterAdsorbateCoverage(f, sas, subtract_height=
-                                           self.subtract_height, dmax=self.dmax) 
+            sac = ClusterAdsorbateCoverage(f, sas, subtract_heights=
+                                           self.subtract_heights, dmax=self.dmax) 
         hsl = sac.hetero_site_list
 
         if self.site_groups is None:
@@ -607,8 +620,9 @@ class AdsorbateGroupPermutation(Mutation):
                         site_groups = gs
                         found = True
                         break
-                assert found, 'Some structures have broken the symmetry' +\
-                              ' so that no groups can be assigned.'                     
+                if not found:
+                    return None, '{1} not possible in {0} due to broken symmetry'.format(
+                                  f.info['confid'], self.descriptor)                     
             else:
                 site_groups = self.site_groups
             if 'groups' in f.info['data']:
@@ -622,11 +636,11 @@ class AdsorbateGroupPermutation(Mutation):
             AdsorbateGroupPermutation.mutate(f, site_groups, self.heights, sas, 
                                              hsl, self.remove_site_shells)
             if True in indi.pbc:
-                nsac = SlabAdsorbateCoverage(f, sas, subtract_height=
-                                             self.subtract_height, dmax=self.dmax)
+                nsac = SlabAdsorbateCoverage(f, sas, subtract_heights=
+                                             self.subtract_heights, dmax=self.dmax)
             else:
-                nsac = ClusterAdsorbateCoverage(f, sas, subtract_height=
-                                                self.subtract_height, dmax=self.dmax)
+                nsac = ClusterAdsorbateCoverage(f, sas, subtract_heights=
+                                                self.subtract_heights, dmax=self.dmax)
             hsl = nsac.hetero_site_list
 
         for atom in f:
@@ -650,7 +664,7 @@ class AdsorbateGroupPermutation(Mutation):
         st01 = hsl[groups[i1][0]]
         ings = []
         if remove_site_shells > 0:                                                   
-            nsl = sas.get_neighbor_site_list(neighbor_number=remove_site_shells)
+            nsl = sas.get_neighbor_site_list(neighbor_number=remove_site_shells) 
             if st01['occupied']:
                 ings += [nj for nj in indices if not set(groups[nj]).isdisjoint(nsl[i1])]
         options = [j for j in range(ngroups) if (j not in ings) and 
@@ -765,8 +779,9 @@ class GroupCrossover(Crossover):
                         groups = gs
                         found = True
                         break
-                assert found, 'Some structures have broken the symmetry' +\
-                              ' so that no groups can be assigned.'                 
+                if not found:
+                    return None, '{1} not possible in {0} due to broken symmetry'.format(
+                                  f.info['confid'], self.descriptor)                      
             else:
                 groups = self.groups.copy()
         if self.elements is None:

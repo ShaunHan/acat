@@ -239,8 +239,9 @@
                         <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
                         <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
-                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                  
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1"> due to broken symmetry&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                  <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>                     
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -348,8 +349,9 @@
                         <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
                         <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
-                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                 
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1"> due to broken symmetry&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                  <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>                     
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span>
             <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
@@ -464,7 +466,7 @@
 <span class="sd">        removed. Remove the 1st neighbor site shell by default. Set to 0 if</span>
 <span class="sd">        no site should be removed.</span>
 
-<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">    subtract_heights : bool, default False</span>
 <span class="sd">        Whether to subtract the height from the bond length when allocating</span>
 <span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
 <span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
@@ -487,7 +489,7 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_site_shells</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
 
@@ -500,10 +502,15 @@
                                                      
         <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="o">=</span> <span class="n">site_groups</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_species</span> <span class="o">=</span> <span class="n">max_species</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">site_heights</span> 
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">=</span> <span class="n">remove_site_shells</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
+        <span class="k">if</span> <span class="n">subtract_heights</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="kc">None</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
@@ -524,16 +531,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
 
         <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -548,8 +555,9 @@
                         <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
                         <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
-                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                     
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1"> due to broken symmetry&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                  <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>                     
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
 
@@ -627,11 +635,11 @@
                     <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">to_spec</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-            <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> 
             <span class="n">nsac</span><span class="o">.</span><span class="n">get_adsorbates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)]</span>
 
@@ -688,7 +696,7 @@
 <span class="sd">        removed. Remove the 1st neighbor site shell by default. Set to 0 if</span>
 <span class="sd">        no site should be removed.</span>
 
-<span class="sd">    subtract_height : bool, default False</span>
+<span class="sd">    subtract_heights : bool, default False</span>
 <span class="sd">        Whether to subtract the height from the bond length when allocating</span>
 <span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
 <span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
@@ -709,7 +717,7 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_site_shells</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
 
@@ -717,10 +725,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> <span class="o">=</span> <span class="n">adsorbate_species</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span>       
                                  <span class="n">adsorbate_species</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">adsorbate_species</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="o">=</span> <span class="n">site_groups</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">heights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span> <span class="o">=</span> <span class="n">site_heights</span> 
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">=</span> <span class="n">remove_site_shells</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
+        <span class="k">if</span> <span class="n">subtract_heights</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="kc">None</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
@@ -744,16 +757,16 @@
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span>
                 <span class="n">sas</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
+            <span class="n">sac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span> 
         <span class="n">hsl</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -769,8 +782,9 @@
                         <span class="n">site_groups</span> <span class="o">=</span> <span class="n">gs</span>
                         <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
-                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                     
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1"> due to broken symmetry&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                  <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>                     
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">site_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>
             <span class="k">if</span> <span class="s1">&#39;groups&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
@@ -784,11 +798,11 @@
             <span class="n">AdsorbateGroupPermutation</span><span class="o">.</span><span class="n">mutate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">site_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> 
                                              <span class="n">hsl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">)</span>
             <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
-                <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                             <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_height</span><span class="o">=</span>
-                                                <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
+                <span class="n">nsac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
             <span class="n">hsl</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">hetero_site_list</span>
 
         <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
@@ -812,7 +826,7 @@
         <span class="n">st01</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
         <span class="n">ings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>                                                   
-            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="n">remove_site_shells</span><span class="p">)</span>
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="n">remove_site_shells</span><span class="p">)</span> 
             <span class="k">if</span> <span class="n">st01</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="n">ings</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nj</span> <span class="k">for</span> <span class="n">nj</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="n">nj</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">nsl</span><span class="p">[</span><span class="n">i1</span><span class="p">])]</span>
         <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ings</span><span class="p">)</span> <span class="ow">and</span> 
@@ -927,8 +941,9 @@
                         <span class="n">groups</span> <span class="o">=</span> <span class="n">gs</span>
                         <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-                <span class="k">assert</span> <span class="n">found</span><span class="p">,</span> <span class="s1">&#39;Some structures have broken the symmetry&#39;</span> <span class="o">+</span>\
-                              <span class="s1">&#39; so that no groups can be assigned.&#39;</span>                 
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1"> not possible in </span><span class="si">{0}</span><span class="s1"> due to broken symmetry&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                  <span class="n">f</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>                      
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

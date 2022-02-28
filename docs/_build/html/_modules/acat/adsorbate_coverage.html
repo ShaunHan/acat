@@ -225,12 +225,13 @@
 <span class="sd">        If this is not provided, the arguments for identifying adsorption </span>
 <span class="sd">        sites can still be passed in by **kwargs.</span>
 
-<span class="sd">    subtract_height : bool, default False</span>
-<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
-<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
-<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
-<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
-<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+<span class="sd">    subtract_heights : dict, default None</span>
+<span class="sd">        A dictionary that contains the height to be subtracted from the bond </span>
+<span class="sd">        length when allocating a type of site to an adsorbate. Default is to </span>
+<span class="sd">        allocate the site that is closest to the adsorbate&#39;s binding atom </span>
+<span class="sd">        without subtracting height. Useful for ensuring the allocated site </span>
+<span class="sd">        for each adsorbate is consistent with the site to which the adsorbate</span>
+<span class="sd">        was added.                                                           </span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -282,7 +283,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> 
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
@@ -303,7 +304,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="n">subtract_heights</span>
+        <span class="k">if</span> <span class="n">subtract_heights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="n">site_heights</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">subtract_heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>      
         <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span> <span class="o">=</span> <span class="n">label_occupied_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -427,9 +432,9 @@
                         <span class="k">continue</span>
 
             <span class="n">adspos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">adsid</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">dls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*</span> 
-                                     <span class="n">site_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">adspos</span> 
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">adspos</span> 
                                      <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">stid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dls</span><span class="p">)</span>
                 <span class="n">st</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">stid</span><span class="p">]</span>
@@ -439,6 +444,7 @@
                                      <span class="n">adspos</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">stid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">bls</span><span class="p">)</span>
                 <span class="n">st</span><span class="p">,</span> <span class="n">bl</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">stid</span><span class="p">],</span> <span class="n">bls</span><span class="p">[</span><span class="n">stid</span><span class="p">]</span>
+            <span class="n">bl</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">bl</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">bl</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -855,12 +861,13 @@
 <span class="sd">        If this is not provided, the arguments for identifying adsorption </span>
 <span class="sd">        sites can still be passed in by **kwargs.</span>
 
-<span class="sd">    subtract_height : bool, default False</span>
-<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
-<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
-<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
-<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
-<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+<span class="sd">    subtract_heights : dict, default None</span>
+<span class="sd">        A dictionary that contains the height to be subtracted from the bond </span>
+<span class="sd">        length when allocating a type of site to an adsorbate. Default is to </span>
+<span class="sd">        allocate the site that is closest to the adsorbate&#39;s binding atom </span>
+<span class="sd">        without subtracting height. Useful for ensuring the allocated site </span>
+<span class="sd">        for each adsorbate is consistent with the site to which the adsorbate </span>
+<span class="sd">        was added.                                                             </span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -909,7 +916,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> 
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
@@ -930,7 +937,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="n">subtract_heights</span>
+        <span class="k">if</span> <span class="n">subtract_heights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="n">site_heights</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">subtract_heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>      
         <span class="bp">self</span><span class="o">.</span><span class="n">label_occupied_sites</span> <span class="o">=</span> <span class="n">label_occupied_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;allow_6fold&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;composition_effect&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -1056,10 +1067,10 @@
                         <span class="k">continue</span>
 
             <span class="n">adspos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">adsid</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">_</span><span class="p">,</span> <span class="n">dls</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*</span> 
-                                  <span class="n">site_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">adspos</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">]),</span> 
-                                  <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">adspos</span> 
+                                  <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">hsl</span><span class="p">]),</span> <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">stid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dls</span><span class="p">)</span> 
                 <span class="n">st</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">stid</span><span class="p">]</span>
                 <span class="n">bl</span> <span class="o">=</span> <span class="n">get_mic</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">],</span> <span class="n">adspos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
@@ -1069,6 +1080,7 @@
                                   <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>                                         
                 <span class="n">stid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">bls</span><span class="p">)</span> 
                 <span class="n">st</span><span class="p">,</span> <span class="n">bl</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">stid</span><span class="p">],</span> <span class="n">bls</span><span class="p">[</span><span class="n">stid</span><span class="p">]</span>
+            <span class="n">bl</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">bl</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">bl</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -1466,7 +1478,7 @@
 
 <div class="viewcode-block" id="enumerate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.enumerate_occupied_sites">[docs]</a><span class="k">def</span> <span class="nf">enumerate_occupied_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                              <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                             <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                              <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                             
                              <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function that enumerates all occupied adsorption sites of</span>
@@ -1491,12 +1503,13 @@
 <span class="sd">        If the structure is a nanoparticle, the function enumerates</span>
 <span class="sd">        only the sites on the specified surface.</span>
 
-<span class="sd">    subtract_height : bool, default False</span>
-<span class="sd">        Whether to subtract the height from the bond length when allocating</span>
-<span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
-<span class="sd">        closest to the adsorbate&#39;s binding atom without subtracting height.</span>
-<span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
-<span class="sd">        consistent with the site to which the adsorbate was added. </span>
+<span class="sd">    subtract_heights : dict, default None</span>
+<span class="sd">        A dictionary that contains the height to be subtracted from the </span>
+<span class="sd">        bond length when allocating a type of site to an adsorbate. </span>
+<span class="sd">        Default is to allocate the site that is closest to the adsorbate&#39;s </span>
+<span class="sd">        binding atom without subtracting height. Useful for ensuring the </span>
+<span class="sd">        allocated site for each adsorbate is consistent with the site to </span>
+<span class="sd">        which the adsorbate was added.                                                           </span>
 
 <span class="sd">    label_occupied_sites : bool, default False</span>
 <span class="sd">        Whether to assign a label to the occupied each site. The string </span>
@@ -1546,7 +1559,7 @@
 
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
         <span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span>
-                                       <span class="n">subtract_height</span><span class="p">,</span>
+                                       <span class="n">subtract_heights</span><span class="p">,</span>
                                        <span class="n">label_occupied_sites</span><span class="p">,</span> 
                                        <span class="n">dmax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">hetero_site_list</span>
@@ -1559,7 +1572,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
                                     <span class="n">adsorption_sites</span><span class="p">,</span>
-                                    <span class="n">subtract_height</span><span class="p">,</span>
+                                    <span class="n">subtract_heights</span><span class="p">,</span>
                                     <span class="n">label_occupied_sites</span><span class="p">,</span> 
                                     <span class="n">dmax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">all_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">hetero_site_list</span>

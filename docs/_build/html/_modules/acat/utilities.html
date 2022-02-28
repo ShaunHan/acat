@@ -676,6 +676,24 @@
     <span class="k">return</span> <span class="n">frag_list</span>        </div>
 
 
+<div class="viewcode-block" id="orthogonal_transform"><a class="viewcode-back" href="../../utilities.html#acat.utilities.orthogonal_transform">[docs]</a><span class="k">def</span> <span class="nf">orthogonal_transform</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform a non-orthogonal cell to an orthogonal cell.&quot;&quot;&quot;</span>
+    
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">eps</span><span class="p">:</span>
+                <span class="n">atom</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps</span><span class="p">:</span>
+                <span class="n">atom</span><span class="o">.</span><span class="n">x</span> <span class="o">-=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
 <div class="viewcode-block" id="ratios_from_atoms"><a class="viewcode-back" href="../../utilities.html#acat.utilities.ratios_from_atoms">[docs]</a><span class="k">def</span> <span class="nf">ratios_from_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a list of ratios for each element from the atoms.</span>
 

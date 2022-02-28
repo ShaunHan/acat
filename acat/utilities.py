@@ -514,6 +514,24 @@ def string_fragmentation(adsorbate):
     return frag_list        
 
 
+def orthogonal_transform(atoms, eps=1e-5):
+    """Transform a non-orthogonal cell to an orthogonal cell."""
+    
+    cell = atoms.cell
+    a = cell[0]
+    if np.any(atoms.positions[:,0] < 0):
+        for atom in atoms:
+            if atom.x <= eps:
+                atom.x += a[0]
+    else:
+        for atom in atoms:
+            if atom.x >= a[0] - eps:
+                atom.x -= a[0]
+
+    atoms.cell[1][0] = 0
+    atoms.cell[1][2] = 0
+
+
 def ratios_from_atoms(atoms):
     """Return a list of ratios for each element from the atoms.
 
