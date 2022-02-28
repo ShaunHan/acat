@@ -217,12 +217,12 @@ Generate adsorbate overlayer patterns
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: StochasticPatternGenerator, SystematicPatternGenerator, OrderedPatternGenerator, special_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
+    :exclude-members: RandomPatternGenerator, SystematicPatternGenerator, OrderedPatternGenerator, special_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
 
-The StochasticPatternGenerator class
+The RandomPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    .. autoclass:: StochasticPatternGenerator
+    .. autoclass:: RandomPatternGenerator
 
         .. automethod:: run
 
@@ -234,7 +234,7 @@ The StochasticPatternGenerator class
     random C and O coverages, where CH3 is forbidden to be added to 
     ontop and bridge sites:
 
-        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import RandomPatternGenerator as RPG
         >>> from acat.build.adlayer import min_dist_coverage_pattern
         >>> from ase.build import fcc111
         >>> from ase.io import read
@@ -248,20 +248,20 @@ The StochasticPatternGenerator class
         ...                                       surface='fcc111',
         ...                                       min_adsorbate_distance=5.)
         ...     images.append(image)
-        >>> spg = SPG(images, adsorbate_species=['CO','OH','CH3','CHO'],
+        >>> rpg = RPG(images, adsorbate_species=['CO','OH','CH3','CHO'],
         ...           species_probabilities={'CO': 0.3, 'OH': 0.3, 
         ...                                  'CH3': 0.2, 'CHO': 0.2},
         ...           min_adsorbate_distance=1.5, 
         ...           surface='fcc111',
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
-        >>> spg.run(num_gen=100, action='add')
+        >>> rpg.run(num_gen=100, action='add')
         >>> images = read('patterns.traj', index=':') 
         >>> view(images)
 
     Output:
 
-    .. image:: ../images/StochasticPatternGenerator1.gif
+    .. image:: ../images/RandomPatternGenerator1.gif
        :scale: 60 %
        :align: center
 
@@ -274,7 +274,7 @@ The StochasticPatternGenerator class
     between) with probabilities of 0.25, 0.25, 0.5, respectively, and a 
     minimum adsorbate distance of 2.5 Angstrom:
 
-        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import RandomPatternGenerator as RPG
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from ase.io import read
         >>> from ase.build import fcc100
@@ -291,18 +291,18 @@ The StochasticPatternGenerator class
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc100',
         ...                           composition_effect=True,
         ...                           both_sides=True)
-        >>> spg = SPG(atoms, adsorbate_species=['H','OH','OH2'],
+        >>> rpg = RPG(atoms, adsorbate_species=['H','OH','OH2'],
         ...           species_probabilities={'H': 0.25, 'OH': 0.25, 'OH2': 0.5},
         ...           min_adsorbate_distance=2.5,
         ...           adsorption_sites=sas,
         ...           surface='fcc100')
-        >>> spg.run(num_gen=20, action='add', num_act=4)
+        >>> rpg.run(num_gen=20, action='add', num_act=4)
         >>> images = read('patterns.traj', index=':')
         >>> view(images) 
 
     Output:
 
-    .. image:: ../images/StochasticPatternGenerator2.gif
+    .. image:: ../images/RandomPatternGenerator2.gif
        :scale: 60 %
        :align: center
 
@@ -316,7 +316,7 @@ The StochasticPatternGenerator class
     nanoparticles):
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
-        >>> from acat.build.adlayer import StochasticPatternGenerator as SPG
+        >>> from acat.build.adlayer import RandomPatternGenerator as RPG
         >>> from acat.build.ordering import RandomOrderingGenerator as ROG
         >>> from ase.cluster import Octahedron
         >>> from ase.io import read
@@ -326,10 +326,10 @@ The StochasticPatternGenerator class
         >>> rog = ROG(atoms, elements=['Ni', 'Cu', 'Pt', 'Au'])
         >>> rog.run(num_gen=10)
         >>> particles = read('orderings.traj', index=':')
-        >>> spg = SPG(particles, adsorbate_species=['CO','OH','N'],
+        >>> rpg = RPG(particles, adsorbate_species=['CO','OH','N'],
         ...           min_adsorbate_distance=3.,
         ...           composition_effect=True)
-        >>> spg.run(num_gen=20, action='add', num_act=5, 
+        >>> rpg.run(num_gen=20, action='add', num_act=5, 
         ...         add_species_composition={'CO': 1, 'OH': 2, 'N': 2}, 
         ...         unique=False)
         >>> images = read('patterns.traj', index=':')
@@ -337,7 +337,7 @@ The StochasticPatternGenerator class
 
     Output:
 
-    .. image:: ../images/StochasticPatternGenerator3.gif
+    .. image:: ../images/RandomPatternGenerator3.gif
 
 The SystematicPatternGenerator class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
