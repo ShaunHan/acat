@@ -164,8 +164,8 @@ class AdsorbateOperator(OffspringCreator):
         """
 
         i = 0
-        occupied = True
-        while occupied:
+        occupied = False
+        while not occupied:
             site = hetero_site_list[i]
             if not site['occupied']:
                 i += 1
@@ -179,13 +179,12 @@ class AdsorbateOperator(OffspringCreator):
 
             # Remove adsorbate from the correct position. Remove the fragment
             # with priority if it is one of the given adsorbate species
-            rm_frag = site['fragment'] in self.adsorbate_species 
+            rm_frag = (site['fragment'] in self.adsorbate_species) 
             remove_adsorbate_from_site(atoms, site, remove_fragment=rm_frag)
 
             if return_site_index:
                 return i
-
-            occupied = False
+            occupied = True
 
         return atoms
 
@@ -721,7 +720,7 @@ class MoveAdsorbate(AdsorbateOperator):
 
             removed = self.remove_adsorbate(indi, ads_sites,
                                             return_site_index=True)
-            if not removed:
+            if removed is False:
                 removed_species = random.choice(self.adsorbate_species)
             else:
                 removed_species = ads_sites[removed]['fragment']            
@@ -904,7 +903,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
             removed = self.remove_adsorbate(indi, ads_sites,
                                             return_site_index=True)
-            if not removed:
+            if removed is False:
                 removed = random.choice(range(len(ads_sites)))
                 removed_species = 'x'
             else:

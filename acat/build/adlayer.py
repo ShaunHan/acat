@@ -2063,14 +2063,15 @@ class OrderedPatternGenerator(object):
                 st = sl[i]
                 pt = st['position']
                 repeat_pt = pt + vec
-                ja = np.argwhere(find_mic(pts - repeat_pt, cell=atoms.cell,
-                                 pbc=(True in atoms.pbc))[1] < self.dtol)
+                dists = find_mic(pts - repeat_pt, cell=atoms.cell,
+                                 pbc=(True in atoms.pbc))[1]
+                ja = np.argwhere(dists < self.dtol).ravel()
                 if ja.size == 0:
                     if self.populate_isolated_sites:
                         seen.add(i)
                         groups.append([i])
                     continue
-                j = np.min(ja)
+                j = min(ja, key=lambda x: dists[x])
                 if j in seen:
                     continue
                 res = sorted([i, j])

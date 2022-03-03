@@ -451,9 +451,14 @@ Genetic algorithm for adlayer patterns
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: acat.ga.graph_comparators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 **Example1**
 
-All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate``, ``ReplaceAdsorbate``, ``ReplaceAdsorbateSpecies`` and ``AdsorbateCatalystCrossover`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
+All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate``, ``ReplaceAdsorbate``, ``ReplaceAdsorbateSpecies`` and ``AdsorbateCatalystCrossover`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To strictly sort out duplicate structures, consider using ``AdsorptionGraphComparator`` or ``WLGraphComparator``. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
 
 As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
 
@@ -914,7 +919,7 @@ Symmetry-constrained genetic algorithm for adlayer patterns
     :members:
     :undoc-members:
     :show-inheritance:
-    :exclude-members: GroupSubstitute, GroupPermutation, GroupCrossover
+    :exclude-members: GroupSubstitute, GroupPermutation, Crossover, GroupCrossover
 
 **Example1**
 
@@ -1281,7 +1286,9 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
         mutots = num_C * chem_pots['CH4'] + num_O * chem_pots['H2O'] + (
                  num_H - 4 * num_C - 2 * num_O) * chem_pots['H2'] / 2
         fs = -(Epot - mutots)
-    
+
+        # Save the raw fitness of the configuration for all tasks
+        # as a Numpy array in atoms.info['data']['raw_scores']
         atoms.info['data']['raw_scores'] = fs
         atoms.info['key_value_pairs']['potential_energy'] = Epot
     
