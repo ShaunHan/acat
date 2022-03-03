@@ -91,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ga.html">Evolutionary algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
 </ul>
@@ -178,6 +178,7 @@
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -233,6 +234,13 @@
 </li>
       </ul></li>
       <li>
+    acat.ga.graph_comparators
+
+      <ul>
+        <li><a href="ga.html#module-acat.ga.graph_comparators">module</a>
+</li>
+      </ul></li>
+      <li>
     acat.ga.group_comparators
 
       <ul>
@@ -284,7 +292,7 @@
 </li>
       <li><a href="ga.html#acat.ga.adsorbate_operators.AdsorbateOperator">AdsorbateOperator (class in acat.ga.adsorbate_operators)</a>
 </li>
-      <li><a href="ga.html#acat.ga.adsorbate_comparators.AdsorptionGraphComparator">AdsorptionGraphComparator (class in acat.ga.adsorbate_comparators)</a>
+      <li><a href="ga.html#acat.ga.graph_comparators.AdsorptionGraphComparator">AdsorptionGraphComparator (class in acat.ga.graph_comparators)</a>
 </li>
       <li><a href="ga.html#acat.ga.adsorbate_comparators.AdsorptionMetalsComparator">AdsorptionMetalsComparator (class in acat.ga.adsorbate_comparators)</a>
 </li>
@@ -312,7 +320,7 @@
 </li>
       <li><a href="ga.html#acat.ga.adsorbate_comparators.count_ads">count_ads() (in module acat.ga.adsorbate_comparators)</a>
 </li>
-      <li><a href="ga.html#acat.ga.group_operators.Crossover">Crossover (class in acat.ga.group_operators)</a>, <a href="ga.html#id5">[1]</a>
+      <li><a href="ga.html#acat.ga.group_operators.Crossover">Crossover (class in acat.ga.group_operators)</a>
 </li>
       <li><a href="ga.html#acat.ga.adsorbate_operators.CutSpliceCrossoverWithAdsorbates">CutSpliceCrossoverWithAdsorbates (class in acat.ga.adsorbate_operators)</a>
 </li>
@@ -410,6 +418,8 @@
         <li><a href="modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_hetero_connectivity">(acat.adsorbate_coverage.SlabAdsorbateCoverage method)</a>
 </li>
       </ul></li>
+      <li><a href="ga.html#acat.ga.graph_comparators.WLGraphComparator.get_label_dict">get_label_dict() (acat.ga.graph_comparators.WLGraphComparator class method)</a>
+</li>
       <li><a href="utilities.html#acat.utilities.get_mic">get_mic() (in module acat.utilities)</a>
 </li>
       <li><a href="modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list">get_neighbor_site_list() (acat.adsorption_sites.ClusterAdsorptionSites method)</a>
@@ -562,14 +572,16 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ga.html#acat.ga.graph_comparators.WLGraphComparator.look_alike">look_alike() (acat.ga.graph_comparators.WLGraphComparator method)</a>
+</li>
       <li><a href="ga.html#acat.ga.adsorbate_comparators.AdsorbateCountComparator.looks_like">looks_like() (acat.ga.adsorbate_comparators.AdsorbateCountComparator method)</a>
 
       <ul>
-        <li><a href="ga.html#acat.ga.adsorbate_comparators.AdsorptionGraphComparator.looks_like">(acat.ga.adsorbate_comparators.AdsorptionGraphComparator method)</a>
-</li>
         <li><a href="ga.html#acat.ga.adsorbate_comparators.AdsorptionMetalsComparator.looks_like">(acat.ga.adsorbate_comparators.AdsorptionMetalsComparator method)</a>
 </li>
         <li><a href="ga.html#acat.ga.adsorbate_comparators.AdsorptionSitesComparator.looks_like">(acat.ga.adsorbate_comparators.AdsorptionSitesComparator method)</a>
+</li>
+        <li><a href="ga.html#acat.ga.graph_comparators.AdsorptionGraphComparator.looks_like">(acat.ga.graph_comparators.AdsorptionGraphComparator method)</a>
 </li>
         <li><a href="ga.html#acat.ga.group_comparators.GroupCompositionComparator.looks_like">(acat.ga.group_comparators.GroupCompositionComparator method)</a>
 </li>
@@ -609,6 +621,8 @@
         <li><a href="ga.html#module-acat.ga.adsorbate_comparators">acat.ga.adsorbate_comparators</a>
 </li>
         <li><a href="ga.html#module-acat.ga.adsorbate_operators">acat.ga.adsorbate_operators</a>
+</li>
+        <li><a href="ga.html#module-acat.ga.graph_comparators">acat.ga.graph_comparators</a>
 </li>
         <li><a href="ga.html#module-acat.ga.group_comparators">acat.ga.group_comparators</a>
 </li>
@@ -777,6 +791,14 @@
         <li><a href="ga.html#acat.ga.multitasking.MultitaskPopulation.update">(acat.ga.multitasking.MultitaskPopulation method)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ga.html#acat.ga.graph_comparators.WLGraphComparator">WLGraphComparator (class in acat.ga.graph_comparators)</a>
+</li>
   </ul></td>
 </tr></table>
 

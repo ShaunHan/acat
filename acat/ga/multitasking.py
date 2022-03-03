@@ -12,7 +12,9 @@ class MultitaskPopulation(Population):
     are ranked according to the effective fitness, given by the shortest 
     distance between the raw score of the marked niche and the upper 
     envelope after adding the individual. The raw score is given by the 
-    fitness gain in the maximum-gained niche.
+    fitness gain in the maximum-gained niche. **The raw scores of each 
+    configuration for all tasks must be provided as a Numpy array in
+    atoms.info['data']['raw_scores']**.
 
     Parameters
     ----------
@@ -109,9 +111,9 @@ class MultitaskPopulation(Population):
             scores =  new_cand[i].info['data']['raw_scores']
             max_gained_niche = np.argmax(scores - self.max_scores)
             dominating_niche = self.dominating_niches[max_gained_niche]
-            fitness = float(np.around(scores[max_gained_niche] - 
+            f_eff = float(np.around(scores[max_gained_niche] - 
                             self.max_scores[max_gained_niche], 8))
-            new_cand[i].info['key_value_pairs']['raw_score'] = fitness 
+            new_cand[i].info['key_value_pairs']['raw_score'] = f_eff
             new_cand[i].info['key_value_pairs']['niche'] = dominating_niche
 
         # Update the fitness of all previously-relaxed candidates if fitness     
@@ -125,9 +127,9 @@ class MultitaskPopulation(Population):
                 scores = a.info['data']['raw_scores']
                 max_gained_niche = np.argmax(scores - self.max_scores)
                 dominating_niche = self.dominating_niches[max_gained_niche]
-                fitness = float(np.around(scores[max_gained_niche] - 
-                                self.max_scores[max_gained_niche], 8))
-                a.info['key_value_pairs']['raw_score'] = fitness 
+                f_eff = float(np.around(scores[max_gained_niche] - 
+                              self.max_scores[max_gained_niche], 8))
+                a.info['key_value_pairs']['raw_score'] = f_eff
                 a.info['key_value_pairs']['niche'] = dominating_niche
                 updated_cand.append(a)
                 gaid = a.info['confid']

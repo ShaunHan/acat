@@ -91,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Evolutionary algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
 </ul>
@@ -326,8 +326,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">occupied</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">while</span> <span class="n">occupied</span><span class="p">:</span>
+        <span class="n">occupied</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">occupied</span><span class="p">:</span>
             <span class="n">site</span> <span class="o">=</span> <span class="n">hetero_site_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -341,13 +341,12 @@
 
             <span class="c1"># Remove adsorbate from the correct position. Remove the fragment</span>
             <span class="c1"># with priority if it is one of the given adsorbate species</span>
-            <span class="n">rm_frag</span> <span class="o">=</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span> 
+            <span class="n">rm_frag</span> <span class="o">=</span> <span class="p">(</span><span class="n">site</span><span class="p">[</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span> 
             <span class="n">remove_adsorbate_from_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">remove_fragment</span><span class="o">=</span><span class="n">rm_frag</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">return_site_index</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">i</span>
-
-            <span class="n">occupied</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">occupied</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="n">atoms</span></div>
 
@@ -883,7 +882,7 @@
 
             <span class="n">removed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_adsorbate</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">ads_sites</span><span class="p">,</span>
                                             <span class="n">return_site_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">removed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">removed</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
                 <span class="n">removed_species</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adsorbate_species</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">removed_species</span> <span class="o">=</span> <span class="n">ads_sites</span><span class="p">[</span><span class="n">removed</span><span class="p">][</span><span class="s1">&#39;fragment&#39;</span><span class="p">]</span>            
@@ -1066,7 +1065,7 @@
 
             <span class="n">removed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_adsorbate</span><span class="p">(</span><span class="n">indi</span><span class="p">,</span> <span class="n">ads_sites</span><span class="p">,</span>
                                             <span class="n">return_site_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">removed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">removed</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
                 <span class="n">removed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ads_sites</span><span class="p">)))</span>
                 <span class="n">removed_species</span> <span class="o">=</span> <span class="s1">&#39;x&#39;</span>
             <span class="k">else</span><span class="p">:</span>

@@ -91,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Genetic algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Evolutionary algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
 </ul>
@@ -174,7 +174,9 @@
 <span class="sd">    are ranked according to the effective fitness, given by the shortest </span>
 <span class="sd">    distance between the raw score of the marked niche and the upper </span>
 <span class="sd">    envelope after adding the individual. The raw score is given by the </span>
-<span class="sd">    fitness gain in the maximum-gained niche.</span>
+<span class="sd">    fitness gain in the maximum-gained niche. **The raw scores of each </span>
+<span class="sd">    configuration for all tasks must be provided as a Numpy array in</span>
+<span class="sd">    atoms.info[&#39;data&#39;][&#39;raw_scores&#39;]**.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -271,9 +273,9 @@
             <span class="n">scores</span> <span class="o">=</span>  <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span>
             <span class="n">max_gained_niche</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">)</span>
             <span class="n">dominating_niche</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">]</span>
-            <span class="n">fitness</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">]</span> <span class="o">-</span> 
+            <span class="n">f_eff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">]</span> <span class="o">-</span> 
                             <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">],</span> <span class="mi">8</span><span class="p">))</span>
-            <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fitness</span> 
+            <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_eff</span>
             <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;niche&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dominating_niche</span>
 
         <span class="c1"># Update the fitness of all previously-relaxed candidates if fitness     </span>
@@ -287,9 +289,9 @@
                 <span class="n">scores</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span>
                 <span class="n">max_gained_niche</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">)</span>
                 <span class="n">dominating_niche</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">]</span>
-                <span class="n">fitness</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">]</span> <span class="o">-</span> 
-                                <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">],</span> <span class="mi">8</span><span class="p">))</span>
-                <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fitness</span> 
+                <span class="n">f_eff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">]</span> <span class="o">-</span> 
+                              <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">[</span><span class="n">max_gained_niche</span><span class="p">],</span> <span class="mi">8</span><span class="p">))</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_eff</span>
                 <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;niche&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dominating_niche</span>
                 <span class="n">updated_cand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
                 <span class="n">gaid</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]</span>

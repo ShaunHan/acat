@@ -20,7 +20,7 @@ Contents
    Installation <installation.rst>
    Base modules <modules.rst>
    Building things <build.rst>
-   Genetic algorithm <ga.rst>
+   Evolutionary algorithms <ga.rst>
    Other utilities <utilities.rst>
    Notes <notes.rst>
 

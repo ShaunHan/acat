@@ -93,7 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Genetic algorithm</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Evolutionary algorithms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.group_operators">Symmetry-constrained genetic algorithm for nanoalloys</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.adsorbate_operators">Genetic algorithm for adlayer patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-0">Symmetry-constrained genetic algorithm for adlayer patterns</a></li>
@@ -276,7 +276,7 @@ Do not call this class directly.</p>
 <dl class="py class">
 <dt id="acat.ga.group_operators.GroupCrossover">
 <em class="property">class </em><code class="sig-prename descclassname">acat.ga.group_operators.</code><code class="sig-name descname">GroupCrossover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">elements</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">keep_composition</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/group_operators.html#GroupCrossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.group_operators.GroupCrossover" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#id5" title="acat.ga.group_operators.Crossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.group_operators.Crossover</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#acat.ga.group_operators.Crossover" title="acat.ga.group_operators.Crossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.group_operators.Crossover</span></code></a></p>
 <p>Merge the elemental distributions in two half groups from
 different structures together. The elemental composition can be
 fixed.</p>
@@ -1326,9 +1326,10 @@ will have a difference of .5 in both elements:</p>
 
 </dd></dl>
 
+<span class="target" id="module-acat.ga.graph_comparators"></span><p>Comparator objects based on graph theory.</p>
 <dl class="py class">
-<dt id="acat.ga.adsorbate_comparators.AdsorptionGraphComparator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_comparators.</code><code class="sig-name descname">AdsorptionGraphComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorption_sites</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">full_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">subtract_height</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionGraphComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionGraphComparator" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.graph_comparators.AdsorptionGraphComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.graph_comparators.</code><code class="sig-name descname">AdsorptionGraphComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorption_sites</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subtract_height</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/graph_comparators.html#AdsorptionGraphComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.graph_comparators.AdsorptionGraphComparator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Compares the graph of adsorbate overlayer + surface atoms and
 returns True if they are isomorphic with node matches. Before
@@ -1338,44 +1339,62 @@ graphs that are impossible to be isomorphic.</p>
 required (and disk intensive if saved), thus it makes sense to
 get the graph along with e.g. the potential energy and save it in
 atoms.info[‘data’][‘graph’].</p>
-<p>Parameters:</p>
-<dl class="simple">
-<dt>adsorption_sites<span class="classifier">acat.adsorption_sites.ClusterAdsorptionSites object         or acat.adsorption_sites.SlabAdsorptionSites object</span></dt><dd><p>Provide the acat built-in adsorption sites class to accelerate the
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em>) – Provide the acat built-in adsorption sites class to accelerate the
 pattern generation. Make sure all the structures have the same
-atom indexing.</p>
-</dd>
-<dt>composition_effect<span class="classifier">bool, default True</span></dt><dd><p>Whether to consider sites with different elemental compositions as
+atom indexing.</p></li>
+<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to consider sites with different elemental compositions as
 different sites. It is recommended to set composition_effet=False
-for monometallics.</p>
-</dd>
-<dt>fragmentation<span class="classifier">bool, default True</span></dt><dd><p>Whether to cut multidentate species into fragments. This ensures
-that multidentate species with different orientations are
-considered as different adlayer patterns.</p>
-</dd>
-<dt>subsurf_effect<span class="classifier">bool, default False</span></dt><dd><p>Whether to take subsurface atoms into consideration when checking
-uniqueness. Could be important for surfaces like fcc100.</p>
-</dd>
-<dt>full_effect<span class="classifier">bool, default False</span></dt><dd><p>Take the whole catalyst into consideration when generating graph.</p>
-</dd>
-<dt>subtract_height<span class="classifier">bool, default False</span></dt><dd><p>Whether to subtract the height from the bond length when allocating
+for monometallics.</p></li>
+<li><p><strong>subtract_height</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to subtract the height from the bond length when allocating
 a site to an adsorbate. Default is to allocate the site that is
 closest to the adsorbate’s binding atom without subtracting height.
 Useful for ensuring the allocated site for each adsorbate is
-consistent with the site to which the adsorbate was added.</p>
-</dd>
-<dt>dmax<span class="classifier">float, default 2.5</span></dt><dd><p>The maximum bond length (in Angstrom) between an atom and its
-nearest site to be considered as the atom being bound to the site.</p>
+consistent with the site to which the adsorbate was added.</p></li>
+<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
+nearest site to be considered as the atom being bound to the site.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.ga.adsorbate_comparators.AdsorptionGraphComparator.looks_like">
-<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_comparators.html#AdsorptionGraphComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_comparators.AdsorptionGraphComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.ga.graph_comparators.AdsorptionGraphComparator.looks_like">
+<code class="sig-name descname">looks_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/graph_comparators.html#AdsorptionGraphComparator.looks_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.graph_comparators.AdsorptionGraphComparator.looks_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.graph_comparators.WLGraphComparator">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.graph_comparators.</code><code class="sig-name descname">WLGraphComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/graph_comparators.html#WLGraphComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.graph_comparators.WLGraphComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compares two structures based on the Weisfeiler-Lehman subtree
+kernel, as described in N. Shervashidze et al., Journal of Machine
+Learning Research 2011, 12, 2539–2561. This serves as an efficient
+alternative for checking graph isomorphism of two structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement.</p></li>
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – Buffer to calculate nearest neighbor pairs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.graph_comparators.WLGraphComparator.look_alike">
+<code class="sig-name descname">look_alike</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a1</span></em>, <em class="sig-param"><span class="n">a2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/graph_comparators.html#WLGraphComparator.look_alike"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.graph_comparators.WLGraphComparator.look_alike" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="acat.ga.graph_comparators.WLGraphComparator.get_label_dict">
+<em class="property">classmethod </em><code class="sig-name descname">get_label_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">hmax</span></em>, <em class="sig-param"><span class="n">dx</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/graph_comparators.html#WLGraphComparator.get_label_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.graph_comparators.WLGraphComparator.get_label_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <p><strong>Example1</strong></p>
-<p>All the adsorbate operators and comparators can be easily used with other operators and comparators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbateSpecies</span></code> and <code class="docutils literal notranslate"><span class="pre">AdsorbateCatalystCrossover</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> and <code class="docutils literal notranslate"><span class="pre">SimpleCutSpliceCrossoverWithAdsorbates</span></code> operators only work for nanoparticles, and the latter is recommended. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.</p>
+<p>All the adsorbate operators and comparators can be easily used with other operators and comparators. <code class="docutils literal notranslate"><span class="pre">AddAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">MoveAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbate</span></code>, <code class="docutils literal notranslate"><span class="pre">ReplaceAdsorbateSpecies</span></code> and <code class="docutils literal notranslate"><span class="pre">AdsorbateCatalystCrossover</span></code> operators can be used for both non-periodic nanoparticles and periodic surface slabs. <code class="docutils literal notranslate"><span class="pre">CutSpliceCrossoverWithAdsorbates</span></code> and <code class="docutils literal notranslate"><span class="pre">SimpleCutSpliceCrossoverWithAdsorbates</span></code> operators only work for nanoparticles, and the latter is recommended. To strictly sort out duplicate structures, consider using <code class="docutils literal notranslate"><span class="pre">AdsorptionGraphComparator</span></code> or <code class="docutils literal notranslate"><span class="pre">WLGraphComparator</span></code>. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.</p>
 <p>As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.</p>
 <p>The script for a parallel genetic algorithm looks as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">acat.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
@@ -1955,14 +1974,6 @@ Overwrite in subclass.</p>
 
 </dd></dl>
 
-<dl class="py class">
-<dt id="id5">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.group_operators.</code><code class="sig-name descname">Crossover</code><a class="reference internal" href="_modules/acat/ga/group_operators.html#Crossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.offspring_creator.OffspringCreator</span></code></p>
-<p>Base class for all particle crossovers.
-Do not call this class directly.</p>
-</dd></dl>
-
 <p><strong>Example1</strong></p>
 <p>All the symmetry-constrained adsorbate operators can be easily used with other indexing-preserved operators, e.g. All operators can be used for both non-periodic nanoparticles and periodic surface slabs. To accelerate the GA, provide adsorsption sites, site pairing (or all possible parings), and use indexing-preserved operators implemented in ACAT.</p>
 <p>As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni48Pt16 fcc111 slab with adsorbate species of H, C, O, OH, CO, CH using the EMT calculator.</p>
@@ -2196,7 +2207,9 @@ Do not call this class directly.</p>
 are ranked according to the effective fitness, given by the shortest
 distance between the raw score of the marked niche and the upper
 envelope after adding the individual. The raw score is given by the
-fitness gain in the maximum-gained niche.</p>
+fitness gain in the maximum-gained niche. <strong>The raw scores of each
+configuration for all tasks must be provided as a Numpy array in
+atoms.info[‘data’][‘raw_scores’]</strong>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2387,6 +2400,8 @@ Overwrite this in the inherited class.</p>
              <span class="n">num_H</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">num_C</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">num_O</span><span class="p">)</span> <span class="o">*</span> <span class="n">chem_pots</span><span class="p">[</span><span class="s1">&#39;H2&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
     <span class="n">fs</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">Epot</span> <span class="o">-</span> <span class="n">mutots</span><span class="p">)</span>
 
+    <span class="c1"># Save the raw fitness of the configuration for all tasks</span>
+    <span class="c1"># as a Numpy array in atoms.info[&#39;data&#39;][&#39;raw_scores&#39;]</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs</span>
     <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;potential_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Epot</span>
 

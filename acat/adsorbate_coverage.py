@@ -508,7 +508,7 @@ class ClusterAdsorbateCoverage(object):
         ----------
         atom_wise : bool, default False
             Whether to treat each adsorbate as an atom-wise subgraph. If not, 
-            treat each adsorbate as a unity (molecule-wise).
+            treat each adsorbate fragment as a unity (molecule-wise).
 
         fragmentation : bool, default True
             Whether to cut multidentate species into fragments. This ensures 
@@ -1144,7 +1144,7 @@ class SlabAdsorbateCoverage(object):
         ----------
         atom_wise : bool, default False
             Whether to treat each adsorbate as an atom-wise subgraph. If not, 
-            treat each adsorbate as a unity (molecule-wise).
+            treat each adsorbate fragment as a unity (molecule-wise).
 
         fragmentation : bool, default True
             Whether to cut multidentate species into fragments. This ensures 
