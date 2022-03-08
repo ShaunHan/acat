@@ -113,7 +113,7 @@ class ClusterAdsorbateCoverage(object):
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
          'indices': (0, 2, 4), 'composition': 'PtPtPt', 
          'subsurf_index': None, 'subsurf_element': None, 'label': '21CO', 
-         'bonding_index': 201, 'bond_length': 1.3000000000000007, 
+         'bonding_index': 201, 'bond_length': 1.30000000, 
          'adsorbate': 'CO', 'fragment': 'CO', 'adsorbate_indices': (201, 202), 
          'occupied': 1, 'dentate': 1, 'fragment_indices': (201, 202)}
 
@@ -746,7 +746,7 @@ class SlabAdsorbateCoverage(object):
          'normal': array([-0.33333333,  0.        ,  0.94280904]), 
          'indices': (4, 7), 'composition': 'CuAu', 'subsurf_index': None, 
          'subsurf_element': None, 'label': '17OH', 'bonding_index': 40, 
-         'bond_length': 1.4378365786909804, 'adsorbate': 'CH3OH', 
+         'bond_length': 1.43783658, 'adsorbate': 'CH3OH', 
          'fragment': 'OH', 'adsorbate_indices': (36, 37, 38, 39, 40, 41), 
          'occupied': 1, 'dentate': 2, 'fragment_indices': (40, 41)}
 
@@ -1389,7 +1389,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
          'indices': (2,), 'composition': 'Pt', 'subsurf_index': None, 
          'subsurf_element': None, 'label': None, 'bonding_index': 201, 
-         'bond_length': 1.7999999999999996, 'adsorbate': 'OH', 
+         'bond_length': 1.80000000, 'adsorbate': 'OH', 
          'fragment': 'OH', 'adsorbate_indices': (201, 202), 
          'occupied': 1, 'dentate': 1, 'fragment_indices': (201, 202)}
 

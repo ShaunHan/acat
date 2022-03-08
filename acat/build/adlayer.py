@@ -2039,8 +2039,8 @@ class OrderedPatternGenerator(object):
             tup = find_mic(pts - pt1, cell=atoms.cell, 
                            pbc=(True in atoms.pbc))
             if self.repeating_distance is None:
-                lmin = np.min(atoms.cell.lengths()) 
-                i2a = np.argwhere((tup[1] <= lmin / 2) & (tup[1] > 1e-5)).ravel().tolist()
+                lmax = np.max(atoms.cell.lengths()) 
+                i2a = np.argwhere((tup[1] <= lmax / 2) & (tup[1] > 1e-5)).ravel().tolist()
             else:
                 i2a = np.argwhere(np.abs(tup[1] - self.repeating_distance) 
                                   < self.dtol).ravel().tolist()

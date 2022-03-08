@@ -222,7 +222,7 @@ you want to add adsorbate to. This has the highest priority.</p></li>
 Use the default settings if not specified.</p></li>
 <li><p><strong>composition</strong> (<em>str</em><em>, </em><em>default None</em>) – The elemental of the site that should be added to.</p></li>
 <li><p><strong>orientation</strong> (<em>list</em><em> or </em><em>numpy.array</em><em>, </em><em>default None</em>) – The vector that the multidentate adsorbate is aligned to.</p></li>
-<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degrees) relative to
 the surface normal.</p></li>
 <li><p><strong>subsurf_element</strong> (<em>str</em><em>, </em><em>default None</em>) – The subsurface element of the hcp or 4fold hollow site that
 should be added to.</p></li>
@@ -273,7 +273,7 @@ normal vector of the site.</p></li>
 <li><p><strong>height</strong> (<em>float</em><em>, </em><em>default None</em>) – The height of the added adsorbate from the surface.
 Use the default settings if not specified.</p></li>
 <li><p><strong>orientation</strong> (<em>list</em><em> or </em><em>numpy.array</em><em>, </em><em>default None</em>) – The vector that the multidentate adsorbate is aligned to.</p></li>
-<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default None</em>) – Tilt the adsorbate with an angle (in degress) relative to
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default None</em>) – Tilt the adsorbate with an angle (in degrees) relative to
 the surface normal.</p></li>
 </ul>
 </dd>
@@ -346,7 +346,7 @@ only the sites on the specified surface.</p></li>
 <li><p><strong>height</strong> (<em>float</em><em>, </em><em>default None</em>) – The height of the added adsorbate from the surface.
 Use the default settings if not specified.</p></li>
 <li><p><strong>orientation</strong> (<em>list</em><em> or </em><em>numpy.array</em><em>, </em><em>default None</em>) – The vector that the multidentate adsorbate is aligned to.</p></li>
-<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degress) relative to
+<li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degrees) relative to
 the surface normal.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether the label is defined in bimetallic labels or not.</p></li>
 <li><p><strong>all_sites</strong> (<em>list of dicts</em><em>, </em><em>default None</em>) – The list of all sites. Provide this to make the function
@@ -1549,7 +1549,7 @@ octahedral nanoparticle:</p>
 <blockquote>
 <div><dl class="py class">
 <dt id="acat.build.ordering.SymmetricSlabOrderingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">SymmetricSlabOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'rotational'</span></em>, <em class="sig-param"><span class="n">symmetry_axis</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">repeating_size</span><span class="o">=</span><span class="default_value">1, 1</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">ztol</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">SymmetricSlabOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'translational'</span></em>, <em class="sig-param"><span class="n">repeating_size</span><span class="o">=</span><span class="default_value">1, 1</span></em>, <em class="sig-param"><span class="n">bisect_vector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">ztol</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>SymmetricSlabOrderingGenerator</cite> is a class for generating
 symmetric chemical orderings for a <strong>alloy surface slab</strong>.
 There is no limitation of the number of metal components.</p>
@@ -1560,22 +1560,23 @@ There is no limitation of the number of metal components.</p>
 chemical orderings. Accept any ase.Atoms object. No need to
 be built-in.</p></li>
 <li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
-<li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'rotational'</em>) – <p>Support 4 symmetries:</p>
-<p><strong>’rotational’</strong>: rotational symmetry with symmetry
-equivalent groups depending on the symmetry_axis.</p>
+<li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'translational'</em>) – <p>Support 4 symmetries:</p>
 <p><strong>’translational’</strong>: translational symmetry with symmetry
 equivalent groups depending on repeating_size.</p>
 <p><strong>’inversion’</strong>: centrosymmetry with symmetry equivalent
 groups depending on the distance to the geometric center.
 Only works for certain number of slab layers (e.g. 5) and
 orthogonal cell.</p>
-<p><strong>’mirror’</strong>: mirror plane symmetry with symmetry equivalent
-groups depeneding on the xy plane bisecting the slab. Only
-works for certain number of slab layers (e.g. 5) and orthogonal
-cell.</p>
+<p><strong>’vertical_mirror’</strong>: vertical mirror plane symmetry with
+symmetry equivalent groups depending on the vertical plane in
+which the bisect_vector lies.</p>
+<p><strong>’horizontal_mirror’</strong>: horizontal mirror plane symmetry with
+symmetry equivalent groups depending on the xy plane bisecting
+the slab. Only works for certain number of slab layers (e.g. 5)
+and orthogonal cell.</p>
 </p></li>
-<li><p><strong>symmetry_axis</strong> (<em>numpy.array</em><em> or </em><em>list</em><em>, </em><em>default None</em>) – The symmetry axis (3d vector) to form symmetric ordering
-around. Only relevant for rotational symmetry.</p></li>
+<li><p><strong>bisect_vector</strong> (<em>numpy.array</em><em> or </em><em>list</em><em>, </em><em>default None</em>) – The 2d (or 3d) vector that lies in the vertical mirror plane.
+Only relevant for vertical_mirror symmetry.</p></li>
 <li><p><strong>repeating_size</strong> (<em>list of ints</em><em> or </em><em>tuple of ints</em><em>, </em><em>default</em><em> (</em><em>1</em><em>, </em><em>1</em><em>)</em>) – The multiples that describe the size of the repeating pattern
 on the surface. Symmetry-equivalent atoms are grouped by
 the multiples in the x and y directions. The x or y length of
@@ -1646,8 +1647,8 @@ number of generated structures.</p></li>
 </dd></dl>
 
 <p><strong>Example1</strong></p>
-<p>To stochastically generate 50 chemical orderings with
-rotational symmetry around the vector [11.2, 6.467, 0]
+<p>To stochastically generate 50 chemical orderings with vertical
+mirror plane symmetry w.r.t. the bisect vector [11.200, 6.467]
 for binary NixPt1-x fcc111 surface slabs:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">SSOG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
@@ -1657,8 +1658,8 @@ for binary NixPt1-x fcc111 surface slabs:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc111</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ssog</span> <span class="o">=</span> <span class="n">SSOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
-<span class="gp">... </span>            <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;rotational&#39;</span><span class="p">,</span>
-<span class="gp">... </span>            <span class="n">symmetry_axis</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">11.2</span><span class="p">,</span> <span class="mf">6.467</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="gp">... </span>            <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;vertical_mirror&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">bisect_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">11.200</span><span class="p">,</span> <span class="mf">6.467</span><span class="p">]))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ssog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>

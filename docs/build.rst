@@ -791,8 +791,8 @@ The SymmetricSlabOrderingGenerator class
 
     **Example1**
 
-    To stochastically generate 50 chemical orderings with
-    rotational symmetry around the vector [11.2, 6.467, 0]
+    To stochastically generate 50 chemical orderings with vertical 
+    mirror plane symmetry w.r.t. the bisect vector [11.200, 6.467] 
     for binary NixPt1-x fcc111 surface slabs:
 
         >>> from acat.build.ordering import SymmetricSlabOrderingGenerator as SSOG
@@ -803,8 +803,8 @@ The SymmetricSlabOrderingGenerator class
         >>> atoms = fcc111('Ni', (4, 4, 5), vacuum=5.)
         >>> atoms.center()
         >>> ssog = SSOG(atoms, elements=['Ni', 'Pt'],
-        ...             symmetry='rotational',
-        ...             symmetry_axis=np.array([11.2, 6.467, 0]))
+        ...             symmetry='vertical_mirror',
+        ...             bisect_vector=np.array([11.200, 6.467]))
         >>> ssog.run(max_gen=50, mode='stochastic', verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)

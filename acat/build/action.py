@@ -65,7 +65,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
         The vector that the multidentate adsorbate is aligned to.
 
     tilt_angle: float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to
+        Tilt the adsorbate with an angle (in degrees) relative to
         the surface normal.
 
     subsurf_element : str, default None
@@ -159,7 +159,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
         The vector that the multidentate adsorbate is aligned to.
 
     tilt_angle: float, default None
-        Tilt the adsorbate with an angle (in degress) relative to
+        Tilt the adsorbate with an angle (in degrees) relative to
         the surface normal.
 
     """
@@ -269,7 +269,7 @@ def add_adsorbate_to_label(atoms, adsorbate, label,
         The vector that the multidentate adsorbate is aligned to.
 
     tilt_angle: float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to
+        Tilt the adsorbate with an angle (in degrees) relative to
         the surface normal.
 
     composition_effect : bool, default False

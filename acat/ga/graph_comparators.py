@@ -118,13 +118,17 @@ class WLGraphComparator(object):
     dx : float, default 0.5
         Buffer to calculate nearest neighbor pairs.
 
+    tol : float, default 1e-5
+        Tolerance of the discrepancy between K12 and sqrt(K11*K22)
+
     """
 
-    def __init__(self, hmax=2, dx=.5):
+    def __init__(self, hmax=2, dx=.5, tol=1e-5):
         self.hmax = hmax
         self.dx = dx
+        self.tol = tol
 
-    def look_alike(self, a1, a2):
+    def looks_like(self, a1, a2):
         d1 = WLGraphComparator.get_label_dict(a1, self.hmax, self.dx)
         d2 = WLGraphComparator.get_label_dict(a2, self.hmax, self.dx)
         d12 = {k: [d[k] if k in d else 0 for d in (d1, d2)] 
@@ -136,7 +140,7 @@ class WLGraphComparator(object):
         k22 = sum(v**2 for v in d2.values())
         k12 = X12[:,0] @ X12[:,1].T
 
-        return (k12**2 == k11 * k22)
+        return abs(k12 - (k11 * k22)**0.5) <= self.tol 
 
     @classmethod
     def get_label_dict(cls, atoms, hmax, dx):                                                        
