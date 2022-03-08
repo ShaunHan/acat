@@ -522,11 +522,8 @@ class SymmetricSlabOrderingGenerator(object):
     elements : list of strs 
         The metal elements of the alloy catalyst.
 
-    symmetry : str, default 'rotational'
+    symmetry : str, default 'translational'
         Support 4 symmetries: 
-
-        **'rotational'**: rotational symmetry with symmetry
-        equivalent groups depending on the symmetry_axis.
 
         **'translational'**: translational symmetry with symmetry 
         equivalent groups depending on repeating_size.
@@ -536,14 +533,18 @@ class SymmetricSlabOrderingGenerator(object):
         Only works for certain number of slab layers (e.g. 5) and 
         orthogonal cell.
 
-        **'mirror'**: mirror plane symmetry with symmetry equivalent
-        groups depeneding on the xy plane bisecting the slab. Only
-        works for certain number of slab layers (e.g. 5) and orthogonal 
-        cell.
+        **'vertical_mirror'**: vertical mirror plane symmetry with 
+        symmetry equivalent groups depending on the vertical plane in 
+        which the bisect_vector lies.
 
-    symmetry_axis : numpy.array or list, default None
-        The symmetry axis (3d vector) to form symmetric ordering 
-        around. Only relevant for rotational symmetry.
+        **'horizontal_mirror'**: horizontal mirror plane symmetry with 
+        symmetry equivalent groups depending on the xy plane bisecting 
+        the slab. Only works for certain number of slab layers (e.g. 5) 
+        and orthogonal cell.
+
+    bisect_vector : numpy.array or list, default None
+        The 2d (or 3d) vector that lies in the vertical mirror plane. 
+        Only relevant for vertical_mirror symmetry.
 
     repeating_size : list of ints or tuple of ints, default (1, 1)
         The multiples that describe the size of the repeating pattern
@@ -586,9 +587,9 @@ class SymmetricSlabOrderingGenerator(object):
     """
 
     def __init__(self, atoms, elements,
-                 symmetry='rotational',
-                 symmetry_axis=None,
+                 symmetry='translational',
                  repeating_size=(1, 1),
+                 bisect_vector=None,
                  composition=None,
                  groups=None,
                  save_groups=False,
@@ -600,13 +601,17 @@ class SymmetricSlabOrderingGenerator(object):
         self.atoms = atoms
         self.elements = elements
         self.symmetry = symmetry
-        self.symmetry_axis = symmetry_axis
-        if self.symmetry_axis is not None:
-            self.symmetry_axis = np.asarray(self.symmetry_axis)
+        self.repeating_size = repeating_size
+        self.bisect_vector = bisect_vector
+        if self.bisect_vector is not None:
+            if len(self.bisect_vector) == 2:
+                self.bisect_vector = list(bisect_vector) + [0]
+            else:
+                self.bisect_vector[2] = 0
+            self.bisect_vector = np.asarray(self.bisect_vector)
 
         assert is_list_or_tuple(repeating_size) 
         assert len(repeating_size) == 2
-        self.repeating_size = repeating_size
         self.save_groups = save_groups
         self.dtol = dtol
         self.ztol = ztol
@@ -626,7 +631,7 @@ class SymmetricSlabOrderingGenerator(object):
             self.groups = groups
 
     def get_symmetric_pairs(self, atoms):                               
-        sa = self.symmetry_axis
+        rv = self.bisect_vector
         layers = get_layers(atoms, (0, 0, 1), tolerance=self.ztol)[0]
         dd = defaultdict(list)
         for i, layer in enumerate(layers): 
@@ -636,9 +641,9 @@ class SymmetricSlabOrderingGenerator(object):
         indices, sym_pts = [], []
         for idxs in dd.values():
             geo_mid = np.mean(positions[idxs], axis=0)
-            sa2 = sa @ sa
-            projs = np.sum((positions[idxs] - geo_mid) * sa, 
-                            axis=1).reshape((-1,1)) * sa / sa2
+            rv2 = rv @ rv
+            projs = np.sum((positions[idxs] - geo_mid) * rv, 
+                            axis=1).reshape((-1,1)) * rv / rv2
             norms = positions[idxs] - geo_mid - projs
             indices += idxs
             sym_pts += (positions[idxs] - 2 * norms).tolist()
@@ -700,11 +705,7 @@ class SymmetricSlabOrderingGenerator(object):
         symmetry-equivalent atoms."""
 
         atoms = self.atoms.copy()
-        if self.symmetry == 'rotational':
-            assert self.symmetry_axis is not None
-            pairs = self.get_symmetric_pairs(atoms)
-
-        elif self.symmetry == 'translational':
+        if self.symmetry == 'translational':
             if self.repeating_size[0] * self.repeating_size[1] == 1:
                 raise ValueError('Please set repeating_size larger than (1, 1) ' + 
                                  'for translational symmetry') 
@@ -722,7 +723,11 @@ class SymmetricSlabOrderingGenerator(object):
                      return_squared_distance=True)**0.5 - get_mic(positions[p[1]], 
                      geo_mid, cell, return_squared_distance=True)**0.5) < self.dtol]
 
-        elif self.symmetry == 'mirror':
+        elif self.symmetry == 'vertial_mirror':
+            assert self.bisect_vector is not None
+            pairs = self.get_symmetric_pairs(atoms)
+
+        elif self.symmetry == 'horizontal_mirror':
             pairs = self.get_x_y_identical_pairs(atoms)
             atoms.center()
             z_positions = atoms.positions[:,2]

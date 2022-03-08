@@ -684,11 +684,8 @@
 <span class="sd">    elements : list of strs </span>
 <span class="sd">        The metal elements of the alloy catalyst.</span>
 
-<span class="sd">    symmetry : str, default &#39;rotational&#39;</span>
+<span class="sd">    symmetry : str, default &#39;translational&#39;</span>
 <span class="sd">        Support 4 symmetries: </span>
-
-<span class="sd">        **&#39;rotational&#39;**: rotational symmetry with symmetry</span>
-<span class="sd">        equivalent groups depending on the symmetry_axis.</span>
 
 <span class="sd">        **&#39;translational&#39;**: translational symmetry with symmetry </span>
 <span class="sd">        equivalent groups depending on repeating_size.</span>
@@ -698,14 +695,18 @@
 <span class="sd">        Only works for certain number of slab layers (e.g. 5) and </span>
 <span class="sd">        orthogonal cell.</span>
 
-<span class="sd">        **&#39;mirror&#39;**: mirror plane symmetry with symmetry equivalent</span>
-<span class="sd">        groups depeneding on the xy plane bisecting the slab. Only</span>
-<span class="sd">        works for certain number of slab layers (e.g. 5) and orthogonal </span>
-<span class="sd">        cell.</span>
+<span class="sd">        **&#39;vertical_mirror&#39;**: vertical mirror plane symmetry with </span>
+<span class="sd">        symmetry equivalent groups depending on the vertical plane in </span>
+<span class="sd">        which the bisect_vector lies.</span>
 
-<span class="sd">    symmetry_axis : numpy.array or list, default None</span>
-<span class="sd">        The symmetry axis (3d vector) to form symmetric ordering </span>
-<span class="sd">        around. Only relevant for rotational symmetry.</span>
+<span class="sd">        **&#39;horizontal_mirror&#39;**: horizontal mirror plane symmetry with </span>
+<span class="sd">        symmetry equivalent groups depending on the xy plane bisecting </span>
+<span class="sd">        the slab. Only works for certain number of slab layers (e.g. 5) </span>
+<span class="sd">        and orthogonal cell.</span>
+
+<span class="sd">    bisect_vector : numpy.array or list, default None</span>
+<span class="sd">        The 2d (or 3d) vector that lies in the vertical mirror plane. </span>
+<span class="sd">        Only relevant for vertical_mirror symmetry.</span>
 
 <span class="sd">    repeating_size : list of ints or tuple of ints, default (1, 1)</span>
 <span class="sd">        The multiples that describe the size of the repeating pattern</span>
@@ -748,9 +749,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span>
-                 <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;rotational&#39;</span><span class="p">,</span>
-                 <span class="n">symmetry_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;translational&#39;</span><span class="p">,</span>
                  <span class="n">repeating_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">bisect_vector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">save_groups</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -762,13 +763,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="n">symmetry</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="o">=</span> <span class="n">symmetry_axis</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span> <span class="o">=</span> <span class="n">repeating_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span> <span class="o">=</span> <span class="n">bisect_vector</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bisect_vector</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">repeating_size</span><span class="p">)</span> 
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">repeating_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span> <span class="o">=</span> <span class="n">repeating_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span> <span class="o">=</span> <span class="n">save_groups</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span> <span class="o">=</span> <span class="n">dtol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ztol</span> <span class="o">=</span> <span class="n">ztol</span>
@@ -788,7 +793,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">groups</span>
 
     <span class="k">def</span> <span class="nf">get_symmetric_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>                               
-        <span class="n">sa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span>
         <span class="n">layers</span> <span class="o">=</span> <span class="n">get_layers</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ztol</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">dd</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span> 
@@ -798,9 +803,9 @@
         <span class="n">indices</span><span class="p">,</span> <span class="n">sym_pts</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">dd</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">geo_mid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">sa2</span> <span class="o">=</span> <span class="n">sa</span> <span class="o">@</span> <span class="n">sa</span>
-            <span class="n">projs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">)</span> <span class="o">*</span> <span class="n">sa</span><span class="p">,</span> 
-                            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">sa</span> <span class="o">/</span> <span class="n">sa2</span>
+            <span class="n">rv2</span> <span class="o">=</span> <span class="n">rv</span> <span class="o">@</span> <span class="n">rv</span>
+            <span class="n">projs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">)</span> <span class="o">*</span> <span class="n">rv</span><span class="p">,</span> 
+                            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">rv</span> <span class="o">/</span> <span class="n">rv2</span>
             <span class="n">norms</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span> <span class="o">-</span> <span class="n">projs</span>
             <span class="n">indices</span> <span class="o">+=</span> <span class="n">idxs</span>
             <span class="n">sym_pts</span> <span class="o">+=</span> <span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">norms</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -862,11 +867,7 @@
 <span class="sd">        symmetry-equivalent atoms.&quot;&quot;&quot;</span>
 
         <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;rotational&#39;</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetric_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;translational&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;translational&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeating_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Please set repeating_size larger than (1, 1) &#39;</span> <span class="o">+</span> 
                                  <span class="s1">&#39;for translational symmetry&#39;</span><span class="p">)</span> 
@@ -884,7 +885,11 @@
                      <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">get_mic</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> 
                      <span class="n">geo_mid</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtol</span><span class="p">]</span>
 
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;mirror&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;vertial_mirror&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">bisect_vector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_symmetric_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;horizontal_mirror&#39;</span><span class="p">:</span>
             <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_x_y_identical_pairs</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
             <span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
             <span class="n">z_positions</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>

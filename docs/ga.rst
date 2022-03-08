@@ -97,7 +97,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         return atoms.get_chemical_formula(mode='hill')
     
     # Give fittest candidates at different compositions equal fitness.
-    # Use this to find global minima at each composition
+    # Use this to find global minimum at each composition
     pop = RankFitnessPopulation(data_connection=db,
                                 population_size=pop_size,
                                 comparator=comp,
@@ -105,8 +105,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
                                 exp_function=True,
                                 logfile='log.txt')
     
-    # Normal fitness ranking irrespective of coverage.
-    # Use this to find global minimum irrespective of composition
+    # Normal fitness ranking irrespective of composition
     #pop = Population(data_connection=db, 
     #                 population_size=pop_size, 
     #                 comparator=comp, 
@@ -321,7 +320,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
         return atoms.get_chemical_formula(mode='hill')
     
     # Give fittest candidates at different compositions equal fitness.
-    # Use this to find global minima at each composition
+    # Use this to find global minimum at each composition
     pop = RankFitnessPopulation(data_connection=db,
                                 population_size=pop_size,
                                 comparator=comp,
@@ -329,8 +328,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
                                 exp_function=True,
                                 logfile='log.txt')
     
-    # Normal fitness ranking irrespective of coverage.
-    # Use this to find global minimum irrespective of composition
+    # Normal fitness ranking irrespective of composition
     #pop = Population(data_connection=db, 
     #                 population_size=pop_size, 
     #                 comparator=comp, 
@@ -416,7 +414,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
                 offspring, desc = op.get_new_individual(parents)
                 # An operator could return None if an offspring cannot be formed
                 # by the chosen parents
-                if offspring is None:
+                if offspring is not None:
                     break
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)        
@@ -458,7 +456,7 @@ Genetic algorithm for adlayer patterns
 
 **Example1**
 
-All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate``, ``ReplaceAdsorbate``, ``ReplaceAdsorbateSpecies`` and ``AdsorbateCatalystCrossover`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To strictly sort out duplicate structures, consider using ``AdsorptionGraphComparator`` or ``WLGraphComparator``. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
+All the adsorbate operators and comparators can be easily used with other operators and comparators. ``AddAdsorbate``, ``RemoveAdsorbate``, ``MoveAdsorbate``, ``ReplaceAdsorbate``, ``ReplaceAdsorbateSpecies`` and ``CatalystAdsorbateCrossover`` operators can be used for both non-periodic nanoparticles and periodic surface slabs. ``CutSpliceCrossoverWithAdsorbates`` and ``SimpleCutSpliceCrossoverWithAdsorbates`` operators only work for nanoparticles, and the latter is recommended. To strictly sort out duplicate structures, consider using ``AdsorptionGraphComparator`` or ``WLGraphComparator``. To accelerate the GA, provide adsorsption sites and use indexing-preserved operators implemented in ACAT.
 
 As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni110Pt37 icosahedral nanoalloy with adsorbate species of H, C, O, OH, CO, CH, CH2 and CH3 using the EMT calculator.
 
@@ -571,7 +569,8 @@ The script for a parallel genetic algorithm looks as follows:
     
         return len(get_ads(atoms))
     
-    # Give fittest candidates at different coverages equal fitness
+    # Give fittest candidates at different coverages equal fitness.
+    # Use this to find global minimum at each adsorbate coverage
     pop = RankFitnessPopulation(data_connection=db,
                                 population_size=pop_size,
                                 comparator=comp,
@@ -579,7 +578,7 @@ The script for a parallel genetic algorithm looks as follows:
                                 exp_function=True,
                                 logfile='log.txt')
     
-    # Normal fitness ranking regardless of coverage
+    # Normal fitness ranking irrespective of adsorabte coverage
     #pop = Population(data_connection=db,
     #                 population_size=pop_size,
     #                 comparator=comp,
@@ -664,7 +663,7 @@ The script for a parallel genetic algorithm looks as follows:
                 offspring, desc = op.get_new_individual(parents)
                 # An operator could return None if an offspring cannot be formed
                 # by the chosen parents
-                if offspring is None:
+                if offspring is not None:
                     break
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)
@@ -751,7 +750,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     sas = ClusterAdsorptionSites(particle, composition_effect=False)
     
     # Instantiate the db
-    db_name = 'ridge_Ni110Pt37_ads.db'
+    db_name = 'ridge_Ni110Pt37_ads20.db'
     
     db = PrepareDB(db_name, cell=particle.cell, population_size=pop_size)
     
@@ -780,38 +779,11 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
                                  NNMatComparator(0.2, ['Ni', 'Pt'])],
                                 [0.5, 0.5])
     
-    def get_ads(atoms):
-        """Returns a list of adsorbate names and corresponding indices."""
-    
-        if 'data' not in atoms.info:
-            atoms.info['data'] = {}
-        if 'adsorbates' in atoms.info['data']:
-            adsorbates = atoms.info['data']['adsorbates']
-        else:
-            cac = ClusterAdsorbateCoverage(atoms)
-            adsorbates = [t[0] for t in cac.get_adsorbates()]
-    
-        return adsorbates
-    
-    def vf(atoms):
-        """Returns the descriptor that distinguishes candidates in the
-        niched population."""
-    
-        return len(get_ads(atoms))
-    
-    # Give fittest candidates at different coverages equal fitness
-    pop = RankFitnessPopulation(data_connection=db,
-                                population_size=pop_size,
-                                comparator=comp,
-                                variable_function=vf,
-                                exp_function=True,
-                                logfile='log.txt')
-    
-    # Normal fitness ranking regardless of coverage
-    #pop = Population(data_connection=db,
-    #                 population_size=pop_size,
-    #                 comparator=comp,
-    #                 logfile='log.txt')
+    # Normal fitness ranking irrespective of adsorbate coverage
+    pop = Population(data_connection=db,
+                     population_size=pop_size,
+                     comparator=comp,
+                     logfile='log.txt')
     
     # Set convergence criteria
     cc = GenerationRepetitionConvergence(pop, 5)
@@ -892,7 +864,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
                 offspring, desc = op.get_new_individual(parents)
                 # An operator could return None if an offspring cannot be formed
                 # by the chosen parents
-                if offspring is None:
+                if offspring is not None:
                     break
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)
@@ -937,7 +909,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     from acat.build.ordering import RandomOrderingGenerator as ROG
     from acat.build.adlayer import OrderedPatternGenerator as OPG
     from acat.ga.adsorbate_operators import (ReplaceAdsorbateSpecies,
-                                             AdsorbateCatalystCrossover)
+                                             CatalystAdsorbateCrossover)
     from acat.ga.slab_operators import (CutSpliceSlabCrossover,
                                         RandomSlabPermutation,
                                         RandomCompositionMutation)
@@ -1011,7 +983,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
                                          remove_site_shells=1),
                 AdsorbateGroupPermutation(species, adsorption_sites=sas, 
                                           remove_site_shells=1),
-                AdsorbateCatalystCrossover(species, adsorption_sites=sas),])               
+                CatalystAdsorbateCrossover(species, adsorption_sites=sas),])               
     op_selector = OperationSelector(*soclist)
     
     # Define comparators
@@ -1038,7 +1010,8 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     
         return len(get_ads(atoms))
     
-    # Give fittest candidates at different coverages equal fitness
+    # Give fittest candidates at different coverages equal fitness.
+    # Use this to find global minimum at each adsorbate coverage
     pop = RankFitnessPopulation(data_connection=db,
                                 population_size=pop_size,
                                 comparator=comp,
@@ -1046,7 +1019,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
                                 exp_function=True,
                                 logfile='log.txt')
     
-    # Normal fitness ranking regardless of coverage
+    # Normal fitness ranking irrespective of adsorbate coverage
     #pop = Population(data_connection=db,
     #                 population_size=pop_size,
     #                 comparator=comp,
@@ -1172,7 +1145,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
     from acat.build.ordering import RandomOrderingGenerator as ROG
     from acat.build.adlayer import OrderedPatternGenerator as OPG
     from acat.ga.adsorbate_operators import (ReplaceAdsorbateSpecies,
-                                             AdsorbateCatalystCrossover)
+                                             CatalystAdsorbateCrossover)
     from acat.ga.slab_operators import (CutSpliceSlabCrossover,
                                         RandomSlabPermutation,
                                         RandomCompositionMutation)
@@ -1249,7 +1222,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
                                          remove_site_shells=1),
                 AdsorbateGroupPermutation(species, adsorption_sites=sas, 
                                           remove_site_shells=1),
-                AdsorbateCatalystCrossover(species, adsorption_sites=sas),])               
+                CatalystAdsorbateCrossover(species, adsorption_sites=sas),])               
     op_selector = OperationSelector(*soclist)
     
     # Define comparators
@@ -1363,3 +1336,26 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
         # Update the population to allow new candidates to enter
         # (DO NOT add relaxed_candidates into db before this update)
         pop.update(new_cand=relaxed_candidates) 
+
+.. code-block:: text
+
+The fittest individuals covering all tasks can be easily obtained by the following script:
+
+.. code-block:: python
+
+    from ase.db import connect
+    from ase.io import write
+
+    db = connect('ridge_Ni48Pt16_ads_multitask.db')
+    fittest_images = []
+    seen_niches = set()
+    for row in db.select('relaxed=1'):
+        atoms = row.toatoms()
+        f_eff = row.raw_score
+        niche = row.niche
+        # Get the fittest individual with an effective
+        # fitness of 0 in each niche (without duplicates)
+        if (f_eff == 0) and (niche not in seen_niches):
+            seen_niches.add(niche)
+            fittest_images.append(atoms)
+    write('fittest_images.traj', fittest_images)

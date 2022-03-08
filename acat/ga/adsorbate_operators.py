@@ -84,7 +84,7 @@ class AdsorbateOperator(OffspringCreator):
             should be found.
         
         tilt_angle : float, default 0.
-            Tilt the adsorbate with an angle (in degress) relative to the 
+            Tilt the adsorbate with an angle (in degrees) relative to the 
             surface normal.
 
         """
@@ -294,7 +294,7 @@ class AddAdsorbate(AdsorbateOperator):
         if max_coverage is not specified.
 
     tilt_angle : float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to the 
+        Tilt the adsorbate with an angle (in degrees) relative to the 
         surface normal.
 
     subtract_heights : bool, default False
@@ -613,7 +613,7 @@ class MoveAdsorbate(AdsorbateOperator):
         Please only use this for nanoparticles.
 
     tilt_angle : float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to the 
+        Tilt the adsorbate with an angle (in degrees) relative to the 
         surface normal.
 
     subtract_heights : bool, default False
@@ -800,7 +800,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
         Please only use this for nanoparticles.
 
     tilt_angle : float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to the 
+        Tilt the adsorbate with an angle (in degrees) relative to the 
         surface normal.
 
     subtract_heights : bool, default False
@@ -980,7 +980,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         consistent with the site to which the adsorbate was added. 
 
     tilt_angle : float, default 0.
-        Tilt the adsorbate with an angle (in degress) relative to the 
+        Tilt the adsorbate with an angle (in degrees) relative to the 
         surface normal.
 
     dmax : float, default 2.5
@@ -1722,11 +1722,11 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         return ac
 
 
-class AdsorbateCatalystCrossover(AdsorbateOperator):
-    """Crossover that divides two particles or two slabs by the adsorbate
-    -catalyst interfaces and exchange all adsorbates (only returns one of
-    them). The indexing of the atoms is preserved. Please only use this 
-    operator with other operators that also preserves the indexing.
+class CatalystAdsorbateCrossover(AdsorbateOperator):
+    """Crossover that divides two particles or two slabs by the catalyst-
+    adsorbates interfaces and exchange all adsorbates (only returns one 
+    of them). The indexing of the atoms is preserved. Please only use 
+    this operator with other operators that also preserves the indexing.
 
     The composition or the coverage is fixed if it is preserved by all 
     other operators being used.
@@ -1772,7 +1772,7 @@ class AdsorbateCatalystCrossover(AdsorbateOperator):
                  subtract_heights=False,
                  dmax=2.5, **kwargs):
         AdsorbateOperator.__init__(self, adsorbate_species)
-        self.descriptor = 'AdsorbateCatalystCrossover'
+        self.descriptor = 'CatalystAdsorbateCrossover'
 
         self.heights = site_heights 
         for k, v in heights.items():
