@@ -1337,8 +1337,6 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
         # (DO NOT add relaxed_candidates into db before this update)
         pop.update(new_cand=relaxed_candidates) 
 
-.. code-block:: text
-
 The fittest individuals covering all tasks can be easily obtained by the following script:
 
 .. code-block:: python
