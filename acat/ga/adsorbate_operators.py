@@ -954,7 +954,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         surface. Choosing adsorbate species with equal probability if 
         not specified.
 
-    vacancy_replacement : bool, default False
+    replace_vacancy : bool, default False
         Whether to allow replacing adsorbates with vacancies, i.e., 
         effectively removing all adsorbates of a certain species.
         Note that if you want to specify species_probabilties, you
@@ -990,7 +990,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
     """
 
     def __init__(self, adsorbate_species,
-                 vacancy_replacement=False,
+                 replace_vacancy=False,
                  species_probabilities=None,
                  heights=site_heights,
                  adsorption_sites=None,
@@ -1002,7 +1002,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
         self.descriptor = 'ReplaceAdsorbateSpecies'
 
         assert len(set(self.adsorbate_species)) > 1
-        self.vacancy_replacement = vacancy_replacement
+        self.replace_vacancy = replace_vacancy
         self.heights = site_heights 
         for k, v in heights.items():
             self.heights[k] = v
@@ -1058,7 +1058,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
                                                           self.descriptor)
         spec = random.choice(specs)
         all_specs = self.adsorbate_species.copy()
-        if self.vacancy_replacement:
+        if self.replace_vacancy:
             if 'vacancy' not in all_specs:
                 all_specs.append('vacancy')
 
@@ -1095,6 +1095,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
             for st in ads_sites:
                 if st['indices'] in rmsis:
                     height = self.heights[st['site']]
+#                    height = st['bond_length']
                     add_adsorbate_to_site(indi, to_spec, st, height, tilt_angle=self.tilt_angle) 
         
         if True in indi.pbc:
@@ -1722,7 +1723,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         return ac
 
 
-class CatalystAdsorbateCrossover(AdsorbateOperator):
+class CatalystAdsorbateCrossover(AdsorbateOperator):                                   
     """Crossover that divides two particles or two slabs by the catalyst-
     adsorbates interfaces and exchange all adsorbates (only returns one 
     of them). The indexing of the atoms is preserved. Please only use 
@@ -1733,117 +1734,36 @@ class CatalystAdsorbateCrossover(AdsorbateOperator):
 
     Parameters
     ----------
-    adsorbate_species : str or list of strs 
-        One or a list of adsorbate species to be added to the surface.
-
-    heights : dict, default acat.settings.site_heights
-        A dictionary that contains the adsorbate height for each site 
-        type. Use the default height settings if the height for a site 
-        type is not specified.
-
-    adsorption_sites : acat.adsorption_sites.ClusterAdsorptionSites object \
-        or acat.adsorption_sites.SlabAdsorptionSites object, default None
-        Provide the built-in adsorption sites class to accelerate the 
-        genetic algorithm. Make sure all the operators used with this
-        operator preserve the indexing of the atoms.
-
     group_by_sites : bool, default False
         If atoms.info['data']['groups'] is used, please set this to True
         if the groups is for adsorption sites, so that the offspring will
         inheritate the site groups. The default is grouping by slab atoms.
 
-    subtract_heights : bool, default False
-        Whether to subtract the height from the bond length when allocating
-        a site to an adsorbate. Default is to allocate the site that is
-        closest to the adsorbate's binding atom without subtracting height.
-        Useful for ensuring the allocated site for each adsorbate is
-        consistent with the site to which the adsorbate was added. 
-
-    dmax : float, default 2.5
-        The maximum bond length (in Angstrom) between an atom and its
-        nearest site to be considered as the atom being bound to the site.
-
     """
 
-    def __init__(self, adsorbate_species,
-                 heights=site_heights,
-                 adsorption_sites=None,
-                 group_by_sites=False,
-                 subtract_heights=False,
-                 dmax=2.5, **kwargs):
-        AdsorbateOperator.__init__(self, adsorbate_species)
+    def __init__(self, group_by_sites=False):
+        AdsorbateOperator.__init__(self, adsorbate_species='X')
         self.descriptor = 'CatalystAdsorbateCrossover'
 
-        self.heights = site_heights 
-        for k, v in heights.items():
-            self.heights[k] = v
-        self.adsorption_sites = adsorption_sites
         self.group_by_sites = group_by_sites
-        self.kwargs = {'allow_6fold': False, 'composition_effect': False, 
-                       'ignore_bridge_sites': False, 'label_sites': False}
-        self.kwargs.update(kwargs)
-        if self.adsorption_sites is not None:
-            for k in self.kwargs.keys():             
-                self.kwargs[k] = attrgetter(k)(self.adsorption_sites)
-        self.__dict__.update(self.kwargs)
-        if subtract_heights:
-            self.subtract_heights = self.heights
-        else:
-            self.subtract_heights = None        
         self.min_inputs = 2
-        self.dmax = dmax
         
     def get_new_individual(self, parents):
         f, m = parents        
         indi = f.copy()
-        
-        # Place adsorbates from m onto the clean slab of f
-        if True in indi.pbc:
-            if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
-                sas.update(indi)
-            else:
-                sas = SlabAdsorptionSites(indi, **self.kwargs) 
-            msac = SlabAdsorbateCoverage(m, sas, subtract_heights=
-                                         self.subtract_heights, dmax=self.dmax)
-        else:
-            if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
-                sas.update(indi)                
-            else:
-                sas = ClusterAdsorptionSites(indi, **self.kwargs)
-            msac = ClusterAdsorbateCoverage(m, sas, subtract_heights=
-                                            self.subtract_heights, dmax=self.dmax)
-        indi = indi[sas.indices]
-        mhsl = msac.hetero_site_list
-
-        adsi_dict = {}
-        for st in mhsl:
-            if st['occupied']:
-                si = st['indices']
-                adsi_dict[si] = {}
-                adsi_dict[si]['height'] = self.heights[st['site']]
-                adsi_dict[si]['fragment'] = st['fragment']
-                adsi_dict[si]['fragment_indices'] = st['fragment_indices']        
-
-        for st in sas.site_list:
-            si = st['indices']
-            if si in adsi_dict:
-                adsorbate = adsi_dict[si]['fragment']
-                height = adsi_dict[si]['height']    
-                add_adsorbate_to_site(indi, adsorbate, st, height)
+        slab_ids = [a.index for a in indi if a.symbol not in adsorbate_elements]
+        indi.symbols[slab_ids] = m.symbols[slab_ids]
 
         indi = self.initialize_individual(f, indi)
         if 'groups' in f.info['data']:
             if self.group_by_sites:
-                indi.info['data']['groups'] = m.info['data']['groups']
-            else:
                 indi.info['data']['groups'] = f.info['data']['groups']
+            else:
+                indi.info['data']['groups'] = m.info['data']['groups']
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
-        indi.info['data']['adsorbates'] = [t[0] for t in 
-            msac.get_adsorbates(self.adsorbate_species)]
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],
                                                    m.info['confid'])
         return (self.finalize_individual(indi),
                 self.descriptor + parent_message)
+

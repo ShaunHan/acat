@@ -2467,7 +2467,7 @@
         <span class="n">surface</span> <span class="o">=</span> <span class="p">[</span><span class="n">surface</span><span class="p">]</span> 
 
     <span class="c1">#TODO: implement Woods&#39; notation</span>
-    <span class="k">def</span> <span class="nf">find_ordered_sites</span><span class="p">(</span><span class="n">site_list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">find_special_sites</span><span class="p">(</span><span class="n">site_list</span><span class="p">):</span>
         <span class="n">final_sites</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="s1">&#39;fcc111&#39;</span> <span class="ow">in</span> <span class="n">surface</span><span class="p">:</span> 
             <span class="c1"># fcc+hcp pattern</span>
@@ -2720,11 +2720,11 @@
                         <span class="n">final_sites</span> <span class="o">+=</span> <span class="n">sites_to_keep</span>
         <span class="k">return</span> <span class="n">final_sites</span>
 
-    <span class="n">final_sites</span> <span class="o">=</span> <span class="n">find_ordered_sites</span><span class="p">(</span><span class="n">site_list</span><span class="p">)</span>
+    <span class="n">final_sites</span> <span class="o">=</span> <span class="n">find_special_sites</span><span class="p">(</span><span class="n">site_list</span><span class="p">)</span>
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;both_sides&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;both_sides&#39;</span><span class="p">]:</span>
-                <span class="n">final_sites</span> <span class="o">+=</span> <span class="n">find_ordered_sites</span><span class="p">(</span><span class="n">bot_site_list</span><span class="p">)</span>
+                <span class="n">final_sites</span> <span class="o">+=</span> <span class="n">find_special_sites</span><span class="p">(</span><span class="n">bot_site_list</span><span class="p">)</span>
     <span class="c1"># Add edge coverage for nanoparticles</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">coverage</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>

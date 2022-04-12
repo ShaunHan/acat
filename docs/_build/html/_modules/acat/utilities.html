@@ -676,7 +676,7 @@
     <span class="k">return</span> <span class="n">frag_list</span>        </div>
 
 
-<div class="viewcode-block" id="orthogonal_transform"><a class="viewcode-back" href="../../utilities.html#acat.utilities.orthogonal_transform">[docs]</a><span class="k">def</span> <span class="nf">orthogonal_transform</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+<div class="viewcode-block" id="orthogonal_transform"><a class="viewcode-back" href="../../utilities.html#acat.utilities.orthogonal_transform">[docs]</a><span class="k">def</span> <span class="nf">orthogonal_transform</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">transform_cell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Transform a non-orthogonal cell to an orthogonal cell.&quot;&quot;&quot;</span>
     
     <span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
@@ -690,8 +690,9 @@
             <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps</span><span class="p">:</span>
                 <span class="n">atom</span><span class="o">.</span><span class="n">x</span> <span class="o">-=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+    <span class="k">if</span> <span class="n">transform_cell</span><span class="p">:</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
 
 
 <div class="viewcode-block" id="ratios_from_atoms"><a class="viewcode-back" href="../../utilities.html#acat.utilities.ratios_from_atoms">[docs]</a><span class="k">def</span> <span class="nf">ratios_from_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
@@ -794,26 +795,6 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">atoms</span><span class="p">[((</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">-</span> 
                      <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span></div>
-
-
-<span class="c1">#def relative_cosine_similarity(counter1, counter2):</span>
-<span class="c1">#    &quot;&quot;&quot;Computes the relative cosine similarity between two.</span>
-<span class="c1">#    counter dictionaries (e.g. {&#39;Pt&#39;: 5, &#39;Ni&#39;: 8}).&quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#    if not counter1 and not counter2:</span>
-<span class="c1">#        return 1</span>
-<span class="c1">#    if not counter1 or not counter2:</span>
-<span class="c1">#        return 0 </span>
-<span class="c1">#</span>
-<span class="c1">#    lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())</span>
-<span class="c1">#    lensim = min(lenc1, lenc2) / max(lenc1, lenc2)</span>
-<span class="c1">#    terms = set(counter1).union(counter2)</span>
-<span class="c1">#    dotprod = sum(counter1.get(k, 0) * counter2.get(k, 0) for k in terms)</span>
-<span class="c1">#    magA = math.sqrt(sum(counter1.get(k, 0)**2 for k in terms))</span>
-<span class="c1">#    magB = math.sqrt(sum(counter2.get(k, 0)**2 for k in terms))</span>
-<span class="c1">#    cossim = dotprod / (magA * magB)</span>
-<span class="c1">#</span>
-<span class="c1">#    return lensim * cossim</span>
 
 
 <div class="viewcode-block" id="draw_graph"><a class="viewcode-back" href="../../utilities.html#acat.utilities.draw_graph">[docs]</a><span class="k">def</span> <span class="nf">draw_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="s1">&#39;graph.png&#39;</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;spring&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>               

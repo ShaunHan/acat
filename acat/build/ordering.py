@@ -723,7 +723,7 @@ class SymmetricSlabOrderingGenerator(object):
                      return_squared_distance=True)**0.5 - get_mic(positions[p[1]], 
                      geo_mid, cell, return_squared_distance=True)**0.5) < self.dtol]
 
-        elif self.symmetry == 'vertial_mirror':
+        elif self.symmetry == 'vertical_mirror':
             assert self.bisect_vector is not None
             pairs = self.get_symmetric_pairs(atoms)
 
@@ -734,7 +734,9 @@ class SymmetricSlabOrderingGenerator(object):
             mid_z = (atoms.cell/2.)[2][2]
             pairs = [p for p in pairs if abs(abs(z_positions[p[0]] - mid_z) - 
                      abs(z_positions[p[1]] - mid_z)) < self.ztol]
-            
+        else:
+            raise NotImplementedError("Symmetry '{}' is not supported".format(self.symmetry))
+
         def to_edges(lst):
             it = iter(lst)
             last = next(it) 
