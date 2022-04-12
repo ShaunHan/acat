@@ -73,7 +73,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     
     for atoms in images:
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         db.add_unrelaxed_candidate(atoms, data=atoms.info['data'])
     
     # Connect to the db
@@ -145,7 +145,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     # Relax starting generation
     def relax_an_unrelaxed_candidate(atoms):
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
 
@@ -178,7 +178,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
-            While True:
+            while True:
                 # Assign rng with a random seed
                 np.random.seed(randint(1, 10000))
                 pop.rng = np.random 
@@ -196,18 +196,19 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)        
             if 'data' not in offspring.info:
-                offspring.info['data'] = {}
-            relax(offspring)
-            db.add_relaxed_candidate(offspring)
+                offspring.info['data'] = {'tag': None}
+            
+            return relax(offspring)
             
         # Create a multiprocessing Pool
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially
         # useful when running GA on large nanoparticles  
-        pool.map(procreation, range(pop_size))  
+        relaxed_candidates = pool.map(procreation, range(pop_size))  
         pool.close()
         pool.join()
-    
+        db.add_more_relaxed_candidates(relaxed_candidates)    
+
         # Update the population to allow new candidates to enter
         pop.update()
 
@@ -294,7 +295,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
     
     for atoms in images:
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         db.add_unrelaxed_candidate(atoms, data=atoms.info['data'])
     
     # Connect to the db
@@ -368,7 +369,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
     # Relax starting generation
     def relax_an_unrelaxed_candidate(atoms):
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
 
@@ -401,7 +402,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
-            While True:
+            while True:
                 # Assign rng with a random seed
                 np.random.seed(randint(1, 10000))
                 pop.rng = np.random 
@@ -419,7 +420,7 @@ The script for a fixed-composition parallel genetic algorithm now looks as follo
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)        
             if 'data' not in offspring.info:
-                offspring.info['data'] = {}
+                offspring.info['data'] = {'tag': None}
 
             return relax(offspring)
             
@@ -526,7 +527,7 @@ The script for a parallel genetic algorithm looks as follows:
     
     for atoms in patterns:
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         db.add_unrelaxed_candidate(atoms, data=atoms.info['data'])
     
     # Connect to the db
@@ -554,7 +555,7 @@ The script for a parallel genetic algorithm looks as follows:
         """Returns a list of adsorbate names and corresponding indices."""
     
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         if 'adsorbates' in atoms.info['data']:
             adsorbates = atoms.info['data']['adsorbates']
         else:
@@ -618,7 +619,7 @@ The script for a parallel genetic algorithm looks as follows:
     # Relax starting generation
     def relax_an_unrelaxed_candidate(atoms):
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
 
@@ -650,7 +651,7 @@ The script for a parallel genetic algorithm looks as follows:
         def procreation(x):
             # Select an operator and use it
             op = op_selector.get_operator()
-            While True:
+            while True:
                 # Assign rng with a random seed
                 np.random.seed(randint(1, 10000))
                 pop.rng = np.random 
@@ -668,7 +669,7 @@ The script for a parallel genetic algorithm looks as follows:
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)
             if 'data' not in offspring.info:
-                offspring.info['data'] = {}
+                offspring.info['data'] = {'tag': None}
 
             return relax(offspring, single_point=True) # Single point only for testing
             
@@ -756,7 +757,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     
     for atoms in patterns:
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         db.add_unrelaxed_candidate(atoms, data=atoms.info['data'])
     
     # Connect to the db
@@ -819,7 +820,7 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
     # Relax starting generation
     def relax_an_unrelaxed_candidate(atoms):
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
 
@@ -869,17 +870,18 @@ The script for a fixed-coverage parallel genetic algorithm now looks as follows:
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)
             if 'data' not in offspring.info:
-                offspring.info['data'] = {}
-            relax(offspring, single_point=True) # Single point only for testing
-            db.add_relaxed_candidate(offspring)
+                offspring.info['data'] = {'tag': None}
+
+            return relax(offspring, single_point=True) # Single point only for testing
             
         # Create a multiprocessing Pool
         pool = Pool(os.cpu_count())
         # Perform procreations in parallel. Especially useful when
         # using adsorbate operators which requires site identification
-        pool.map(procreation, range(pop_size))
+        relaxed_candidates = pool.map(procreation, range(pop_size))
         pool.close()
         pool.join()
+        db.add_more_relaxed_candidates(relaxed_candidates) 
     
         # Update the population to allow new candidates to enter
         pop.update()
@@ -966,7 +968,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     
     for atoms in patterns:
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         db.add_unrelaxed_candidate(atoms, data=atoms.info['data'])
     
     # Connect to the db
@@ -995,7 +997,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
         """Returns a list of adsorbate names and corresponding indices."""
     
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         if 'adsorbates' in atoms.info['data']:
             adsorbates = atoms.info['data']['adsorbates']
         else:
@@ -1055,7 +1057,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     # Relax starting generation
     def relax_an_unrelaxed_candidate(atoms):
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
     
@@ -1105,7 +1107,7 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)
             if 'data' not in offspring.info:
-                offspring.info['data'] = {}
+                offspring.info['data'] = {'tag': None}
     
             return relax(offspring, single_point=True) # Single point only for testing
     
@@ -1205,7 +1207,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
     
     for atoms in patterns:
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         db.add_unrelaxed_candidate(atoms, data=atoms.info['data'])
     
     # Connect to the db
@@ -1270,7 +1272,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
     # Relax starting generation
     def relax_an_unrelaxed_candidate(atoms):
         if 'data' not in atoms.info:
-            atoms.info['data'] = {}
+            atoms.info['data'] = {'tag': None}
         nncomp = atoms.get_chemical_formula(mode='hill')
         print('Relaxing ' + nncomp)
     
@@ -1321,7 +1323,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
             nncomp = offspring.get_chemical_formula(mode='hill')
             print('Relaxing ' + nncomp)
             if 'data' not in offspring.info:
-                offspring.info['data'] = {}
+                offspring.info['data'] = {'tag': None}
     
             return relax(offspring, single_point=True) # Single point only for testing
     

@@ -66,6 +66,8 @@ class GroupSubstitute(Mutation):
 
         atoms = atoms.copy() 
         if self.groups is None:
+            assert 'data' in atoms.info 
+            assert 'groups' in atoms.info['data']
             groups = atoms.info['data']['groups']
         else:
             depth = get_depth(self.groups)
@@ -175,6 +177,8 @@ class GroupPermutation(Mutation):
         indi = self.initialize_individual(f)
         indi.info['data']['parents'] = [f.info['confid']]
         if self.groups is None:
+            assert 'data' in f.info
+            assert 'groups' in f.info['data']
             groups = f.info['data']['groups']
             indi.info['data']['groups'] = groups
         else:
@@ -192,8 +196,9 @@ class GroupPermutation(Mutation):
                                   f.info['confid'], self.descriptor)                     
             else:
                 groups = self.groups
-            if 'groups' in f.info['data']:
-                indi.info['data']['groups'] = f.info['data']['groups']
+            if 'data' in f.info:
+                if 'groups' in f.info['data']:
+                    indi.info['data']['groups'] = f.info['data']['groups']
         for _ in range(self.num_muts):
             GroupPermutation.mutate(f, groups, self.elements,
                                     self.keep_composition)
@@ -382,6 +387,8 @@ class AdsorbateGroupSubstitute(Mutation):
 
         hsl = sac.hetero_site_list
         if self.site_groups is None:
+            assert 'data' in atoms.info
+            assert 'groups' in atoms.info['data']
             groups = atoms.info['data']['groups']
         else:
             depth = get_depth(self.site_groups)
@@ -395,7 +402,7 @@ class AdsorbateGroupSubstitute(Mutation):
                         break
                 if not found:
                     return None, '{1} not possible in {0} due to broken symmetry'.format(
-                                  f.info['confid'], self.descriptor)                     
+                                  atoms.info['confid'], self.descriptor)                     
             else:
                 groups = self.site_groups
 
@@ -608,6 +615,8 @@ class AdsorbateGroupPermutation(Mutation):
         hsl = sac.hetero_site_list
 
         if self.site_groups is None:
+            assert 'data' in atoms.info
+            assert 'groups' in atoms.info['data']
             site_groups = f.info['data']['groups']
             indi.info['data']['groups'] = site_groups
         else:
@@ -767,6 +776,10 @@ class GroupCrossover(Crossover):
         f, m = parents
         indi = f.copy()
         if self.groups is None:
+            assert 'data' in f.info
+            assert 'groups' in f.info['data']
+            assert 'data' in m.info
+            assert 'groups' in m.info['data']
             assert f.info['data']['groups'] == m.info['data']['groups']
             groups = indi.info['data']['groups']
         else:
@@ -835,8 +848,9 @@ class GroupCrossover(Crossover):
 
         indi.symbols[mids] = m.symbols[mids]
         indi = self.initialize_individual(f, indi)
-        if 'groups' in f.info['data']:
-            indi.info['data']['groups'] = f.info['data']['groups']
+        if 'data' in f.info:
+            if 'groups' in f.info['data']:
+                indi.info['data']['groups'] = f.info['data']['groups']
         indi.info['data']['parents'] = [i.info['confid'] for i in parents] 
         indi.info['data']['operation'] = 'crossover'
         parent_message = ':Parents {0} {1}'.format(f.info['confid'],

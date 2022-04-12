@@ -426,7 +426,7 @@ structures are still considered to be look alike.</p></li>
 
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
 
 <span class="c1"># Connect to the db</span>
@@ -498,7 +498,7 @@ structures are still considered to be look alike.</p></li>
 <span class="c1"># Relax starting generation</span>
 <span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
 
@@ -531,7 +531,7 @@ structures are still considered to be look alike.</p></li>
     <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="c1"># Select an operator and use it</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
-        <span class="n">While</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="c1"># Assign rng with a random seed</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))</span>
             <span class="n">pop</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span>
@@ -549,17 +549,18 @@ structures are still considered to be look alike.</p></li>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
     <span class="c1"># Create a multiprocessing Pool</span>
     <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
     <span class="c1"># Perform procreations in parallel. Especially</span>
     <span class="c1"># useful when running GA on large nanoparticles</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+    <span class="n">relaxed_candidates</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">relaxed_candidates</span><span class="p">)</span>
 
     <span class="c1"># Update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -643,7 +644,7 @@ structures are still considered to be look alike.</p></li>
 
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
 
 <span class="c1"># Connect to the db</span>
@@ -717,7 +718,7 @@ structures are still considered to be look alike.</p></li>
 <span class="c1"># Relax starting generation</span>
 <span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
 
@@ -750,7 +751,7 @@ structures are still considered to be look alike.</p></li>
     <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="c1"># Select an operator and use it</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
-        <span class="n">While</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="c1"># Assign rng with a random seed</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))</span>
             <span class="n">pop</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span>
@@ -768,7 +769,7 @@ structures are still considered to be look alike.</p></li>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
 
@@ -1062,7 +1063,7 @@ Overwrite in subclass.</p>
 
 <dl class="py class">
 <dt id="acat.ga.adsorbate_operators.ReplaceAdsorbateSpecies">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">ReplaceAdsorbateSpecies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">vacancy_replacement</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#ReplaceAdsorbateSpecies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.ReplaceAdsorbateSpecies" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">ReplaceAdsorbateSpecies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">replace_vacancy</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#ReplaceAdsorbateSpecies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.ReplaceAdsorbateSpecies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
 <p>This operator replace all adsorbates of a certain species with
 another species at the same sites. Return None if there is no
@@ -1077,7 +1078,7 @@ adsorbate present on the surface.</p>
 values of their probabilities of replacing an adsorbate on the
 surface. Choosing adsorbate species with equal probability if
 not specified.</p></li>
-<li><p><strong>vacancy_replacement</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow replacing adsorbates with vacancies, i.e.,
+<li><p><strong>replace_vacancy</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow replacing adsorbates with vacancies, i.e.,
 effectively removing all adsorbates of a certain species.
 Note that if you want to specify species_probabilties, you
 then need to also provide the probability for vacancy
@@ -1218,7 +1219,7 @@ Overwrite in subclass.</p>
 
 <dl class="py class">
 <dt id="acat.ga.adsorbate_operators.CatalystAdsorbateCrossover">
-<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">CatalystAdsorbateCrossover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">group_by_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#CatalystAdsorbateCrossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.CatalystAdsorbateCrossover" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.adsorbate_operators.</code><code class="sig-name descname">CatalystAdsorbateCrossover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">group_by_sites</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/adsorbate_operators.html#CatalystAdsorbateCrossover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.adsorbate_operators.CatalystAdsorbateCrossover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#acat.ga.adsorbate_operators.AdsorbateOperator" title="acat.ga.adsorbate_operators.AdsorbateOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">acat.ga.adsorbate_operators.AdsorbateOperator</span></code></a></p>
 <p>Crossover that divides two particles or two slabs by the catalyst-
 adsorbates interfaces and exchange all adsorbates (only returns one
@@ -1228,25 +1229,9 @@ this operator with other operators that also preserves the indexing.</p>
 other operators being used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – One or a list of adsorbate species to be added to the surface.</p></li>
-<li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
-type. Use the default height settings if the height for a site
-type is not specified.</p></li>
-<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
-genetic algorithm. Make sure all the operators used with this
-operator preserve the indexing of the atoms.</p></li>
-<li><p><strong>group_by_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – If atoms.info[‘data’][‘groups’] is used, please set this to True
+<dd class="field-odd"><p><strong>group_by_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – If atoms.info[‘data’][‘groups’] is used, please set this to True
 if the groups is for adsorption sites, so that the offspring will
-inheritate the site groups. The default is grouping by slab atoms.</p></li>
-<li><p><strong>subtract_heights</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to subtract the height from the bond length when allocating
-a site to an adsorbate. Default is to allocate the site that is
-closest to the adsorbate’s binding atom without subtracting height.
-Useful for ensuring the allocated site for each adsorbate is
-consistent with the site to which the adsorbate was added.</p></li>
-<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
-nearest site to be considered as the atom being bound to the site.</p></li>
-</ul>
+inheritate the site groups. The default is grouping by slab atoms.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -1458,7 +1443,7 @@ alternative for checking graph isomorphism of two structures.</p>
 
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
 
 <span class="c1"># Connect to the db</span>
@@ -1486,7 +1471,7 @@ alternative for checking graph isomorphism of two structures.</p>
     <span class="sd">&quot;&quot;&quot;Returns a list of adsorbate names and corresponding indices.&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="k">if</span> <span class="s1">&#39;adsorbates&#39;</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1550,7 +1535,7 @@ alternative for checking graph isomorphism of two structures.</p>
 <span class="c1"># Relax starting generation</span>
 <span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
 
@@ -1582,7 +1567,7 @@ alternative for checking graph isomorphism of two structures.</p>
     <span class="k">def</span> <span class="nf">procreation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="c1"># Select an operator and use it</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">op_selector</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()</span>
-        <span class="n">While</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="c1"># Assign rng with a random seed</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))</span>
             <span class="n">pop</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span>
@@ -1600,7 +1585,7 @@ alternative for checking graph isomorphism of two structures.</p>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
 
@@ -1684,7 +1669,7 @@ alternative for checking graph isomorphism of two structures.</p>
 
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
 
 <span class="c1"># Connect to the db</span>
@@ -1747,7 +1732,7 @@ alternative for checking graph isomorphism of two structures.</p>
 <span class="c1"># Relax starting generation</span>
 <span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
 
@@ -1797,17 +1782,18 @@ alternative for checking graph isomorphism of two structures.</p>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">add_relaxed_candidate</span><span class="p">(</span><span class="n">offspring</span><span class="p">)</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
 
     <span class="c1"># Create a multiprocessing Pool</span>
     <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
     <span class="c1"># Perform procreations in parallel. Especially useful when</span>
     <span class="c1"># using adsorbate operators which requires site identification</span>
-    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
+    <span class="n">relaxed_candidates</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">procreation</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span><span class="p">))</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">relaxed_candidates</span><span class="p">)</span>
 
     <span class="c1"># Update the population to allow new candidates to enter</span>
     <span class="n">pop</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
@@ -2014,7 +2000,7 @@ Overwrite in subclass.</p>
 
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
 
 <span class="c1"># Connect to the db</span>
@@ -2043,7 +2029,7 @@ Overwrite in subclass.</p>
     <span class="sd">&quot;&quot;&quot;Returns a list of adsorbate names and corresponding indices.&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="k">if</span> <span class="s1">&#39;adsorbates&#39;</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
         <span class="n">adsorbates</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;adsorbates&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -2103,7 +2089,7 @@ Overwrite in subclass.</p>
 <span class="c1"># Relax starting generation</span>
 <span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
 
@@ -2153,7 +2139,7 @@ Overwrite in subclass.</p>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
 
@@ -2183,7 +2169,9 @@ distance between the raw score of the marked niche and the upper
 envelope after adding the individual. The raw score is given by the
 fitness gain in the maximum-gained niche. <strong>The raw scores of each
 configuration for all tasks must be provided as a Numpy array in
-atoms.info[‘data’][‘raw_scores’]</strong>.</p>
+atoms.info[‘data’][‘raw_scores’]</strong>. After providing the raw scores,
+the effective scores is automatically calculated and saved in
+atoms.info[‘key_value_pairs’][‘raw_score’]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2196,7 +2184,7 @@ If False use the same as in Population.</p></li>
 </dl>
 <dl class="py method">
 <dt id="acat.ga.multitasking.MultitaskPopulation.get_rank">
-<code class="sig-name descname">get_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidates</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation.get_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation.get_rank" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidates</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation.get_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation.get_rank" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -2319,7 +2307,7 @@ Overwrite this in the inherited class.</p>
 
 <span class="k">for</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
 
 <span class="c1"># Connect to the db</span>
@@ -2384,7 +2372,7 @@ Overwrite this in the inherited class.</p>
 <span class="c1"># Relax starting generation</span>
 <span class="k">def</span> <span class="nf">relax_an_unrelaxed_candidate</span><span class="p">(</span><span class="n">atoms</span><span class="p">):</span>
     <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">nncomp</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
 
@@ -2435,7 +2423,7 @@ Overwrite this in the inherited class.</p>
         <span class="n">nncomp</span> <span class="o">=</span> <span class="n">offspring</span><span class="o">.</span><span class="n">get_chemical_formula</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;hill&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Relaxing &#39;</span> <span class="o">+</span> <span class="n">nncomp</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
-            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">offspring</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">relax</span><span class="p">(</span><span class="n">offspring</span><span class="p">,</span> <span class="n">single_point</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Single point only for testing</span>
 

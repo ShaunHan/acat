@@ -232,6 +232,9 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
 
     ads.translate(pos - bondpos)
     atoms += ads
+    if ads.get_chemical_formula() == 'H2':
+        shift = (atoms.positions[-2] - atoms.positions[-1]) / 2
+        atoms.positions[-2:,:] += shift
 
 
 def add_adsorbate_to_label(atoms, adsorbate, label, 

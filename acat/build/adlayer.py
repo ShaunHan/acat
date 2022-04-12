@@ -2305,7 +2305,7 @@ def special_coverage_pattern(atoms, adsorbate_species,
         surface = [surface] 
 
     #TODO: implement Woods' notation
-    def find_ordered_sites(site_list):
+    def find_special_sites(site_list):
         final_sites = []
         if 'fcc111' in surface: 
             # fcc+hcp pattern
@@ -2558,11 +2558,11 @@ def special_coverage_pattern(atoms, adsorbate_species,
                         final_sites += sites_to_keep
         return final_sites
 
-    final_sites = find_ordered_sites(site_list)
+    final_sites = find_special_sites(site_list)
     if True in atoms.pbc:
         if 'both_sides' in kwargs:
             if kwargs['both_sides']:
-                final_sites += find_ordered_sites(bot_site_list)
+                final_sites += find_special_sites(bot_site_list)
     # Add edge coverage for nanoparticles
     else:
         if coverage in [1, 2]:

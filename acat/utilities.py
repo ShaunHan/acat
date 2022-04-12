@@ -514,7 +514,7 @@ def string_fragmentation(adsorbate):
     return frag_list        
 
 
-def orthogonal_transform(atoms, eps=1e-5):
+def orthogonal_transform(atoms, transform_cell=True, eps=1e-5):
     """Transform a non-orthogonal cell to an orthogonal cell."""
     
     cell = atoms.cell
@@ -528,8 +528,9 @@ def orthogonal_transform(atoms, eps=1e-5):
             if atom.x >= a[0] - eps:
                 atom.x -= a[0]
 
-    atoms.cell[1][0] = 0
-    atoms.cell[1][2] = 0
+    if transform_cell:
+        atoms.cell[1][0] = 0
+        atoms.cell[1][2] = 0
 
 
 def ratios_from_atoms(atoms):
@@ -632,26 +633,6 @@ def sort_atoms_by_ref_atoms(atoms, ref_atoms, mic=False):
     else:
         return atoms[((ref_atoms.positions[:, np.newaxis] - 
                      atoms.positions)**2).sum(2).argmin(1)]
-
-
-#def relative_cosine_similarity(counter1, counter2):
-#    """Computes the relative cosine similarity between two.
-#    counter dictionaries (e.g. {'Pt': 5, 'Ni': 8})."""
-#
-#    if not counter1 and not counter2:
-#        return 1
-#    if not counter1 or not counter2:
-#        return 0 
-#
-#    lenc1, lenc2 = sum(counter1.values()), sum(counter2.values())
-#    lensim = min(lenc1, lenc2) / max(lenc1, lenc2)
-#    terms = set(counter1).union(counter2)
-#    dotprod = sum(counter1.get(k, 0) * counter2.get(k, 0) for k in terms)
-#    magA = math.sqrt(sum(counter1.get(k, 0)**2 for k in terms))
-#    magB = math.sqrt(sum(counter2.get(k, 0)**2 for k in terms))
-#    cossim = dotprod / (magA * magB)
-#
-#    return lensim * cossim
 
 
 def draw_graph(G, savefig='graph.png', layout='spring', *args, **kwargs):               
