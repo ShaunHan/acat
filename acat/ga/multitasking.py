@@ -15,8 +15,8 @@ class MultitaskPopulation(Population):
     fitness gain in the maximum-gained niche. **The raw scores of each 
     configuration for all tasks must be provided as a Numpy array in
     atoms.info['data']['raw_scores']**. After providing the raw scores, 
-    the effective scores is automatically calculated and saved in 
-    atoms.info['key_value_pairs']['raw_score']
+    **the effective score of each configuration is automatically 
+    calculated and stored in atoms.info['key_value_pairs']['raw_score']**.
 
     Parameters
     ----------
@@ -96,39 +96,37 @@ class MultitaskPopulation(Population):
         will potentially change for all candidates when new are added,
         therefore just recalc the population every time. New candidates
         are required (must not be added before calling this method).
+        The maximum gain dynamic niching (MGDN) algorithm is executed.
         """
-        # Maximum gain dynamic niching (MGDN) algorithm
 
         # Locate the updated upper envelope
-        new_max_scores = self.max_scores.copy()
+        prev_max_scores = self.max_scores.copy()
         gained_ids = []
         for i, a in enumerate(new_cand):
             scores = a.info['data']['raw_scores']
-            gained_niches = np.argwhere(scores > new_max_scores)
+            gained_niches = np.argwhere(scores > self.max_scores)
             if gained_niches.size != 0:
-                new_max_scores[gained_niches] = scores[gained_niches]
+                self.max_scores[gained_niches] = scores[gained_niches]
                 gained_ids.append(i)
 
         # Update the array that records the niche dominating other gained niches
         # with the requirements of: 1. contributes to the updated upper envelope;
-        # 2. maximum in gain. Meanwhile actually update the upper envelope
+        # 2. maximum in gain compared to the previous upper envelope
         for i in gained_ids:
             scores = new_cand[i].info['data']['raw_scores']
-            gained_niches = np.argwhere(scores > self.max_scores)
-            maxed_niches = np.argwhere(scores == new_max_scores)
+            maxed_niches = np.argwhere(scores == self.max_scores)
             if maxed_niches.size != 0:
                 dominating_niche = int(max(maxed_niches, key=lambda x:
-                                           scores[x] - self.max_scores[x]))
-                self.dominating_niches[gained_niches] = dominating_niche
-            self.max_scores[gained_niches] = scores[gained_niches]
+                                           scores[x] - prev_max_scores[x]))
+                self.dominating_niches[maxed_niches] = dominating_niche
 
         # Caculate the effective fitness and assign a niche for each new candidate
         for i in range(len(new_cand)):
             scores = new_cand[i].info['data']['raw_scores']
-            max_gained_niche = np.argmax(scores - self.max_scores)
-            dominating_niche = self.dominating_niches[max_gained_niche]
-            f_eff = float(np.around(scores[max_gained_niche] - 
-                          self.max_scores[max_gained_niche], 8))
+            min_loss_niche = np.argmax(scores - self.max_scores)
+            dominating_niche = self.dominating_niches[min_loss_niche]
+            f_eff = float(np.around(scores[min_loss_niche] - 
+                          self.max_scores[min_loss_niche], 8))
             new_cand[i].info['key_value_pairs']['raw_score'] = f_eff
             new_cand[i].info['key_value_pairs']['niche'] = dominating_niche
 
@@ -141,10 +139,10 @@ class MultitaskPopulation(Population):
             del_ids = [] 
             for a in prev_cand:
                 scores = a.info['data']['raw_scores']
-                max_gained_niche = np.argmax(scores - self.max_scores)
-                dominating_niche = self.dominating_niches[max_gained_niche]
-                f_eff = float(np.around(scores[max_gained_niche] - 
-                              self.max_scores[max_gained_niche], 8))
+                min_loss_niche = np.argmax(scores - self.max_scores)
+                dominating_niche = self.dominating_niches[min_loss_niche]
+                f_eff = float(np.around(scores[min_loss_niche] - 
+                              self.max_scores[min_loss_niche], 8))
                 a.info['key_value_pairs']['raw_score'] = f_eff
                 a.info['key_value_pairs']['niche'] = dominating_niche
                 updated_cand.append(a)

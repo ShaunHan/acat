@@ -2170,8 +2170,8 @@ envelope after adding the individual. The raw score is given by the
 fitness gain in the maximum-gained niche. <strong>The raw scores of each
 configuration for all tasks must be provided as a Numpy array in
 atoms.info[‘data’][‘raw_scores’]</strong>. After providing the raw scores,
-the effective scores is automatically calculated and saved in
-atoms.info[‘key_value_pairs’][‘raw_score’]</p>
+<strong>the effective score of each configuration is automatically
+calculated and stored in atoms.info[‘key_value_pairs’][‘raw_score’]</strong>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2199,7 +2199,8 @@ If False use the same as in Population.</p></li>
 the population, that can’t be used here since the fitness
 will potentially change for all candidates when new are added,
 therefore just recalc the population every time. New candidates
-are required (must not be added before calling this method).</p>
+are required (must not be added before calling this method).
+The maximum gain dynamic niching (MGDN) algorithm is executed.</p>
 </dd></dl>
 
 <dl class="py method">
