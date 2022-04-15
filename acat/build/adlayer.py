@@ -10,13 +10,12 @@ from ..utilities import (get_mic, atoms_too_close_after_addition,
                          is_list_or_tuple, numbers_from_ratios)
 from .action import (add_adsorbate_to_site, 
                      remove_adsorbate_from_site)
+from ..ga.graph_comparators import WLGraphComparator
 from ase.io import read, write, Trajectory
 from ase.formula import Formula
 from ase.geometry import find_mic
 from operator import attrgetter
 from copy import deepcopy
-import networkx.algorithms.isomorphism as iso
-import networkx as nx
 from scipy.spatial import distance_matrix
 import numpy as np
 import warnings
@@ -671,7 +670,8 @@ class RandomPatternGenerator(object):
             action_probabilities=None,
             num_act=1,
             add_species_composition=None,
-            unique=True,
+            unique=False,
+            hmax=2,
             site_preference=None,
             subsurf_effect=False):
         """Run the pattern generator.
@@ -707,8 +707,13 @@ class RandomPatternGenerator(object):
             Adding adsorbate species according to species_probabilities if 
             not specified. Please only use this if the action is 'add'.
 
-        unique : bool, default True 
+        unique : bool, default False 
             Whether to discard duplicate patterns based on graph isomorphism.
+            The Weisfeiler-Lehman subtree kernel is used to check identity.
+
+        hmax : int, default 2                                               
+            Maximum number of iterations for color refinement. Only relevant
+            if unique=True.
 
         site_preference : str of list of strs, defualt None
             The site type(s) that has higher priority to attach adsorbates.
@@ -734,6 +739,8 @@ class RandomPatternGenerator(object):
 
         self.labels_list, self.graph_list = [], []
         self.unique = unique
+        if self.unique:
+            self.comp = WLGraphComparator(hmax=hmax)
         self.subsurf_effect = subsurf_effect
         if len(self.traj) > 0 and self.unique and self.append_trajectory:                                 
             if self.logfile is not None:                             
@@ -850,8 +857,6 @@ class RandomPatternGenerator(object):
                     G = nsac.get_graph(fragmentation=self.fragmentation,
                                        subsurf_effect=self.subsurf_effect)
                     if self.graph_list:
-                        # Skip duplicates based on isomorphism 
-                        nm = iso.categorical_node_match('symbol', 'X')
                         potential_graphs = [g for i, g in enumerate(self.graph_list) 
                                             if self.labels_list[i] == labs]
                         # If the surface slab is clean, the potentially isomorphic
@@ -864,10 +869,10 @@ class RandomPatternGenerator(object):
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
                             continue
-                        if any(H for H in potential_graphs if 
-                        nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                        # Skip duplicates based on isomorphism 
+                        if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
                             if self.logfile is not None:                             
-                                self.logfile.write('Duplicate found by isomorphism. '
+                                self.logfile.write('Duplicate found by isomorphism test. '
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
                             continue
@@ -1186,9 +1191,7 @@ class SystematicPatternGenerator(object):
                                 and not self.subsurf_effect:
                                     self.n_duplicate += 1
                                     continue
-                                nm = iso.categorical_node_match('symbol', 'X')
-                                if any(H for H in potential_graphs if 
-                                nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
                                     self.n_duplicate += 1
                                     continue
 
@@ -1277,9 +1280,7 @@ class SystematicPatternGenerator(object):
                         # Skip duplicates based on isomorphism 
                         potential_graphs = [g for i, g in enumerate(self.graph_list)
                                             if self.labels_list[i] == labs]
-                        nm = iso.categorical_node_match('symbol', 'X')
-                        if any(H for H in potential_graphs if 
-                        nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                        if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
                             self.n_duplicate += 1
                             continue            
 
@@ -1461,9 +1462,7 @@ class SystematicPatternGenerator(object):
                                 # Skip duplicates based on isomorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
                                                     if self.labels_list[i] == labs]
-                                nm = iso.categorical_node_match('symbol', 'X')
-                                if any(H for H in potential_graphs if 
-                                nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
                                     self.n_duplicate += 1
                                     continue            
 
@@ -1646,9 +1645,7 @@ class SystematicPatternGenerator(object):
                                 # Skip duplicates based on isomorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
                                                     if self.labels_list[i] == labs]
-                                nm = iso.categorical_node_match('symbol', 'X')
-                                if any(H for H in potential_graphs if 
-                                nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
                                     self.n_duplicate += 1
                                     continue            
 
@@ -1674,7 +1671,8 @@ class SystematicPatternGenerator(object):
             action='add',
             num_act=1, 
             add_species_composition=None,
-            unique=True, 
+            unique=False,
+            hmax=2,
             site_preference=None,
             subsurf_effect=False):
         """Run the pattern generator.
@@ -1702,8 +1700,13 @@ class SystematicPatternGenerator(object):
             Adding all possible adsorbate species if not specified. Please 
             only use this if the action is 'add'.
 
-        unique : bool, default True 
+        unique : bool, default False 
             Whether to discard duplicate patterns based on graph isomorphism.
+            The Weisfeiler-Lehman subtree kernel is used to check identity.
+
+        hmax : int, default 2                                               
+            Maximum number of iterations for color refinement. Only relevant
+            if unique=True.
 
         site_preference : str of list of strs, defualt None
             The site type(s) that has higher priority to attach adsorbates.
@@ -1732,6 +1735,8 @@ class SystematicPatternGenerator(object):
 
         self.labels_list, self.graph_list = [], []
         self.unique = unique
+        if self.unique:
+            self.comp = WLGraphComparator(hmax=hmax)
         self.subsurf_effect = subsurf_effect
         if len(self.traj) > 0 and self.unique and self.append_trajectory:                                 
             if self.logfile is not None:                             
@@ -1809,7 +1814,7 @@ class SystematicPatternGenerator(object):
                 self._exhaustive_replace_adsorbate(atoms, sas)            
 
             if self.logfile is not None:
-                method = 'label match' if self.clean_slab else 'isomorphism'
+                method = 'label match' if self.clean_slab else 'isomorphism test'
                 self.logfile.write('All possible patterns were generated '
                                    + 'for image {}\n'.format(n) +
                                    '{} patterns were '.format(self.n_duplicate)
@@ -2101,7 +2106,7 @@ class OrderedPatternGenerator(object):
  
         return sorted(all_sorted_groups)
  
-    def run(self, max_gen=None, unique=True):
+    def run(self, max_gen=None, unique=False, hmax=2):
         """Run the ordered pattern generator.
 
         Parameters
@@ -2111,8 +2116,13 @@ class OrderedPatternGenerator(object):
             forever (until exhaustive for systematic search) if not 
             specified. 
 
-        unique : bool, default True 
+        unique : bool, default False 
             Whether to discard duplicate patterns based on graph isomorphism.
+            The Weisfeiler-Lehman subtree kernel is used to check identity.
+
+        hmax : int, default 2                                               
+            Maximum number of iterations for color refinement. Only relevant
+            if unique=True.
 
         """
 
@@ -2123,6 +2133,9 @@ class OrderedPatternGenerator(object):
         groups = self.site_groups        
         ngroups = len(groups)
         labels_list, graph_list = [], []
+        if unique:
+            comp = WLGraphComparator(hmax=hmax)
+
         if len(traj) > 0 and unique and self.append_trajectory:                                
             prev_images = read(self.trajectory, index=':')
             for patoms in prev_images:
@@ -2184,11 +2197,9 @@ class OrderedPatternGenerator(object):
                                 G = nsac.get_graph(fragmentation=self.fragmentation)
                                 if graph_list:
                                     # Skip duplicates based on isomorphism 
-                                    nm = iso.categorical_node_match('symbol', 'X')
                                     potential_graphs = [g for i, g in enumerate(graph_list) 
                                                         if labels_list[i] == labs]
-                                    if any(H for H in potential_graphs if 
-                                    nx.isomorphism.is_isomorphic(G, H, node_match=nm)):
+                                    if any(H for H in potential_graphs if comp.looks_like(G, H)):
                                         dup = True
                                         break
                                 graph_list.append(G)

@@ -172,13 +172,12 @@
                          <span class="n">is_list_or_tuple</span><span class="p">,</span> <span class="n">numbers_from_ratios</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.action</span> <span class="kn">import</span> <span class="p">(</span><span class="n">add_adsorbate_to_site</span><span class="p">,</span> 
                      <span class="n">remove_adsorbate_from_site</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..ga.graph_comparators</span> <span class="kn">import</span> <span class="n">WLGraphComparator</span>
 <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">,</span> <span class="n">Trajectory</span>
 <span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
 <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">networkx.algorithms.isomorphism</span> <span class="k">as</span> <span class="nn">iso</span>
-<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance_matrix</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -833,7 +832,8 @@
             <span class="n">action_probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">num_act</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">add_species_composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">hmax</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">site_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the pattern generator.</span>
@@ -869,8 +869,13 @@
 <span class="sd">            Adding adsorbate species according to species_probabilities if </span>
 <span class="sd">            not specified. Please only use this if the action is &#39;add&#39;.</span>
 
-<span class="sd">        unique : bool, default True </span>
+<span class="sd">        unique : bool, default False </span>
 <span class="sd">            Whether to discard duplicate patterns based on graph isomorphism.</span>
+<span class="sd">            The Weisfeiler-Lehman subtree kernel is used to check identity.</span>
+
+<span class="sd">        hmax : int, default 2                                               </span>
+<span class="sd">            Maximum number of iterations for color refinement. Only relevant</span>
+<span class="sd">            if unique=True.</span>
 
 <span class="sd">        site_preference : str of list of strs, defualt None</span>
 <span class="sd">            The site type(s) that has higher priority to attach adsorbates.</span>
@@ -896,6 +901,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unique</span> <span class="o">=</span> <span class="n">unique</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp</span> <span class="o">=</span> <span class="n">WLGraphComparator</span><span class="p">(</span><span class="n">hmax</span><span class="o">=</span><span class="n">hmax</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span> <span class="o">=</span> <span class="n">subsurf_effect</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span><span class="p">:</span>                                 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                             
@@ -1012,8 +1019,6 @@
                     <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">,</span>
                                        <span class="n">subsurf_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">:</span>
-                        <span class="c1"># Skip duplicates based on isomorphism </span>
-                        <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
                         <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span> 
                                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">labs</span><span class="p">]</span>
                         <span class="c1"># If the surface slab is clean, the potentially isomorphic</span>
@@ -1026,10 +1031,10 @@
                                                    <span class="o">+</span> <span class="s1">&#39;Discarded!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
                             <span class="k">continue</span>
-                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> 
-                        <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
+                        <span class="c1"># Skip duplicates based on isomorphism </span>
+                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">)):</span>
                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                             
-                                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Duplicate found by isomorphism. &#39;</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Duplicate found by isomorphism test. &#39;</span>
                                                    <span class="o">+</span> <span class="s1">&#39;Discarded!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
                             <span class="k">continue</span>
@@ -1348,9 +1353,7 @@
                                 <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span><span class="p">:</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>
-                                <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
-                                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> 
-                                <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
+                                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">)):</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>
 
@@ -1439,9 +1442,7 @@
                         <span class="c1"># Skip duplicates based on isomorphism </span>
                         <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
                                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">labs</span><span class="p">]</span>
-                        <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> 
-                        <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
+                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">)):</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="k">continue</span>            
 
@@ -1623,9 +1624,7 @@
                                 <span class="c1"># Skip duplicates based on isomorphism </span>
                                 <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
                                                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">labs</span><span class="p">]</span>
-                                <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
-                                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> 
-                                <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
+                                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">)):</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>            
 
@@ -1808,9 +1807,7 @@
                                 <span class="c1"># Skip duplicates based on isomorphism </span>
                                 <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span><span class="p">)</span>
                                                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">labs</span><span class="p">]</span>
-                                <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
-                                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> 
-                                <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
+                                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">)):</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span> <span class="o">+=</span> <span class="mi">1</span>
                                     <span class="k">continue</span>            
 
@@ -1836,7 +1833,8 @@
             <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span>
             <span class="n">num_act</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
             <span class="n">add_species_composition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+            <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">hmax</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">site_preference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">subsurf_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the pattern generator.</span>
@@ -1864,8 +1862,13 @@
 <span class="sd">            Adding all possible adsorbate species if not specified. Please </span>
 <span class="sd">            only use this if the action is &#39;add&#39;.</span>
 
-<span class="sd">        unique : bool, default True </span>
+<span class="sd">        unique : bool, default False </span>
 <span class="sd">            Whether to discard duplicate patterns based on graph isomorphism.</span>
+<span class="sd">            The Weisfeiler-Lehman subtree kernel is used to check identity.</span>
+
+<span class="sd">        hmax : int, default 2                                               </span>
+<span class="sd">            Maximum number of iterations for color refinement. Only relevant</span>
+<span class="sd">            if unique=True.</span>
 
 <span class="sd">        site_preference : str of list of strs, defualt None</span>
 <span class="sd">            The site type(s) that has higher priority to attach adsorbates.</span>
@@ -1894,6 +1897,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">labels_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unique</span> <span class="o">=</span> <span class="n">unique</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp</span> <span class="o">=</span> <span class="n">WLGraphComparator</span><span class="p">(</span><span class="n">hmax</span><span class="o">=</span><span class="n">hmax</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_effect</span> <span class="o">=</span> <span class="n">subsurf_effect</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span><span class="p">:</span>                                 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                             
@@ -1971,7 +1976,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_exhaustive_replace_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sas</span><span class="p">)</span>            
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;label match&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_slab</span> <span class="k">else</span> <span class="s1">&#39;isomorphism&#39;</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;label match&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_slab</span> <span class="k">else</span> <span class="s1">&#39;isomorphism test&#39;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;All possible patterns were generated &#39;</span>
                                    <span class="o">+</span> <span class="s1">&#39;for image </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span>
                                    <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> patterns were &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_duplicate</span><span class="p">)</span>
@@ -2263,7 +2268,7 @@
  
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_sorted_groups</span><span class="p">)</span></div>
  
-<div class="viewcode-block" id="OrderedPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.OrderedPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="OrderedPatternGenerator.run"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.OrderedPatternGenerator.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run the ordered pattern generator.</span>
 
 <span class="sd">        Parameters</span>
@@ -2273,8 +2278,13 @@
 <span class="sd">            forever (until exhaustive for systematic search) if not </span>
 <span class="sd">            specified. </span>
 
-<span class="sd">        unique : bool, default True </span>
+<span class="sd">        unique : bool, default False </span>
 <span class="sd">            Whether to discard duplicate patterns based on graph isomorphism.</span>
+<span class="sd">            The Weisfeiler-Lehman subtree kernel is used to check identity.</span>
+
+<span class="sd">        hmax : int, default 2                                               </span>
+<span class="sd">            Maximum number of iterations for color refinement. Only relevant</span>
+<span class="sd">            if unique=True.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -2285,6 +2295,9 @@
         <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_groups</span>        
         <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
         <span class="n">labels_list</span><span class="p">,</span> <span class="n">graph_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+            <span class="n">comp</span> <span class="o">=</span> <span class="n">WLGraphComparator</span><span class="p">(</span><span class="n">hmax</span><span class="o">=</span><span class="n">hmax</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">unique</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_trajectory</span><span class="p">:</span>                                
             <span class="n">prev_images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">patoms</span> <span class="ow">in</span> <span class="n">prev_images</span><span class="p">:</span>
@@ -2346,11 +2359,9 @@
                                 <span class="n">G</span> <span class="o">=</span> <span class="n">nsac</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">fragmentation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragmentation</span><span class="p">)</span>
                                 <span class="k">if</span> <span class="n">graph_list</span><span class="p">:</span>
                                     <span class="c1"># Skip duplicates based on isomorphism </span>
-                                    <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>
                                     <span class="n">potential_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph_list</span><span class="p">)</span> 
                                                         <span class="k">if</span> <span class="n">labels_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">labs</span><span class="p">]</span>
-                                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> 
-                                    <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">)):</span>
+                                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">potential_graphs</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">)):</span>
                                         <span class="n">dup</span> <span class="o">=</span> <span class="kc">True</span>
                                         <span class="k">break</span>
                                 <span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>

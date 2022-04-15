@@ -2,20 +2,20 @@
 from ..adsorbate_coverage import ClusterAdsorbateCoverage
 from ..adsorbate_coverage import SlabAdsorbateCoverage
 from ..utilities import neighbor_shell_list, get_adj_matrix
-import networkx.algorithms.isomorphism as iso
+from ase.atoms import Atoms
 import networkx as nx
 import numpy as np
 
 
 class AdsorptionGraphComparator(object):
     """Compares the graph of adsorbate overlayer + surface atoms and 
-    returns True if they are isomorphic with node matches. Before
-    checking graph isomorphism, a cheap label match is used to reject
-    graphs that are impossible to be isomorphic.
+    returns True if they are isomorphic with node matches. Before checking 
+    graph isomorphism by color refinement, a cheap label match is used to 
+    reject graphs that are impossible to be isomorphic.
 
-    The graphs can be quite costly to obtain every time a graph is 
-    required (and disk intensive if saved), thus it makes sense to 
-    get the graph along with e.g. the potential energy and save it in 
+    The graphs (nx.Graph objects) can be quite costly to obtain every time 
+    a graph is required (and disk intensive if saved), thus it makes sense 
+    to get the graph along with e.g. the potential energy and save it in 
     atoms.info['data']['graph'].
 
     Parameters
@@ -38,6 +38,9 @@ class AdsorptionGraphComparator(object):
         Useful for ensuring the allocated site for each adsorbate is
         consistent with the site to which the adsorbate was added. 
 
+    hmax : int, default 2
+        Maximum number of iterations for color refinement.
+
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between an atom and its
         nearest site to be considered as the atom being bound to the site.
@@ -47,13 +50,15 @@ class AdsorptionGraphComparator(object):
     def __init__(self, adsorption_sites,  
                  composition_effect=True,
                  subtract_height=False,
-                 dmax=2.5, **kwargs):
+                 hmax=2, dmax=2.5, **kwargs):
         
         self.adsorption_sites = adsorption_sites
         self.composition_effect = composition_effect
         self.subtract_height = subtract_height
+        self.hmax = hmax
         self.dmax = dmax
         self.kwargs = kwargs
+        self.comp = WLGraphComparator(hmax=self.hmax)
 
     def looks_like(self, a1, a2):
         isocheck = False
@@ -97,18 +102,23 @@ class AdsorptionGraphComparator(object):
                 G1 = sac1.get_graph(self.kwargs)
                 G2 = sac2.get_graph(self.kwargs)
         if isocheck:
-            nm = iso.categorical_node_match('symbol', 'X')  
-            if nx.isomorphism.is_isomorphic(G1, G2, node_match=nm):
+            if self.comp.looks_like(G1, G2):
                 return True
 
         return False
 
 
 class WLGraphComparator(object):
-    """Compares two structures based on the Weisfeiler-Lehman subtree
-    kernel, as described in N. Shervashidze et al., Journal of Machine 
-    Learning Research 2011, 12, 2539–2561. This serves as an efficient 
-    alternative for checking graph isomorphism of two structures. 
+    """Compares two structures (or graphs) based on the Weisfeiler-Lehman 
+    subtree kernel (color refinement), as described in N. Shervashidze et 
+    al., Journal of Machine Learning Research 2011, 12, 2539–2561. This 
+    serves as a scalable solver for checking graph isomorphism of two 
+    structures. 
+
+    The graphs (nx.Graph objects) can be quite costly to obtain every time 
+    a graph is required (and disk intensive if saved), thus it makes sense 
+    to get the graph along with e.g. the potential energy and save it in 
+    atoms.info['data']['graph'].
 
     Parameters
     ----------
@@ -129,6 +139,10 @@ class WLGraphComparator(object):
         self.tol = tol
 
     def looks_like(self, a1, a2):
+        if ('data' in a1.info and 'graph' in a1.info['data']) and (
+        'data' in a2.info and 'graph' in a2.info['data']):
+            a1 = a1.info['data']['graph']
+            a2 = a2.info['data']['graph']
         d1 = WLGraphComparator.get_label_dict(a1, self.hmax, self.dx)
         d2 = WLGraphComparator.get_label_dict(a2, self.hmax, self.dx)
         d12 = {k: [d[k] if k in d else 0 for d in (d1, d2)] 
@@ -143,17 +157,25 @@ class WLGraphComparator(object):
         return abs(k12 - (k11 * k22)**0.5) <= self.tol 
 
     @classmethod
-    def get_label_dict(cls, atoms, hmax, dx):                                                        
-        d = {}                                                                
-        numbers = atoms.numbers
-        nblist = neighbor_shell_list(atoms, dx=dx, neighbor_number=1, 
-                                     mic=(True in atoms.pbc))                     
-        A = get_adj_matrix(nblist)                                                
-        G = nx.from_numpy_matrix(A)
+    def get_label_dict(cls, G, hmax, dx):                                                        
+        d = {}
+        if isinstance(G, Atoms):
+            atoms = G.copy()
+            symbols = atoms.symbols
+            nblist = neighbor_shell_list(atoms, dx=dx, neighbor_number=1, 
+                                         mic=(True in atoms.pbc))                     
+            A = get_adj_matrix(nblist)
+            N = len(A)
+            G = nx.from_numpy_matrix(A)
+        else:
+            N = G.number_of_nodes()
+            symbols = np.asarray([G.nodes[i]['symbol'] for i in range(N)], 
+                                 dtype=object)
+
         nnlabs, neighbors = {}, {}
         isolates = []
-        for i in range(len(A)):
-            lab0 = str(numbers[i])
+        for i in range(N):
+            lab0 = str(symbols[i])
             if lab0 in d:
                 d[lab0] += 1.
             else:
@@ -165,8 +187,8 @@ class WLGraphComparator(object):
                 if len(nns) == 0:
                     isolates.append(i)
                     continue
-                sorted_numbers = sorted(numbers[nns])
-                lab1 = lab0 + ':' + ','.join(map(str, sorted_numbers))
+                sorted_symbols = sorted(symbols[nns])
+                lab1 = lab0 + ':' + ','.join(sorted_symbols)
                 nnlabs[i] = lab1
                 if lab1 in d:
                     d[lab1] += 1 
@@ -175,7 +197,7 @@ class WLGraphComparator(object):
         if hmax > 1: 
             for k in range(1, hmax):
                 nnnlabs = {}
-                for i in range(len(A)):
+                for i in range(N):
                     if i in isolates:
                         continue
                     nnlab = nnlabs[i]

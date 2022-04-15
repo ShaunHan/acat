@@ -1339,7 +1339,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
         # (DO NOT add relaxed_candidates into db before this update)
         pop.update(new_cand=relaxed_candidates) 
 
-The fittest individuals covering all tasks can be easily obtained by the following script:
+The fittest individuals covering all tasks (and which task is dominated by which individual) can be easily obtained by the following script:
 
 .. code-block:: python
 
@@ -1348,14 +1348,17 @@ The fittest individuals covering all tasks can be easily obtained by the followi
 
     db = connect('ridge_Ni48Pt16_ads_multitask.db')
     fittest_images = []
-    seen_niches = set()
+    seen_dns = set()
     for row in db.select('relaxed=1'):
         atoms = row.toatoms()
         f_eff = row.raw_score
-        niche = row.niche
+        dn = row.dominating_niche
+        niches = row.data['niches']
         # Get the fittest individual with an effective
         # fitness of 0 in each niche (without duplicates)
-        if (f_eff == 0) and (niche not in seen_niches):
-            seen_niches.add(niche)
+        if (f_eff == 0) and (dn not in seen_dns):
+            seen_dns.add(dn)
             fittest_images.append(atoms)
+        # Get the niches where this structure is the fittest
+        print('Fittest niches: {}'.format(niches))
     write('fittest_images.traj', fittest_images)

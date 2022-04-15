@@ -17,6 +17,9 @@ class MultitaskPopulation(Population):
     atoms.info['data']['raw_scores']**. After providing the raw scores, 
     **the effective score of each configuration is automatically 
     calculated and stored in atoms.info['key_value_pairs']['raw_score']**.
+    The niches that benefit the most from each configuration are stored in
+    atoms.info['data']['niches'], and the dominating niche is stored in
+    atoms.info['key_value_pairs']['dominating_niche'].
 
     Parameters
     ----------
@@ -36,7 +39,7 @@ class MultitaskPopulation(Population):
                  exp_function=True, exp_prefactor=0.5, rng=np.random):
         self.exp_function = exp_function
         self.exp_prefactor = exp_prefactor
-        self.vf = lambda x: x.info['key_value_pairs']['niche']
+        self.vf = lambda x: x.info['key_value_pairs']['dominating_niche']
         # The current fitness is set at each update of the population
         self.current_fitness = None
 
@@ -99,7 +102,7 @@ class MultitaskPopulation(Population):
         The maximum gain dynamic niching (MGDN) algorithm is executed.
         """
 
-        # Locate the updated upper envelope
+        # Update the upper envelope
         prev_max_scores = self.max_scores.copy()
         gained_ids = []
         for i, a in enumerate(new_cand):
@@ -112,12 +115,16 @@ class MultitaskPopulation(Population):
         # Update the array that records the niche dominating other gained niches
         # with the requirements of: 1. contributes to the updated upper envelope;
         # 2. maximum in gain compared to the previous upper envelope
+        first_generation = np.any(prev_max_scores == np.NINF)
         for i in gained_ids:
             scores = new_cand[i].info['data']['raw_scores']
             maxed_niches = np.argwhere(scores == self.max_scores)
             if maxed_niches.size != 0:
-                dominating_niche = int(max(maxed_niches, key=lambda x:
-                                           scores[x] - prev_max_scores[x]))
+                if first_generation:
+                    dominating_niche = int(max(maxed_niches, key=lambda x: scores[x])
+                else:
+                    dominating_niche = int(max(maxed_niches, key=lambda x:
+                                               scores[x] - prev_max_scores[x]))
                 self.dominating_niches[maxed_niches] = dominating_niche
 
         # Caculate the effective fitness and assign a niche for each new candidate
@@ -128,7 +135,9 @@ class MultitaskPopulation(Population):
             f_eff = float(np.around(scores[min_loss_niche] - 
                           self.max_scores[min_loss_niche], 8))
             new_cand[i].info['key_value_pairs']['raw_score'] = f_eff
-            new_cand[i].info['key_value_pairs']['niche'] = dominating_niche
+            new_cand[i].info['key_value_pairs']['dominating_niche'] = dominating_niche
+            new_cand[i].info['data']['niches'] = np.argwhere(
+                self.dominating_niches==dominating_niche).flatten() 
 
         # Update the fitness of all previously-relaxed candidates if fitness     
         # is gained at any niche from the new generation (niche migration)
@@ -144,7 +153,9 @@ class MultitaskPopulation(Population):
                 f_eff = float(np.around(scores[min_loss_niche] - 
                               self.max_scores[min_loss_niche], 8))
                 a.info['key_value_pairs']['raw_score'] = f_eff
-                a.info['key_value_pairs']['niche'] = dominating_niche
+                a.info['key_value_pairs']['dominating_niche'] = dominating_niche
+                a.info['data']['niches'] = np.argwhere(
+                    self.dominating_niches==dominating_niche).flatten() 
                 updated_cand.append(a)
                 gaid = a.info['confid']
                 del_ids.append(gaid)
