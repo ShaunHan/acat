@@ -121,7 +121,7 @@ class MultitaskPopulation(Population):
             maxed_niches = np.argwhere(scores == self.max_scores)
             if maxed_niches.size != 0:
                 if first_generation:
-                    dominating_niche = int(max(maxed_niches, key=lambda x: scores[x])
+                    dominating_niche = int(max(maxed_niches, key=lambda x: scores[x]))
                 else:
                     dominating_niche = int(max(maxed_niches, key=lambda x:
                                                scores[x] - prev_max_scores[x]))

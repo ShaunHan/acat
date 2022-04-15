@@ -97,7 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.group_operators">Symmetry-constrained genetic algorithm for nanoalloys</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.adsorbate_operators">Genetic algorithm for adlayer patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-0">Symmetry-constrained genetic algorithm for adlayer patterns</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#evolutionary-multitasking">Evolutionary Multitasking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-acat.ga.multitasking">Evolutionary Multitasking</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
@@ -2163,8 +2163,90 @@ Overwrite in subclass.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="evolutionary-multitasking">
-<h2>Evolutionary Multitasking<a class="headerlink" href="#evolutionary-multitasking" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-acat.ga.multitasking">
+<span id="evolutionary-multitasking"></span><h2>Evolutionary Multitasking<a class="headerlink" href="#module-acat.ga.multitasking" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="acat.ga.multitasking.MultitaskPopulation">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.multitasking.</code><code class="sig-name descname">MultitaskPopulation</code><span class="sig-paren">(</span><em class="sig-param">data_connection</em>, <em class="sig-param">population_size</em>, <em class="sig-param">num_tasks</em>, <em class="sig-param">comparator=None</em>, <em class="sig-param">logfile=None</em>, <em class="sig-param">use_extinct=False</em>, <em class="sig-param">exp_function=True</em>, <em class="sig-param">exp_prefactor=0.5</em>, <em class="sig-param">rng=&lt;module 'numpy.random' from '/home/modules/software/SciPy-bundle/2020.11-intel-2020b/lib/python3.8/site-packages/numpy/random/__init__.py'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.population.Population</span></code></p>
+<p>Different tasks are assigned to different niches. The candidates
+are ranked according to the effective fitness, given by the shortest
+distance between the raw score of the marked niche and the upper
+envelope after adding the individual. The raw score is given by the
+fitness gain in the maximum-gained niche. <strong>The raw scores of each
+configuration for all tasks must be provided as a Numpy array in
+atoms.info[‘data’][‘raw_scores’]</strong>. After providing the raw scores,
+<strong>the effective score of each configuration is automatically
+calculated and stored in atoms.info[‘key_value_pairs’][‘raw_score’]</strong>.
+The niches that benefit the most from each configuration are stored in
+atoms.info[‘data’][‘niches’], and the dominating niche is stored in
+atoms.info[‘key_value_pairs’][‘dominating_niche’].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_tasks</strong> (<em>int</em>) – The number of tasks.</p></li>
+<li><p><strong>exp_function</strong> (<em>bool</em><em>, </em><em>default True</em>) – If True use an exponential function for ranking the fitness.
+If False use the same as in Population.</p></li>
+<li><p><strong>exp_prefactor</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – The prefactor used in the exponential fitness scaling function.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.multitasking.MultitaskPopulation.get_rank">
+<code class="sig-name descname">get_rank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidates</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation.get_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation.get_rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="acat.ga.multitasking.MultitaskPopulation.set_vf_dict">
+<code class="sig-name descname">set_vf_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidates</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">sort_arguments</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation.set_vf_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation.set_vf_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="acat.ga.multitasking.MultitaskPopulation.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_cand</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>The update method in Population will add to the end of
+the population, that can’t be used here since the fitness
+will potentially change for all candidates when new are added,
+therefore just recalc the population every time. New candidates
+are required (must not be added before calling this method).
+The maximum gain dynamic niching (MGDN) algorithm is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.ga.multitasking.MultitaskPopulation.get_two_candidates">
+<code class="sig-name descname">get_two_candidates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskPopulation.get_two_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskPopulation.get_two_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns two candidates for pairing employing the
+roulete wheel selection scheme described in
+R.L. Johnston Dalton Transactions,
+Vol. 22, No. 22. (2003), pp. 4193-4207</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="acat.ga.multitasking.MultitaskGenerationRepetitionConvergence">
+<em class="property">class </em><code class="sig-prename descclassname">acat.ga.multitasking.</code><code class="sig-name descname">MultitaskGenerationRepetitionConvergence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">population_instance</span></em>, <em class="sig-param"><span class="n">number_of_generations</span></em>, <em class="sig-param"><span class="n">max_generations</span><span class="o">=</span><span class="default_value">100000000</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskGenerationRepetitionConvergence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskGenerationRepetitionConvergence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.ga.convergence.Convergence</span></code></p>
+<p>Returns True if the latest finished population is stagnated
+(no fitness gain in any task) for number_of_generations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>number_of_generations</strong> (<em>int</em>) – How many generations need to be equal before convergence.</p></li>
+<li><p><strong>max_generations</strong> (<em>int</em><em>, </em><em>default indefinte</em>) – The maximum number of generations the GA is allowed to run.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="acat.ga.multitasking.MultitaskGenerationRepetitionConvergence.converged">
+<code class="sig-name descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/multitasking.html#MultitaskGenerationRepetitionConvergence.converged"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.multitasking.MultitaskGenerationRepetitionConvergence.converged" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is called to find out if the algorithm
+run has converged, it should return True or False.
+Overwrite this in the inherited class.</p>
+</dd></dl>
+
+</dd></dl>
+
 <p><strong>Example1</strong></p>
 <p>We implement evolutionary multitasking in a Population instance and a Convergence instance in ACAT. The maximum-gain dynamic niching (MGDN) algrotim is implemented in the <code class="docutils literal notranslate"><span class="pre">MultitaskPopulation</span></code>.</p>
 <p>As an example we will simultaneously optimize both the adsorbate overlayer pattern and the catalyst chemical ordering of a Ni48Pt16 fcc111 slab with adsorbate species of H, C, O, OH, CO, CH using the EMT calculator for 10 tasks: each with CH4 chemical potentials of 20, 21, 22, 23, 24, 25, 26, 27, 28 and 29 eV, respectively.</p>

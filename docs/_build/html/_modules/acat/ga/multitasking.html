@@ -1,0 +1,488 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>acat.ga.multitasking &mdash; ACAT 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/table_styling.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/acat_favicon.ico"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> ACAT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Base modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../build.html">Building things</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ga.html">Evolutionary algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ACAT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>acat.ga.multitasking</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for acat.ga.multitasking</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">tanh</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">ase.ga.population</span> <span class="kn">import</span> <span class="n">Population</span>
+<span class="kn">from</span> <span class="nn">ase.ga.convergence</span> <span class="kn">import</span> <span class="n">Convergence</span>
+<span class="kn">from</span> <span class="nn">ase.ga</span> <span class="kn">import</span> <span class="n">get_raw_score</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="MultitaskPopulation"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskPopulation">[docs]</a><span class="k">class</span> <span class="nc">MultitaskPopulation</span><span class="p">(</span><span class="n">Population</span><span class="p">):</span>                                      
+    <span class="sd">&quot;&quot;&quot;Different tasks are assigned to different niches. The candidates</span>
+<span class="sd">    are ranked according to the effective fitness, given by the shortest </span>
+<span class="sd">    distance between the raw score of the marked niche and the upper </span>
+<span class="sd">    envelope after adding the individual. The raw score is given by the </span>
+<span class="sd">    fitness gain in the maximum-gained niche. **The raw scores of each </span>
+<span class="sd">    configuration for all tasks must be provided as a Numpy array in</span>
+<span class="sd">    atoms.info[&#39;data&#39;][&#39;raw_scores&#39;]**. After providing the raw scores, </span>
+<span class="sd">    **the effective score of each configuration is automatically </span>
+<span class="sd">    calculated and stored in atoms.info[&#39;key_value_pairs&#39;][&#39;raw_score&#39;]**.</span>
+<span class="sd">    The niches that benefit the most from each configuration are stored in</span>
+<span class="sd">    atoms.info[&#39;data&#39;][&#39;niches&#39;], and the dominating niche is stored in</span>
+<span class="sd">    atoms.info[&#39;key_value_pairs&#39;][&#39;dominating_niche&#39;].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_tasks: int</span>
+<span class="sd">        The number of tasks.</span>
+
+<span class="sd">    exp_function: bool, default True</span>
+<span class="sd">        If True use an exponential function for ranking the fitness.</span>
+<span class="sd">        If False use the same as in Population.</span>
+
+<span class="sd">    exp_prefactor: float, default 0.5</span>
+<span class="sd">        The prefactor used in the exponential fitness scaling function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connection</span><span class="p">,</span> <span class="n">population_size</span><span class="p">,</span> <span class="n">num_tasks</span><span class="p">,</span>
+                 <span class="n">comparator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_extinct</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">exp_function</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exp_prefactor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_function</span> <span class="o">=</span> <span class="n">exp_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_prefactor</span> <span class="o">=</span> <span class="n">exp_prefactor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vf</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;dominating_niche&#39;</span><span class="p">]</span>
+        <span class="c1"># The current fitness is set at each update of the population</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_fitness</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">Population</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connection</span><span class="p">,</span> <span class="n">population_size</span><span class="p">,</span>
+                            <span class="n">comparator</span><span class="p">,</span> <span class="n">logfile</span><span class="p">,</span> <span class="n">use_extinct</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_tasks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">num_tasks</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rep_no_gain</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="MultitaskPopulation.get_rank"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskPopulation.get_rank">[docs]</a>    <span class="k">def</span> <span class="nf">get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">):</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">))</span>
+        <span class="c1"># Remember the order when decreasing rank later</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">candidates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;gaid&#39;</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>
+
+        <span class="c1"># Group candidates in niches according to the variable</span>
+        <span class="c1"># function vf and also sort them according to raw score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_vf_dict</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">get_raw_score</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Decrease the rank of the not best candidates in each niche</span>
+        <span class="k">for</span> <span class="n">vf</span><span class="p">,</span> <span class="n">li</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vf_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">li</span><span class="p">):</span>
+                <span class="n">rank</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;gaid&#39;</span><span class="p">]]]</span> <span class="o">-=</span> <span class="n">i</span>
+
+        <span class="k">return</span> <span class="n">rank</span></div>
+
+<div class="viewcode-block" id="MultitaskPopulation.set_vf_dict"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskPopulation.set_vf_dict">[docs]</a>    <span class="k">def</span> <span class="nf">set_vf_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="o">**</span><span class="n">sort_arguments</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vf</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sort_arguments</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cl</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">cl</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="o">**</span><span class="n">sort_arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vf_dict</span> <span class="o">=</span> <span class="n">d</span></div>
+
+    <span class="k">def</span> <span class="nf">__get_fitness__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">):</span>
+        <span class="n">expf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_function</span>
+        <span class="n">rfit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rank</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">expf</span><span class="p">:</span>
+            <span class="n">rmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rfit</span><span class="p">)</span>
+            <span class="n">rmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">rfit</span><span class="p">)</span>
+            <span class="n">T</span> <span class="o">=</span> <span class="n">rmin</span> <span class="o">-</span> <span class="n">rmax</span>
+            <span class="c1"># If using obj_rank probability, must have non-zero T val.</span>
+            <span class="c1"># pop_size must be greater than number of permutations.</span>
+            <span class="c1"># We test for this here</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Equal fitness for best and worst candidate in the &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;population! Fitness scaling is impossible! &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;Try with a larger population.&quot;</span>
+            <span class="k">assert</span> <span class="n">T</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">msg</span>
+            <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="n">rfit</span> <span class="o">-</span> <span class="n">rmax</span><span class="p">)</span> <span class="o">/</span> <span class="n">T</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_prefactor</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">rfit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultitaskPopulation.update"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskPopulation.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_cand</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The update method in Population will add to the end of</span>
+<span class="sd">        the population, that can&#39;t be used here since the fitness</span>
+<span class="sd">        will potentially change for all candidates when new are added,</span>
+<span class="sd">        therefore just recalc the population every time. New candidates</span>
+<span class="sd">        are required (must not be added before calling this method).</span>
+<span class="sd">        The maximum gain dynamic niching (MGDN) algorithm is executed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Update the upper envelope</span>
+        <span class="n">prev_max_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">gained_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">new_cand</span><span class="p">):</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span>
+            <span class="n">gained_niches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">gained_niches</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">[</span><span class="n">gained_niches</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">gained_niches</span><span class="p">]</span>
+                <span class="n">gained_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="c1"># Update the array that records the niche dominating other gained niches</span>
+        <span class="c1"># with the requirements of: 1. contributes to the updated upper envelope;</span>
+        <span class="c1"># 2. maximum in gain compared to the previous upper envelope</span>
+        <span class="n">first_generation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">prev_max_scores</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gained_ids</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span>
+            <span class="n">maxed_niches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">scores</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">maxed_niches</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">first_generation</span><span class="p">:</span>
+                    <span class="n">dominating_niche</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">maxed_niches</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">scores</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dominating_niche</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">maxed_niches</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span>
+                                               <span class="n">scores</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">-</span> <span class="n">prev_max_scores</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="p">[</span><span class="n">maxed_niches</span><span class="p">]</span> <span class="o">=</span> <span class="n">dominating_niche</span>
+
+        <span class="c1"># Caculate the effective fitness and assign a niche for each new candidate</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_cand</span><span class="p">)):</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span>
+            <span class="n">min_loss_niche</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">)</span>
+            <span class="n">dominating_niche</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="p">[</span><span class="n">min_loss_niche</span><span class="p">]</span>
+            <span class="n">f_eff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">min_loss_niche</span><span class="p">]</span> <span class="o">-</span> 
+                          <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">[</span><span class="n">min_loss_niche</span><span class="p">],</span> <span class="mi">8</span><span class="p">))</span>
+            <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_eff</span>
+            <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;dominating_niche&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dominating_niche</span>
+            <span class="n">new_cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;niches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="o">==</span><span class="n">dominating_niche</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> 
+
+        <span class="c1"># Update the fitness of all previously-relaxed candidates if fitness     </span>
+        <span class="c1"># is gained at any niche from the new generation (niche migration)</span>
+        <span class="n">updated_cand</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">gained_ids</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Update the database        </span>
+            <span class="n">prev_cand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc</span><span class="o">.</span><span class="n">get_all_relaxed_candidates</span><span class="p">()</span>
+            <span class="n">del_ids</span> <span class="o">=</span> <span class="p">[]</span> 
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">prev_cand</span><span class="p">:</span>
+                <span class="n">scores</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;raw_scores&#39;</span><span class="p">]</span>
+                <span class="n">min_loss_niche</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">)</span>
+                <span class="n">dominating_niche</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="p">[</span><span class="n">min_loss_niche</span><span class="p">]</span>
+                <span class="n">f_eff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">min_loss_niche</span><span class="p">]</span> <span class="o">-</span> 
+                              <span class="bp">self</span><span class="o">.</span><span class="n">max_scores</span><span class="p">[</span><span class="n">min_loss_niche</span><span class="p">],</span> <span class="mi">8</span><span class="p">))</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;raw_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_eff</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;key_value_pairs&#39;</span><span class="p">][</span><span class="s1">&#39;dominating_niche&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dominating_niche</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;niches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dominating_niches</span><span class="o">==</span><span class="n">dominating_niche</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> 
+                <span class="n">updated_cand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">gaid</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]</span>
+                <span class="n">del_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gaid</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dc</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">del_ids</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rep_no_gain</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rep_no_gain</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc</span><span class="o">.</span><span class="n">add_more_relaxed_candidates</span><span class="p">(</span><span class="n">updated_cand</span> <span class="o">+</span> <span class="n">new_cand</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pop</span> <span class="o">=</span> <span class="p">[]</span>            
+        <span class="bp">self</span><span class="o">.</span><span class="n">__initialize_pop__</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_log</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__initialize_pop__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Get all relaxed candidates from the database</span>
+        <span class="n">ue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_extinct</span>
+        <span class="n">all_cand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc</span><span class="o">.</span><span class="n">get_all_relaxed_candidates</span><span class="p">(</span><span class="n">use_extinct</span><span class="o">=</span><span class="n">ue</span><span class="p">)</span>
+        <span class="n">all_cand</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">get_raw_score</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_cand</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">fitf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_fitness__</span><span class="p">(</span><span class="n">all_cand</span><span class="p">)</span>
+            <span class="n">all_sorted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">fitf</span><span class="p">,</span> <span class="n">all_cand</span><span class="p">))</span>
+            <span class="n">all_sorted</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sort_cand</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="n">all_sorted</span><span class="p">:</span>
+                <span class="n">sort_cand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span>
+            <span class="n">all_sorted</span> <span class="o">=</span> <span class="n">sort_cand</span>
+
+            <span class="c1"># Fill up the population with the self.pop_size most stable</span>
+            <span class="c1"># unique candidates.</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_sorted</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop_size</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">all_sorted</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">c_vf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vf</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">eq</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">:</span>
+                    <span class="n">a_vf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vf</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                    <span class="c1"># Only run comparator if the variable_function (self.vf)</span>
+                    <span class="c1"># returns the same. If it returns something different the</span>
+                    <span class="c1"># candidates are inherently different.</span>
+                    <span class="c1"># This is done to speed up.</span>
+                    <span class="k">if</span> <span class="n">a_vf</span> <span class="o">==</span> <span class="n">c_vf</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comparator</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+                            <span class="n">eq</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">eq</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_fitness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_fitness__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_cand</span> <span class="o">=</span> <span class="n">all_cand</span>
+
+<div class="viewcode-block" id="MultitaskPopulation.get_two_candidates"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskPopulation.get_two_candidates">[docs]</a>    <span class="k">def</span> <span class="nf">get_two_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns two candidates for pairing employing the</span>
+<span class="sd">        roulete wheel selection scheme described in</span>
+<span class="sd">        R.L. Johnston Dalton Transactions,</span>
+<span class="sd">        Vol. 22, No. 22. (2003), pp. 4193-4207</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Use saved fitness</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_fitness</span>
+        <span class="n">fmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">while</span> <span class="n">c1</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">c2</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;confid&#39;</span><span class="p">]:</span>
+            <span class="n">nnf</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">while</span> <span class="n">nnf</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">fit</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">*</span> <span class="n">fmax</span><span class="p">:</span>
+                    <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+                    <span class="n">nnf</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">nnf</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">while</span> <span class="n">nnf</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">fit</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">*</span> <span class="n">fmax</span><span class="p">:</span>
+                    <span class="n">c2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+                    <span class="n">nnf</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">c1</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">c2</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="MultitaskGenerationRepetitionConvergence"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskGenerationRepetitionConvergence">[docs]</a><span class="k">class</span> <span class="nc">MultitaskGenerationRepetitionConvergence</span><span class="p">(</span><span class="n">Convergence</span><span class="p">):</span>                      
+    <span class="sd">&quot;&quot;&quot;Returns True if the latest finished population is stagnated </span>
+<span class="sd">    (no fitness gain in any task) for number_of_generations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number_of_generations: int</span>
+<span class="sd">        How many generations need to be equal before convergence.</span>
+
+<span class="sd">    max_generations: int, default indefinte</span>
+<span class="sd">        The maximum number of generations the GA is allowed to run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population_instance</span><span class="p">,</span> 
+                 <span class="n">number_of_generations</span><span class="p">,</span>
+                 <span class="n">max_generations</span><span class="o">=</span><span class="mi">100000000</span><span class="p">):</span>
+        <span class="n">Convergence</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population_instance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numgens</span> <span class="o">=</span> <span class="n">number_of_generations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxgen</span> <span class="o">=</span> <span class="n">max_generations</span>
+
+<div class="viewcode-block" id="MultitaskGenerationRepetitionConvergence.converged"><a class="viewcode-back" href="../../../ga.html#acat.ga.multitasking.MultitaskGenerationRepetitionConvergence.converged">[docs]</a>    <span class="k">def</span> <span class="nf">converged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="o">.</span><span class="n">pop_size</span>
+        <span class="n">cur_gen_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="o">.</span><span class="n">dc</span><span class="o">.</span><span class="n">get_generation_number</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cur_gen_num</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxgen</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">cur_gen_num</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="o">.</span><span class="n">rep_no_gain</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numgens</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Shuang Han.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
