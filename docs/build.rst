@@ -228,11 +228,11 @@ The RandomPatternGenerator class
 
     **Example1**
 
-    The following example illustrates how to generate 100 stochastic
-    adsorbate overlayer patterns with one more adsorbate chosen from 
-    CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface slabs with 
-    random C and O coverages, where CH3 is forbidden to be added to 
-    ontop and bridge sites:
+    The following example illustrates how to stochastically generate 
+    100 unique adsorbate overlayer patterns with one more adsorbate 
+    chosen from CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface 
+    slabs with random C and O coverages, where CH3 is forbidden to be
+    added to ontop and bridge sites:
 
         >>> from acat.build.adlayer import RandomPatternGenerator as RPG
         >>> from acat.build.adlayer import min_dist_coverage_pattern
@@ -255,7 +255,7 @@ The RandomPatternGenerator class
         ...           surface='fcc111',
         ...           composition_effect=False, 
         ...           species_forbidden_sites={'CH3': ['ontop','bridge']})
-        >>> rpg.run(num_gen=100, action='add')
+        >>> rpg.run(num_gen=100, action='add', unique=True)
         >>> images = read('patterns.traj', index=':') 
         >>> view(images)
 
@@ -296,7 +296,7 @@ The RandomPatternGenerator class
         ...           min_adsorbate_distance=2.5,
         ...           adsorption_sites=sas,
         ...           surface='fcc100')
-        >>> rpg.run(num_gen=20, action='add', num_act=4)
+        >>> rpg.run(num_gen=20, action='add', num_act=4, unique=True)
         >>> images = read('patterns.traj', index=':')
         >>> view(images) 
 
@@ -308,7 +308,7 @@ The RandomPatternGenerator class
 
     **Example3**
 
-    The following example illustrates how to generate 20 stochastic
+    The following example illustrates how to generate 20 random
     adsorbate overlayer patterns with 5 adsorbates: 1 CO, 2 OH and 
     2 N, on 10 quaternary cuboctahedral nanoalloys with random 
     chemical orderings. The minimum adsorbate distance is set to 3 
@@ -791,9 +791,9 @@ The SymmetricSlabOrderingGenerator class
 
     **Example1**
 
-    To stochastically generate 50 chemical orderings with vertical 
+    To stochastically generate 20 chemical orderings with vertical 
     mirror plane symmetry w.r.t. the bisect vector [11.200, 6.467] 
-    for binary NixPt1-x fcc111 surface slabs:
+    for binary NixPt1-x fcc111 surface slabs without duplicates:
 
         >>> from acat.build.ordering import SymmetricSlabOrderingGenerator as SSOG
         >>> from ase.build import fcc111
@@ -805,14 +805,14 @@ The SymmetricSlabOrderingGenerator class
         >>> ssog = SSOG(atoms, elements=['Ni', 'Pt'],
         ...             symmetry='vertical_mirror',
         ...             bisect_vector=np.array([11.200, 6.467]))
-        >>> ssog.run(max_gen=50, mode='stochastic', verbose=True)
+        >>> ssog.run(max_gen=20, mode='stochastic', unique=True, verbose=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
 
     Output:
 
         | 50 symmetry-equivalent groups classified           
-        | 50 symmetric chemical orderings generated 
+        | 20 symmetric chemical orderings generated 
 
     .. image:: ../images/SymmetricSlabOrderingGenerator1.gif
        :scale: 60 %
@@ -940,7 +940,7 @@ The RandomOrderingGenerator class
     **Example2**
 
     To generate 50 random chemical orderings for Pt0.5Au0.5 
-    fcc111 surface slabs:
+    fcc111 surface slabs without duplicates:
 
         >>> from acat.build.ordering import RandomOrderingGenerator as ROG 
         >>> from ase.build import fcc111
@@ -950,7 +950,7 @@ The RandomOrderingGenerator class
         >>> atoms.center()
         >>> rog = ROG(atoms, elements=['Pt', 'Au'],
         ...           composition={'Pt': 0.5, 'Au': 0.5})
-        >>> rog.run(num_gen=50)
+        >>> rog.run(num_gen=50, unique=True)
         >>> images = read('orderings.traj', index=':')
         >>> view(images)
 

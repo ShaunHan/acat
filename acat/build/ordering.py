@@ -2,6 +2,7 @@ from ..utilities import (bipartitions, get_mic,
                          partitions_into_totals, 
                          numbers_from_ratios, 
                          is_list_or_tuple)
+from ..ga.graph_comparators import WLGraphComparator
 from ase.geometry import get_distances, find_mic, get_layers
 from ase.io import Trajectory, read, write
 from asap3.analysis import FullCNA 
@@ -327,7 +328,8 @@ class SymmetricClusterOrderingGenerator(object):
  
         return groups
 
-    def run(self, max_gen=None, mode='systematic', eps=0.01, verbose=False):
+    def run(self, max_gen=None, mode='systematic', eps=0.01, 
+            unique=False, hmax=2, verbose=False):
         """Run the chemical ordering generator.
 
         Parameters
@@ -359,6 +361,14 @@ class SymmetricClusterOrderingGenerator(object):
             larger eps if the concentrations you specified in compositions 
             are not accurate enough.
 
+        unique : bool, default False 
+            Whether to discard duplicate patterns based on graph isomorphism.
+            The Weisfeiler-Lehman subtree kernel is used to check identity.  
+
+        hmax : int, default 2                                               
+            Maximum number of iterations for color refinement. Only relevant
+            if unique=True.
+
         verbose : bool, default False 
             Whether to print out information about number of groups and
             number of generated structures.
@@ -371,6 +381,10 @@ class SymmetricClusterOrderingGenerator(object):
         groups = self.groups
         ngroups = len(groups)
         n_write = 0
+        if unique:
+            comp = WLGraphComparator(hmax=hmax)
+            atoms_list, formula_list = [], []
+
         if verbose:
             print('{} symmetry-equivalent groups classified'.format(ngroups))
 
@@ -395,11 +409,22 @@ class SymmetricClusterOrderingGenerator(object):
                         for j in range(len(totals)):
                             ids = [i for group in part[j] for i in group] 
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        # Skip duplicates based on isomorphism                                     
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
                         if n_write == max_gen:
                             break
@@ -451,11 +476,22 @@ class SymmetricClusterOrderingGenerator(object):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
 
         else: 
@@ -473,11 +509,22 @@ class SymmetricClusterOrderingGenerator(object):
                     for combo in combos:
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms) 
+                            formula_list.append(formula)
                         n_write += 1
                         if max_gen is not None:
                             if n_write == max_gen:
@@ -494,11 +541,22 @@ class SymmetricClusterOrderingGenerator(object):
                         combos.add(combo)
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:                      
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
                         if max_gen is not None:
                             if n_write == max_gen:
@@ -754,7 +812,8 @@ class SymmetricSlabOrderingGenerator(object):
 
         return groups
 
-    def run(self, max_gen=None, mode='systematic', eps=0.01, verbose=False):
+    def run(self, max_gen=None, mode='systematic', eps=0.01, 
+            unique=False, hmax=2, verbose=False):
         """Run the chemical ordering generator.
 
         Parameters
@@ -786,6 +845,14 @@ class SymmetricSlabOrderingGenerator(object):
             larger eps if the concentrations you specified in compositions 
             are not accurate enough.
 
+        unique : bool, default False 
+            Whether to discard duplicate patterns based on graph isomorphism.
+            The Weisfeiler-Lehman subtree kernel is used to check identity.  
+
+        hmax : int, default 2                                               
+            Maximum number of iterations for color refinement. Only relevant
+            if unique=True.
+
         verbose : bool, default False 
             Whether to print out information about number of groups and
             number of generated structures.
@@ -798,6 +865,10 @@ class SymmetricSlabOrderingGenerator(object):
         groups = self.groups
         ngroups = len(groups)
         n_write = 0
+        if unique:                     
+            comp = WLGraphComparator(hmax=hmax)
+            atoms_list, formula_list = [], []
+
         if verbose:
             print('{} symmetry-equivalent groups classified'.format(ngroups))
 
@@ -821,11 +892,22 @@ class SymmetricSlabOrderingGenerator(object):
                         for j in range(len(totals)):
                             ids = [i for group in part[j] for i in group] 
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
                         if n_write == max_gen:
                             break
@@ -877,11 +959,22 @@ class SymmetricSlabOrderingGenerator(object):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
 
         else: 
@@ -899,11 +992,22 @@ class SymmetricSlabOrderingGenerator(object):
                     for combo in combos:
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potenetial_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
                         if max_gen is not None:
                             if n_write == max_gen:
@@ -920,11 +1024,22 @@ class SymmetricSlabOrderingGenerator(object):
                         combos.add(combo)
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
+                        # Skip duplicates based on isomorphism                              
+                        if unique:
+                            formula = atoms.get_chemical_formula()
+                            potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                              formula_list[i] == formula]
+                            if potential_dups:
+                                if any(a for a in potential_dups if comp.looks_like(atoms, a)): 
+                                    continue
                         if self.save_groups:
                             if 'data' not in atoms.info:
                                 atoms.info['data'] = {}
                             atoms.info['data']['groups'] = groups
                         traj.write(atoms)
+                        if unique:
+                            atoms_list.append(atoms)
+                            formula_list.append(formula)
                         n_write += 1
                         if max_gen is not None:
                             if n_write == max_gen:
@@ -1006,7 +1121,7 @@ class RandomOrderingGenerator(object):
 
         return res
 
-    def run(self, num_gen):
+    def run(self, num_gen, unique=False, hmax=2):
         """Run the chemical ordering generator.
 
         Parameters
@@ -1014,12 +1129,23 @@ class RandomOrderingGenerator(object):
         num_gen : int
             Number of chemical orderings to generate.
 
+        unique : bool, default False 
+            Whether to discard duplicate patterns based on graph isomorphism.
+            The Weisfeiler-Lehman subtree kernel is used to check identity.  
+
+        hmax : int, default 2                                               
+            Maximum number of iterations for color refinement. Only relevant
+            if unique=True.
+
         """
 
         traj_mode = 'a' if self.append_trajectory else 'w'
         traj = Trajectory(self.trajectory, mode=traj_mode)
         atoms = self.atoms
         natoms = len(atoms)
+        if unique:
+            comp = WLGraphComparator(hmax=hmax)
+            atoms_list, formula_list = [], []
 
         for _ in range(num_gen):
             if self.composition is None:
@@ -1030,4 +1156,15 @@ class RandomOrderingGenerator(object):
             indi = atoms.copy()
             for e, ids in chunks.items():
                 indi.symbols[ids] = e
+            # Skip duplicates based on isomorphism                                 
+            if unique:
+                formula = indi.get_chemical_formula()
+                potential_dups = [a for i, a in enumerate(atoms_list) if 
+                                  formula_list[i] == formula]
+                if potential_dups:
+                    if any(a for a in potential_dups if comp.looks_like(indi, a)):
+                        continue
             traj.write(indi)
+            if unique:
+                atoms_list.append(indi)
+                formula_list.append(formula)

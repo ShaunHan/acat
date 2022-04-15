@@ -164,20 +164,20 @@
 <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
 <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">neighbor_shell_list</span><span class="p">,</span> <span class="n">get_adj_matrix</span>
-<span class="kn">import</span> <span class="nn">networkx.algorithms.isomorphism</span> <span class="k">as</span> <span class="nn">iso</span>
+<span class="kn">from</span> <span class="nn">ase.atoms</span> <span class="kn">import</span> <span class="n">Atoms</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
 <div class="viewcode-block" id="AdsorptionGraphComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.graph_comparators.AdsorptionGraphComparator">[docs]</a><span class="k">class</span> <span class="nc">AdsorptionGraphComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compares the graph of adsorbate overlayer + surface atoms and </span>
-<span class="sd">    returns True if they are isomorphic with node matches. Before</span>
-<span class="sd">    checking graph isomorphism, a cheap label match is used to reject</span>
-<span class="sd">    graphs that are impossible to be isomorphic.</span>
+<span class="sd">    returns True if they are isomorphic with node matches. Before checking </span>
+<span class="sd">    graph isomorphism by color refinement, a cheap label match is used to </span>
+<span class="sd">    reject graphs that are impossible to be isomorphic.</span>
 
-<span class="sd">    The graphs can be quite costly to obtain every time a graph is </span>
-<span class="sd">    required (and disk intensive if saved), thus it makes sense to </span>
-<span class="sd">    get the graph along with e.g. the potential energy and save it in </span>
+<span class="sd">    The graphs (nx.Graph objects) can be quite costly to obtain every time </span>
+<span class="sd">    a graph is required (and disk intensive if saved), thus it makes sense </span>
+<span class="sd">    to get the graph along with e.g. the potential energy and save it in </span>
 <span class="sd">    atoms.info[&#39;data&#39;][&#39;graph&#39;].</span>
 
 <span class="sd">    Parameters</span>
@@ -200,6 +200,9 @@
 <span class="sd">        Useful for ensuring the allocated site for each adsorbate is</span>
 <span class="sd">        consistent with the site to which the adsorbate was added. </span>
 
+<span class="sd">    hmax : int, default 2</span>
+<span class="sd">        Maximum number of iterations for color refinement.</span>
+
 <span class="sd">    dmax : float, default 2.5</span>
 <span class="sd">        The maximum bond length (in Angstrom) between an atom and its</span>
 <span class="sd">        nearest site to be considered as the atom being bound to the site.</span>
@@ -209,13 +212,15 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span>  
                  <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">subtract_height</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                 <span class="n">hmax</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">composition_effect</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subtract_height</span> <span class="o">=</span> <span class="n">subtract_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hmax</span> <span class="o">=</span> <span class="n">hmax</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="n">dmax</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp</span> <span class="o">=</span> <span class="n">WLGraphComparator</span><span class="p">(</span><span class="n">hmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hmax</span><span class="p">)</span>
 
 <div class="viewcode-block" id="AdsorptionGraphComparator.looks_like"><a class="viewcode-back" href="../../../ga.html#acat.ga.graph_comparators.AdsorptionGraphComparator.looks_like">[docs]</a>    <span class="k">def</span> <span class="nf">looks_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">):</span>
         <span class="n">isocheck</span> <span class="o">=</span> <span class="kc">False</span>
@@ -259,18 +264,23 @@
                 <span class="n">G1</span> <span class="o">=</span> <span class="n">sac1</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="n">G2</span> <span class="o">=</span> <span class="n">sac2</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">isocheck</span><span class="p">:</span>
-            <span class="n">nm</span> <span class="o">=</span> <span class="n">iso</span><span class="o">.</span><span class="n">categorical_node_match</span><span class="p">(</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">)</span>  
-            <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">nm</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">looks_like</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="kc">False</span></div></div>
 
 
 <div class="viewcode-block" id="WLGraphComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.graph_comparators.WLGraphComparator">[docs]</a><span class="k">class</span> <span class="nc">WLGraphComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compares two structures based on the Weisfeiler-Lehman subtree</span>
-<span class="sd">    kernel, as described in N. Shervashidze et al., Journal of Machine </span>
-<span class="sd">    Learning Research 2011, 12, 2539–2561. This serves as an efficient </span>
-<span class="sd">    alternative for checking graph isomorphism of two structures. </span>
+    <span class="sd">&quot;&quot;&quot;Compares two structures (or graphs) based on the Weisfeiler-Lehman </span>
+<span class="sd">    subtree kernel (color refinement), as described in N. Shervashidze et </span>
+<span class="sd">    al., Journal of Machine Learning Research 2011, 12, 2539–2561. This </span>
+<span class="sd">    serves as a scalable solver for checking graph isomorphism of two </span>
+<span class="sd">    structures. </span>
+
+<span class="sd">    The graphs (nx.Graph objects) can be quite costly to obtain every time </span>
+<span class="sd">    a graph is required (and disk intensive if saved), thus it makes sense </span>
+<span class="sd">    to get the graph along with e.g. the potential energy and save it in </span>
+<span class="sd">    atoms.info[&#39;data&#39;][&#39;graph&#39;].</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -291,6 +301,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
 
 <div class="viewcode-block" id="WLGraphComparator.looks_like"><a class="viewcode-back" href="../../../ga.html#acat.ga.graph_comparators.WLGraphComparator.looks_like">[docs]</a>    <span class="k">def</span> <span class="nf">looks_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;data&#39;</span> <span class="ow">in</span> <span class="n">a1</span><span class="o">.</span><span class="n">info</span> <span class="ow">and</span> <span class="s1">&#39;graph&#39;</span> <span class="ow">in</span> <span class="n">a1</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="s1">&#39;data&#39;</span> <span class="ow">in</span> <span class="n">a2</span><span class="o">.</span><span class="n">info</span> <span class="ow">and</span> <span class="s1">&#39;graph&#39;</span> <span class="ow">in</span> <span class="n">a2</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]):</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="n">a1</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">a2</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span>
         <span class="n">d1</span> <span class="o">=</span> <span class="n">WLGraphComparator</span><span class="o">.</span><span class="n">get_label_dict</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
         <span class="n">d2</span> <span class="o">=</span> <span class="n">WLGraphComparator</span><span class="o">.</span><span class="n">get_label_dict</span><span class="p">(</span><span class="n">a2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
         <span class="n">d12</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">)]</span> 
@@ -305,17 +319,25 @@
         <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">k12</span> <span class="o">-</span> <span class="p">(</span><span class="n">k11</span> <span class="o">*</span> <span class="n">k22</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> </div>
 
 <div class="viewcode-block" id="WLGraphComparator.get_label_dict"><a class="viewcode-back" href="../../../ga.html#acat.ga.graph_comparators.WLGraphComparator.get_label_dict">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_label_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">hmax</span><span class="p">,</span> <span class="n">dx</span><span class="p">):</span>                                                        
-        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>                                                                
-        <span class="n">numbers</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">numbers</span>
-        <span class="n">nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                                     <span class="n">mic</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">))</span>                     
-        <span class="n">A</span> <span class="o">=</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="n">nblist</span><span class="p">)</span>                                                
-        <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_matrix</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_label_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">hmax</span><span class="p">,</span> <span class="n">dx</span><span class="p">):</span>                                                        
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Atoms</span><span class="p">):</span>
+            <span class="n">atoms</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span>
+            <span class="n">nblist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                                         <span class="n">mic</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">))</span>                     
+            <span class="n">A</span> <span class="o">=</span> <span class="n">get_adj_matrix</span><span class="p">(</span><span class="n">nblist</span><span class="p">)</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy_matrix</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;symbol&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)],</span> 
+                                 <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
         <span class="n">nnlabs</span><span class="p">,</span> <span class="n">neighbors</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
         <span class="n">isolates</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
-            <span class="n">lab0</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">lab0</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">lab0</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
                 <span class="n">d</span><span class="p">[</span><span class="n">lab0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.</span>
             <span class="k">else</span><span class="p">:</span>
@@ -327,8 +349,8 @@
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">isolates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
                     <span class="k">continue</span>
-                <span class="n">sorted_numbers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="n">nns</span><span class="p">])</span>
-                <span class="n">lab1</span> <span class="o">=</span> <span class="n">lab0</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">sorted_numbers</span><span class="p">))</span>
+                <span class="n">sorted_symbols</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">symbols</span><span class="p">[</span><span class="n">nns</span><span class="p">])</span>
+                <span class="n">lab1</span> <span class="o">=</span> <span class="n">lab0</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sorted_symbols</span><span class="p">)</span>
                 <span class="n">nnlabs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">lab1</span>
                 <span class="k">if</span> <span class="n">lab1</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
                     <span class="n">d</span><span class="p">[</span><span class="n">lab1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> 
@@ -337,7 +359,7 @@
         <span class="k">if</span> <span class="n">hmax</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span> 
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">hmax</span><span class="p">):</span>
                 <span class="n">nnnlabs</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">isolates</span><span class="p">:</span>
                         <span class="k">continue</span>
                     <span class="n">nnlab</span> <span class="o">=</span> <span class="n">nnlabs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>

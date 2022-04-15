@@ -597,7 +597,7 @@ stochastically but for all images systematically, e.g. generating
 </dl>
 <dl class="py method">
 <dt id="acat.build.adlayer.RandomPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">action_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#RandomPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.RandomPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">action_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#RandomPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.RandomPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -621,7 +621,10 @@ way, but the number of adsorbates is not guaranteed to be fixed.</p></li>
 values of the species composition to be added onto the surface.
 Adding adsorbate species according to species_probabilities if
 not specified. Please only use this if the action is ‘add’.</p></li>
-<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to discard duplicate patterns based on graph isomorphism.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate patterns based on graph isomorphism.
+The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
+if unique=True.</p></li>
 <li><p><strong>site_preference</strong> (<em>str of list of strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to take subsurface atoms into consideration when checking
 uniqueness. Could be important for surfaces like fcc100.</p></li>
@@ -633,11 +636,11 @@ uniqueness. Could be important for surfaces like fcc100.</p></li>
 </dd></dl>
 
 <p><strong>Example1</strong></p>
-<p>The following example illustrates how to generate 100 stochastic
-adsorbate overlayer patterns with one more adsorbate chosen from
-CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface slabs with
-random C and O coverages, where CH3 is forbidden to be added to
-ontop and bridge sites:</p>
+<p>The following example illustrates how to stochastically generate
+100 unique adsorbate overlayer patterns with one more adsorbate
+chosen from CO, OH, CH3 and CHO, based on 10 Pt fcc111 surface
+slabs with random C and O coverages, where CH3 is forbidden to be
+added to ontop and bridge sites:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">RandomPatternGenerator</span> <span class="k">as</span> <span class="n">RPG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
@@ -659,7 +662,7 @@ ontop and bridge sites:</p>
 <span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">species_forbidden_sites</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;CH3&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;ontop&#39;</span><span class="p">,</span><span class="s1">&#39;bridge&#39;</span><span class="p">]})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
@@ -695,7 +698,7 @@ minimum adsorbate distance of 2.5 Angstrom:</p>
 <span class="gp">... </span>          <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">sas</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
@@ -703,7 +706,7 @@ minimum adsorbate distance of 2.5 Angstrom:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/RandomPatternGenerator2.gif"><img alt="_images/RandomPatternGenerator2.gif" class="align-center" src="_images/RandomPatternGenerator2.gif" style="width: 288.0px; height: 384.0px;" /></a>
 <p><strong>Example3</strong></p>
-<p>The following example illustrates how to generate 20 stochastic
+<p>The following example illustrates how to generate 20 random
 adsorbate overlayer patterns with 5 adsorbates: 1 CO, 2 OH and
 2 N, on 10 quaternary cuboctahedral nanoalloys with random
 chemical orderings. The minimum adsorbate distance is set to 3
@@ -794,7 +797,7 @@ graph isomorphism for the existing structures in the trajectory.</p></li>
 </dl>
 <dl class="py method">
 <dt id="acat.build.adlayer.SystematicPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen_per_image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SystematicPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SystematicPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen_per_image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SystematicPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SystematicPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -812,7 +815,10 @@ control the exact number of adsorbates.</p></li>
 values of the species composition to be added onto the surface.
 Adding all possible adsorbate species if not specified. Please
 only use this if the action is ‘add’.</p></li>
-<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to discard duplicate patterns based on graph isomorphism.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate patterns based on graph isomorphism.
+The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
+if unique=True.</p></li>
 <li><p><strong>site_preference</strong> (<em>str of list of strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to take subsurface atoms into consideration when checking
 uniqueness. Could be important for surfaces like fcc100.</p></li>
@@ -967,7 +973,7 @@ the adsorption sites.</p>
 
 <dl class="py method">
 <dt id="acat.build.adlayer.OrderedPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the ordered pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -975,7 +981,10 @@ the adsorption sites.</p>
 <li><p><strong>max_gen</strong> (<em>int</em><em>, </em><em>default None</em>) – Maximum number of chemical orderings to generate. Running
 forever (until exhaustive for systematic search) if not
 specified.</p></li>
-<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to discard duplicate patterns based on graph isomorphism.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate patterns based on graph isomorphism.
+The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
+if unique=True.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1419,7 +1428,7 @@ symmetry-equivalent atoms.</p>
 
 <dl class="py method">
 <dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1445,6 +1454,10 @@ generating fixed-composition symmetric nanoalloys using
 want the exact composition accurate to one atom. Please use a
 larger eps if the concentrations you specified in compositions
 are not accurate enough.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate patterns based on graph isomorphism.
+The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
+if unique=True.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1611,7 +1624,7 @@ symmetry-equivalent atoms.</p>
 
 <dl class="py method">
 <dt id="acat.build.ordering.SymmetricSlabOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'systematic'</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1637,6 +1650,10 @@ generating fixed-composition symmetric nanoalloys using
 want the exact composition accurate to one atom. Please use a
 larger eps if the concentrations you specified in compositions
 are not accurate enough.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate patterns based on graph isomorphism.
+The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
+if unique=True.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to print out information about number of groups and
 number of generated structures.</p></li>
 </ul>
@@ -1647,9 +1664,9 @@ number of generated structures.</p></li>
 </dd></dl>
 
 <p><strong>Example1</strong></p>
-<p>To stochastically generate 50 chemical orderings with vertical
+<p>To stochastically generate 20 chemical orderings with vertical
 mirror plane symmetry w.r.t. the bisect vector [11.200, 6.467]
-for binary NixPt1-x fcc111 surface slabs:</p>
+for binary NixPt1-x fcc111 surface slabs without duplicates:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">SymmetricSlabOrderingGenerator</span> <span class="k">as</span> <span class="n">SSOG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
@@ -1660,7 +1677,7 @@ for binary NixPt1-x fcc111 surface slabs:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ssog</span> <span class="o">=</span> <span class="n">SSOG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">],</span>
 <span class="gp">... </span>            <span class="n">symmetry</span><span class="o">=</span><span class="s1">&#39;vertical_mirror&#39;</span><span class="p">,</span>
 <span class="gp">... </span>            <span class="n">bisect_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">11.200</span><span class="p">,</span> <span class="mf">6.467</span><span class="p">]))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ssog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ssog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">max_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
@@ -1669,7 +1686,7 @@ for binary NixPt1-x fcc111 surface slabs:</p>
 <blockquote>
 <div><div class="line-block">
 <div class="line">50 symmetry-equivalent groups classified</div>
-<div class="line">50 symmetric chemical orderings generated</div>
+<div class="line">20 symmetric chemical orderings generated</div>
 </div>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/SymmetricSlabOrderingGenerator1.gif"><img alt="_images/SymmetricSlabOrderingGenerator1.gif" class="align-center" src="_images/SymmetricSlabOrderingGenerator1.gif" style="width: 384.0px; height: 288.0px;" /></a>
@@ -1798,11 +1815,17 @@ chunk.</p>
 
 <dl class="py method">
 <dt id="acat.build.ordering.RandomOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>num_gen</strong> (<em>int</em>) – Number of chemical orderings to generate.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_gen</strong> (<em>int</em>) – Number of chemical orderings to generate.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate patterns based on graph isomorphism.
+The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
+<li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
+if unique=True.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -1828,7 +1851,7 @@ Ni0.5Pt0.2Au0.3 nanoalloys:</p>
 <a class="reference internal image-reference" href="_images/RandomOrderingGenerator1.gif"><img alt="_images/RandomOrderingGenerator1.gif" class="align-center" src="_images/RandomOrderingGenerator1.gif" style="width: 192.6px; height: 193.79999999999998px;" /></a>
 <p><strong>Example2</strong></p>
 <p>To generate 50 random chemical orderings for Pt0.5Au0.5
-fcc111 surface slabs:</p>
+fcc111 surface slabs without duplicates:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.ordering</span> <span class="kn">import</span> <span class="n">RandomOrderingGenerator</span> <span class="k">as</span> <span class="n">ROG</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
@@ -1837,7 +1860,7 @@ fcc111 surface slabs:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span> <span class="o">=</span> <span class="n">ROG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Pt&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rog</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
