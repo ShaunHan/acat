@@ -1869,10 +1869,14 @@ class OrderedPatternGenerator(object):
         is fixed. If this is not provided, the arguments for identifying
         adsorption sites can still be passed in by **kwargs.
 
-    remove_site_shells : int, default 1
+    remove_site_shells : int, default 1                                    
         The neighbor shell number within which the neighbor sites should be 
         removed. Remove the 1st neighbor site shell by default. Set to 0 if
         no site should be removed.
+
+    remove_site_radius : float, default None                                  
+        The radius within which the neighbor sites should be removed. This 
+        serves as an alternative to remove_site_shells.                   
 
     populate_isolated_sites : bool, default False
         Whether to add adsorbates to low-symmetry sites that are not grouped 
@@ -1933,6 +1937,7 @@ class OrderedPatternGenerator(object):
                  sorting_vector=np.array([1, 0]), 
                  adsorption_sites=None,
                  remove_site_shells=1,
+                 remove_site_radius=None,
                  populate_isolated_sites=False,
                  allow_odd=False,
                  heights=site_heights, 
@@ -1978,9 +1983,11 @@ class OrderedPatternGenerator(object):
         else:
             self.subtract_heights = None        
         self.remove_site_shells = remove_site_shells
-        if self.remove_site_shells > 0:
+        self.remove_site_radius = remove_site_radius
+        if (self.remove_site_shells > 0) or (self.remove_site_radius is not None):
             self.nsl = self.adsorption_sites.get_neighbor_site_list(
-                       neighbor_number=self.remove_site_shells)
+                       neighbor_number=self.remove_site_shells,
+                       radius=self.remove_site_radius)
         self.populate_isolated_sites = populate_isolated_sites
         self.allow_odd = allow_odd
         self.save_groups = save_groups
@@ -2055,7 +2062,7 @@ class OrderedPatternGenerator(object):
 
         all_groups = set()
         for i2 in i2a:
-            if self.remove_site_shells > 0:
+            if (self.remove_site_shells > 0) or (self.remove_site_radius is not None):
                 if i2 in self.nsl[i1]:
                     continue
             pt2 = sl[i2]['position']
@@ -2169,7 +2176,8 @@ class OrderedPatternGenerator(object):
                     spec = 'vacancy'
                 else:
                     spec = random.choice(specs)
-                    if (self.remove_site_shells > 0) and (spec != 'vacancy'):
+                    if ((self.remove_site_shells > 0) or (self.remove_site_radius is not None)
+                    ) and (spec != 'vacancy'):
                         newvs.update([i for k in group for i in self.nsl[k]])
                 combo[idx] = spec
 

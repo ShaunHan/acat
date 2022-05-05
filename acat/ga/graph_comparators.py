@@ -139,10 +139,11 @@ class WLGraphComparator(object):
         self.tol = tol
 
     def looks_like(self, a1, a2):
-        if ('data' in a1.info and 'graph' in a1.info['data']) and (
-        'data' in a2.info and 'graph' in a2.info['data']):
-            a1 = a1.info['data']['graph']
-            a2 = a2.info['data']['graph']
+        if isinstance(a1, Atoms) and isinstance(a2, Atoms):
+            if ('data' in a1.info and 'graph' in a1.info['data']) and (
+            'data' in a2.info and 'graph' in a2.info['data']):
+                a1 = a1.info['data']['graph']
+                a2 = a2.info['data']['graph']
         d1 = WLGraphComparator.get_label_dict(a1, self.hmax, self.dx)
         d2 = WLGraphComparator.get_label_dict(a2, self.hmax, self.dx)
         d12 = {k: [d[k] if k in d else 0 for d in (d1, d2)] 

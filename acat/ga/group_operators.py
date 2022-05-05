@@ -309,6 +309,10 @@ class AdsorbateGroupSubstitute(Mutation):
         removed. Remove the 1st neighbor site shell by default. Set to 0 if
         no site should be removed.
 
+    remove_site_radius : float, default None                              
+        The radius within which the neighbor sites should be removed. This
+        serves as an alternative to remove_site_shells.                   
+
     subtract_heights : bool, default False
         Whether to subtract the height from the bond length when allocating
         a site to an adsorbate. Default is to allocate the site that is
@@ -332,6 +336,7 @@ class AdsorbateGroupSubstitute(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_site_shells=1,
+                 remove_site_radius=None,
                  subtract_heights=False,
                  num_muts=1, dmax=2.5, **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
@@ -350,6 +355,7 @@ class AdsorbateGroupSubstitute(Mutation):
             self.heights[k] = v
         self.adsorption_sites = adsorption_sites
         self.remove_site_shells = remove_site_shells
+        self.remove_site_radius = remove_site_radius
         if subtract_heights:
             self.subtract_heights = self.heights
         else:
@@ -408,8 +414,9 @@ class AdsorbateGroupSubstitute(Mutation):
 
         ngroups = len(groups)
         indices = list(range(ngroups))
-        if self.remove_site_shells > 0:
-            nsl = sas.get_neighbor_site_list(neighbor_number=self.remove_site_shells)
+        if (self.remove_site_shells > 0) or (self.remove_site_radius is not None):
+            nsl = sas.get_neighbor_site_list(neighbor_number=self.remove_site_shells,
+                                             radius=self.remove_site_radius)
             indexes = indices.copy()
             random.shuffle(indexes)
             itbms = set()
@@ -466,7 +473,7 @@ class AdsorbateGroupSubstitute(Mutation):
                 changes[idx] = to_spec
                 if to_spec == 'vacancy':
                     newvs.update(group)
-                elif self.remove_site_shells > 0:
+                elif (self.remove_site_shells > 0) or (self.remove_site_radius is not None):
                     newvs.update([i for k in group for i in nsl[k]])
 
         rmsites = [hsl[j] for idx, to_spec in enumerate(changes) 
@@ -541,6 +548,10 @@ class AdsorbateGroupPermutation(Mutation):
         removed. Remove the 1st neighbor site shell by default. Set to 0 if
         no site should be removed.
 
+    remove_site_radius : float, default None                              
+        The radius within which the neighbor sites should be removed. This
+        serves as an alternative to remove_site_shells.                   
+
     subtract_heights : bool, default False
         Whether to subtract the height from the bond length when allocating
         a site to an adsorbate. Default is to allocate the site that is
@@ -562,6 +573,7 @@ class AdsorbateGroupPermutation(Mutation):
                  heights=site_heights,
                  adsorption_sites=None,
                  remove_site_shells=1,
+                 remove_site_radius=None,
                  subtract_heights=False,
                  num_muts=1, dmax=2.5, **kwargs):
         Mutation.__init__(self, num_muts=num_muts)
@@ -575,6 +587,7 @@ class AdsorbateGroupPermutation(Mutation):
             self.heights[k] = v
         self.adsorption_sites = adsorption_sites
         self.remove_site_shells = remove_site_shells
+        self.remove_site_radius = remove_site_radius
         if subtract_heights:
             self.subtract_heights = self.heights
         else:
@@ -643,7 +656,8 @@ class AdsorbateGroupPermutation(Mutation):
                                                           self.descriptor)
         for _ in range(self.num_muts):
             AdsorbateGroupPermutation.mutate(f, site_groups, self.heights, sas, 
-                                             hsl, self.remove_site_shells)
+                                             hsl, self.remove_site_shells, 
+                                             self.remove_site_radius)
             if True in indi.pbc:
                 nsac = SlabAdsorbateCoverage(f, sas, subtract_heights=
                                              self.subtract_heights, dmax=self.dmax)
@@ -663,7 +677,7 @@ class AdsorbateGroupPermutation(Mutation):
 
     @classmethod
     def mutate(cls, atoms, groups, heights, adsorption_sites, 
-               hetero_site_list, remove_site_shells):
+               hetero_site_list, remove_site_shells, remove_site_radius):
         """Do the actual permutation of the adsorbates."""
 
         sas, hsl = adsorption_sites, hetero_site_list
@@ -672,8 +686,9 @@ class AdsorbateGroupPermutation(Mutation):
         i1 = random.randint(0, ngroups - 1)
         st01 = hsl[groups[i1][0]]
         ings = []
-        if remove_site_shells > 0:                                                   
-            nsl = sas.get_neighbor_site_list(neighbor_number=remove_site_shells) 
+        if (remove_site_shells > 0) or (remove_site_radius is not None):                                                   
+            nsl = sas.get_neighbor_site_list(neighbor_number=remove_site_shells,
+                                             radius=remove_site_radius) 
             if st01['occupied']:
                 ings += [nj for nj in indices if not set(groups[nj]).isdisjoint(nsl[i1])]
         options = [j for j in range(ngroups) if (j not in ings) and 
@@ -706,13 +721,13 @@ class AdsorbateGroupPermutation(Mutation):
                 changes[idx] = to_spec1
                 if to_spec1 == 'vacancy':
                     newvs.update(group)
-                elif remove_site_shells > 0:
+                elif (remove_site_shells > 0) or (remove_site_radius is not None):
                     newvs.update([i for k in group for i in nsl[k]])
             elif idx == i2:
                 changes[idx] = to_spec2
                 if to_spec2 == 'vacancy':
                     newvs.update(group)
-                elif remove_site_shells > 0:
+                elif (remove_site_shells > 0) or (remove_site_radius is not None):
                     newvs.update([i for k in group for i in nsl[k]])
 
         rmsites = [hsl[j] for idx, to_spec in enumerate(changes) 

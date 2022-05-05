@@ -74,7 +74,7 @@ class ClusterAdsorbateCoverage(object):
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
-        label that represents the occpied site.
+        label that represents the occupied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between an atom and its
@@ -710,7 +710,7 @@ class SlabAdsorbateCoverage(object):
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
-        label that represents the occpied site.
+        label that represents the occupied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between an atom and its
@@ -1352,7 +1352,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
     label_occupied_sites : bool, default False
         Whether to assign a label to the occupied each site. The string 
         of the occupying adsorbate is concatentated to the numerical 
-        label that represents the occpied site.
+        label that represents the occupied site.
 
     dmax : float, default 2.5
         The maximum bond length (in Angstrom) between an atom and its

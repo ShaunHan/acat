@@ -503,7 +503,9 @@ class ClusterAdsorptionSites(object):
 
     def get_unique_sites(self, unique_composition=False,         
                          unique_subsurf=False,
-                         return_signatures=False):
+                         return_signatures=False,
+                         return_site_indices=False,
+                         site_list=None):
         """Get all symmetry-inequivalent adsorption sites (one
         site for each type).
         
@@ -522,9 +524,16 @@ class ClusterAdsorptionSites(object):
             Whether to return the unique signatures of the
             sites instead.
 
+        return_site_indices: bool, default False
+            Whether to return the indices of each unique 
+            site (in the site list).                     
+
         """
 
-        sl = self.site_list
+        if site_list is None:
+            sl = self.site_list
+        else:
+            sl = site_list
         key_list = ['site', 'surface']
         if unique_composition:
             if not self.composition_effect:
@@ -544,10 +553,12 @@ class ClusterAdsorptionSites(object):
         else:
             seen_tuple = []
             uni_sites = []
-            for s in sl:
+            for i, s in enumerate(sl):
                 sig = tuple(s[k] for k in key_list)
                 if sig not in seen_tuple:
                     seen_tuple.append(sig)
+                    if return_site_indices:
+                        s = i 
                     uni_sites.append(s)
             return uni_sites                        
 
@@ -893,46 +904,68 @@ class ClusterAdsorptionSites(object):
 
         return G
 
-    def get_neighbor_site_list(self, dx=0.1, neighbor_number=1, span=True):           
+    def get_neighbor_site_list(self, dx=0.1, neighbor_number=1, 
+                               radius=None, span=True, unique=False, 
+                               unique_composition=False,
+                               unique_subsurf=False):           
         """Returns the site_list index of all neighbor shell sites 
         for each site.
 
         Parameters
         ----------
         dx : float, default 0.1
-            Buffer to calculate nearest neighbor pairs.
+            Buffer to calculate nearest neighbor site pairs.
 
         neighbor_number : int, default 1
-            Neighbor shell number. 
+            Neighbor shell number.
+
+        radius : float, default None
+            The radius that defines site a is a neighbor of site b.
+            This serves as an alternative to neighbor_number.      
 
         span : bool, default True
             Whether to include all neighbors sites spanned within 
             the shell.
 
+        unique : bool, default False
+            Whether to discard duplicate types of neighbor sites.
+
         """
 
         sl = self.site_list
-        adsposs = np.asarray([s['position'] + s['normal'] * 
-                              site_heights[s['site']] for s in sl])
-        statoms = Atoms('X{}'.format(len(sl)), positions=adsposs, 
+        poss = np.asarray([s['position'] for s in sl])
+        statoms = Atoms('X{}'.format(len(sl)), positions=poss,
                         cell=self.cell, pbc=self.pbc)
-        cr = 0.55 
-        if neighbor_number == 1:
-            cr += 0.1
-        if self.ignore_bridge_sites:
-            cr *= 1.5                                             
-        nbslist = neighbor_shell_list(statoms, dx, neighbor_number,
-                                      mic=False, radius=cr, span=span)
-        if neighbor_number == 1:
-            topi_dict = {}
-            for i, st in enumerate(sl):
-                if st['site'] == 'ontop':
-                    topi_dict[st['indices'][0]] = i
-            for i, st in enumerate(sl):
-                if st['site'] in ['fcc','hcp']:
-                    for j in st['indices']:
-                        if j in topi_dict:
-                            nbslist[i].append(topi_dict[j]) 
+        if radius is not None:                                                           
+            nbslist = neighbor_shell_list(statoms, dx, neighbor_number=1,
+                                          mic=False, radius=radius, span=span)
+            if unique:
+                for i in range(len(nbslist)):
+                    nbsids = nbslist[i]
+                    tmpids = self.get_unique_sites(unique_composition, unique_subsurf,
+                                                   return_site_indices=True,
+                                                   site_list=[sl[ni] for ni in nbsids])
+                    nbsids = [nbsids[j] for j in tmpids]
+                    nbslist[i] = nbsids
+        else:
+            D = statoms.get_all_distances(mic=False)
+            nbslist = {}
+            for i, row in enumerate(D):
+                argsort = np.argsort(row)
+                row = row[argsort]
+                res = np.split(argsort, np.where(np.abs(np.diff(row)) > dx)[0] + 1)
+                if span:
+                    nbsids = sorted([n for nn in range(1, neighbor_number + 1) 
+                                     for n in list(res[nn])])
+                else:
+                    nbsids = sorted(res[neighbor_number])
+                if unique:
+                    tmpids = self.get_unique_sites(unique_composition, unique_subsurf,
+                                                   return_site_indices=True, 
+                                                   site_list=[sl[ni] for ni in nbsids])
+                    nbsids = [nbsids[j] for j in tmpids]
+                nbslist[i] = nbsids
+
         return nbslist
 
     def update(self, atoms, update_composition=False):                 
@@ -1016,7 +1049,7 @@ def group_sites_by_facet(atoms, sites, all_sites=None):
                   s['surface'] in ['vertex', 'edge']]
     unique_ve_indices = set(list(sum(ve_indices, ())))
      
-    G=nx.Graph()
+    G = nx.Graph()
     for site in sites:
         indices = site['indices']
         reduced_indices = tuple(i for i in indices if i 
@@ -2407,7 +2440,9 @@ class SlabAdsorptionSites(object):
 
     def get_unique_sites(self, unique_composition=False,                
                          unique_subsurf=False, 
-                         return_signatures=False):
+                         return_signatures=False,
+                         return_site_indices=False,
+                         site_list=None):
         """Get all symmetry-inequivalent adsorption sites (one
         site for each type).
         
@@ -2424,10 +2459,17 @@ class SlabAdsorptionSites(object):
         return_signatures : bool, default False           
             Whether to return the unique signatures of the 
             sites instead.
+
+        return_site_indices: bool, default False
+            Whether to return the indices of each unique 
+            site (in the site list).                     
         
         """
 
-        sl = self.site_list
+        if site_list is None:
+            sl = self.site_list
+        else:
+            sl = site_list
         key_list = ['site', 'morphology']
         if unique_composition:
             if not self.composition_effect:
@@ -2446,10 +2488,12 @@ class SlabAdsorptionSites(object):
         else:
             seen_tuple = []
             uni_sites = []
-            for s in sl:
+            for i, s in enumerate(sl):
                 sig = tuple(s[k] for k in key_list)
                 if sig not in seen_tuple:
                     seen_tuple.append(sig)
+                    if return_site_indices:
+                        s = i
                     uni_sites.append(s)
             return uni_sites                        
 
@@ -2639,56 +2683,68 @@ class SlabAdsorptionSites(object):
 
         return G
 
-    def get_neighbor_site_list(self, dx=0.1, neighbor_number=1, span=True):           
+    def get_neighbor_site_list(self, dx=0.1, neighbor_number=1, 
+                               radius=None, span=True, unique=False,
+                               unique_composition=False,
+                               unique_subsurf=False):           
         """Returns the site_list index of all neighbor shell sites 
         for each site.
 
         Parameters
         ----------
         dx : float, default 0.1
-            Buffer to calculate nearest neighbor pairs.
+            Buffer to calculate nearest neighbor site pairs.
 
         neighbor_number : int, default 1
             Neighbor shell number. 
+
+        radius : float, default None
+            The radius that defines site a is a neighbor of site b.
+            This serves as an alternative to neighbor_number.      
 
         span : bool, default True
             Whether to include all neighbors sites spanned within 
             the shell.
 
+        unique : bool, default False
+            Whether to discard duplicate types of neighbor sites.
+
         """
 
         sl = self.site_list
-        if self.optimize_surrogate_cell:
-            refposs = np.asarray([(s['position'] @ np.linalg.pinv(self.cell) 
-                                  - np.average(self.delta_positions[list(
-                                  s['indices'])], 0)) @ self.ref_atoms.cell + 
-                                  s['normal'] * site_heights[s['site']] for s in sl])
-            statoms = Atoms('X{}'.format(len(sl)), positions=refposs, 
-                            cell=self.ref_atoms.cell, pbc=self.pbc)
+        poss = np.asarray([s['position'] for s in sl])
+        statoms = Atoms('X{}'.format(len(sl)), positions=poss,
+                        cell=self.cell, pbc=self.pbc)
+        if radius is not None:                                                          
+            nbslist = neighbor_shell_list(statoms, dx, neighbor_number=1,
+                                          mic=True, radius=radius, span=span)
+            if unique:
+                for i in range(len(nbslist)):
+                    nbsids = nbslist[i]
+                    tmpids = self.get_unique_sites(unique_composition, unique_subsurf,
+                                                   return_site_indices=True,
+                                                   site_list=[sl[ni] for ni in nbsids])
+                    nbsids = [nbsids[j] for j in tmpids]
+                    nbslist[i] = nbsids
         else:
-            refposs = np.asarray([s['position'] - np.average(
-                                  self.delta_positions[list(
-                                  s['indices'])], 0) + s['normal'] * 
-                                  site_heights[s['site']] for s in sl])
-            statoms = Atoms('X{}'.format(len(sl)), positions=refposs, 
-                            cell=self.cell, pbc=self.pbc)
-        cr = 0.55 
-        if neighbor_number == 1:
-            cr += 0.1
-        if self.ignore_bridge_sites:
-            cr *= 1.5
-        nbslist = neighbor_shell_list(statoms, dx, neighbor_number,
-                                      mic=True, radius=cr, span=span)
-        if neighbor_number == 1:
-            top_set = set(self.surf_ids)
-            topi_dict = {}
-            for i, st in enumerate(sl):
-                if st['site'] == 'ontop':
-                    topi_dict[st['indices'][0]] = i
-                elif st['site'] in ['fcc','hcp']:
-                    for j in st['indices']:
-                        if j in topi_dict:
-                            nbslist[i].append(topi_dict[j])  
+            D = statoms.get_all_distances(mic=True)
+            nbslist = {}
+            for i, row in enumerate(D):
+                argsort = np.argsort(row)
+                row = row[argsort]
+                res = np.split(argsort, np.where(np.abs(np.diff(row)) > dx)[0] + 1)
+                if span:
+                    nbsids = sorted([n for nn in range(1, neighbor_number + 1) 
+                                     for n in list(res[nn])])
+                else:
+                    nbsids = sorted(res[neighbor_number])
+                if unique:
+                    tmpids = self.get_unique_sites(unique_composition, unique_subsurf,
+                                                   return_site_indices=True, 
+                                                   site_list=[sl[ni] for ni in nbsids])
+                    nbsids = [nbsids[j] for j in tmpids]
+                nbslist[i] = nbsids
+
         return nbslist
 
     def update(self, atoms, update_composition=False):

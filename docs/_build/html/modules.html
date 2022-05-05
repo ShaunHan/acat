@@ -301,7 +301,7 @@ atoms and collect in a site list.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites">
-<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_site_indices</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all symmetry-inequivalent adsorption sites (one
 site for each type).</p>
 <dl class="field-list simple">
@@ -314,6 +314,8 @@ checking uniqueness. Could be important for
 surfaces like fcc100.</p></li>
 <li><p><strong>return_signatures</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the unique signatures of the
 sites instead.</p></li>
+<li><p><strong>return_site_indices</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the indices of each unique
+site (in the site list).</p></li>
 </ul>
 </dd>
 </dl>
@@ -401,16 +403,19 @@ object.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list">
-<code class="sig-name descname">get_neighbor_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">span</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_neighbor_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_neighbor_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">span</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_neighbor_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the site_list index of all neighbor shell sites
 for each site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Buffer to calculate nearest neighbor pairs.</p></li>
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Buffer to calculate nearest neighbor site pairs.</p></li>
 <li><p><strong>neighbor_number</strong> (<em>int</em><em>, </em><em>default 1</em>) – Neighbor shell number.</p></li>
+<li><p><strong>radius</strong> (<em>float</em><em>, </em><em>default None</em>) – The radius that defines site a is a neighbor of site b.
+This serves as an alternative to neighbor_number.</p></li>
 <li><p><strong>span</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to include all neighbors sites spanned within
 the shell.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate types of neighbor sites.</p></li>
 </ul>
 </dd>
 </dl>
@@ -621,7 +626,7 @@ surface atoms in a supercell and collect in a site list.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites">
-<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_site_indices</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all symmetry-inequivalent adsorption sites (one
 site for each type).</p>
 <dl class="field-list simple">
@@ -633,6 +638,8 @@ checking uniqueness.</p></li>
 checking uniqueness.</p></li>
 <li><p><strong>return_signatures</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the unique signatures of the
 sites instead.</p></li>
+<li><p><strong>return_site_indices</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the indices of each unique
+site (in the site list).</p></li>
 </ul>
 </dd>
 </dl>
@@ -690,16 +697,19 @@ object.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list">
-<code class="sig-name descname">get_neighbor_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">span</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_neighbor_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_neighbor_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">span</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_neighbor_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the site_list index of all neighbor shell sites
 for each site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Buffer to calculate nearest neighbor pairs.</p></li>
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>default 0.1</em>) – Buffer to calculate nearest neighbor site pairs.</p></li>
 <li><p><strong>neighbor_number</strong> (<em>int</em><em>, </em><em>default 1</em>) – Neighbor shell number.</p></li>
+<li><p><strong>radius</strong> (<em>float</em><em>, </em><em>default None</em>) – The radius that defines site a is a neighbor of site b.
+This serves as an alternative to neighbor_number.</p></li>
 <li><p><strong>span</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to include all neighbors sites spanned within
 the shell.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to discard duplicate types of neighbor sites.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1189,7 +1199,7 @@ for each adsorbate is consistent with the site to which the adsorbate
 was added.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occupied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
 nearest site to be considered as the atom being bound to the site.</p></li>
 </ul>
@@ -1395,7 +1405,7 @@ for each adsorbate is consistent with the site to which the adsorbate
 was added.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occupied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
 nearest site to be considered as the atom being bound to the site.</p></li>
 </ul>
@@ -1579,7 +1589,7 @@ allocated site for each adsorbate is consistent with the site to
 which the adsorbate was added.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occupied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
 nearest site to be considered as the atom being bound to the site.</p></li>
 </ul>
@@ -1664,7 +1674,7 @@ for each adsorbate is consistent with the site to which the adsorbate
 was added.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occupied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
 nearest site to be considered as the atom being bound to the site.</p></li>
 </ul>
@@ -1754,7 +1764,7 @@ for each adsorbate is consistent with the site to which the adsorbate
 was added.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occupied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
 nearest site to be considered as the atom being bound to the site.</p></li>
 </ul>
@@ -1823,7 +1833,7 @@ allocated site for each adsorbate is consistent with the site to
 which the adsorbate was added.</p></li>
 <li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
 of the occupying adsorbate is concatentated to the numerical
-label that represents the occpied site.</p></li>
+label that represents the occupied site.</p></li>
 <li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
 nearest site to be considered as the atom being bound to the site.</p></li>
 </ul>

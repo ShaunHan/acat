@@ -471,6 +471,10 @@
 <span class="sd">        removed. Remove the 1st neighbor site shell by default. Set to 0 if</span>
 <span class="sd">        no site should be removed.</span>
 
+<span class="sd">    remove_site_radius : float, default None                              </span>
+<span class="sd">        The radius within which the neighbor sites should be removed. This</span>
+<span class="sd">        serves as an alternative to remove_site_shells.                   </span>
+
 <span class="sd">    subtract_heights : bool, default False</span>
 <span class="sd">        Whether to subtract the height from the bond length when allocating</span>
 <span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
@@ -494,6 +498,7 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_site_shells</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">remove_site_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
@@ -512,6 +517,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">=</span> <span class="n">remove_site_shells</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="o">=</span> <span class="n">remove_site_radius</span>
         <span class="k">if</span> <span class="n">subtract_heights</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span>
         <span class="k">else</span><span class="p">:</span>
@@ -570,8 +576,9 @@
 
         <span class="n">ngroups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">,</span>
+                                             <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span><span class="p">)</span>
             <span class="n">indexes</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span>
             <span class="n">itbms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -628,7 +635,7 @@
                 <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_spec</span>
                 <span class="k">if</span> <span class="n">to_spec</span> <span class="o">==</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">:</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
 
         <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> 
@@ -703,6 +710,10 @@
 <span class="sd">        removed. Remove the 1st neighbor site shell by default. Set to 0 if</span>
 <span class="sd">        no site should be removed.</span>
 
+<span class="sd">    remove_site_radius : float, default None                              </span>
+<span class="sd">        The radius within which the neighbor sites should be removed. This</span>
+<span class="sd">        serves as an alternative to remove_site_shells.                   </span>
+
 <span class="sd">    subtract_heights : bool, default False</span>
 <span class="sd">        Whether to subtract the height from the bond length when allocating</span>
 <span class="sd">        a site to an adsorbate. Default is to allocate the site that is</span>
@@ -724,6 +735,7 @@
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span>
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_site_shells</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">remove_site_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">subtract_heights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">num_muts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">Mutation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_muts</span><span class="o">=</span><span class="n">num_muts</span><span class="p">)</span>
@@ -737,6 +749,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span> <span class="o">=</span> <span class="n">adsorption_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">=</span> <span class="n">remove_site_shells</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="o">=</span> <span class="n">remove_site_radius</span>
         <span class="k">if</span> <span class="n">subtract_heights</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span>
         <span class="k">else</span><span class="p">:</span>
@@ -805,7 +818,8 @@
                                                           <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_muts</span><span class="p">):</span>
             <span class="n">AdsorbateGroupPermutation</span><span class="o">.</span><span class="n">mutate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">site_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> 
-                                             <span class="n">hsl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">)</span>
+                                             <span class="n">hsl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">,</span> 
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span><span class="p">)</span>
             <span class="k">if</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">indi</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
                 <span class="n">nsac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sas</span><span class="p">,</span> <span class="n">subtract_heights</span><span class="o">=</span>
                                              <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">)</span>
@@ -825,7 +839,7 @@
 
 <div class="viewcode-block" id="AdsorbateGroupPermutation.mutate"><a class="viewcode-back" href="../../../ga.html#acat.ga.group_operators.AdsorbateGroupPermutation.mutate">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">heights</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="p">,</span> 
-               <span class="n">hetero_site_list</span><span class="p">,</span> <span class="n">remove_site_shells</span><span class="p">):</span>
+               <span class="n">hetero_site_list</span><span class="p">,</span> <span class="n">remove_site_shells</span><span class="p">,</span> <span class="n">remove_site_radius</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Do the actual permutation of the adsorbates.&quot;&quot;&quot;</span>
 
         <span class="n">sas</span><span class="p">,</span> <span class="n">hsl</span> <span class="o">=</span> <span class="n">adsorption_sites</span><span class="p">,</span> <span class="n">hetero_site_list</span>
@@ -834,8 +848,9 @@
         <span class="n">i1</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngroups</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">st01</span> <span class="o">=</span> <span class="n">hsl</span><span class="p">[</span><span class="n">groups</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
         <span class="n">ings</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>                                                   
-            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="n">remove_site_shells</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="p">(</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>                                                   
+            <span class="n">nsl</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="n">remove_site_shells</span><span class="p">,</span>
+                                             <span class="n">radius</span><span class="o">=</span><span class="n">remove_site_radius</span><span class="p">)</span> 
             <span class="k">if</span> <span class="n">st01</span><span class="p">[</span><span class="s1">&#39;occupied&#39;</span><span class="p">]:</span>
                 <span class="n">ings</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nj</span> <span class="k">for</span> <span class="n">nj</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="n">nj</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">nsl</span><span class="p">[</span><span class="n">i1</span><span class="p">])]</span>
         <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngroups</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ings</span><span class="p">)</span> <span class="ow">and</span> 
@@ -868,13 +883,13 @@
                 <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_spec1</span>
                 <span class="k">if</span> <span class="n">to_spec1</span> <span class="o">==</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">:</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
             <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="n">i2</span><span class="p">:</span>
                 <span class="n">changes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_spec2</span>
                 <span class="k">if</span> <span class="n">to_spec2</span> <span class="o">==</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">:</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
                     <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
 
         <span class="n">rmsites</span> <span class="o">=</span> <span class="p">[</span><span class="n">hsl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> 
