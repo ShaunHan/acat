@@ -100,7 +100,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#the-enumerate-adsorption-sites-function">The enumerate_adsorption_sites function</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-acat.adsorbate_coverage">Adsorbate coverage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#adsorbate-coverage">Adsorbate coverage</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#the-clusteradsorbatecoverage-class">The ClusterAdsorbateCoverage class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-slabadsorbatecoverage-class">The SlabAdsorbateCoverage class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-enumerate-occupied-sites-function">The enumerate_occupied_sites function</a></li>
@@ -184,7 +184,10 @@
 <div class="section" id="adsorption-sites">
 <h2>Adsorption sites<a class="headerlink" href="#adsorption-sites" title="Permalink to this headline">¶</a></h2>
 <p>All symmetry-inequivalent adsorption sites supported by ACAT can be found in <a class="reference download internal" download="" href="_downloads/2323b5636c7c7624f7124ca37b2d01b9/table_of_adsorption_sites.pdf"><code class="xref download docutils literal notranslate"><span class="pre">Table</span> <span class="pre">of</span> <span class="pre">Adsorption</span> <span class="pre">Sites</span></code></a>. The table includes snapshots of each site and the corresponding numerical labels irrespective of composition (<cite>Label 1</cite>) or considering composition effect (<cite>Label 2</cite>) for monometallics and bimetallics.</p>
-<span class="target" id="module-acat.adsorption_sites"></span><dl class="py class">
+<div class="section" id="the-clusteradsorptionsites-class">
+<h3>The ClusterAdsorptionSites class<a class="headerlink" href="#the-clusteradsorptionsites-class" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py class">
 <dt id="acat.adsorption_sites.ClusterAdsorptionSites">
 <em class="property">class </em><code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">ClusterAdsorptionSites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">label_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surrogate_metal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -442,7 +445,12 @@ the surface is not fixed.</p></li>
 
 </dd></dl>
 
-<dl class="py function">
+</div></blockquote>
+</div>
+<div class="section" id="the-group-sites-by-facet-function">
+<h3>The group_sites_by_facet function<a class="headerlink" href="#the-group-sites-by-facet-function" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py function">
 <dt id="acat.adsorption_sites.group_sites_by_facet">
 <code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">group_sites_by_facet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">sites</span></em>, <em class="sig-param"><span class="n">all_sites</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#group_sites_by_facet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.group_sites_by_facet" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that uses networkx to group one set of sites by
@@ -481,7 +489,12 @@ icosahedral nanoparticle by its 20 geometrical facets:</p>
 </div>
 </dd></dl>
 
-<dl class="py class">
+</div></blockquote>
+</div>
+<div class="section" id="the-slabadsorptionsites-class">
+<h3>The SlabAdsorptionSites class<a class="headerlink" href="#the-slabadsorptionsites-class" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py class">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites">
 <em class="property">class </em><code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">SlabAdsorptionSites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">label_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surrogate_metal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -736,332 +749,14 @@ the surface is not fixed.</p></li>
 
 </dd></dl>
 
-<dl class="py function">
-<dt id="acat.adsorption_sites.get_adsorption_site">
-<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">get_adsorption_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_index</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#get_adsorption_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.get_adsorption_site" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function that returns the information of a site given the
-indices of the atoms that contribute to the site. The function
-is generalized for both periodic and non-periodic systems
-(distinguished by atoms.pbc).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em>) – The indices of the atoms that contribute to the site.</p></li>
-<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices)
-Only required for periodic surface slabs.</p></li>
-<li><p><strong>return_index</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the site index of the site list
-together with the site.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>This is an example of getting the site information of the
-(24, 29, 31) 3-fold hollow site on a fcc110 surface:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">get_adsorption_site</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc110</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc110</span><span class="p">(</span><span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">site</span> <span class="o">=</span> <span class="n">get_adsorption_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc110&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc110&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="s1">&#39;sc-tc-h&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">3.91083333</span><span class="p">,</span>  <span class="mf">1.91449161</span><span class="p">,</span> <span class="mf">13.5088516</span> <span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.81649658</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;CuCuAu&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt id="acat.adsorption_sites.enumerate_adsorption_sites">
-<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">enumerate_adsorption_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">morphology</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#enumerate_adsorption_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.enumerate_adsorption_sites" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function that enumerates all adsorption sites of the
-input atoms object. The function is generalized for both
-periodic and non-periodic systems (distinguished by atoms.pbc).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices).
-If the structure is a periodic surface slab, this is required.
-If the structure is a nanoparticle, the function enumerates
-only the sites on the specified surface.</p></li>
-<li><p><strong>morphology</strong> (<em>str</em><em>, </em><em>default None</em>) – The function enumerates only the sites of the specified
-local surface morphology. Only available for surface slabs.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>This is an example of enumerating all sites on the fcc100 surfaces
-of a Marks decahedral nanoparticle:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">enumerate_adsorption_sites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Decahedron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Decahedron</span><span class="p">(</span><span class="s1">&#39;Pb&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Ag&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">enumerate_adsorption_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                   <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;4fold&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">22.63758191</span><span class="p">,</span> <span class="mf">21.69793997</span><span class="p">,</span> <span class="mf">13.75044642</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">0.58778525</span><span class="p">,</span>  <span class="mf">0.80901699</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.</span>        <span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">116</span><span class="p">,</span> <span class="mi">117</span><span class="p">,</span> <span class="mi">118</span><span class="p">,</span> <span class="mi">119</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;AgAgPbPb&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="s1">&#39;Pb&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<div class="section" id="the-clusteradsorptionsites-class">
-<h3>The ClusterAdsorptionSites class<a class="headerlink" href="#the-clusteradsorptionsites-class" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="py class">
-<dt id="id0">
-<em class="property">class </em><code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">ClusterAdsorptionSites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">label_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surrogate_metal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for identifying adsorption sites on a nanoparticle.
-Support common nanoparticle shapes including: Mackay icosahedron,
-(truncated) octahedron and (Marks) decahedron.</p>
-<p>The information of each site is stored in a dictionary with the
-following keys:</p>
-<p><strong>‘site’</strong>: the site type, support ‘ontop’, ‘bridge’, ‘longbridge’,
-‘shortbridge’, ‘fcc’, ‘hcp’, ‘3fold’, ‘4fold’, ‘5fold’, ‘6fold’.</p>
-<p><strong>‘surface’</strong>: the surface of the site, support ‘vertex’, ‘edge’,
-‘fcc100’, ‘fcc111’.</p>
-<p><strong>‘position’</strong>: the 3D Cartesian coordinate of the site saved as a
-numpy array.</p>
-<p><strong>‘normal’</strong>: the surface normal vector of the site saved as a numpy
-array.</p>
-<p><strong>‘indices’</strong>: the indices of the atoms that constitute the site.</p>
-<p><strong>‘composition’</strong>: the elemental composition of the site. Always in
-the lowest lexicographical order.</p>
-<p><strong>‘subsurf_index’</strong>: the index of the subsurface atom underneath an
-hcp or 4fold site.</p>
-<p><strong>‘subsurf_element’</strong>: the element of the subsurface atom underneath
-an hcp or 4fold site</p>
-<p><strong>‘label’</strong>: the numerical label assigned to the site if label_sites
-is set to True.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a non-periodic nanoparticle.
-Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
-underneath fcc hollow sites.</p></li>
-<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
-compositions as different sites. It is recommended to
-set composition_effect=False for monometallics.</p></li>
-<li><p><strong>ignore_bridge_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to ignore bridge sites.</p></li>
-<li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
-Labels for different sites are listed in acat.labels.
-Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
-<li><p><strong>surrogate_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized w.r.t. pure transition metals.
-The generalization of the code is achieved by mapping all
-input atoms to a surrogate transition metal that is
-supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt
-or Au). Try changing the surrogate metal when the site
-identification is not satisfying.</p></li>
-<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – The tolerence of neighbor distance (in Angstrom).
-Might be helpful to adjust this if the site identification
-is not satisfying. When the nanoparticle is small (less
-than 300 atoms), Cu is normally the better choice, while
-Au should be good for larger nanoparticles.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>The following example illustrates the most important use of a
-<cite>ClusterAdsorptionSites</cite> object - getting all adsorption sites:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="gp">... </span>                             <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="gp">... </span>                             <span class="n">label_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">6.96</span><span class="p">,</span>  <span class="mf">7.94</span><span class="p">,</span> <span class="mf">11.86</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.66666667</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.66666667</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.33333333</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;PtPt&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="mi">14</span><span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div></blockquote>
-</div>
-<div class="section" id="the-group-sites-by-facet-function">
-<h3>The group_sites_by_facet function<a class="headerlink" href="#the-group-sites-by-facet-function" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="py function">
-<dt id="id1">
-<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">group_sites_by_facet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">sites</span></em>, <em class="sig-param"><span class="n">all_sites</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#group_sites_by_facet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function that uses networkx to group one set of sites by
-geometrical facets of the nanoparticle. Different geometrical
-facets can have the same surface type. The function returns a
-list of lists, each contains sites on a same geometrical facet.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a non-periodic nanoparticle.
-Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>sites</strong> (<em>list of dicts</em>) – The adsorption sites to be grouped by geometrical facet.</p></li>
-<li><p><strong>all_sites</strong> (<em>list of dicts</em><em>, </em><em>default None</em>) – The list of all sites. Provide this to make the grouping
-much faster. Useful when the function is called many times.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>The following example shows how to group all fcc sites of an
-icosahedral nanoparticle by its 20 geometrical facets:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">group_sites_by_facet</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">all_sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fcc_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_sites</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fcc&#39;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">groups</span> <span class="o">=</span> <span class="n">group_sites_by_facet</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">fcc_sites</span><span class="p">,</span> <span class="n">all_sites</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="mi">20</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div></blockquote>
-</div>
-<div class="section" id="the-slabadsorptionsites-class">
-<h3>The SlabAdsorptionSites class<a class="headerlink" href="#the-slabadsorptionsites-class" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="py class">
-<dt id="id2">
-<em class="property">class </em><code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">SlabAdsorptionSites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">label_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surrogate_metal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for identifying adsorption sites on a surface slab.
-Support 20 common surfaces: fcc100, fcc111, fcc110, fcc211,
-fcc221, fcc311, fcc322, fcc331, fcc332, bcc100, bcc111, bcc110,
-bcc210, bcc211, bcc310, hcp0001, hcp10m10t, hcp10m10h,
-hcp10m11, hcp10m12.</p>
-<p>The information of each site is stored in a dictionary with the
-following keys:</p>
-<p><strong>‘site’</strong>: the site type, support ‘ontop’, ‘bridge’, ‘longbridge’,
-‘shortbridge’, ‘fcc’, ‘hcp’, ‘3fold’, ‘4fold’, ‘5fold’, ‘6fold’.</p>
-<p><strong>‘surface’</strong>: the surface type (crystal structure + Miller indices)
-of the slab. Support 20 surfaces as listed above.</p>
-<p><strong>‘morphology’</strong>: the local surface morphology of the site. Support
-‘step’, ‘terrace’, ‘corner’, ‘sc-tc-x’, ‘tc-cc-x’, ‘sc-cc-x’.
-‘sc’, ‘tc’ and ‘cc’ represents step chain, terrace chain and corner,
-respectively. ‘x’ is the Bravais lattice that connects the 2 chains,
-e.g. ‘h’ = hexagonal, ‘t’ = ‘tetragonal’, ‘o’ = ‘orthorhombic’.</p>
-<p><strong>‘position’</strong>: the 3D Cartesian coordinate of the site saved as a
-numpy array.</p>
-<p><strong>‘normal’</strong>: the surface normal vector of the site saved as a numpy
-array.</p>
-<p><strong>‘indices’</strong>: the indices of the atoms that constitute the site.</p>
-<p><strong>‘composition’</strong>: the elemental composition of the site. Always in
-the lowest lexicographical order.</p>
-<p><strong>‘subsurf_index’</strong>: the index of the subsurface atom underneath an
-hcp or 4fold site.</p>
-<p><strong>‘subsurf_element’</strong>: the element of the subsurface atom underneath
-an hcp or 4fold site</p>
-<p><strong>‘label’</strong>: the numerical label assigned to the site if label_sites
-is set to True.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a periodic surface slab with at
-least 3 layers (e.g. all surface atoms make up one layer).
-Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>surface</strong> (<em>str</em>) – The surface type (crystal structure + Miller indices).</p></li>
-<li><p><strong>allow_6fold</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to allow the adsorption on 6-fold subsurf sites
-underneath fcc hollow sites.</p></li>
-<li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites with different elemental
-compositions as different sites. It is recommended to
-set composition_effect=False for monometallics.</p></li>
-<li><p><strong>both_sides</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to consider sites on both top and bottom sides
-of the slab.</p></li>
-<li><p><strong>ignore_bridge_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to ignore bridge sites.</p></li>
-<li><p><strong>label_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a numerical label to each site.
-Labels for different sites are listed in acat.labels.
-Use the bimetallic labels if composition_effect=True,
-otherwise use the monometallic labels.</p></li>
-<li><p><strong>surrogate_metal</strong> (<em>str</em><em>, </em><em>default None</em>) – The code is parameterized w.r.t. pure transition metals.
-The generalization of the code is achieved by mapping all
-input atoms to a surrogate transition metal that is
-supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt
-or Au). Try changing the surrogate metal when the site
-identification is not satisfying. When the cell is small,
-Cu is normally the better choice, while the Pt and Au
-should be good for larger cells.</p></li>
-<li><p><strong>optimize_surrogate_cell</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to also optimize the cell during the optimization
-of the surrogate slab. Useful for generalizing the code for
-alloy slabs of various compositions and lattice constants.
-Recommand to set to True if the surrogate metal is very
-different from the composition of the input slab.</p></li>
-<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – The tolerence of neighbor distance (in Angstrom).
-Might be helpful to adjust this if the site identification
-is not satisfying. The default 0.5 is usually good enough.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>The following example illustrates the most important use of a
-<cite>SlabAdsorptionSites</cite> object - getting all adsorption sites:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc211</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc211</span><span class="p">(</span><span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">label_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;hcp&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc211&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="s1">&#39;sc-tc-h&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">4.51584136</span><span class="p">,</span>  <span class="mf">0.63816387</span><span class="p">,</span> <span class="mf">12.86014042</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.33333333</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.94280904</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;CuAuAu&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="mi">28</span><span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
 </div></blockquote>
 </div>
 <div class="section" id="the-get-adsorption-site-function">
 <h3>The get_adsorption_site function<a class="headerlink" href="#the-get-adsorption-site-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="id3">
-<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">get_adsorption_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_index</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#get_adsorption_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.adsorption_sites.get_adsorption_site">
+<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">get_adsorption_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_index</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#get_adsorption_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.get_adsorption_site" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that returns the information of a site given the
 indices of the atoms that contribute to the site. The function
 is generalized for both periodic and non-periodic systems
@@ -1108,8 +803,8 @@ together with the site.</p></li>
 <h3>The enumerate_adsorption_sites function<a class="headerlink" href="#the-enumerate-adsorption-sites-function" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="id4">
-<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">enumerate_adsorption_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">morphology</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#enumerate_adsorption_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dt id="acat.adsorption_sites.enumerate_adsorption_sites">
+<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">enumerate_adsorption_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">morphology</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#enumerate_adsorption_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.enumerate_adsorption_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that enumerates all adsorption sites of the
 input atoms object. The function is generalized for both
 periodic and non-periodic systems (distinguished by atoms.pbc).</p>
@@ -1154,9 +849,13 @@ of a Marks decahedral nanoparticle:</p>
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="module-acat.adsorbate_coverage">
-<span id="adsorbate-coverage"></span><h2>Adsorbate coverage<a class="headerlink" href="#module-acat.adsorbate_coverage" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<div class="section" id="adsorbate-coverage">
+<h2>Adsorbate coverage<a class="headerlink" href="#adsorbate-coverage" title="Permalink to this headline">¶</a></h2>
+<p>This class is implemented to detect which adsorbate species are bound to which adsorption sites from a given surface-adsorbate configuration. It is recommended to use this class with a ClusterAdsorptionSites or SlabAdsorptionSites object as input.</p>
+<div class="section" id="the-clusteradsorbatecoverage-class">
+<h3>The ClusterAdsorbateCoverage class<a class="headerlink" href="#the-clusteradsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py class">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage">
 <em class="property">class </em><code class="sig-prename descclassname">acat.adsorbate_coverage.</code><code class="sig-name descname">ClusterAdsorbateCoverage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_occupied_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -1190,7 +889,7 @@ No need to be built-in.</p></li>
 <li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>,         </em><em>default None</em>) – <cite>ClusterAdsorptionSites</cite> object of the nanoparticle. Initialize a
 <cite>ClusterAdsorptionSites</cite> object if not specified.
 If this is not provided, the arguments for identifying adsorption
-sites can still be passed in by <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs.</p></li>
+sites can still be passed in by <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs.</p></li>
 <li><p><strong>subtract_heights</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains the height to be subtracted from the bond
 length when allocating a type of site to an adsorbate. Default is to
 allocate the site that is closest to the adsorbate’s binding atom
@@ -1361,7 +1060,12 @@ atom_wise=True.</p></li>
 
 </dd></dl>
 
-<dl class="py class">
+</div></blockquote>
+</div>
+<div class="section" id="the-slabadsorbatecoverage-class">
+<h3>The SlabAdsorbateCoverage class<a class="headerlink" href="#the-slabadsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py class">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage">
 <em class="property">class </em><code class="sig-prename descclassname">acat.adsorbate_coverage.</code><code class="sig-name descname">SlabAdsorbateCoverage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_occupied_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -1396,7 +1100,7 @@ No need to be built-in.</p></li>
 <li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>,         </em><em>default None</em>) – <cite>SlabAdsorptionSites</cite> object of the nanoparticle. Initialize a
 <cite>SlabAdsorptionSites</cite> object if not specified.
 If this is not provided, the arguments for identifying adsorption
-sites can still be passed in by <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs.</p></li>
+sites can still be passed in by <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs.</p></li>
 <li><p><strong>subtract_heights</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains the height to be subtracted from the bond
 length when allocating a type of site to an adsorbate. Default is to
 allocate the site that is closest to the adsorbate’s binding atom
@@ -1564,7 +1268,12 @@ atom_wise=True.</p></li>
 
 </dd></dl>
 
-<dl class="py function">
+</div></blockquote>
+</div>
+<div class="section" id="the-enumerate-occupied-sites-function">
+<h3>The enumerate_occupied_sites function<a class="headerlink" href="#the-enumerate-occupied-sites-function" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="py function">
 <dt id="acat.adsorbate_coverage.enumerate_occupied_sites">
 <code class="sig-prename descclassname">acat.adsorbate_coverage.</code><code class="sig-name descname">enumerate_occupied_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_occupied_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#enumerate_occupied_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.enumerate_occupied_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that enumerates all occupied adsorption sites of
@@ -1576,251 +1285,7 @@ periodic and non-periodic systems (distinguished by atoms.pbc).</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – Accept any ase.Atoms object. No need to be built-in.</p></li>
 <li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites         object</em><em> or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>,         </em><em>default None</em>) – The built-in adsorption sites class. If this is not provided,
 the arguments for identifying adsorption sites can still be
-passed in by <a href="#id9"><span class="problematic" id="id10">**</span></a>kwargs.</p></li>
-<li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices)
-If the structure is a periodic surface slab, this is required.
-If the structure is a nanoparticle, the function enumerates
-only the sites on the specified surface.</p></li>
-<li><p><strong>subtract_heights</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains the height to be subtracted from the
-bond length when allocating a type of site to an adsorbate.
-Default is to allocate the site that is closest to the adsorbate’s
-binding atom without subtracting height. Useful for ensuring the
-allocated site for each adsorbate is consistent with the site to
-which the adsorbate was added.</p></li>
-<li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
-of the occupying adsorbate is concatentated to the numerical
-label that represents the occupied site.</p></li>
-<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
-nearest site to be considered as the atom being bound to the site.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>This is an example of enumerating all occupied sites on a truncated
-octahedral nanoparticle:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">enumerate_occupied_sites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ontop&#39;</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">enumerate_occupied_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">cas</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;ontop&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">6.76</span><span class="p">,</span>  <span class="mf">8.52</span><span class="p">,</span> <span class="mf">10.28</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span>
- <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.80000000</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span>
- <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span>
- <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">)}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<div class="section" id="the-clusteradsorbatecoverage-class">
-<h3>The ClusterAdsorbateCoverage class<a class="headerlink" href="#the-clusteradsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="py class">
-<dt id="id11">
-<em class="property">class </em><code class="sig-prename descclassname">acat.adsorbate_coverage.</code><code class="sig-name descname">ClusterAdsorbateCoverage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_occupied_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
-<dd><p>Child class of <cite>ClusterAdsorptionSites</cite> for identifying adsorbate
-coverage on a nanoparticle. Support common nanoparticle shapes
-including: Mackay icosahedron, (truncated) octahedron and (Marks)
-decahedron.</p>
-<p>The information of each occupied site stored in the dictionary is
-updated with the following new keys:</p>
-<p><strong>‘occupied’</strong>: 1 if the site is occupied, otherwise 0.</p>
-<p><strong>‘adsorbate’</strong>: the name of the adsorbate that occupies this site.</p>
-<p><strong>‘adsorbate_indices’</strong>: the indices of the adosorbate atoms that occupy
-this site. If the adsorbate is multidentate, these atoms might
-occupy multiple sites.</p>
-<p><strong>‘bonding_index’</strong>: the index of the atom that directly bonds to the
-site (closest to the site).</p>
-<p><strong>‘fragment’</strong>: the name of the fragment that occupies this site. Useful
-for multidentate species.</p>
-<p><strong>‘fragment_indices’</strong>: the indices of the fragment atoms that occupy
-this site. Useful for multidentate species.</p>
-<p><strong>‘bond_length’</strong>: the distance between the bonding atom and the site.</p>
-<p><strong>‘dentate’</strong>: dentate number.</p>
-<p><strong>‘label’</strong>: the updated label with the name of the occupying adsorbate
-if label_occupied_sites is set to True.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a non-periodic nanoparticle with at
-least one adsorbate attached to it. Accept any ase.Atoms object.
-No need to be built-in.</p></li>
-<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>,         </em><em>default None</em>) – <cite>ClusterAdsorptionSites</cite> object of the nanoparticle. Initialize a
-<cite>ClusterAdsorptionSites</cite> object if not specified.
-If this is not provided, the arguments for identifying adsorption
-sites can still be passed in by <a href="#id12"><span class="problematic" id="id13">**</span></a>kwargs.</p></li>
-<li><p><strong>subtract_heights</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains the height to be subtracted from the bond
-length when allocating a type of site to an adsorbate. Default is to
-allocate the site that is closest to the adsorbate’s binding atom
-without subtracting height. Useful for ensuring the allocated site
-for each adsorbate is consistent with the site to which the adsorbate
-was added.</p></li>
-<li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
-of the occupying adsorbate is concatentated to the numerical
-label that represents the occupied site.</p></li>
-<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
-nearest site to be considered as the atom being bound to the site.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>The following example illustrates the most important use of a
-<cite>ClusterAdsorbateCoverage</cite> object - getting occupied adsorption sites:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">ClusterAdsorbateCoverage</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fcc&#39;</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">add_adsorbate_to_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cac</span> <span class="o">=</span> <span class="n">ClusterAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">cas</span><span class="p">,</span>
-<span class="gp">... </span>                               <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">occupied_sites</span> <span class="o">=</span> <span class="n">cac</span><span class="o">.</span><span class="n">get_sites</span><span class="p">(</span><span class="n">occupied_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">occupied_sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">6.41470446</span><span class="p">,</span>  <span class="mf">8.17470446</span><span class="p">,</span> <span class="mf">11.69470446</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;PtPtPt&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;21CO&#39;</span><span class="p">,</span>
- <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.30000000</span><span class="p">,</span>
- <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span>
- <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">)}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div></blockquote>
-</div>
-<div class="section" id="the-slabadsorbatecoverage-class">
-<h3>The SlabAdsorbateCoverage class<a class="headerlink" href="#the-slabadsorbatecoverage-class" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="py class">
-<dt id="id14">
-<em class="property">class </em><code class="sig-prename descclassname">acat.adsorbate_coverage.</code><code class="sig-name descname">SlabAdsorbateCoverage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_occupied_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id14" title="Permalink to this definition">¶</a></dt>
-<dd><p>Child class of <cite>SlabAdsorptionSites</cite> for identifying adsorbate
-coverage on a surface slab. Support 20 common surfaces: fcc100,
-fcc111, fcc110, fcc211, fcc221, fcc311, fcc322, fcc331, fcc332,
-bcc100, bcc111, bcc110, bcc210, bcc211, bcc310, hcp0001,
-hcp10m10t, hcp10m10h, hcp10m11, hcp10m12.</p>
-<p>The information of each occupied site stored in the dictionary is
-updated with the following new keys:</p>
-<p><strong>‘occupied’</strong>: 1 if the site is occupied, otherwise 0.</p>
-<p><strong>‘adsorbate’</strong>: the name of the adsorbate that occupies this site.</p>
-<p><strong>‘adsorbate_indices’</strong>: the indices of the adosorbate atoms that occupy
-this site. If the adsorbate is multidentate, these atoms might
-occupy multiple sites.</p>
-<p><strong>‘bonding_index’</strong>: the index of the atom that directly bonds to the
-site (closest to the site).</p>
-<p><strong>‘fragment’</strong>: the name of the fragment that occupies this site. Useful
-for multidentate species.</p>
-<p><strong>‘fragment_indices’</strong>: the indices of the fragment atoms that occupy
-this site. Useful for multidentate species.</p>
-<p><strong>‘bond_length’</strong>: the distance between the bonding atom and the site.</p>
-<p><strong>‘dentate’</strong>: dentate number.</p>
-<p><strong>‘label’</strong>: the updated label with the name of the occupying adsorbate
-if label_occupied_sites is set to True.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The atoms object must be a non-periodic nanoparticle with at
-least one adsorbate attached to it. Accept any ase.Atoms object.
-No need to be built-in.</p></li>
-<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>,         </em><em>default None</em>) – <cite>SlabAdsorptionSites</cite> object of the nanoparticle. Initialize a
-<cite>SlabAdsorptionSites</cite> object if not specified.
-If this is not provided, the arguments for identifying adsorption
-sites can still be passed in by <a href="#id15"><span class="problematic" id="id16">**</span></a>kwargs.</p></li>
-<li><p><strong>subtract_heights</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains the height to be subtracted from the bond
-length when allocating a type of site to an adsorbate. Default is to
-allocate the site that is closest to the adsorbate’s binding atom
-without subtracting height. Useful for ensuring the allocated site
-for each adsorbate is consistent with the site to which the adsorbate
-was added.</p></li>
-<li><p><strong>label_occupied_sites</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to assign a label to the occupied each site. The string
-of the occupying adsorbate is concatentated to the numerical
-label that represents the occupied site.</p></li>
-<li><p><strong>dmax</strong> (<em>float</em><em>, </em><em>default 2.5</em>) – The maximum bond length (in Angstrom) between an atom and its
-nearest site to be considered as the atom being bound to the site.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<p>The following example illustrates the most important use of a
-<cite>SlabAdsorbateCoverage</cite> object - getting occupied adsorption sites:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc211</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc211</span><span class="p">(</span><span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;CH3OH&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span>
-<span class="gp">... </span>              <span class="n">indices</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                            <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">occupied_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">get_sites</span><span class="p">(</span><span class="n">occupied_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">occupied_sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc211&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="s1">&#39;tc-cc-h&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">2.08423447</span><span class="p">,</span>  <span class="mf">3.82898322</span><span class="p">,</span> <span class="mf">12.00043756</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.33333333</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.94280904</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;CuAu&#39;</span><span class="p">,</span> <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;17OH&#39;</span><span class="p">,</span> <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
- <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.43783658</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CH3OH&#39;</span><span class="p">,</span>
- <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span>
- <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">)}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div></blockquote>
-</div>
-<div class="section" id="the-enumerate-occupied-sites-function">
-<h3>The enumerate_occupied_sites function<a class="headerlink" href="#the-enumerate-occupied-sites-function" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><dl class="py function">
-<dt id="id17">
-<code class="sig-prename descclassname">acat.adsorbate_coverage.</code><code class="sig-name descname">enumerate_occupied_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_occupied_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#enumerate_occupied_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id17" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function that enumerates all occupied adsorption sites of
-the input atoms object. The function is generalized for both
-periodic and non-periodic systems (distinguished by atoms.pbc).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites         object</em><em> or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>,         </em><em>default None</em>) – The built-in adsorption sites class. If this is not provided,
-the arguments for identifying adsorption sites can still be
-passed in by <a href="#id18"><span class="problematic" id="id19">**</span></a>kwargs.</p></li>
+passed in by <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs.</p></li>
 <li><p><strong>surface</strong> (<em>str</em><em>, </em><em>default None</em>) – The surface type (crystal structure + Miller indices)
 If the structure is a periodic surface slab, this is required.
 If the structure is a nanoparticle, the function enumerates
