@@ -2031,10 +2031,14 @@
 <span class="sd">        is fixed. If this is not provided, the arguments for identifying</span>
 <span class="sd">        adsorption sites can still be passed in by **kwargs.</span>
 
-<span class="sd">    remove_site_shells : int, default 1</span>
+<span class="sd">    remove_site_shells : int, default 1                                    </span>
 <span class="sd">        The neighbor shell number within which the neighbor sites should be </span>
 <span class="sd">        removed. Remove the 1st neighbor site shell by default. Set to 0 if</span>
 <span class="sd">        no site should be removed.</span>
+
+<span class="sd">    remove_site_radius : float, default None                                  </span>
+<span class="sd">        The radius within which the neighbor sites should be removed. This </span>
+<span class="sd">        serves as an alternative to remove_site_shells.                   </span>
 
 <span class="sd">    populate_isolated_sites : bool, default False</span>
 <span class="sd">        Whether to add adsorbates to low-symmetry sites that are not grouped </span>
@@ -2095,6 +2099,7 @@
                  <span class="n">sorting_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> 
                  <span class="n">adsorption_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">remove_site_shells</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">remove_site_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">populate_isolated_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">allow_odd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">heights</span><span class="o">=</span><span class="n">site_heights</span><span class="p">,</span> 
@@ -2140,9 +2145,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subtract_heights</span> <span class="o">=</span> <span class="kc">None</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">=</span> <span class="n">remove_site_shells</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="o">=</span> <span class="n">remove_site_radius</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nsl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adsorption_sites</span><span class="o">.</span><span class="n">get_neighbor_site_list</span><span class="p">(</span>
-                       <span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">)</span>
+                       <span class="n">neighbor_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span><span class="p">,</span>
+                       <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">populate_isolated_sites</span> <span class="o">=</span> <span class="n">populate_isolated_sites</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allow_odd</span> <span class="o">=</span> <span class="n">allow_odd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_groups</span> <span class="o">=</span> <span class="n">save_groups</span>
@@ -2217,7 +2224,7 @@
 
         <span class="n">all_groups</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">i2</span> <span class="ow">in</span> <span class="n">i2a</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">i2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsl</span><span class="p">[</span><span class="n">i1</span><span class="p">]:</span>
                     <span class="k">continue</span>
             <span class="n">pt2</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="n">i2</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
@@ -2331,7 +2338,8 @@
                     <span class="n">spec</span> <span class="o">=</span> <span class="s1">&#39;vacancy&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">spec</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">specs</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">spec</span> <span class="o">!=</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_shells</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_site_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">spec</span> <span class="o">!=</span> <span class="s1">&#39;vacancy&#39;</span><span class="p">):</span>
                         <span class="n">newvs</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsl</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
                 <span class="n">combo</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span>
 

@@ -665,7 +665,9 @@
 
 <div class="viewcode-block" id="ClusterAdsorptionSites.get_unique_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_unique_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unique_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>         
                          <span class="n">unique_subsurf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">return_signatures</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                         <span class="n">return_signatures</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">site_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get all symmetry-inequivalent adsorption sites (one</span>
 <span class="sd">        site for each type).</span>
 <span class="sd">        </span>
@@ -684,9 +686,16 @@
 <span class="sd">            Whether to return the unique signatures of the</span>
 <span class="sd">            sites instead.</span>
 
+<span class="sd">        return_site_indices: bool, default False</span>
+<span class="sd">            Whether to return the indices of each unique </span>
+<span class="sd">            site (in the site list).                     </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="k">if</span> <span class="n">site_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="n">site_list</span>
         <span class="n">key_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">unique_composition</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
@@ -706,10 +715,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seen_tuple</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">uni_sites</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
                 <span class="n">sig</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">sig</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_tuple</span><span class="p">:</span>
                     <span class="n">seen_tuple</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">return_site_indices</span><span class="p">:</span>
+                        <span class="n">s</span> <span class="o">=</span> <span class="n">i</span> 
                     <span class="n">uni_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">uni_sites</span>                        </div>
 
@@ -1055,46 +1066,68 @@
 
         <span class="k">return</span> <span class="n">G</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>           
+<div class="viewcode-block" id="ClusterAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                               <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                               <span class="n">unique_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                               <span class="n">unique_subsurf</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>           
         <span class="sd">&quot;&quot;&quot;Returns the site_list index of all neighbor shell sites </span>
 <span class="sd">        for each site.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        dx : float, default 0.1</span>
-<span class="sd">            Buffer to calculate nearest neighbor pairs.</span>
+<span class="sd">            Buffer to calculate nearest neighbor site pairs.</span>
 
 <span class="sd">        neighbor_number : int, default 1</span>
-<span class="sd">            Neighbor shell number. </span>
+<span class="sd">            Neighbor shell number.</span>
+
+<span class="sd">        radius : float, default None</span>
+<span class="sd">            The radius that defines site a is a neighbor of site b.</span>
+<span class="sd">            This serves as an alternative to neighbor_number.      </span>
 
 <span class="sd">        span : bool, default True</span>
 <span class="sd">            Whether to include all neighbors sites spanned within </span>
 <span class="sd">            the shell.</span>
 
+<span class="sd">        unique : bool, default False</span>
+<span class="sd">            Whether to discard duplicate types of neighbor sites.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="n">adsposs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*</span> 
-                              <span class="n">site_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
-        <span class="n">statoms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;X</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)),</span> <span class="n">positions</span><span class="o">=</span><span class="n">adsposs</span><span class="p">,</span> 
+        <span class="n">poss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
+        <span class="n">statoms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;X</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)),</span> <span class="n">positions</span><span class="o">=</span><span class="n">poss</span><span class="p">,</span>
                         <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
-        <span class="n">cr</span> <span class="o">=</span> <span class="mf">0.55</span> 
-        <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">cr</span> <span class="o">+=</span> <span class="mf">0.1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
-            <span class="n">cr</span> <span class="o">*=</span> <span class="mf">1.5</span>                                             
-        <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="p">,</span>
-                                      <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">cr</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">topi_dict</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ontop&#39;</span><span class="p">:</span>
-                    <span class="n">topi_dict</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">i</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc&#39;</span><span class="p">,</span><span class="s1">&#39;hcp&#39;</span><span class="p">]:</span>
-                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">topi_dict</span><span class="p">:</span>
-                            <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">topi_dict</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> 
+        <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                                           
+            <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                          <span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)):</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">tmpids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sites</span><span class="p">(</span><span class="n">unique_composition</span><span class="p">,</span> <span class="n">unique_subsurf</span><span class="p">,</span>
+                                                   <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                   <span class="n">site_list</span><span class="o">=</span><span class="p">[</span><span class="n">sl</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">nbsids</span><span class="p">])</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="p">[</span><span class="n">nbsids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tmpids</span><span class="p">]</span>
+                    <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nbsids</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">statoms</span><span class="o">.</span><span class="n">get_all_distances</span><span class="p">(</span><span class="n">mic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">nbslist</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+                <span class="n">argsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">argsort</span><span class="p">]</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">argsort</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">row</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">span</span><span class="p">:</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">neighbor_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> 
+                                     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">nn</span><span class="p">])])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">neighbor_number</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+                    <span class="n">tmpids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sites</span><span class="p">(</span><span class="n">unique_composition</span><span class="p">,</span> <span class="n">unique_subsurf</span><span class="p">,</span>
+                                                   <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                                                   <span class="n">site_list</span><span class="o">=</span><span class="p">[</span><span class="n">sl</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">nbsids</span><span class="p">])</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="p">[</span><span class="n">nbsids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tmpids</span><span class="p">]</span>
+                <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nbsids</span>
+
         <span class="k">return</span> <span class="n">nbslist</span></div>
 
 <div class="viewcode-block" id="ClusterAdsorptionSites.update"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                 
@@ -1178,7 +1211,7 @@
                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;vertex&#39;</span><span class="p">,</span> <span class="s1">&#39;edge&#39;</span><span class="p">]]</span>
     <span class="n">unique_ve_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">ve_indices</span><span class="p">,</span> <span class="p">())))</span>
      
-    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
         <span class="n">reduced_indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">i</span> 
@@ -2569,7 +2602,9 @@
 
 <div class="viewcode-block" id="SlabAdsorptionSites.get_unique_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_unique_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unique_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                
                          <span class="n">unique_subsurf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                         <span class="n">return_signatures</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                         <span class="n">return_signatures</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">site_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get all symmetry-inequivalent adsorption sites (one</span>
 <span class="sd">        site for each type).</span>
 <span class="sd">        </span>
@@ -2586,10 +2621,17 @@
 <span class="sd">        return_signatures : bool, default False           </span>
 <span class="sd">            Whether to return the unique signatures of the </span>
 <span class="sd">            sites instead.</span>
+
+<span class="sd">        return_site_indices: bool, default False</span>
+<span class="sd">            Whether to return the indices of each unique </span>
+<span class="sd">            site (in the site list).                     </span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="k">if</span> <span class="n">site_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="n">site_list</span>
         <span class="n">key_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">unique_composition</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
@@ -2608,10 +2650,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seen_tuple</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">uni_sites</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
                 <span class="n">sig</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">sig</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_tuple</span><span class="p">:</span>
                     <span class="n">seen_tuple</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">return_site_indices</span><span class="p">:</span>
+                        <span class="n">s</span> <span class="o">=</span> <span class="n">i</span>
                     <span class="n">uni_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">uni_sites</span>                        </div>
 
@@ -2801,56 +2845,68 @@
 
         <span class="k">return</span> <span class="n">G</span></div>
 
-<div class="viewcode-block" id="SlabAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>           
+<div class="viewcode-block" id="SlabAdsorptionSites.get_neighbor_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_neighbor_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbor_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                               <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                               <span class="n">unique_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                               <span class="n">unique_subsurf</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>           
         <span class="sd">&quot;&quot;&quot;Returns the site_list index of all neighbor shell sites </span>
 <span class="sd">        for each site.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        dx : float, default 0.1</span>
-<span class="sd">            Buffer to calculate nearest neighbor pairs.</span>
+<span class="sd">            Buffer to calculate nearest neighbor site pairs.</span>
 
 <span class="sd">        neighbor_number : int, default 1</span>
 <span class="sd">            Neighbor shell number. </span>
+
+<span class="sd">        radius : float, default None</span>
+<span class="sd">            The radius that defines site a is a neighbor of site b.</span>
+<span class="sd">            This serves as an alternative to neighbor_number.      </span>
 
 <span class="sd">        span : bool, default True</span>
 <span class="sd">            Whether to include all neighbors sites spanned within </span>
 <span class="sd">            the shell.</span>
 
+<span class="sd">        unique : bool, default False</span>
+<span class="sd">            Whether to discard duplicate types of neighbor sites.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">:</span>
-            <span class="n">refposs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">)</span> 
-                                  <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_positions</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span>
-                                  <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])],</span> <span class="mi">0</span><span class="p">))</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">cell</span> <span class="o">+</span> 
-                                  <span class="n">s</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">site_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
-            <span class="n">statoms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;X</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)),</span> <span class="n">positions</span><span class="o">=</span><span class="n">refposs</span><span class="p">,</span> 
-                            <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
+        <span class="n">poss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
+        <span class="n">statoms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;X</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)),</span> <span class="n">positions</span><span class="o">=</span><span class="n">poss</span><span class="p">,</span>
+                        <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>                                                          
+            <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                          <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nbslist</span><span class="p">)):</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">tmpids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sites</span><span class="p">(</span><span class="n">unique_composition</span><span class="p">,</span> <span class="n">unique_subsurf</span><span class="p">,</span>
+                                                   <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                   <span class="n">site_list</span><span class="o">=</span><span class="p">[</span><span class="n">sl</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">nbsids</span><span class="p">])</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="p">[</span><span class="n">nbsids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tmpids</span><span class="p">]</span>
+                    <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nbsids</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">refposs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span>
-                                  <span class="bp">self</span><span class="o">.</span><span class="n">delta_positions</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span>
-                                  <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])],</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*</span> 
-                                  <span class="n">site_heights</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">])</span>
-            <span class="n">statoms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;X</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">)),</span> <span class="n">positions</span><span class="o">=</span><span class="n">refposs</span><span class="p">,</span> 
-                            <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
-        <span class="n">cr</span> <span class="o">=</span> <span class="mf">0.55</span> 
-        <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">cr</span> <span class="o">+=</span> <span class="mf">0.1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
-            <span class="n">cr</span> <span class="o">*=</span> <span class="mf">1.5</span>
-        <span class="n">nbslist</span> <span class="o">=</span> <span class="n">neighbor_shell_list</span><span class="p">(</span><span class="n">statoms</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">neighbor_number</span><span class="p">,</span>
-                                      <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">cr</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">neighbor_number</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">top_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">)</span>
-            <span class="n">topi_dict</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ontop&#39;</span><span class="p">:</span>
-                    <span class="n">topi_dict</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">i</span>
-                <span class="k">elif</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc&#39;</span><span class="p">,</span><span class="s1">&#39;hcp&#39;</span><span class="p">]:</span>
-                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">topi_dict</span><span class="p">:</span>
-                            <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">topi_dict</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>  
+            <span class="n">D</span> <span class="o">=</span> <span class="n">statoms</span><span class="o">.</span><span class="n">get_all_distances</span><span class="p">(</span><span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">nbslist</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+                <span class="n">argsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">argsort</span><span class="p">]</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">argsort</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">row</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">dx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">span</span><span class="p">:</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">neighbor_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> 
+                                     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">nn</span><span class="p">])])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">neighbor_number</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+                    <span class="n">tmpids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sites</span><span class="p">(</span><span class="n">unique_composition</span><span class="p">,</span> <span class="n">unique_subsurf</span><span class="p">,</span>
+                                                   <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                                                   <span class="n">site_list</span><span class="o">=</span><span class="p">[</span><span class="n">sl</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">nbsids</span><span class="p">])</span>
+                    <span class="n">nbsids</span> <span class="o">=</span> <span class="p">[</span><span class="n">nbsids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tmpids</span><span class="p">]</span>
+                <span class="n">nbslist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nbsids</span>
+
         <span class="k">return</span> <span class="n">nbslist</span></div>
 
 <div class="viewcode-block" id="SlabAdsorptionSites.update"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
