@@ -220,7 +220,7 @@ class ClusterAdsorptionSites(object):
                         site = self.new_site()
                         site.update({'site': 'bridge',
                                      'surface': site_surf,
-                                     'position': pos,
+                                     'position': np.round(pos, 8),
                                      'indices': si})
                         if self.composition_effect:                         
                             symbols = [(self.symbols[i], self.numbers[i]) 
@@ -255,7 +255,7 @@ class ClusterAdsorptionSites(object):
                             site = self.new_site()
                             site.update({'site': this_site,
                                          'surface': site_surf,
-                                         'position': pos,
+                                         'position': np.round(pos, 8),
                                          'normal': np.round(normal, 8),
                                          'indices': si})
                             if self.composition_effect:                       
@@ -311,7 +311,7 @@ class ClusterAdsorptionSites(object):
                                             site = self.new_site()
                                             site.update({'site': '4fold',
                                                          'surface': site_surf,
-                                                         'position': pos,
+                                                         'position': np.round(pos, 8),
                                                          'normal': np.round(normal, 8),
                                                          'indices': si})
                                             if self.composition_effect:
@@ -361,7 +361,7 @@ class ClusterAdsorptionSites(object):
                 site = self.new_site()
                 site.update({'site': 'ontop', 
                              'surface': surface,
-                             'position': self.positions[s],
+                             'position': np.round(self.positions[s], 8),
                              'indices': (s,)})
                 if self.composition_effect:
                     site.update({'composition': self.symbols[s]})
@@ -394,7 +394,7 @@ class ClusterAdsorptionSites(object):
                     subsi = sorted(sorted(subsurf_ids, key=get_squared_distance)[:3])     
                     si = site['indices']
                     site.update({'site': '6fold',      
-                                 'position': subpos,
+                                 'position': np.round(subpos, 8),
                                  'indices': tuple(sorted(si+tuple(subsi)))})      
                     if self.composition_effect:
                         metals = self.metals
@@ -990,7 +990,7 @@ class ClusterAdsorptionSites(object):
         for st in sl:
             si = list(st['indices'])
             newpos = np.average(atoms.positions[si], 0) 
-            st['position'] = newpos
+            st['position'] = np.round(newpos, 8)
             if update_composition:
                 newcomp = ''.join(sorted(atoms.symbols[si], key=
                                          lambda x: atomic_numbers[x]))
@@ -1288,47 +1288,36 @@ class SlabAdsorptionSites(object):
         else:
             ref_cell = self.cell
         usi = set() # used_site_indices
-        cm = self.adj_matrix 
-        for s in top_indices:
-            occurence = cm[s]
-            sumo = np.sum(occurence, axis=0)
+        cm = self.adj_matrix
+        sorted_top_indices = sorted(top_indices, key=lambda x: np.sum(cm[x], axis=0))
+        ntop = len(top_indices)
+
+        for i, s in enumerate(sorted_top_indices):
             if self.surface in ['fcc111','fcc100','bcc100','bcc110','hcp0001']:
                 morphology = 'terrace'
+            elif self.surface in ['fcc221','fcc332','bcc111','fcc221','fcc332',
+            'bcc210','hcp10m12']:
+                if i < ntop / 3:
+                    morphology = 'step'
+                elif i >= ntop * 2 / 3:
+                    morphology = 'corner'
+                else:
+                    morphology = 'terrace'
             else:
-                if sumo <= 8:
-                    if sumo == 8 and self.surface in ['fcc221','fcc332','bcc210']:
-                        morphology = 'terrace'
-                    else:
-                        morphology = 'step'
-                elif sumo == 9:
-                    if self.surface == 'bcc210':
-                        morphology = 'corner'
-                    else:
-                        morphology = 'terrace'
-                elif sumo == 10:
-                    if self.surface in ['fcc211','fcc322','fcc221','fcc332','bcc210',
-                    'hcp10m12']:
-                        morphology = 'corner'
-                #    elif self.surface in ['fcc110','fcc311','fcc331','bcc111','bcc211',
-                #    'hcp10m10t','hcp10m10h','bcc310']:
-                    else:
-                        morphology = 'terrace'
-                elif sumo >= 11:
-                    if self.surface in ['fcc221','fcc332','bcc111','hcp10m12']:
-                        morphology = 'corner'
-                #    elif self.surface in ['fcc110','bcc211','hcp10m10h']:
-                    else:
-                        morphology = 'terrace'
+                if i < ntop / 2:
+                    morphology = 'step'
+                else:
+                    morphology = 'terrace'
 
             si = (s,)
             site = self.new_site() 
             site.update({'site': 'ontop',
                          'surface': self.surface,
                          'morphology': morphology,
-                         'position': self.positions[s],
+                         'position': np.round(self.positions[s], 8),
                          'indices': si})            
             if self.surface in ['fcc110','bcc211','hcp10m10h'] and morphology == 'terrace':
-                site.update({'extra': np.where(occurence==1)[0]})
+                site.update({'extra': np.where(cm[s]==1)[0]})
             if self.composition_effect:
                 site.update({'composition': self.symbols[s]})
             sl.append(site)
@@ -1544,7 +1533,7 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:                            
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si)) 
+                            warnings.warn('Cannot identify site {}'.format(si)) 
                             continue 
                     elif self.surface in ['fcc311','fcc331']:
                         this_site = 'bridge'
@@ -1557,11 +1546,11 @@ class SlabAdsorptionSites(object):
                             elif cto2 == 3:
                                 morphology = 'sc-tc-h'
                             else:
-                                print('Cannot identify site {}'.format(si))
+                                warnings.warn('Cannot identify site {}'.format(si))
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si)) 
+                            warnings.warn('Cannot identify site {}'.format(si)) 
                             continue          
                     elif self.surface in ['fcc211','fcc322']:             
                         this_site = 'bridge'
@@ -1584,7 +1573,7 @@ class SlabAdsorptionSites(object):
                             elif self.surface == 'fcc322':
                                 morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si)) 
+                            warnings.warn('Cannot identify site {}'.format(si)) 
                             continue
                     elif self.surface in ['fcc221','fcc332']:
                         this_site = 'bridge'
@@ -1602,7 +1591,7 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface == 'bcc110':
                         this_site, morphology = 'shortbridge', 'terrace'
@@ -1614,8 +1603,10 @@ class SlabAdsorptionSites(object):
                             this_site, morphology = 'shortbridge', 'sc-tc-o'
                         elif nterrace == 1 and ncorner == 1:
                             this_site, morphology = 'shortbridge', 'tc-cc-o'
+                        elif nstep == 2 or nterrace == 2 or ncorner == 2:
+                            continue
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface == 'bcc210':            
                         this_site = 'bridge'
@@ -1635,7 +1626,7 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si)) 
+                            warnings.warn('Cannot identify site {}'.format(si)) 
                             continue
                     if self.surface == 'bcc211':
                         this_site = 'bridge'
@@ -1646,7 +1637,7 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface == 'bcc310':
                         this_site = 'bridge'
@@ -1659,11 +1650,11 @@ class SlabAdsorptionSites(object):
                             elif cto2 == 3:
                                 morphology = 'sc-tc-o'
                             else:
-                                print('Cannot identify site {}'.format(si))
+                                warnings.warn('Cannot identify site {}'.format(si))
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface == 'hcp10m10t':
                         this_site = 'bridge'
@@ -1674,7 +1665,7 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface == 'hcp10m11':
                         this_site = 'bridge'
@@ -1692,12 +1683,12 @@ class SlabAdsorptionSites(object):
                             elif cto2 == 3:
                                 morphology = 'sc-tc-h'
                             else:
-                                print('Cannot identify site {}'.format(si))
+                                warnings.warn('Cannot identify site {}'.format(si))
                                 continue
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface == 'hcp10m12':
                         this_site = 'bridge'
@@ -1715,7 +1706,7 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
-                            print('Cannot identify site {}'.format(si))
+                            warnings.warn('Cannot identify site {}'.format(si))
                             continue
                     elif self.surface in ['fcc111','fcc100','bcc100','hcp0001']:
                         this_site, morphology = 'bridge', 'terrace'
@@ -1727,7 +1718,7 @@ class SlabAdsorptionSites(object):
                         extraids = [xi for xi in np.where(occurence==2)[0]
                                     if xi in self.surf_ids]
                         #if len(extraids) < 2:
-                        #    print('Cannot identify other 2 atoms of 4-fold site {}'.format(si))
+                        #    warnings.warn('Cannot identify other 2 atoms of 4-fold site {}'.format(si))
                         if len(extraids) > 2:
                             extraids = sorted(extraids, key=lambda x: get_mic(        
                                        self.ref_atoms.positions[x], refpos, ref_cell,
@@ -1735,7 +1726,7 @@ class SlabAdsorptionSites(object):
                         site.update({'site': this_site,
                                      'surface': self.surface,
                                      'morphology': morphology,
-                                     'position': pos,
+                                     'position': np.round(pos, 8),
                                      'indices': bridgeids + extraids})
                     elif self.surface == 'hcp10m11' and morphology == 'subsurf': 
                         special = True
@@ -1743,13 +1734,13 @@ class SlabAdsorptionSites(object):
                         site.update({'site': this_site,
                                      'surface': self.surface,
                                      'morphology': morphology,
-                                     'position': subpos,
+                                     'position': np.round(subpos, 8),
                                      'indices': bridgeids + isubs})
                     else:                         
                         site.update({'site': this_site,               
                                      'surface': self.surface,
                                      'morphology': morphology,
-                                     'position': pos,
+                                     'position': np.round(pos, 8),
                                      'indices': si})           
                     if self.composition_effect:
                         if self.surface == 'hcp10m11' and morphology == 'subsurf':
@@ -1804,8 +1795,7 @@ class SlabAdsorptionSites(object):
                                    0)) @ self.cell
                         else:
                             pos = refpos + np.average(self.delta_positions[fold4ids], 0) 
-                        normal = self.get_surface_normal(
-                                 [si[0], si[1], si[2]])
+                        normal = self.get_surface_normal([si[0], si[1], si[2]])
                         for idx in si:
                             normals_for_site[idx].append(normal)
 
@@ -1815,7 +1805,7 @@ class SlabAdsorptionSites(object):
                             site.update({'site': this_site,
                                          'surface': self.surface,
                                          'morphology': 'subsurf',
-                                         'position': self.positions[isub],
+                                         'position': np.round(self.positions[isub], 8),
                                          'normal': np.round(normal, 8),
                                          'indices': tuple(sorted(fold4ids+[isub]))})
                         else:                                                
@@ -1832,7 +1822,7 @@ class SlabAdsorptionSites(object):
                             site.update({'site': this_site,               
                                          'surface': self.surface,
                                          'morphology': morphology,
-                                         'position': pos,
+                                         'position': np.round(pos, 8),
                                          'normal': np.round(normal, 8),
                                          'indices': si})                     
                         if self.composition_effect:                        
@@ -1909,8 +1899,8 @@ class SlabAdsorptionSites(object):
                     if len(fold3ids) != 3:
                         #if self.surface != 'hcp10m11':
                         #    si = tuple(sorted(fold3ids))
-                        #    print('Cannot find the correct atoms of this 3-fold site.',
-                        #          'Find {} instead'.format(si))
+                        #    warnings.warn('Cannot find the correct atoms of this 3-fold site.',
+                        #                  'Find {} instead'.format(si))
                         continue
                     # Remove redundant 3-fold sites that belongs to 4-fold sites
                     if coexist_3_4: 
@@ -1923,8 +1913,7 @@ class SlabAdsorptionSites(object):
                                0)) @ self.cell
                     else:
                         pos = refpos + np.average(self.delta_positions[fold3ids], 0)
-                    normal = self.get_surface_normal(
-                             [si[0], si[1], si[2]])
+                    normal = self.get_surface_normal([si[0], si[1], si[2]])
                     for idx in si:
                         normals_for_site[idx].append(normal)
 
@@ -1980,7 +1969,7 @@ class SlabAdsorptionSites(object):
                     site.update({'site': this_site,
                                  'surface': self.surface,
                                  'morphology': morphology,
-                                 'position': pos,
+                                 'position': np.round(pos, 8),
                                  'normal': np.round(normal, 8),
                                  'indices': si})
                     if self.composition_effect:                       
@@ -2057,8 +2046,7 @@ class SlabAdsorptionSites(object):
                                0)) @ self.cell
                     else:
                         pos = refpos + np.average(self.delta_positions[fold4ids], 0)
-                    normal = self.get_surface_normal(
-                             [si[0], si[1], si[2]])
+                    normal = self.get_surface_normal([si[0], si[1], si[2]])
                     for idx in si:
                         normals_for_site[idx].append(normal)
                     
@@ -2068,7 +2056,7 @@ class SlabAdsorptionSites(object):
                         site.update({'site': this_site,
                                      'surface': self.surface,
                                      'morphology': 'subsurf',
-                                     'position': self.positions[isub],
+                                     'position': np.round(self.positions[isub], 8),
                                      'normal': np.round(normal, 8),
                                      'indices': tuple(sorted(fold4ids+[isub]))})
                     else:
@@ -2084,7 +2072,7 @@ class SlabAdsorptionSites(object):
                         site.update({'site': this_site,
                                      'surface': self.surface,
                                      'morphology': morphology,
-                                     'position': pos,
+                                     'position': np.round(pos, 8),
                                      'normal': np.round(normal, 8),
                                      'indices': si})
                     if self.composition_effect:                       
@@ -2153,6 +2141,7 @@ class SlabAdsorptionSites(object):
         for t in sl:
             stids = t['indices']
             this_site = t['site']
+
             # Add normals to ontop sites                                
             if this_site == 'ontop':
                 n = np.average(normals_for_site[stids[0]], 0)
@@ -2190,9 +2179,9 @@ class SlabAdsorptionSites(object):
                         t['site'] = '{}fold'.format(nstids)
                         t['indices'] = tuple(sorted(stids))
             
-            # Take care of duplicate fcc/hcp indices. When unit cell is 
-            # small, different sites can have exactly same indices
-            elif this_site in ['fcc', 'hcp']:
+            # Take care of duplicate fcc/hcp indices for fcc111. When unit 
+            # cell is small, different sites can have exactly same indices
+            elif (self.surface in ['fcc111','hcp0001']) and (this_site in ['fcc', 'hcp']):
                 if stids in index_list:
                     slid = next(si for si in range(len(sl)) if 
                                 sl[si]['indices'] == stids)
@@ -2258,7 +2247,7 @@ class SlabAdsorptionSites(object):
                     si = tuple(sorted(surfsi + subsi))
                     normal = np.asarray([0.,0.,1.])
                     site.update({'site': '6fold',
-                                 'position': subpos,
+                                 'position': np.round(subpos, 8),
                                  'morphology': 'subsurf',
                                  'normal': np.round(normal, 8),
                                  'indices': si})
@@ -2272,7 +2261,7 @@ class SlabAdsorptionSites(object):
                                           key=get_squared_distance)[:3])     
                     si = site['indices']
                     site.update({'site': '6fold',      
-                                 'position': subpos,
+                                 'position': np.round(subpos, 8),
                                  'morphology': 'subsurf',
                                  'indices': tuple(sorted(si+tuple(subsi)))})
                 else:
@@ -2632,6 +2621,7 @@ class SlabAdsorptionSites(object):
         return sorted(surf), sorted(subsurf)
  
     def get_two_vectors(self, indices):
+
         p1 = self.positions[indices[1]]
         p2 = self.positions[indices[2]]
         vec1 = get_mic(p1, self.positions[indices[0]], self.cell)
@@ -2650,12 +2640,20 @@ class SlabAdsorptionSites(object):
         
         """
 
-        vec1, vec2 = self.get_two_vectors(indices)
-        n = np.cross(vec1, vec2)
-        l = math.sqrt(n @ n.conj())
-        n /= l
-        if n[2] < 0:
-            n *= -1
+        abscostheta_min = 10000
+        for i in range(len(indices)):
+            ids = [indices[i]] + indices[:i] + indices[i+1:]
+            vec1, vec2 = self.get_two_vectors(ids)
+            abscostheta = np.abs((vec1[:2] / np.linalg.norm(vec1[:2])) @  
+                                  vec2[:2] / np.linalg.norm(vec2[:2]))
+            if abscostheta < abscostheta_min:
+                abscostheta_min = abscostheta
+                n = np.cross(vec1, vec2)
+                l = math.sqrt(n @ n.conj())
+                n /= l
+                if n[2] < 0:
+                    n *= -1
+
         return n
 
     def get_graph(self, return_adj_matrix=False):                              

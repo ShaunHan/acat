@@ -81,7 +81,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
     composition_effect = any(v is not None for v in 
                              [composition, subsurf_element])
 
-    if composition:
+    if composition is not None:
         if '-' in composition or len(list(Formula(composition))) == 6:
             scomp = composition
         else:
@@ -106,20 +106,20 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
                         composition_effect=composition_effect, **kwargs)
 
     if indices is not None:
+        if site is not None:
+            all_sites = [s for s in all_sites if s['site'] == site]
+        if scomp is not None:
+            all_sites = [s for s in all_sites if s['composition'] == scomp]
         indices = indices if is_list_or_tuple(indices) else [indices]
         indices = tuple(sorted(indices))
-        st = next((s for s in all_sites if 
-                   s['indices'] == indices), None)
+        st = next((s for s in all_sites if s['indices'] == indices), None)
     
     elif subsurf_element is None:
-        st = next((s for s in all_sites if 
-                   s['site'] == site and
+        st = next((s for s in all_sites if s['site'] == site and
                    s['composition'] == scomp), None)
     else:
-        st = next((s for s in all_sites if
-                   s['site'] == site and
-                   s['composition'] == scomp and
-                   s['subsurf_element']
+        st = next((s for s in all_sites if s['site'] == site and
+                   s['composition'] == scomp and s['subsurf_element']
                    == subsurf_element), None)
 
     if not st:
