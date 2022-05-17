@@ -1289,25 +1289,26 @@ class SlabAdsorptionSites(object):
             ref_cell = self.cell
         usi = set() # used_site_indices
         cm = self.adj_matrix
-        sorted_top_indices = sorted(top_indices, key=lambda x: np.sum(cm[x], axis=0))
-        ntop = len(top_indices)
 
+        # Sort top indicies by z coordinates to identify step / terrace / corner
+        sorted_top_indices = sorted(top_indices, key=lambda x: self.positions[x,2])
+        ntop = len(top_indices)
         for i, s in enumerate(sorted_top_indices):
             if self.surface in ['fcc111','fcc100','bcc100','bcc110','hcp0001']:
                 morphology = 'terrace'
             elif self.surface in ['fcc221','fcc332','bcc111','fcc221','fcc332',
             'bcc210','hcp10m12']:
                 if i < ntop / 3:
-                    morphology = 'step'
-                elif i >= ntop * 2 / 3:
                     morphology = 'corner'
+                elif i >= ntop * 2 / 3:
+                    morphology = 'step'
                 else:
                     morphology = 'terrace'
             else:
                 if i < ntop / 2:
-                    morphology = 'step'
-                else:
                     morphology = 'terrace'
+                else:
+                    morphology = 'step'
 
             si = (s,)
             site = self.new_site() 
@@ -1334,22 +1335,6 @@ class SlabAdsorptionSites(object):
             elif geo == 'corner':
                 cornerids.add(sid)
         geo_dict = {'step': stepids, 'terrace': terraceids, 'corner': cornerids}
-
-        # Sort by z coordinates if different geometries have same sumo
-        if self.surface == 'bcc210':
-            sorted_steps = sorted([i for i in stepids], key=lambda x: self.positions[x,2])
-            for j, stpi in enumerate(sorted_steps):
-                if j < len(sorted_steps) / 2: 
-                    if not _bot_side:
-                        stepids.remove(stpi)
-                        terraceids.add(stpi)
-                else:
-                    if _bot_side:
-                        stepids.remove(stpi)
-                        terraceids.add(stpi)
-            for st in sl:
-                if st['morphology'] == 'step' and st['indices'][0] in terraceids:
-                    st['morphology'] = 'terrace'
 
         if self.surface in ['fcc110','bcc211','hcp10m10h']:   
             for st in sl:
