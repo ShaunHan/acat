@@ -160,7 +160,8 @@
            <div itemprop="articleBody">
             
   <h1>Source code for acat.build.adlayer</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="p">(</span><span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span><span class="p">,</span> 
+<span></span><span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="p">(</span><span class="n">adsorbate_elements</span><span class="p">,</span> 
+                        <span class="n">site_heights</span><span class="p">,</span> 
                         <span class="n">monodentate_adsorbate_list</span><span class="p">,</span> 
                         <span class="n">multidentate_adsorbate_list</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..adsorption_sites</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorptionSites</span><span class="p">,</span> 
@@ -168,20 +169,24 @@
                                 <span class="n">group_sites_by_facet</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorbateCoverage</span><span class="p">,</span> 
                                   <span class="n">SlabAdsorbateCoverage</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_mic</span><span class="p">,</span> <span class="n">atoms_too_close_after_addition</span><span class="p">,</span> 
-                         <span class="n">is_list_or_tuple</span><span class="p">,</span> <span class="n">numbers_from_ratios</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_mic</span><span class="p">,</span> 
+                         <span class="n">atoms_too_close_after_addition</span><span class="p">,</span> 
+                         <span class="n">custom_warning</span><span class="p">,</span> 
+                         <span class="n">is_list_or_tuple</span><span class="p">,</span> 
+                         <span class="n">numbers_from_ratios</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.action</span> <span class="kn">import</span> <span class="p">(</span><span class="n">add_adsorbate_to_site</span><span class="p">,</span> 
                      <span class="n">remove_adsorbate_from_site</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..ga.graph_comparators</span> <span class="kn">import</span> <span class="n">WLGraphComparator</span>
 <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">,</span> <span class="n">Trajectory</span>
 <span class="kn">from</span> <span class="nn">ase.formula</span> <span class="kn">import</span> <span class="n">Formula</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">pdist</span><span class="p">,</span> <span class="n">squareform</span>
 <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance_matrix</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">random</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">formatwarning</span> <span class="o">=</span> <span class="n">custom_warning</span>
 
 
 <div class="viewcode-block" id="RandomPatternGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.adlayer.RandomPatternGenerator">[docs]</a><span class="k">class</span> <span class="nc">RandomPatternGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -2997,7 +3002,7 @@
         <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">find_mic</span><span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span><span class="mi">1</span><span class="p">)),</span> 
                         <span class="n">cell</span><span class="o">=</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">D</span> <span class="o">=</span> <span class="n">distance_matrix</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">squareform</span><span class="p">(</span><span class="n">pdist</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
 
     <span class="c1"># K-medoids clustering (PAM algorithm)</span>
     <span class="n">medoids_init</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)),</span> <span class="n">nads</span><span class="p">)</span>

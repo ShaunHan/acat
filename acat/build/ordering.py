@@ -1,15 +1,14 @@
-from ..utilities import (bipartitions, get_mic,
+from ..utilities import (get_mic,
                          partitions_into_totals, 
                          numbers_from_ratios, 
                          is_list_or_tuple)
 from ..ga.graph_comparators import WLGraphComparator
 from ase.geometry import get_distances, find_mic, get_layers
-from ase.io import Trajectory, read, write
+from ase.io import read, write, Trajectory
 from asap3.analysis import FullCNA 
-from asap3 import EMT as asapEMT
 from asap3.Internal.BuiltinPotentials import Gupta
 from collections import defaultdict
-from itertools import product, combinations
+from itertools import product
 from networkx.algorithms.components.connected import connected_components
 import networkx as nx
 import numpy as np
@@ -1050,9 +1049,10 @@ class SymmetricSlabOrderingGenerator(object):
 
 class RandomOrderingGenerator(object):
     """`RandomOrderingGenerator` is a class for generating random 
-    chemical orderings for an alloy catalyst. The function is 
-    generalized for both periodic and non-periodic systems, and 
-    there is no limitation of the number of metal components.
+    chemical orderings for an alloy catalyst (can be either bulk,
+    slab or nanoparticle). The function is generalized for both 
+    periodic and non-periodic systems, and there is no limitation 
+    of the number of metal components.
  
     Parameters
     ----------

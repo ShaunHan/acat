@@ -1,7 +1,9 @@
 """Procreation operators meant to be used in symmetry-constrained
 genetic algorithm (SCGA)."""
-from ..settings import adsorbate_elements, site_heights
-from ..utilities import is_list_or_tuple, get_depth
+from ..settings import site_heights
+from ..utilities import (custom_warning, 
+                         is_list_or_tuple, 
+                         get_depth)
 from ..adsorption_sites import (ClusterAdsorptionSites,    
                                 SlabAdsorptionSites)
 from ..adsorbate_coverage import (ClusterAdsorbateCoverage,
@@ -13,6 +15,7 @@ from collections import defaultdict
 from operator import attrgetter
 import warnings
 import random
+warnings.formatwarning = custom_warning
 
 
 class Mutation(OffspringCreator):
@@ -499,9 +502,7 @@ class AdsorbateGroupSubstitute(Mutation):
 
     def get_new_individual(self, parents):
         f = parents[0]
-        print('f: {}'.format(f))
         indi = self.substitute(f)
-        print('indi: {}'.format(indi))
         indi = self.initialize_individual(f, indi) 
         if 'groups' in f.info['data']:
             indi.info['data']['groups'] = f.info['data']['groups']

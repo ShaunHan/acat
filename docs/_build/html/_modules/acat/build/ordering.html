@@ -160,18 +160,17 @@
            <div itemprop="articleBody">
             
   <h1>Source code for acat.build.ordering</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">bipartitions</span><span class="p">,</span> <span class="n">get_mic</span><span class="p">,</span>
+<span></span><span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_mic</span><span class="p">,</span>
                          <span class="n">partitions_into_totals</span><span class="p">,</span> 
                          <span class="n">numbers_from_ratios</span><span class="p">,</span> 
                          <span class="n">is_list_or_tuple</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..ga.graph_comparators</span> <span class="kn">import</span> <span class="n">WLGraphComparator</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">get_distances</span><span class="p">,</span> <span class="n">find_mic</span><span class="p">,</span> <span class="n">get_layers</span>
-<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">Trajectory</span><span class="p">,</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">,</span> <span class="n">Trajectory</span>
 <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
-<span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
 <span class="kn">from</span> <span class="nn">asap3.Internal.BuiltinPotentials</span> <span class="kn">import</span> <span class="n">Gupta</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
 <span class="kn">from</span> <span class="nn">networkx.algorithms.components.connected</span> <span class="kn">import</span> <span class="n">connected_components</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -1212,9 +1211,10 @@
 
 <div class="viewcode-block" id="RandomOrderingGenerator"><a class="viewcode-back" href="../../../build.html#acat.build.ordering.RandomOrderingGenerator">[docs]</a><span class="k">class</span> <span class="nc">RandomOrderingGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;`RandomOrderingGenerator` is a class for generating random </span>
-<span class="sd">    chemical orderings for an alloy catalyst. The function is </span>
-<span class="sd">    generalized for both periodic and non-periodic systems, and </span>
-<span class="sd">    there is no limitation of the number of metal components.</span>
+<span class="sd">    chemical orderings for an alloy catalyst (can be either bulk,</span>
+<span class="sd">    slab or nanoparticle). The function is generalized for both </span>
+<span class="sd">    periodic and non-periodic systems, and there is no limitation </span>
+<span class="sd">    of the number of metal components.</span>
 <span class="sd"> </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

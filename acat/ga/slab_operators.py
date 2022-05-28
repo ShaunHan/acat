@@ -7,7 +7,6 @@ from collections import Counter
 from itertools import permutations
 import numpy as np
 from ase.ga.offspring_creator import OffspringCreator
-from ase.ga.element_mutations import get_row_column
 
 
 def permute2(atoms):

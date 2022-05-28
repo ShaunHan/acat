@@ -1,9 +1,12 @@
-from ..settings import (adsorbate_elements, site_heights,  
-                        adsorbate_list, adsorbate_molecule)
+from ..settings import (adsorbate_elements, 
+                        site_heights,  
+                        adsorbate_list, 
+                        adsorbate_molecule)
 from ..adsorption_sites import enumerate_adsorption_sites 
 from ..adsorbate_coverage import (ClusterAdsorbateCoverage, 
                                   SlabAdsorbateCoverage)
-from ..utilities import (is_list_or_tuple, 
+from ..utilities import (custom_warning,
+                         is_list_or_tuple, 
                          get_close_atoms, 
                          get_rodrigues_rotation_matrix,
                          get_angle_between, 
@@ -16,6 +19,7 @@ from ase import Atoms, Atom
 import numpy as np
 import warnings
 import re
+warnings.formatwarning = custom_warning
 
 
 def add_adsorbate(atoms, adsorbate, site=None, surface=None, 
@@ -123,7 +127,7 @@ def add_adsorbate(atoms, adsorbate, site=None, surface=None,
                    == subsurf_element), None)
 
     if not st:
-        print('No such site can be found')            
+        warnings.warn('No such site can be found')            
     else:
         if height is None:
             height = site_heights[st['site']]
@@ -169,6 +173,9 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
 
     # Make the correct position
     normal = site['normal']
+    if np.isnan(np.sum(normal)):
+        warnings.warn('The normal vector is NaN, use [0., 0., 1.] instead.')
+        normal = np.array([0., 0., 1.])
     pos = site['position'] + normal * height
 
     # Convert the adsorbate to an Atoms object
@@ -181,7 +188,7 @@ def add_adsorbate_to_site(atoms, adsorbate, site, height=None,
     else:
         ads = adsorbate_molecule(adsorbate)
         if not ads:
-            print('Nothing is added.')
+            warnings.warn('Nothing is added.')
             return 
 
     bondpos = ads[0].position

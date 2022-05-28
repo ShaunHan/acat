@@ -1,7 +1,6 @@
 """Crossover operations originally intended for medium sized particles"""
 import random
 import numpy as np
-from ase import Atoms
 from ase.ga.offspring_creator import OffspringCreator
 
 

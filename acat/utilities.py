@@ -1,9 +1,10 @@
-from ase.data import covalent_radii, atomic_numbers, atomic_masses
+from ase.data import (covalent_radii, 
+                      atomic_numbers, 
+                      atomic_masses)
 from ase.geometry.geometry import _row_col_from_pdist
 from ase.geometry import find_mic
 from ase.formula import Formula
-from itertools import product, permutations, combinations
-from scipy.spatial.distance import cdist, euclidean
+from itertools import product, combinations
 from collections import abc, Counter
 import networkx as nx
 import numpy as np
@@ -463,6 +464,12 @@ def get_total_masses(symbol):
 
     return np.sum([atomic_masses[atomic_numbers[s]] 
                    for s in list(Formula(symbol))])
+
+
+def custom_warning(message, category, filename, lineno, 
+                   file=None, line=None):  
+    return '{0}:{1}: {2}: {3}\n'.format(filename, lineno, 
+                                        category.__name__, message)
 
 
 def is_list_or_tuple(obj):

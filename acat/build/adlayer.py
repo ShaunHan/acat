@@ -1,4 +1,5 @@
-from ..settings import (adsorbate_elements, site_heights, 
+from ..settings import (adsorbate_elements, 
+                        site_heights, 
                         monodentate_adsorbate_list, 
                         multidentate_adsorbate_list)
 from ..adsorption_sites import (ClusterAdsorptionSites, 
@@ -6,20 +7,24 @@ from ..adsorption_sites import (ClusterAdsorptionSites,
                                 group_sites_by_facet)
 from ..adsorbate_coverage import (ClusterAdsorbateCoverage, 
                                   SlabAdsorbateCoverage)
-from ..utilities import (get_mic, atoms_too_close_after_addition, 
-                         is_list_or_tuple, numbers_from_ratios)
+from ..utilities import (get_mic, 
+                         atoms_too_close_after_addition, 
+                         custom_warning, 
+                         is_list_or_tuple, 
+                         numbers_from_ratios)
 from .action import (add_adsorbate_to_site, 
                      remove_adsorbate_from_site)
 from ..ga.graph_comparators import WLGraphComparator
 from ase.io import read, write, Trajectory
 from ase.formula import Formula
 from ase.geometry import find_mic
+from scipy.spatial.distance import pdist, squareform
 from operator import attrgetter
 from copy import deepcopy
-from scipy.spatial import distance_matrix
 import numpy as np
 import warnings
 import random
+warnings.formatwarning = custom_warning
 
 
 class RandomPatternGenerator(object):
@@ -2835,7 +2840,7 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
         D = np.asarray([find_mic(points - np.tile(points[i], (len(points),1)), 
                         cell=atoms.cell, pbc=True)[1] for i in range(len(points))])
     else:
-        D = distance_matrix(points, points)
+        D = squareform(pdist(points))
 
     # K-medoids clustering (PAM algorithm)
     medoids_init = random.sample(range(len(points)), nads)

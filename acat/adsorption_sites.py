@@ -1,8 +1,10 @@
-from .settings import adsorbate_elements, site_heights
-from .utilities import (expand_cell, get_mic,
+from .settings import adsorbate_elements
+from .utilities import (expand_cell, 
+                        get_mic, 
+                        custom_warning,
                         is_list_or_tuple, 
                         cart_to_frac, 
-                        hash_composition,
+                        hash_composition, 
                         neighbor_shell_list, 
                         get_adj_matrix)
 from .labels import (get_monometallic_cluster_labels, 
@@ -11,17 +13,16 @@ from .labels import (get_monometallic_cluster_labels,
                      get_bimetallic_slab_labels,
                      get_multimetallic_cluster_labels, 
                      get_multimetallic_slab_labels)
-from ase.data import (reference_states, 
-                      atomic_numbers, 
-                      chemical_symbols)
+from ase.data import reference_states, atomic_numbers
 from ase.constraints import ExpCellFilter
-from ase.geometry import find_mic
+from ase.geometry import find_mic, wrap_positions
 from ase.optimize import BFGS, FIRE
 from ase import Atoms
 from asap3.analysis import rdf, FullCNA 
 from asap3 import FullNeighborList
 from asap3 import EMT as asapEMT
-from collections import defaultdict
+from scipy.spatial.distance import pdist, squareform
+from collections import defaultdict, Counter
 from itertools import combinations, groupby
 import networkx as nx
 import numpy as np
@@ -29,6 +30,7 @@ import warnings
 import scipy
 import math
 import re
+warnings.formatwarning = custom_warning
 
 
 class ClusterAdsorptionSites(object):
@@ -95,7 +97,10 @@ class ClusterAdsorptionSites(object):
         input atoms to a surrogate transition metal that is 
         supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt 
         or Au). Try changing the surrogate metal when the site 
-        identification is not satisfying.
+        identification is not satisfying. If no surrogate metal is
+        provided, but the majority of the nanoparticle is a metal       
+        supported by asap3.EMT, the surrogate metal will be set to 
+        that metal automatically.
 
     tol : float, default 0.5
         The tolerence of neighbor distance (in Angstrom).
@@ -143,7 +148,9 @@ class ClusterAdsorptionSites(object):
                  tol=.5):
 
         assert True not in atoms.pbc, 'the cell must be non-periodic'
-        warnings.filterwarnings('ignore')
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+
         atoms = atoms.copy()
         for dim in range(3):
             if np.linalg.norm(atoms.cell[dim]) == 0:
@@ -583,10 +590,14 @@ class ClusterAdsorptionSites(object):
 
         ref_atoms = atoms.copy()
         pm = self.surrogate_metal
-        if pm is not None:
-            ref_symbol = pm
+        if pm is None:
+            common_metal = Counter(self.atoms.symbols).most_common(1)[0][0]
+            if common_metal in ['Ni', 'Cu', 'Pd', 'Ag', 'Pt', 'Au']:
+                ref_symbol = common_metal
+            else:
+                ref_symbol = 'Au' if len(atoms) > 300 else 'Cu'
         else:
-            ref_symbol = 'Au' if len(atoms) > 300 else 'Cu'
+            ref_symbol = pm
         for a in ref_atoms:
             a.symbol = ref_symbol
 
@@ -1155,9 +1166,12 @@ class SlabAdsorptionSites(object):
         or Au). Try changing the surrogate metal when the site 
         identification is not satisfying. When the cell is small, 
         Cu is normally the better choice, while the Pt and Au 
-        should be good for larger cells.
+        should be good for larger cells. If no surrogate metal is
+        provided, but the majority of the slab is a metal supported     
+        by asap3.EMT, the surrogate metal will be set to that metal 
+        automatically.
 
-    optimize_surrogate_cell : bool, default True
+    optimize_surrogate_cell : bool, default False
         Whether to also optimize the cell during the optimization
         of the surrogate slab. Useful for generalizing the code for
         alloy slabs of various compositions and lattice constants.
@@ -1207,13 +1221,14 @@ class SlabAdsorptionSites(object):
                  ignore_bridge_sites=False,
                  label_sites=False,
                  surrogate_metal=None,
-                 optimize_surrogate_cell=True,
-                 tol=.5):
+                 optimize_surrogate_cell=False,
+                 tol=.5, _allow_expand=True):
 
         assert True in atoms.pbc, 'the cell must be periodic in at least one direction'   
-        warnings.filterwarnings('ignore')
-        atoms = atoms.copy() 
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
+        atoms = atoms.copy() 
         ptp = np.ptp(atoms.positions[:, 2]) 
         if np.linalg.norm(atoms.cell[2]) - ptp < 10.:
             atoms.cell[2][2] = ptp + 10.
@@ -1251,23 +1266,18 @@ class SlabAdsorptionSites(object):
         else:
             self.label_dict = get_monometallic_slab_labels(self.surface)    
         self.tol = tol 
+        self._allow_expand = _allow_expand
 
         self.make_neighbor_list(neighbor_number=1) 
         self.adj_matrix = self.get_connectivity()         
-
         self.surf_ids, self.subsurf_ids = self.get_termination() 
+
         self.site_list = []
         self.populate_site_list()
-
-        if self.both_sides:
-            self.populate_opposite_site_list()
-        if self.ignore_bridge_sites:
-            self.site_list = [s for s in self.site_list if 'bridge' not in s['site']]
-        if self.label_sites:
-            self.get_labels()
+        self.postprocessing()        
         self.site_list.sort(key=lambda x: x['indices'])
         
-    def populate_site_list(self, cutoff=5., _bot_side=False):        
+    def populate_site_list(self, cutoff=5.):        
         """Find all ontop, bridge and hollow sites (3-fold and 4-fold) 
         given an input slab based on Delaunay triangulation of the 
         surface atoms in a supercell and collect in a site list.
@@ -1278,7 +1288,7 @@ class SlabAdsorptionSites(object):
             Radius of maximum atomic bond distance to consider.
 
         """
- 
+
         top_indices = self.surf_ids
         sl = self.site_list
         normals_for_site = dict(list(zip(top_indices, 
@@ -1296,8 +1306,7 @@ class SlabAdsorptionSites(object):
         for i, s in enumerate(sorted_top_indices):
             if self.surface in ['fcc111','fcc100','bcc100','bcc110','hcp0001']:
                 morphology = 'terrace'
-            elif self.surface in ['fcc221','fcc332','bcc111','fcc221','fcc332',
-            'bcc210','hcp10m12']:
+            elif self.surface in ['fcc211','fcc322','fcc221','fcc332','bcc111','bcc210','hcp10m12']:
                 if i < ntop / 3:
                     morphology = 'corner'
                 elif i >= ntop * 2 / 3:
@@ -1344,7 +1353,7 @@ class SlabAdsorptionSites(object):
                     extraids = [e for e in extra if e in self.surf_ids
                                 and e not in geo_dict[st['morphology']]]
                     #if len(extraids) < 4:    
-                    #    print('Cannot identify other 4 atoms of 5-fold site {}'.format(si))
+                    #    warnings.warn('Cannot identify other 4 atoms of 5-fold site {}'.format(si))
                     if len(extraids) > 4:
                         extraids = sorted(extraids, key=lambda x: get_mic(                
                                    self.ref_atoms.positions[x], refpos, ref_cell,
@@ -1462,7 +1471,7 @@ class SlabAdsorptionSites(object):
         for n, poss in enumerate([bridge_positions,fold4_positions,fold3_positions]):
             if not poss:
                 continue
-            fracs = np.stack(poss, axis=0) @ np.linalg.pinv(ref_cell)
+            fracs = np.stack(poss, axis=0) @ np.linalg.pinv(ref_cell)       
             xfracs, yfracs = fracs[:,0], fracs[:,1]
 
             # Take only the positions within the periodic boundary
@@ -1487,7 +1496,9 @@ class SlabAdsorptionSites(object):
             if n == 0:
                 fold4_poss = []
                 for i, refpos in enumerate(reduced_poss):
-                    bridge_indices = nblist[ntop2+i]                     
+                    bridge_indices = nblist[ntop2+i]
+                    if not bridge_indices:
+                        continue
                     bridgeids = [top2_indices[j] for j in bridge_indices if j < ntop1]
                     if len(bridgeids) != 2: 
                         if self.surface in ['fcc100','fcc211','fcc311','fcc322','fcc331',
@@ -1518,7 +1529,8 @@ class SlabAdsorptionSites(object):
                         elif nterrace == 2:                            
                             morphology = 'terrace'
                         else:
-                            warnings.warn('Cannot identify site {}'.format(si)) 
+                            warnings.warn('Cannot identify site {}'.format(si))
+                            assert False
                             continue 
                     elif self.surface in ['fcc311','fcc331']:
                         this_site = 'bridge'
@@ -1712,7 +1724,7 @@ class SlabAdsorptionSites(object):
                                      'surface': self.surface,
                                      'morphology': morphology,
                                      'position': np.round(pos, 8),
-                                     'indices': bridgeids + extraids})
+                                     'indices': tuple(sorted(bridgeids + extraids))})
                     elif self.surface == 'hcp10m11' and morphology == 'subsurf': 
                         special = True
                         extraids = si
@@ -1720,7 +1732,7 @@ class SlabAdsorptionSites(object):
                                      'surface': self.surface,
                                      'morphology': morphology,
                                      'position': np.round(subpos, 8),
-                                     'indices': bridgeids + isubs})
+                                     'indices': tuple(sorted(bridgeids + isubs))})
                     else:                         
                         site.update({'site': this_site,               
                                      'surface': self.surface,
@@ -1876,7 +1888,7 @@ class SlabAdsorptionSites(object):
                 coexist_3_4 = (self.surface in ['fcc211','fcc311','fcc322','fcc331',
                                                 'bcc210','bcc310','hcp10m12'])
                 if coexist_3_4:
-                    fold4_sets = [set(s['indices']) for s in sl if s['site'] == '4fold']
+                    fold4_sites = [s for s in sl if s['site'] == '4fold']
 
                 for i, refpos in enumerate(reduced_poss):
                     fold3_indices = nblist[ntop2+i]
@@ -1887,10 +1899,6 @@ class SlabAdsorptionSites(object):
                         #    warnings.warn('Cannot find the correct atoms of this 3-fold site.',
                         #                  'Find {} instead'.format(si))
                         continue
-                    # Remove redundant 3-fold sites that belongs to 4-fold sites
-                    if coexist_3_4: 
-                        if any(set(fold3ids).issubset(j) for j in fold4_sets):
-                            continue
                     si = tuple(sorted(fold3ids))
                     if self.optimize_surrogate_cell:                                           
                         reffrac = refpos @ np.linalg.pinv(ref_cell)                
@@ -1898,6 +1906,15 @@ class SlabAdsorptionSites(object):
                                0)) @ self.cell
                     else:
                         pos = refpos + np.average(self.delta_positions[fold3ids], 0)
+
+                    # Remove redundant 3-fold sites that belongs to 4-fold sites
+                    if coexist_3_4:
+                        dup_sites = [s for s in fold4_sites if 
+                                     set(fold3ids).issubset(set(s['indices']))]
+                        if dup_sites:
+                            if any(get_mic(s['position'], pos, self.cell, 
+                            return_squared_distance=True) < 1.5 for s in dup_sites):
+                                continue
                     normal = self.get_surface_normal([si[0], si[1], si[2]])
                     for idx in si:
                         normals_for_site[idx].append(normal)
@@ -2122,7 +2139,6 @@ class SlabAdsorptionSites(object):
 
         if self.surface == 'bcc110':
             bcc110_long_bridges = []
-        index_list, pos_list, st_list = [], [], []
         for t in sl:
             stids = t['indices']
             this_site = t['site']
@@ -2164,36 +2180,6 @@ class SlabAdsorptionSites(object):
                         t['site'] = '{}fold'.format(nstids)
                         t['indices'] = tuple(sorted(stids))
             
-            # Take care of duplicate fcc/hcp indices for fcc111. When unit 
-            # cell is small, different sites can have exactly same indices
-            elif (self.surface in ['fcc111','hcp0001']) and (this_site in ['fcc', 'hcp']):
-                if stids in index_list:
-                    slid = next(si for si in range(len(sl)) if 
-                                sl[si]['indices'] == stids)
-                    previd = index_list.index(stids)
-                    prevpos = pos_list[previd]
-                    prevst = st_list[previd]
-                    if min([np.linalg.norm(prevpos - pos) for pos 
-                    in self.positions[self.subsurf_ids]]) < \
-                    min([np.linalg.norm(t['position'] - pos) for pos
-                    in self.positions[self.subsurf_ids]]):
-                        t['site'] = 'fcc'
-                        if prevst == 'fcc':
-                            sl[slid]['site'] = 'hcp'
-                        t['subsurf_index'] = None
-                        if self.composition_effect:
-                            t['subsurf_element'] = None 
-                    else:
-                        t['site'] = 'hcp'
-                        if prevst == 'hcp':
-                            sl[slid]['site'] = 'fcc'
-                        sl[slid]['subsurf_index'] = None
-                        if self.composition_effect:
-                            sl[slid]['subsurf_element'] = None
-                else:
-                    index_list.append(t['indices'])
-                    pos_list.append(t['position'])
-                    st_list.append(t['site'])
             # Take care of longbridge sites on bcc110
             elif self.surface == 'bcc110' and this_site == '3fold':
                 si = t['indices']
@@ -2315,34 +2301,97 @@ class SlabAdsorptionSites(object):
                 sl.append(site)
                 usi.add(si)
 
+    def postprocessing(self):
+        """Postprocessing the site list, and potentially adding 
+        more sites."""
+
+        # Check if the cell is so small that there are sites with duplicate indices             
+        small = False
+        if not self._allow_expand:
+            small = False
+        elif self.surface in ['fcc211','fcc311','fcc322','fcc331','bcc210','bcc310','hcp10m12']:
+            sorted_sets = sorted([set(s['indices']) for s in self.site_list if s['site'] in 
+                                 ['fcc','hcp','3fold','4fold']], key=len, reverse=True)
+            for i in range(1, len(sorted_sets)):
+                for s, t in zip(sorted_sets, sorted_sets[-i:]):
+                    if s.issubset(t):
+                        small = True
+                        break
+                else:
+                    continue
+                break
+        elif len(set(s['indices'] for s in self.site_list)) < len(self.site_list):
+            small = True
+                                                                                                
+        if small:
+            self.populate_expanded_site_list()
+        else:
+            if self.both_sides:
+                self.populate_opposite_site_list()
+            if self.ignore_bridge_sites:
+                self.site_list = [s for s in self.site_list if 'bridge' not in s['site']]
+            if self.label_sites:
+                self.get_labels()
+
     def populate_opposite_site_list(self):
         """Collect the sites on the opposite side of the slab."""
 
-        top_surf_ids = self.surf_ids.copy()
-        top_subsurf_ids = self.subsurf_ids.copy() 
-        top_site_list = self.site_list.copy()
+        atoms = self.atoms.copy()
+        atoms.positions *= [1,1,-1]
+        nsas = SlabAdsorptionSites(atoms, surface=self.surface,                                 
+                                   allow_6fold=self.allow_6fold,
+                                   composition_effect=self.composition_effect, 
+                                   both_sides=False,
+                                   ignore_bridge_sites=self.ignore_bridge_sites,
+                                   label_sites=self.label_sites,
+                                   surrogate_metal=self.surrogate_metal,
+                                   optimize_surrogate_cell=self.optimize_surrogate_cell,
+                                   tol=self.tol, _allow_expand=False)
+        # Take only the site positions within the periodic boundary
+        bot_site_list = nsas.site_list
+        for st in bot_site_list:
+            if st['normal'][2] > 0:
+                st['normal'] *= [1,1,-1]
+            st['position'] *= [1,1,-1]
+        self.site_list += bot_site_list
+        self.surf_ids += nsas.surf_ids
+        self.subsurf_ids += nsas.subsurf_ids
 
-        self.atoms.positions *= [1,1,-1]
-        self.ref_atoms.positions *= [1,1,-1]
-        if self.optimize_surrogate_cell:
-            self.delta_positions = cart_to_frac(self.atoms) - cart_to_frac(self.ref_atoms)
-        else:
-            self.delta_positions = self.atoms.positions - self.ref_atoms.positions
-        self.surf_ids, self.subsurf_ids = self.get_termination()
+    def populate_expanded_site_list(self):
+        """Collect the sites on the 2x2 expanded surface and cell for 
+        small unit cells and then return the sites within the original
+        unit cell."""
+
+        atoms = self.atoms.copy()
+        atoms.wrap()
+        atoms *= [2,2,1]
+        nsas = SlabAdsorptionSites(atoms, surface=self.surface,                          
+                                   allow_6fold=self.allow_6fold,
+                                   composition_effect=self.composition_effect, 
+                                   both_sides=self.both_sides,
+                                   ignore_bridge_sites=self.ignore_bridge_sites,
+                                   label_sites=self.label_sites,
+                                   surrogate_metal=self.surrogate_metal,
+                                   optimize_surrogate_cell=self.optimize_surrogate_cell,
+                                   tol=self.tol, _allow_expand=False)
+        # Take only the site positions within the periodic boundary
+        sl = nsas.site_list
+        poss = np.stack([s['position'] for s in sl], axis=0)
+        poss = wrap_positions(poss, self.cell, self.pbc)
+        D = squareform(pdist(poss))
+        screen, wrapped_poss = [], []                             
+        seen = set()
+        for row, col in zip(*np.where(D < 0.15)):
+            if row not in seen:
+                screen.append(row)
+                wrapped_poss.append(poss[row])
+            seen.update([row, col])
         self.site_list = []
-        self.populate_site_list(_bot_side=True)
-        self.surf_ids = top_surf_ids + self.surf_ids
-        self.subsurf_ids = top_subsurf_ids + self.subsurf_ids
-        for st in self.site_list:
-            st['normal'] *= [1,1,-1]
-            if self.surface in ['fcc110','bcc211','hcp10m10h'] \
-            and st['site'] == '5fold':
-                continue
-            elif st['site'] != 'ontop':                
-                st['position'] *= [1,1,-1]                
-        self.site_list = top_site_list + self.site_list
-        self.atoms.positions *= [1,1,-1]
-        self.ref_atoms.positions *= [1,1,-1]
+        for i, j in enumerate(screen):
+            s = sl[j]
+            s['position'] = wrapped_poss[i]
+            s['indices'] = tuple(sorted(np.mod(s['indices'], len(self.atoms))))
+            self.site_list.append(s)
 
     def get_site(self, indices):
         """Get information of a site given its atom indices.
@@ -2492,6 +2541,10 @@ class SlabAdsorptionSites(object):
 
         ref_atoms = atoms.copy()
         pm = self.surrogate_metal
+        if pm is None:
+            common_metal = Counter(self.atoms.symbols).most_common(1)[0][0]
+            if common_metal in ['Ni', 'Cu', 'Pd', 'Ag', 'Pt', 'Au']:
+                pm = common_metal
         area = np.linalg.norm(np.cross(atoms.cell[0], atoms.cell[1]))
         if self.surface in ['fcc100','fcc110','fcc311','fcc221','fcc331','fcc322',
         'fcc332','bcc210','bcc211']:
@@ -2512,6 +2565,7 @@ class SlabAdsorptionSites(object):
         for a in ref_atoms:
             a.symbol = ref_symbol
         ref_atoms.calc = asapEMT()
+
         if self.optimize_surrogate_cell:
             ecf = ExpCellFilter(ref_atoms)
             opt = BFGS(ecf, logfile=None)
@@ -2625,19 +2679,12 @@ class SlabAdsorptionSites(object):
         
         """
 
-        abscostheta_min = 10000
-        for i in range(len(indices)):
-            ids = [indices[i]] + indices[:i] + indices[i+1:]
-            vec1, vec2 = self.get_two_vectors(ids)
-            abscostheta = np.abs((vec1[:2] / np.linalg.norm(vec1[:2])) @  
-                                  vec2[:2] / np.linalg.norm(vec2[:2]))
-            if abscostheta < abscostheta_min:
-                abscostheta_min = abscostheta
-                n = np.cross(vec1, vec2)
-                l = math.sqrt(n @ n.conj())
-                n /= l
-                if n[2] < 0:
-                    n *= -1
+        vec1, vec2 = self.get_two_vectors(indices)
+        n = np.cross(vec1, vec2)
+        l = math.sqrt(n @ n.conj())
+        n /= l
+        if n[2] < 0:
+            n *= -1
 
         return n
 

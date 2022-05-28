@@ -233,7 +233,10 @@ The generalization of the code is achieved by mapping all
 input atoms to a surrogate transition metal that is
 supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt
 or Au). Try changing the surrogate metal when the site
-identification is not satisfying.</p></li>
+identification is not satisfying. If no surrogate metal is
+provided, but the majority of the nanoparticle is a metal
+supported by asap3.EMT, the surrogate metal will be set to
+that metal automatically.</p></li>
 <li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – The tolerence of neighbor distance (in Angstrom).
 Might be helpful to adjust this if the site identification
 is not satisfying. When the nanoparticle is small (less
@@ -496,7 +499,7 @@ icosahedral nanoparticle by its 20 geometrical facets:</p>
 <blockquote>
 <div><dl class="py class">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites">
-<em class="property">class </em><code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">SlabAdsorptionSites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">label_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surrogate_metal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">SlabAdsorptionSites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">surface</span></em>, <em class="sig-param"><span class="n">allow_6fold</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">both_sides</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">label_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surrogate_metal</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">_allow_expand</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class for identifying adsorption sites on a surface slab.
 Support 20 common surfaces: fcc100, fcc111, fcc110, fcc211,
@@ -553,8 +556,11 @@ supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt
 or Au). Try changing the surrogate metal when the site
 identification is not satisfying. When the cell is small,
 Cu is normally the better choice, while the Pt and Au
-should be good for larger cells.</p></li>
-<li><p><strong>optimize_surrogate_cell</strong> (<em>bool</em><em>, </em><em>default True</em>) – Whether to also optimize the cell during the optimization
+should be good for larger cells. If no surrogate metal is
+provided, but the majority of the slab is a metal supported
+by asap3.EMT, the surrogate metal will be set to that metal
+automatically.</p></li>
+<li><p><strong>optimize_surrogate_cell</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to also optimize the cell during the optimization
 of the surrogate slab. Useful for generalizing the code for
 alloy slabs of various compositions and lattice constants.
 Recommand to set to True if the surrogate metal is very
@@ -593,7 +599,7 @@ is not satisfying. The default 0.5 is usually good enough.</p></li>
 </div>
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.populate_site_list">
-<code class="sig-name descname">populate_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">5.0</span></em>, <em class="sig-param"><span class="n">_bot_side</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.populate_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">populate_site_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">5.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.populate_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find all ontop, bridge and hollow sites (3-fold and 4-fold)
 given an input slab based on Delaunay triangulation of the
 surface atoms in a supercell and collect in a site list.</p>
@@ -605,9 +611,24 @@ surface atoms in a supercell and collect in a site list.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="acat.adsorption_sites.SlabAdsorptionSites.postprocessing">
+<code class="sig-name descname">postprocessing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.postprocessing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.postprocessing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Postprocessing the site list, and potentially adding
+more sites.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.populate_opposite_site_list">
 <code class="sig-name descname">populate_opposite_site_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.populate_opposite_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.populate_opposite_site_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collect the sites on the opposite side of the slab.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="acat.adsorption_sites.SlabAdsorptionSites.populate_expanded_site_list">
+<code class="sig-name descname">populate_expanded_site_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.populate_expanded_site_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.populate_expanded_site_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect the sites on the 2x2 expanded surface and cell for
+small unit cells and then return the sites within the original
+unit cell.</p>
 </dd></dl>
 
 <dl class="py method">
