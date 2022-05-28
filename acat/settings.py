@@ -1,5 +1,4 @@
 from ase.formula import Formula
-from ase.io import read, write
 from ase.build import molecule
 from ase import Atoms
 

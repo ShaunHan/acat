@@ -1,9 +1,9 @@
 """Adsorbate procreation operators that adds an adsorbate to the surface of 
 a particle or given structure."""
 from ..settings import (adsorbate_elements, 
-                        adsorbate_molecule, 
                         site_heights)
-from ..utilities import (is_list_or_tuple, 
+from ..utilities import (custom_warning, 
+                         is_list_or_tuple, 
                          atoms_too_close_after_addition)
 from ..adsorption_sites import (ClusterAdsorptionSites, 
                                 SlabAdsorptionSites)
@@ -14,13 +14,14 @@ from ..build.action import (add_adsorbate_to_site,
                             remove_adsorbates_from_sites)
 from ase.ga.offspring_creator import OffspringCreator
 from ase.formula import Formula
-from ase import Atoms, Atom
+from ase import Atoms
 from asap3 import FullNeighborList
-from asap3 import EMT as asapEMT
 from operator import attrgetter
 from itertools import chain
 import numpy as np
+import warnings
 import random
+warnings.formatwarning = custom_warning
 
 
 class AdsorbateOperator(OffspringCreator):
@@ -174,7 +175,7 @@ class AdsorbateOperator(OffspringCreator):
             if i >= len(hetero_site_list):
                 if return_site_index:
                     return False
-                print('Removal not possible, will add instead')
+                warnings.warn('Removal not possible, will add instead')
                 return self.add_adsorbate(atoms, hetero_site_list, site_heights)
 
             # Remove adsorbate from the correct position. Remove the fragment
@@ -1225,7 +1226,7 @@ class CutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         
         if self.rvecs is not None:
             if not isinstance(self.rvecs, list):
-                print('Rotation vectors are not a list, skipping rotation')
+                warnings.warn('Rotation vectors are not a list, skipping rotation')
             else:
                 vec = random.choice(self.rvecs)
                 try:

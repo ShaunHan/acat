@@ -160,11 +160,13 @@
            <div itemprop="articleBody">
             
   <h1>Source code for acat.adsorption_sites</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">expand_cell</span><span class="p">,</span> <span class="n">get_mic</span><span class="p">,</span>
+<span></span><span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">expand_cell</span><span class="p">,</span> 
+                        <span class="n">get_mic</span><span class="p">,</span> 
+                        <span class="n">custom_warning</span><span class="p">,</span>
                         <span class="n">is_list_or_tuple</span><span class="p">,</span> 
                         <span class="n">cart_to_frac</span><span class="p">,</span> 
-                        <span class="n">hash_composition</span><span class="p">,</span>
+                        <span class="n">hash_composition</span><span class="p">,</span> 
                         <span class="n">neighbor_shell_list</span><span class="p">,</span> 
                         <span class="n">get_adj_matrix</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.labels</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_monometallic_cluster_labels</span><span class="p">,</span> 
@@ -173,17 +175,16 @@
                      <span class="n">get_bimetallic_slab_labels</span><span class="p">,</span>
                      <span class="n">get_multimetallic_cluster_labels</span><span class="p">,</span> 
                      <span class="n">get_multimetallic_slab_labels</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">reference_states</span><span class="p">,</span> 
-                      <span class="n">atomic_numbers</span><span class="p">,</span> 
-                      <span class="n">chemical_symbols</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">reference_states</span><span class="p">,</span> <span class="n">atomic_numbers</span>
 <span class="kn">from</span> <span class="nn">ase.constraints</span> <span class="kn">import</span> <span class="n">ExpCellFilter</span>
-<span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span>
+<span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span><span class="p">,</span> <span class="n">wrap_positions</span>
 <span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span><span class="p">,</span> <span class="n">FIRE</span>
 <span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
 <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">rdf</span><span class="p">,</span> <span class="n">FullCNA</span> 
 <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">FullNeighborList</span>
 <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">pdist</span><span class="p">,</span> <span class="n">squareform</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">groupby</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -191,6 +192,7 @@
 <span class="kn">import</span> <span class="nn">scipy</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">formatwarning</span> <span class="o">=</span> <span class="n">custom_warning</span>
 
 
 <div class="viewcode-block" id="ClusterAdsorptionSites"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites">[docs]</a><span class="k">class</span> <span class="nc">ClusterAdsorptionSites</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -257,7 +259,10 @@
 <span class="sd">        input atoms to a surrogate transition metal that is </span>
 <span class="sd">        supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt </span>
 <span class="sd">        or Au). Try changing the surrogate metal when the site </span>
-<span class="sd">        identification is not satisfying.</span>
+<span class="sd">        identification is not satisfying. If no surrogate metal is</span>
+<span class="sd">        provided, but the majority of the nanoparticle is a metal       </span>
+<span class="sd">        supported by asap3.EMT, the surrogate metal will be set to </span>
+<span class="sd">        that metal automatically.</span>
 
 <span class="sd">    tol : float, default 0.5</span>
 <span class="sd">        The tolerence of neighbor distance (in Angstrom).</span>
@@ -305,7 +310,9 @@
                  <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">):</span>
 
         <span class="k">assert</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">,</span> <span class="s1">&#39;the cell must be non-periodic&#39;</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">VisibleDeprecationWarning</span><span class="p">)</span>
+
         <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -745,10 +752,14 @@
 
         <span class="n">ref_atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span>
-        <span class="k">if</span> <span class="n">pm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ref_symbol</span> <span class="o">=</span> <span class="n">pm</span>
+        <span class="k">if</span> <span class="n">pm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">common_metal</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">common_metal</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Pd&#39;</span><span class="p">,</span> <span class="s1">&#39;Ag&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">]:</span>
+                <span class="n">ref_symbol</span> <span class="o">=</span> <span class="n">common_metal</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ref_symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">300</span> <span class="k">else</span> <span class="s1">&#39;Cu&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">ref_symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">300</span> <span class="k">else</span> <span class="s1">&#39;Cu&#39;</span>
+            <span class="n">ref_symbol</span> <span class="o">=</span> <span class="n">pm</span>
         <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ref_atoms</span><span class="p">:</span>
             <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">ref_symbol</span>
 
@@ -1317,9 +1328,12 @@
 <span class="sd">        or Au). Try changing the surrogate metal when the site </span>
 <span class="sd">        identification is not satisfying. When the cell is small, </span>
 <span class="sd">        Cu is normally the better choice, while the Pt and Au </span>
-<span class="sd">        should be good for larger cells.</span>
+<span class="sd">        should be good for larger cells. If no surrogate metal is</span>
+<span class="sd">        provided, but the majority of the slab is a metal supported     </span>
+<span class="sd">        by asap3.EMT, the surrogate metal will be set to that metal </span>
+<span class="sd">        automatically.</span>
 
-<span class="sd">    optimize_surrogate_cell : bool, default True</span>
+<span class="sd">    optimize_surrogate_cell : bool, default False</span>
 <span class="sd">        Whether to also optimize the cell during the optimization</span>
 <span class="sd">        of the surrogate slab. Useful for generalizing the code for</span>
 <span class="sd">        alloy slabs of various compositions and lattice constants.</span>
@@ -1369,13 +1383,14 @@
                  <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">surrogate_metal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">):</span>
+                 <span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">,</span> <span class="n">_allow_expand</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
         <span class="k">assert</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">,</span> <span class="s1">&#39;the cell must be periodic in at least one direction&#39;</span>   
-        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-        <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">VisibleDeprecationWarning</span><span class="p">)</span>
 
+        <span class="n">atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
         <span class="n">ptp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="n">ptp</span> <span class="o">&lt;</span> <span class="mf">10.</span><span class="p">:</span>
             <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ptp</span> <span class="o">+</span> <span class="mf">10.</span>
@@ -1413,23 +1428,18 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">label_dict</span> <span class="o">=</span> <span class="n">get_monometallic_slab_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">)</span>    
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allow_expand</span> <span class="o">=</span> <span class="n">_allow_expand</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">make_neighbor_list</span><span class="p">(</span><span class="n">neighbor_number</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connectivity</span><span class="p">()</span>         
-
         <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_termination</span><span class="p">()</span> 
+
         <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">populate_site_list</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">populate_opposite_site_list</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> <span class="s1">&#39;bridge&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_labels</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">postprocessing</span><span class="p">()</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
         
-<div class="viewcode-block" id="SlabAdsorptionSites.populate_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span> <span class="n">_bot_side</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>        
+<div class="viewcode-block" id="SlabAdsorptionSites.populate_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.populate_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">5.</span><span class="p">):</span>        
         <span class="sd">&quot;&quot;&quot;Find all ontop, bridge and hollow sites (3-fold and 4-fold) </span>
 <span class="sd">        given an input slab based on Delaunay triangulation of the </span>
 <span class="sd">        surface atoms in a supercell and collect in a site list.</span>
@@ -1440,7 +1450,7 @@
 <span class="sd">            Radius of maximum atomic bond distance to consider.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
- 
+
         <span class="n">top_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
         <span class="n">normals_for_site</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">top_indices</span><span class="p">,</span> 
@@ -1458,8 +1468,7 @@
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sorted_top_indices</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span><span class="s1">&#39;bcc100&#39;</span><span class="p">,</span><span class="s1">&#39;bcc110&#39;</span><span class="p">,</span><span class="s1">&#39;hcp0001&#39;</span><span class="p">]:</span>
                 <span class="n">morphology</span> <span class="o">=</span> <span class="s1">&#39;terrace&#39;</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc221&#39;</span><span class="p">,</span><span class="s1">&#39;fcc332&#39;</span><span class="p">,</span><span class="s1">&#39;bcc111&#39;</span><span class="p">,</span><span class="s1">&#39;fcc221&#39;</span><span class="p">,</span><span class="s1">&#39;fcc332&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;bcc210&#39;</span><span class="p">,</span><span class="s1">&#39;hcp10m12&#39;</span><span class="p">]:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span><span class="s1">&#39;fcc322&#39;</span><span class="p">,</span><span class="s1">&#39;fcc221&#39;</span><span class="p">,</span><span class="s1">&#39;fcc332&#39;</span><span class="p">,</span><span class="s1">&#39;bcc111&#39;</span><span class="p">,</span><span class="s1">&#39;bcc210&#39;</span><span class="p">,</span><span class="s1">&#39;hcp10m12&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ntop</span> <span class="o">/</span> <span class="mi">3</span><span class="p">:</span>
                     <span class="n">morphology</span> <span class="o">=</span> <span class="s1">&#39;corner&#39;</span>
                 <span class="k">elif</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">ntop</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">:</span>
@@ -1506,7 +1515,7 @@
                     <span class="n">extraids</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extra</span> <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
                                 <span class="ow">and</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geo_dict</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;morphology&#39;</span><span class="p">]]]</span>
                     <span class="c1">#if len(extraids) &lt; 4:    </span>
-                    <span class="c1">#    print(&#39;Cannot identify other 4 atoms of 5-fold site {}&#39;.format(si))</span>
+                    <span class="c1">#    warnings.warn(&#39;Cannot identify other 4 atoms of 5-fold site {}&#39;.format(si))</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extraids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
                         <span class="n">extraids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">extraids</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">get_mic</span><span class="p">(</span>                
                                    <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">refpos</span><span class="p">,</span> <span class="n">ref_cell</span><span class="p">,</span>
@@ -1624,7 +1633,7 @@
         <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">poss</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">bridge_positions</span><span class="p">,</span><span class="n">fold4_positions</span><span class="p">,</span><span class="n">fold3_positions</span><span class="p">]):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">poss</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">fracs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">poss</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">ref_cell</span><span class="p">)</span>
+            <span class="n">fracs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">poss</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">ref_cell</span><span class="p">)</span>       
             <span class="n">xfracs</span><span class="p">,</span> <span class="n">yfracs</span> <span class="o">=</span> <span class="n">fracs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">fracs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
 
             <span class="c1"># Take only the positions within the periodic boundary</span>
@@ -1649,7 +1658,9 @@
             <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">fold4_poss</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">refpos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reduced_poss</span><span class="p">):</span>
-                    <span class="n">bridge_indices</span> <span class="o">=</span> <span class="n">nblist</span><span class="p">[</span><span class="n">ntop2</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>                     
+                    <span class="n">bridge_indices</span> <span class="o">=</span> <span class="n">nblist</span><span class="p">[</span><span class="n">ntop2</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">bridge_indices</span><span class="p">:</span>
+                        <span class="k">continue</span>
                     <span class="n">bridgeids</span> <span class="o">=</span> <span class="p">[</span><span class="n">top2_indices</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">bridge_indices</span> <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">ntop1</span><span class="p">]</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bridgeids</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span> 
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span><span class="s1">&#39;fcc311&#39;</span><span class="p">,</span><span class="s1">&#39;fcc322&#39;</span><span class="p">,</span><span class="s1">&#39;fcc331&#39;</span><span class="p">,</span>
@@ -1680,7 +1691,8 @@
                         <span class="k">elif</span> <span class="n">nterrace</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>                            
                             <span class="n">morphology</span> <span class="o">=</span> <span class="s1">&#39;terrace&#39;</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Cannot identify site </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">si</span><span class="p">))</span> 
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Cannot identify site </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">si</span><span class="p">))</span>
+                            <span class="k">assert</span> <span class="kc">False</span>
                             <span class="k">continue</span> 
                     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc311&#39;</span><span class="p">,</span><span class="s1">&#39;fcc331&#39;</span><span class="p">]:</span>
                         <span class="n">this_site</span> <span class="o">=</span> <span class="s1">&#39;bridge&#39;</span>
@@ -1874,7 +1886,7 @@
                                      <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>
                                      <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="n">morphology</span><span class="p">,</span>
                                      <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-                                     <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">bridgeids</span> <span class="o">+</span> <span class="n">extraids</span><span class="p">})</span>
+                                     <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">bridgeids</span> <span class="o">+</span> <span class="n">extraids</span><span class="p">))})</span>
                     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="s1">&#39;hcp10m11&#39;</span> <span class="ow">and</span> <span class="n">morphology</span> <span class="o">==</span> <span class="s1">&#39;subsurf&#39;</span><span class="p">:</span> 
                         <span class="n">special</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="n">extraids</span> <span class="o">=</span> <span class="n">si</span>
@@ -1882,7 +1894,7 @@
                                      <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>
                                      <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="n">morphology</span><span class="p">,</span>
                                      <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">subpos</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-                                     <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">bridgeids</span> <span class="o">+</span> <span class="n">isubs</span><span class="p">})</span>
+                                     <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">bridgeids</span> <span class="o">+</span> <span class="n">isubs</span><span class="p">))})</span>
                     <span class="k">else</span><span class="p">:</span>                         
                         <span class="n">site</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="n">this_site</span><span class="p">,</span>               
                                      <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>
@@ -2038,7 +2050,7 @@
                 <span class="n">coexist_3_4</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span><span class="s1">&#39;fcc311&#39;</span><span class="p">,</span><span class="s1">&#39;fcc322&#39;</span><span class="p">,</span><span class="s1">&#39;fcc331&#39;</span><span class="p">,</span>
                                                 <span class="s1">&#39;bcc210&#39;</span><span class="p">,</span><span class="s1">&#39;bcc310&#39;</span><span class="p">,</span><span class="s1">&#39;hcp10m12&#39;</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">coexist_3_4</span><span class="p">:</span>
-                    <span class="n">fold4_sets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;4fold&#39;</span><span class="p">]</span>
+                    <span class="n">fold4_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;4fold&#39;</span><span class="p">]</span>
 
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">refpos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reduced_poss</span><span class="p">):</span>
                     <span class="n">fold3_indices</span> <span class="o">=</span> <span class="n">nblist</span><span class="p">[</span><span class="n">ntop2</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
@@ -2049,10 +2061,6 @@
                         <span class="c1">#    warnings.warn(&#39;Cannot find the correct atoms of this 3-fold site.&#39;,</span>
                         <span class="c1">#                  &#39;Find {} instead&#39;.format(si))</span>
                         <span class="k">continue</span>
-                    <span class="c1"># Remove redundant 3-fold sites that belongs to 4-fold sites</span>
-                    <span class="k">if</span> <span class="n">coexist_3_4</span><span class="p">:</span> 
-                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fold3ids</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">fold4_sets</span><span class="p">):</span>
-                            <span class="k">continue</span>
                     <span class="n">si</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">fold3ids</span><span class="p">))</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">:</span>                                           
                         <span class="n">reffrac</span> <span class="o">=</span> <span class="n">refpos</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">ref_cell</span><span class="p">)</span>                
@@ -2060,6 +2068,15 @@
                                <span class="mi">0</span><span class="p">))</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">pos</span> <span class="o">=</span> <span class="n">refpos</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_positions</span><span class="p">[</span><span class="n">fold3ids</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+                    <span class="c1"># Remove redundant 3-fold sites that belongs to 4-fold sites</span>
+                    <span class="k">if</span> <span class="n">coexist_3_4</span><span class="p">:</span>
+                        <span class="n">dup_sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">fold4_sites</span> <span class="k">if</span> 
+                                     <span class="nb">set</span><span class="p">(</span><span class="n">fold3ids</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]))]</span>
+                        <span class="k">if</span> <span class="n">dup_sites</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">get_mic</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">],</span> <span class="n">pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> 
+                            <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.5</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">dup_sites</span><span class="p">):</span>
+                                <span class="k">continue</span>
                     <span class="n">normal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_surface_normal</span><span class="p">([</span><span class="n">si</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">si</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">si</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
                     <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">si</span><span class="p">:</span>
                         <span class="n">normals_for_site</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">normal</span><span class="p">)</span>
@@ -2284,7 +2301,6 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="s1">&#39;bcc110&#39;</span><span class="p">:</span>
             <span class="n">bcc110_long_bridges</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">index_list</span><span class="p">,</span> <span class="n">pos_list</span><span class="p">,</span> <span class="n">st_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
             <span class="n">stids</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
             <span class="n">this_site</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span>
@@ -2326,36 +2342,6 @@
                         <span class="n">t</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">fold&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nstids</span><span class="p">)</span>
                         <span class="n">t</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">stids</span><span class="p">))</span>
             
-            <span class="c1"># Take care of duplicate fcc/hcp indices for fcc111. When unit </span>
-            <span class="c1"># cell is small, different sites can have exactly same indices</span>
-            <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span><span class="s1">&#39;hcp0001&#39;</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">this_site</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc&#39;</span><span class="p">,</span> <span class="s1">&#39;hcp&#39;</span><span class="p">]):</span>
-                <span class="k">if</span> <span class="n">stids</span> <span class="ow">in</span> <span class="n">index_list</span><span class="p">:</span>
-                    <span class="n">slid</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">si</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sl</span><span class="p">))</span> <span class="k">if</span> 
-                                <span class="n">sl</span><span class="p">[</span><span class="n">si</span><span class="p">][</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">stids</span><span class="p">)</span>
-                    <span class="n">previd</span> <span class="o">=</span> <span class="n">index_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">stids</span><span class="p">)</span>
-                    <span class="n">prevpos</span> <span class="o">=</span> <span class="n">pos_list</span><span class="p">[</span><span class="n">previd</span><span class="p">]</span>
-                    <span class="n">prevst</span> <span class="o">=</span> <span class="n">st_list</span><span class="p">[</span><span class="n">previd</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="nb">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">prevpos</span> <span class="o">-</span> <span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> 
-                    <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span><span class="p">]])</span> <span class="o">&lt;</span> \
-                    <span class="nb">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span>
-                    <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span><span class="p">]]):</span>
-                        <span class="n">t</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fcc&#39;</span>
-                        <span class="k">if</span> <span class="n">prevst</span> <span class="o">==</span> <span class="s1">&#39;fcc&#39;</span><span class="p">:</span>
-                            <span class="n">sl</span><span class="p">[</span><span class="n">slid</span><span class="p">][</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;hcp&#39;</span>
-                        <span class="n">t</span><span class="p">[</span><span class="s1">&#39;subsurf_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
-                            <span class="n">t</span><span class="p">[</span><span class="s1">&#39;subsurf_element&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span> 
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">t</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;hcp&#39;</span>
-                        <span class="k">if</span> <span class="n">prevst</span> <span class="o">==</span> <span class="s1">&#39;hcp&#39;</span><span class="p">:</span>
-                            <span class="n">sl</span><span class="p">[</span><span class="n">slid</span><span class="p">][</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fcc&#39;</span>
-                        <span class="n">sl</span><span class="p">[</span><span class="n">slid</span><span class="p">][</span><span class="s1">&#39;subsurf_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
-                            <span class="n">sl</span><span class="p">[</span><span class="n">slid</span><span class="p">][</span><span class="s1">&#39;subsurf_element&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">index_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
-                    <span class="n">pos_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">])</span>
-                    <span class="n">st_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">])</span>
             <span class="c1"># Take care of longbridge sites on bcc110</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="s1">&#39;bcc110&#39;</span> <span class="ow">and</span> <span class="n">this_site</span> <span class="o">==</span> <span class="s1">&#39;3fold&#39;</span><span class="p">:</span>
                 <span class="n">si</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span>
@@ -2477,34 +2463,97 @@
                 <span class="n">sl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
                 <span class="n">usi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">si</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="SlabAdsorptionSites.postprocessing"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.postprocessing">[docs]</a>    <span class="k">def</span> <span class="nf">postprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Postprocessing the site list, and potentially adding </span>
+<span class="sd">        more sites.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if the cell is so small that there are sites with duplicate indices             </span>
+        <span class="n">small</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allow_expand</span><span class="p">:</span>
+            <span class="n">small</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span><span class="s1">&#39;fcc311&#39;</span><span class="p">,</span><span class="s1">&#39;fcc322&#39;</span><span class="p">,</span><span class="s1">&#39;fcc331&#39;</span><span class="p">,</span><span class="s1">&#39;bcc210&#39;</span><span class="p">,</span><span class="s1">&#39;bcc310&#39;</span><span class="p">,</span><span class="s1">&#39;hcp10m12&#39;</span><span class="p">]:</span>
+            <span class="n">sorted_sets</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="ow">in</span> 
+                                 <span class="p">[</span><span class="s1">&#39;fcc&#39;</span><span class="p">,</span><span class="s1">&#39;hcp&#39;</span><span class="p">,</span><span class="s1">&#39;3fold&#39;</span><span class="p">,</span><span class="s1">&#39;4fold&#39;</span><span class="p">]],</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_sets</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sorted_sets</span><span class="p">,</span> <span class="n">sorted_sets</span><span class="p">[</span><span class="o">-</span><span class="n">i</span><span class="p">:]):</span>
+                    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+                        <span class="n">small</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">break</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="p">))</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="p">):</span>
+            <span class="n">small</span> <span class="o">=</span> <span class="kc">True</span>
+                                                                                                
+        <span class="k">if</span> <span class="n">small</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">populate_expanded_site_list</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">populate_opposite_site_list</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> <span class="s1">&#39;bridge&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_labels</span><span class="p">()</span></div>
+
 <div class="viewcode-block" id="SlabAdsorptionSites.populate_opposite_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.populate_opposite_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_opposite_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Collect the sites on the opposite side of the slab.&quot;&quot;&quot;</span>
 
-        <span class="n">top_surf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">top_subsurf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
-        <span class="n">top_site_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nsas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>                                 
+                                   <span class="n">allow_6fold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span><span class="p">,</span>
+                                   <span class="n">composition_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">,</span> 
+                                   <span class="n">both_sides</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                   <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">,</span>
+                                   <span class="n">label_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">,</span>
+                                   <span class="n">surrogate_metal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span><span class="p">,</span>
+                                   <span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">,</span>
+                                   <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">_allow_expand</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Take only the site positions within the periodic boundary</span>
+        <span class="n">bot_site_list</span> <span class="o">=</span> <span class="n">nsas</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">bot_site_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">st</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">+=</span> <span class="n">bot_site_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">+=</span> <span class="n">nsas</span><span class="o">.</span><span class="n">surf_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span> <span class="o">+=</span> <span class="n">nsas</span><span class="o">.</span><span class="n">subsurf_ids</span></div>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">delta_positions</span> <span class="o">=</span> <span class="n">cart_to_frac</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">-</span> <span class="n">cart_to_frac</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">delta_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">positions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_termination</span><span class="p">()</span>
+<div class="viewcode-block" id="SlabAdsorptionSites.populate_expanded_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.populate_expanded_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_expanded_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect the sites on the 2x2 expanded surface and cell for </span>
+<span class="sd">        small unit cells and then return the sites within the original</span>
+<span class="sd">        unit cell.&quot;&quot;&quot;</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
+        <span class="n">atoms</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nsas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>                          
+                                   <span class="n">allow_6fold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span><span class="p">,</span>
+                                   <span class="n">composition_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">,</span> 
+                                   <span class="n">both_sides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span><span class="p">,</span>
+                                   <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">,</span>
+                                   <span class="n">label_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">,</span>
+                                   <span class="n">surrogate_metal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span><span class="p">,</span>
+                                   <span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">,</span>
+                                   <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">_allow_expand</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Take only the site positions within the periodic boundary</span>
+        <span class="n">sl</span> <span class="o">=</span> <span class="n">nsas</span><span class="o">.</span><span class="n">site_list</span>
+        <span class="n">poss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">poss</span> <span class="o">=</span> <span class="n">wrap_positions</span><span class="p">(</span><span class="n">poss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">squareform</span><span class="p">(</span><span class="n">pdist</span><span class="p">(</span><span class="n">poss</span><span class="p">))</span>
+        <span class="n">screen</span><span class="p">,</span> <span class="n">wrapped_poss</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>                             
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">D</span> <span class="o">&lt;</span> <span class="mf">0.15</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">row</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="n">screen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">wrapped_poss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">poss</span><span class="p">[</span><span class="n">row</span><span class="p">])</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">populate_site_list</span><span class="p">(</span><span class="n">_bot_side</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span> <span class="o">=</span> <span class="n">top_surf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span> <span class="o">=</span> <span class="n">top_subsurf_ids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsurf_ids</span>
-        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="p">:</span>
-            <span class="n">st</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc110&#39;</span><span class="p">,</span><span class="s1">&#39;bcc211&#39;</span><span class="p">,</span><span class="s1">&#39;hcp10m10h&#39;</span><span class="p">]</span> \
-            <span class="ow">and</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;5fold&#39;</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;ontop&#39;</span><span class="p">:</span>                
-                <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>                
-        <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="o">=</span> <span class="n">top_site_list</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">positions</span> <span class="o">*=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">screen</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wrapped_poss</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">))))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SlabAdsorptionSites.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get information of a site given its atom indices.</span>
@@ -2654,6 +2703,10 @@
 
         <span class="n">ref_atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span>
+        <span class="k">if</span> <span class="n">pm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">common_metal</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">common_metal</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Pd&#39;</span><span class="p">,</span> <span class="s1">&#39;Ag&#39;</span><span class="p">,</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;Au&#39;</span><span class="p">]:</span>
+                <span class="n">pm</span> <span class="o">=</span> <span class="n">common_metal</span>
         <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span><span class="s1">&#39;fcc110&#39;</span><span class="p">,</span><span class="s1">&#39;fcc311&#39;</span><span class="p">,</span><span class="s1">&#39;fcc221&#39;</span><span class="p">,</span><span class="s1">&#39;fcc331&#39;</span><span class="p">,</span><span class="s1">&#39;fcc322&#39;</span><span class="p">,</span>
         <span class="s1">&#39;fcc332&#39;</span><span class="p">,</span><span class="s1">&#39;bcc210&#39;</span><span class="p">,</span><span class="s1">&#39;bcc211&#39;</span><span class="p">]:</span>
@@ -2674,6 +2727,7 @@
         <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ref_atoms</span><span class="p">:</span>
             <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">ref_symbol</span>
         <span class="n">ref_atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="n">asapEMT</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">:</span>
             <span class="n">ecf</span> <span class="o">=</span> <span class="n">ExpCellFilter</span><span class="p">(</span><span class="n">ref_atoms</span><span class="p">)</span>
             <span class="n">opt</span> <span class="o">=</span> <span class="n">BFGS</span><span class="p">(</span><span class="n">ecf</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -2787,19 +2841,12 @@
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">abscostheta_min</span> <span class="o">=</span> <span class="mi">10000</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)):</span>
-            <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="n">indices</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_two_vectors</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
-            <span class="n">abscostheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">vec1</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vec1</span><span class="p">[:</span><span class="mi">2</span><span class="p">]))</span> <span class="o">@</span>  
-                                  <span class="n">vec2</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vec2</span><span class="p">[:</span><span class="mi">2</span><span class="p">]))</span>
-            <span class="k">if</span> <span class="n">abscostheta</span> <span class="o">&lt;</span> <span class="n">abscostheta_min</span><span class="p">:</span>
-                <span class="n">abscostheta_min</span> <span class="o">=</span> <span class="n">abscostheta</span>
-                <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
-                <span class="n">l</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span> <span class="o">@</span> <span class="n">n</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
-                <span class="n">n</span> <span class="o">/=</span> <span class="n">l</span>
-                <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">n</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_two_vectors</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span> <span class="o">@</span> <span class="n">n</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+        <span class="n">n</span> <span class="o">/=</span> <span class="n">l</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">n</span></div>
 

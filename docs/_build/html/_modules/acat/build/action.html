@@ -160,12 +160,15 @@
            <div itemprop="articleBody">
             
   <h1>Source code for acat.build.action</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="p">(</span><span class="n">adsorbate_elements</span><span class="p">,</span> <span class="n">site_heights</span><span class="p">,</span>  
-                        <span class="n">adsorbate_list</span><span class="p">,</span> <span class="n">adsorbate_molecule</span><span class="p">)</span>
+<span></span><span class="kn">from</span> <span class="nn">..settings</span> <span class="kn">import</span> <span class="p">(</span><span class="n">adsorbate_elements</span><span class="p">,</span> 
+                        <span class="n">site_heights</span><span class="p">,</span>  
+                        <span class="n">adsorbate_list</span><span class="p">,</span> 
+                        <span class="n">adsorbate_molecule</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..adsorption_sites</span> <span class="kn">import</span> <span class="n">enumerate_adsorption_sites</span> 
 <span class="kn">from</span> <span class="nn">..adsorbate_coverage</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClusterAdsorbateCoverage</span><span class="p">,</span> 
                                   <span class="n">SlabAdsorbateCoverage</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">is_list_or_tuple</span><span class="p">,</span> 
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">custom_warning</span><span class="p">,</span>
+                         <span class="n">is_list_or_tuple</span><span class="p">,</span> 
                          <span class="n">get_close_atoms</span><span class="p">,</span> 
                          <span class="n">get_rodrigues_rotation_matrix</span><span class="p">,</span>
                          <span class="n">get_angle_between</span><span class="p">,</span> 
@@ -178,6 +181,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">formatwarning</span> <span class="o">=</span> <span class="n">custom_warning</span>
 
 
 <div class="viewcode-block" id="add_adsorbate"><a class="viewcode-back" href="../../../build.html#acat.build.action.add_adsorbate">[docs]</a><span class="k">def</span> <span class="nf">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
@@ -285,7 +289,7 @@
                    <span class="o">==</span> <span class="n">subsurf_element</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No such site can be found&#39;</span><span class="p">)</span>            
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No such site can be found&#39;</span><span class="p">)</span>            
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">height</span> <span class="o">=</span> <span class="n">site_heights</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]]</span>
@@ -331,6 +335,9 @@
 
     <span class="c1"># Make the correct position</span>
     <span class="n">normal</span> <span class="o">=</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;normal&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">normal</span><span class="p">)):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The normal vector is NaN, use [0., 0., 1.] instead.&#39;</span><span class="p">)</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
     <span class="n">pos</span> <span class="o">=</span> <span class="n">site</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">normal</span> <span class="o">*</span> <span class="n">height</span>
 
     <span class="c1"># Convert the adsorbate to an Atoms object</span>
@@ -343,7 +350,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ads</span> <span class="o">=</span> <span class="n">adsorbate_molecule</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ads</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Nothing is added.&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Nothing is added.&#39;</span><span class="p">)</span>
             <span class="k">return</span> 
 
     <span class="n">bondpos</span> <span class="o">=</span> <span class="n">ads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>

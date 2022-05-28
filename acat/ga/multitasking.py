@@ -1,4 +1,5 @@
-from math import tanh, sqrt, exp
+"""Implementation for evolutionary multitasking (EM)"""
+from math import tanh
 from operator import itemgetter
 from collections import defaultdict
 from ase.ga.population import Population
