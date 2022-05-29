@@ -174,7 +174,7 @@ class ClusterAdsorbateCoverage(object):
         self.hetero_site_list = deepcopy(cas.site_list)
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.populate_occupied_sites()
+        self.populate_hetero_site_list()
 
         if self.ads_ids:
             self.labels = self.get_occupied_labels()
@@ -252,7 +252,7 @@ class ClusterAdsorbateCoverage(object):
 
         return np.asarray(conn_mat) 
 
-    def populate_occupied_sites(self):
+    def populate_hetero_site_list(self):
         """Find all the occupied sites, identify the adsorbate coverage
         of those sites and collect in a heterogeneous site list."""
 
@@ -809,7 +809,7 @@ class SlabAdsorbateCoverage(object):
         self.hetero_site_list = deepcopy(sas.site_list)
 
         self.label_list = ['0'] * len(self.hetero_site_list)
-        self.populate_occupied_sites()
+        self.populate_hetero_site_list()
 
         if self.ads_ids:
             self.labels = self.get_occupied_labels() 
@@ -887,7 +887,7 @@ class SlabAdsorbateCoverage(object):
 
         return np.asarray(conn_mat) 
 
-    def populate_occupied_sites(self):
+    def populate_hetero_site_list(self):
         """Find all the occupied sites, identify the adsorbate coverage
         of those sites and collect in a heterogeneous site list."""
 

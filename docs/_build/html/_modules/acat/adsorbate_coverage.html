@@ -336,7 +336,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">cas</span><span class="o">.</span><span class="n">site_list</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">populate_occupied_sites</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">populate_hetero_site_list</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">()</span>
@@ -414,7 +414,7 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conn_mat</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="ClusterAdsorbateCoverage.populate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.populate_occupied_sites">[docs]</a>    <span class="k">def</span> <span class="nf">populate_occupied_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ClusterAdsorbateCoverage.populate_hetero_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.ClusterAdsorbateCoverage.populate_hetero_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_hetero_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find all the occupied sites, identify the adsorbate coverage</span>
 <span class="sd">        of those sites and collect in a heterogeneous site list.&quot;&quot;&quot;</span>
 
@@ -971,7 +971,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sas</span><span class="o">.</span><span class="n">site_list</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hetero_site_list</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">populate_occupied_sites</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">populate_hetero_site_list</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ads_ids</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_occupied_labels</span><span class="p">()</span> 
@@ -1049,7 +1049,7 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conn_mat</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="SlabAdsorbateCoverage.populate_occupied_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.populate_occupied_sites">[docs]</a>    <span class="k">def</span> <span class="nf">populate_occupied_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SlabAdsorbateCoverage.populate_hetero_site_list"><a class="viewcode-back" href="../../modules.html#acat.adsorbate_coverage.SlabAdsorbateCoverage.populate_hetero_site_list">[docs]</a>    <span class="k">def</span> <span class="nf">populate_hetero_site_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find all the occupied sites, identify the adsorbate coverage</span>
 <span class="sd">        of those sites and collect in a heterogeneous site list.&quot;&quot;&quot;</span>
 
