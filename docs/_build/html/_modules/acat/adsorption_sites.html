@@ -160,7 +160,9 @@
            <div itemprop="articleBody">
             
   <h1>Source code for acat.adsorption_sites</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">adsorbate_elements</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="p">(</span><span class="n">expand_cell</span><span class="p">,</span> 
                         <span class="n">get_mic</span><span class="p">,</span> 
                         <span class="n">custom_warning</span><span class="p">,</span>
@@ -175,7 +177,7 @@
                      <span class="n">get_bimetallic_slab_labels</span><span class="p">,</span>
                      <span class="n">get_multimetallic_cluster_labels</span><span class="p">,</span> 
                      <span class="n">get_multimetallic_slab_labels</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">reference_states</span><span class="p">,</span> <span class="n">atomic_numbers</span>
+<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">reference_states</span>
 <span class="kn">from</span> <span class="nn">ase.constraints</span> <span class="kn">import</span> <span class="n">ExpCellFilter</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">find_mic</span><span class="p">,</span> <span class="n">wrap_positions</span>
 <span class="kn">from</span> <span class="nn">ase.optimize</span> <span class="kn">import</span> <span class="n">BFGS</span><span class="p">,</span> <span class="n">FIRE</span>
@@ -189,6 +191,7 @@
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">re</span>
@@ -286,8 +289,8 @@
 <span class="sd">        &gt;&gt;&gt; cas = ClusterAdsorptionSites(atoms, allow_6fold=False,</span>
 <span class="sd">        ...                              composition_effect=True,</span>
 <span class="sd">        ...                              label_sites=True)</span>
-<span class="sd">        &gt;&gt;&gt; sites = cas.get_sites()</span>
-<span class="sd">        &gt;&gt;&gt; print(sites[0])</span>
+<span class="sd">        &gt;&gt;&gt; site = cas.get_site() # Use cas.get_sites() to get all sites</span>
+<span class="sd">        &gt;&gt;&gt; print(site)</span>
 
 <span class="sd">    Output:</span>
 
@@ -303,9 +306,9 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> 
                  <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                 <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                 <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">composition_effect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">surrogate_metal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">):</span>
 
@@ -335,8 +338,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)),</span> 
-                             <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span> <span class="o">=</span> <span class="n">label_sites</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
@@ -392,10 +394,7 @@
                                      <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
                                      <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">si</span><span class="p">})</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>                         
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> 
-                                       <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">si</span><span class="p">]</span>
-                            <span class="n">comp</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                            <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">comp</span><span class="p">])</span>
+                            <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]))</span>
                             <span class="n">site</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="n">composition</span><span class="p">})</span>
                         <span class="n">sl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
                         <span class="n">usi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">si</span><span class="p">)</span>
@@ -433,7 +432,7 @@
                                     <span class="n">composition</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                                 <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                                     <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                                    <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">si</span><span class="p">]</span>
+                                    <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span>
                                     <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                                     <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                         <span class="n">composition</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">mb</span>
@@ -489,7 +488,7 @@
                                                     <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                                                 <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                                                     <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                                                    <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">si</span><span class="p">]</span>
+                                                    <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span>
                                                     <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                                                     <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                                         <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">mb</span>
@@ -572,7 +571,7 @@
                             <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">comp</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
                         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> 
                             <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                            <span class="n">subsyms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">subi</span><span class="p">]</span> <span class="k">for</span> <span class="n">subi</span> <span class="ow">in</span> <span class="n">subsi</span><span class="p">]</span>
+                            <span class="n">subsyms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">subsi</span><span class="p">]</span>
                             <span class="n">nma</span> <span class="o">=</span> <span class="n">subsyms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">comp</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">mb</span><span class="p">])</span>
@@ -602,20 +601,24 @@
                     <span class="n">sl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
                     <span class="n">usi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">si</span><span class="p">)</span> </div>
 
-<div class="viewcode-block" id="ClusterAdsorptionSites.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get information of a site given its atom indices.</span>
+<div class="viewcode-block" id="ClusterAdsorptionSites.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get information of an adsorption site.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        indices : list or tuple</span>
+<span class="sd">        indices : list or tuple, default None</span>
 <span class="sd">            The indices of the atoms that contribute to the site.</span>
-<span class="sd">        </span>
+<span class="sd">            Return a random site if the indices is not provided.        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-        <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
-        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> 
-                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> 
+                       <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">st</span> </div>
 
 <div class="viewcode-block" id="ClusterAdsorptionSites.get_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -651,14 +654,12 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">comp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;[A-Z][^A-Z]*&#39;</span><span class="p">,</span> <span class="n">composition</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
-                    <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
-                                           <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                    <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">comp</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
-                        <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
-                                               <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                        <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">))</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]]:</span>
+                        <span class="k">if</span> <span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
                             <span class="n">scomp</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
@@ -1141,33 +1142,41 @@
 
         <span class="k">return</span> <span class="n">nbslist</span></div>
 
-<div class="viewcode-block" id="ClusterAdsorptionSites.update"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                 
-        <span class="sd">&quot;&quot;&quot;Update the position and composition of each adsorption site </span>
-<span class="sd">        given an updated atoms object. Please only use this when the </span>
-<span class="sd">        indexing of the atoms object is preserved. Useful for updating</span>
-<span class="sd">        adsorption sites e.g. after geometry optimization.</span>
+<div class="viewcode-block" id="ClusterAdsorptionSites.update"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">full_update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>                 
+        <span class="sd">&quot;&quot;&quot;Update the position of each adsorption site given an updated </span>
+<span class="sd">        atoms object. Please only use this when the indexing of the atoms </span>
+<span class="sd">        object is preserved. Useful for updating adsorption sites e.g. </span>
+<span class="sd">        after geometry optimization. **Please remember to deepcopy the</span>
+<span class="sd">        ClusterAdsorptionSites instance before using update!**</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        atoms : ase.Atoms object</span>
 <span class="sd">            The updated atoms object. </span>
 
-<span class="sd">        update_composition : bool, default False</span>
-<span class="sd">            Whether to update the composition as well. It is recommended</span>
-<span class="sd">            to only set update_composition=True if the composition of </span>
-<span class="sd">            the surface is not fixed.  </span>
+<span class="sd">        full_update : bool, default False</span>
+<span class="sd">            Whether to update the normal vectors and composition as well.</span>
+<span class="sd">            Useful when the composition of the nanoalloy is not fixed.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span> 
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
-        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
-            <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
-            <span class="n">newpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> 
-            <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">newpos</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">update_composition</span><span class="p">:</span>
-                <span class="n">newcomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span>
-                                         <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
-                <span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">newcomp</span>                           </div></div>
+        <span class="n">new_cluster</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[[</span><span class="n">a</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> 
+                             <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adsorbate_elements</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">full_update</span><span class="p">:</span>                                                                      
+            <span class="n">ncas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">new_cluster</span><span class="p">,</span> <span class="n">allow_6fold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span><span class="p">,</span>
+                                          <span class="n">composition_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">,</span> 
+                                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">,</span>
+                                          <span class="n">label_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">,</span>
+                                          <span class="n">surrogate_metal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span><span class="p">,</span>
+                                          <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="n">ncas</span><span class="o">.</span><span class="n">site_list</span>
+                                                                                             
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
+                <span class="n">newpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">new_cluster</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> 
+                <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">newpos</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="group_sites_by_facet"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.group_sites_by_facet">[docs]</a><span class="k">def</span> <span class="nf">group_sites_by_facet</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">sites</span><span class="p">,</span> <span class="n">all_sites</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>            
@@ -1360,9 +1369,10 @@
 <span class="sd">        &gt;&gt;&gt; sas = SlabAdsorptionSites(atoms, surface=&#39;fcc211&#39;,</span>
 <span class="sd">        ...                           allow_6fold=False,</span>
 <span class="sd">        ...                           composition_effect=True,</span>
-<span class="sd">        ...                           label_sites=True)</span>
-<span class="sd">        &gt;&gt;&gt; sites = sas.get_sites()</span>
-<span class="sd">        &gt;&gt;&gt; print(sites[-1])</span>
+<span class="sd">        ...                           label_sites=True,</span>
+<span class="sd">        ...                           surrogate_metal=&#39;Cu&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; site = sas.get_site() # Use sas.get_sites() to get all sites</span>
+<span class="sd">        &gt;&gt;&gt; print(site)</span>
 
 <span class="sd">    Output:</span>
 
@@ -1371,7 +1381,7 @@
 <span class="sd">        {&#39;site&#39;: &#39;hcp&#39;, &#39;surface&#39;: &#39;fcc211&#39;, &#39;morphology&#39;: &#39;sc-tc-h&#39;, </span>
 <span class="sd">         &#39;position&#39;: array([ 4.51584136,  0.63816387, 12.86014042]), </span>
 <span class="sd">         &#39;normal&#39;: array([-0.33333333, -0.        ,  0.94280904]), </span>
-<span class="sd">         &#39;indices&#39;: (0, 2, 3), &#39;composition&#39;: &#39;CuAuAu&#39;, </span>
+<span class="sd">         &#39;indices&#39;: (0, 2, 3), &#39;composition&#39;: &#39;AuAuCu&#39;, </span>
 <span class="sd">         &#39;subsurf_index&#39;: 9, &#39;subsurf_element&#39;: &#39;Cu&#39;, &#39;label&#39;: 28}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1410,8 +1420,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">cell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)),</span> 
-                             <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span> <span class="o">=</span> <span class="n">allow_6fold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span> <span class="o">=</span> <span class="n">composition_effect</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span> <span class="o">=</span> <span class="n">both_sides</span>
@@ -1526,7 +1535,7 @@
                             <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> 
                             <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>                       
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">extraids</span><span class="p">]</span>
+                            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">extraids</span><span class="p">]</span>
                             <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">mb</span>
@@ -1903,16 +1912,11 @@
                                      <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">si</span><span class="p">})</span>           
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">:</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="s1">&#39;hcp10m11&#39;</span> <span class="ow">and</span> <span class="n">morphology</span> <span class="o">==</span> <span class="s1">&#39;subsurf&#39;</span><span class="p">:</span>
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">isubs</span><span class="p">]</span>
+                            <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">isubs</span><span class="p">]))</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">si</span><span class="p">]</span>
-                        <span class="n">comp</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                        <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">comp</span><span class="p">])</span>
+                            <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]))</span>
                         <span class="k">if</span> <span class="n">special</span><span class="p">:</span>
-                            <span class="n">extrasymbols</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">xj</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span><span class="p">[</span><span class="n">xj</span><span class="p">])</span> 
-                                             <span class="k">for</span> <span class="n">xj</span> <span class="ow">in</span> <span class="n">extraids</span><span class="p">]</span>
-                            <span class="n">extra</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">extrasymbols</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                            <span class="n">extracomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extra</span><span class="p">])</span>
+                            <span class="n">extracomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">extraids</span><span class="p">)]))</span>
                             <span class="n">composition</span> <span class="o">+=</span> <span class="s1">&#39;-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">extracomp</span><span class="p">)</span>
                         <span class="n">site</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="n">composition</span><span class="p">})</span>
                     <span class="n">sl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
@@ -1990,7 +1994,7 @@
                                 <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                             <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                                 <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                                <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fold4ids</span><span class="p">]</span>
+                                <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">fold4ids</span><span class="p">]</span>
                                 <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                                 <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                     <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">mb</span>
@@ -2142,7 +2146,7 @@
                             <span class="n">composition</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                             <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">si</span><span class="p">]</span>
+                            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span>
                             <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">composition</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">mb</span>
@@ -2245,7 +2249,7 @@
                             <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
                         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                             <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">si</span><span class="p">]</span>
+                            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span>
                             <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">composition</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">mb</span>
@@ -2410,7 +2414,7 @@
                             <span class="n">comp</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                             <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                            <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">newsi</span><span class="p">]</span>
+                            <span class="n">symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">newsi</span><span class="p">]</span>
                             <span class="n">nma</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">comp</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">mb</span>
@@ -2433,7 +2437,7 @@
                         <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">comp</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
                     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> 
                         <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">metals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                        <span class="n">subsyms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">subi</span><span class="p">]</span> <span class="k">for</span> <span class="n">subi</span> <span class="ow">in</span> <span class="n">subsi</span><span class="p">]</span>
+                        <span class="n">subsyms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">subsi</span><span class="p">]</span>
                         <span class="n">nma</span> <span class="o">=</span> <span class="n">subsyms</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ma</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">nma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                             <span class="n">composition</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">comp</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">mb</span><span class="p">])</span>
@@ -2555,20 +2559,24 @@
             <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">))))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SlabAdsorptionSites.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get information of a site given its atom indices.</span>
+<div class="viewcode-block" id="SlabAdsorptionSites.get_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_site">[docs]</a>    <span class="k">def</span> <span class="nf">get_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get information of an adsorption site.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        indices : list or tuple</span>
+<span class="sd">        indices : list or tuple, default None</span>
 <span class="sd">            The indices of the atoms that contribute to the site.</span>
+<span class="sd">            Return a random site if the indices is not provided.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-        <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
-        <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> 
-                   <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="k">if</span> <span class="n">is_list_or_tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span> <span class="k">if</span> 
+                       <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">st</span></div>
 
 <div class="viewcode-block" id="SlabAdsorptionSites.get_sites"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>                                                                 
@@ -2604,14 +2612,12 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">comp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;[A-Z][^A-Z]*&#39;</span><span class="p">,</span> <span class="n">composition</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
-                    <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
-                                           <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                    <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">comp</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
-                        <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> 
-                                               <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+                        <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">comp</span><span class="p">))</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]]:</span>
+                        <span class="k">if</span> <span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
                             <span class="n">scomp</span> <span class="o">=</span> <span class="n">comp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="n">comp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">scomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
@@ -2939,36 +2945,45 @@
 
         <span class="k">return</span> <span class="n">nbslist</span></div>
 
-<div class="viewcode-block" id="SlabAdsorptionSites.update"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">update_composition</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Update the position and composition of each adsorption site </span>
-<span class="sd">        given an updated atoms object. Please only use this when the </span>
-<span class="sd">        indexing of the atoms object is preserved. Useful for updating</span>
-<span class="sd">        adsorption sites e.g. after geometry optimization.</span>
+<div class="viewcode-block" id="SlabAdsorptionSites.update"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.SlabAdsorptionSites.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">full_update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the position of each adsorption site given an updated</span>
+<span class="sd">        atoms object. Please only use this when the indexing of the atoms </span>
+<span class="sd">        object is preserved. Useful for updating adsorption sites e.g. </span>
+<span class="sd">        after geometry optimization. **Please remember to deepcopy the</span>
+<span class="sd">        SlabAdsorptionSites instance before using update!**</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        atoms : ase.Atoms object</span>
 <span class="sd">            The updated atoms object. </span>
 
-<span class="sd">        update_composition : bool, default False</span>
-<span class="sd">            Whether to update the composition as well. It is recommended</span>
-<span class="sd">            to only set update_composition=True if the composition of </span>
-<span class="sd">            the surface is not fixed.  </span>
+<span class="sd">        full_update : bool, default False</span>
+<span class="sd">            Whether to update the normal vectors and composition as well.</span>
+<span class="sd">            Useful when the composition of the alloy surface is not fixed.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">sl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_list</span>
         <span class="n">new_slab</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[[</span><span class="n">a</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span> <span class="k">if</span> 
                           <span class="n">a</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adsorbate_elements</span><span class="p">]]</span>
-        <span class="n">dvecs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">new_slab</span><span class="o">.</span><span class="n">positions</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
-            <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
-            <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">dvecs</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> 
-            <span class="k">if</span> <span class="n">update_composition</span><span class="p">:</span>
-                <span class="n">newcomp</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span>
-                                         <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atomic_numbers</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
-                <span class="n">st</span><span class="p">[</span><span class="s1">&#39;composition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">newcomp</span>                           </div></div>
+        <span class="k">if</span> <span class="n">full_update</span><span class="p">:</span>                                                                       
+            <span class="n">nsas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">new_slab</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>                         
+                                       <span class="n">allow_6fold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">allow_6fold</span><span class="p">,</span>
+                                       <span class="n">composition_effect</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">composition_effect</span><span class="p">,</span> 
+                                       <span class="n">both_sides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">both_sides</span><span class="p">,</span>
+                                       <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_bridge_sites</span><span class="p">,</span>
+                                       <span class="n">label_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">,</span>
+                                       <span class="n">surrogate_metal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span><span class="p">,</span>
+                                       <span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">,</span>
+                                       <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="n">nsas</span><span class="o">.</span><span class="n">site_list</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dvecs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_mic</span><span class="p">(</span><span class="n">new_slab</span><span class="o">.</span><span class="n">positions</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbc</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">:</span>
+                <span class="n">si</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">])</span>
+                <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">dvecs</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> </div></div>
 
 
 <div class="viewcode-block" id="get_adsorption_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.get_adsorption_site">[docs]</a><span class="k">def</span> <span class="nf">get_adsorption_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> 
@@ -3017,7 +3032,7 @@
 <span class="sd">        {&#39;site&#39;: &#39;fcc&#39;, &#39;surface&#39;: &#39;fcc110&#39;, &#39;morphology&#39;: &#39;sc-tc-h&#39;, </span>
 <span class="sd">         &#39;position&#39;: array([ 3.91083333,  1.91449161, 13.5088516 ]), </span>
 <span class="sd">         &#39;normal&#39;: array([-0.57735027,  0.        ,  0.81649658]), </span>
-<span class="sd">         &#39;indices&#39;: (24, 29, 31), &#39;composition&#39;: &#39;CuCuAu&#39;, </span>
+<span class="sd">         &#39;indices&#39;: (24, 29, 31), &#39;composition&#39;: &#39;AuCuCu&#39;, </span>
 <span class="sd">         &#39;subsurf_index&#39;: None, &#39;subsurf_element&#39;: None, &#39;label&#39;: None}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>

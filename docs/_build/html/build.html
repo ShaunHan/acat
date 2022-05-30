@@ -236,7 +236,7 @@ much faster. Useful when the function is called many times.</p></li>
 <p><strong>Example</strong></p>
 <p>To add a NO molecule to a bridge site consists of one Pt and one
 Ni on the fcc111 surface of a bimetallic truncated octahedron:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">add_adsorbate</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -283,7 +283,7 @@ the surface normal.</p></li>
 <p><strong>Example1</strong></p>
 <p>To add CO to all fcc sites of an icosahedral nanoparticle:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">ClusterAdsorptionSites</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -302,7 +302,7 @@ the surface normal.</p></li>
 surface slab and rotate to the orientation of a neighbor site:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">get_adsorption_site</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.utilities</span> <span class="kn">import</span> <span class="n">get_mic</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
@@ -359,7 +359,7 @@ much faster. Useful when the function is called many times.</p></li>
 <p><strong>Example</strong></p>
 <p>To add a NH molecule to a site with bimetallic label 14 (an hcp
 CuCuAu site) on a bimetallic fcc110 surface slab:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_label</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_label</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc110</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc110</span><span class="p">(</span><span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
@@ -406,8 +406,8 @@ of the whole adsorbate.</p></li>
 CO and one OH:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">remove_adsorbate_from_site</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_site</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">remove_adsorbate_from_site</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc111</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">4</span><span class="p">,</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
@@ -454,7 +454,7 @@ with both CO and OH:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">SlabAdsorptionSites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorbate_coverage</span> <span class="kn">import</span> <span class="n">SlabAdsorbateCoverage</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">remove_adsorbates_from_sites</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">remove_adsorbates_from_sites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span> <span class="o">=</span> <span class="n">fcc111</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">4</span><span class="p">,</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
@@ -506,7 +506,7 @@ be to close. This distance has to be small.</p></li>
 <p>To remove unphysically close adsorbates on the edges of a Marks
 decahedron with 0.75 ML ordered CO coverage:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">special_coverage_pattern</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.action</span> <span class="kn">import</span> <span class="n">remove_adsorbates_too_close</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">remove_adsorbates_too_close</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Decahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Decahedron</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
