@@ -28,7 +28,8 @@ The add_adsorbate function
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Pt' 
         >>> add_adsorbate(atoms, adsorbate='NO', site='bridge',
-        ...               surface='fcc111', composition='NiPt')
+        ...               surface='fcc111', composition='NiPt',
+        ...               surrogate_metal='Ni')
         >>> view(atoms)
 
     Output: 
@@ -100,8 +101,8 @@ The add_adsorbate_to_label function
 
     **Example**
 
-    To add a NH molecule to a site with bimetallic label 14 (an hcp 
-    CuCuAu site) on a bimetallic fcc110 surface slab:
+    To add a NH molecule to a site with bimetallic label 14 (an 
+    hcp CuCuAu site) on a bimetallic fcc110 surface slab:
 
         >>> from acat.build import add_adsorbate_to_label 
         >>> from ase.build import fcc110
@@ -111,8 +112,10 @@ The add_adsorbate_to_label function
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Au'
         ... atoms.center()
-        >>> add_adsorbate_to_label(atoms, adsorbate='NH', label=14,
-        ...                        surface='fcc110', composition_effect=True)
+        >>> add_adsorbate_to_label(atoms, adsorbate='NH', 
+        ...                        label=14, surface='fcc110', 
+        ...                        composition_effect=True,
+        ...                        surrogate_metal='Cu')
         >>> view(atoms)
 
     Output:
@@ -290,7 +293,8 @@ The RandomPatternGenerator class
         >>> atoms = slab + water_bulk
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc100',
         ...                           composition_effect=True,
-        ...                           both_sides=True)
+        ...                           both_sides=True,
+        ...                           surrogate_metal='Ni')
         >>> rpg = RPG(atoms, adsorbate_species=['H','OH','OH2'],
         ...           species_probabilities={'H': 0.25, 'OH': 0.25, 'OH2': 0.5},
         ...           min_adsorbate_distance=2.5,
@@ -328,10 +332,10 @@ The RandomPatternGenerator class
         >>> particles = read('orderings.traj', index=':')
         >>> rpg = RPG(particles, adsorbate_species=['CO','OH','N'],
         ...           min_adsorbate_distance=3.,
-        ...           composition_effect=True)
-        >>> rpg.run(num_gen=20, action='add', num_act=5, 
-        ...         add_species_composition={'CO': 1, 'OH': 2, 'N': 2}, 
-        ...         unique=False)
+        ...           composition_effect=True,
+        ...           surrogate_metal='Ni')
+        >>> rpg.run(num_gen=20, action='add', num_act=5, unique=False,
+        ...         add_species_composition={'CO': 1, 'OH': 2, 'N': 2})
         >>> images = read('patterns.traj', index=':')
         >>> view(images)
 
@@ -362,7 +366,8 @@ The SystematicPatternGenerator class
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Au' 
         >>> atoms.center(vacuum=5.)
-        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True)
+        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True,
+        ...                              surrogate_metal='Cu')
         >>> spg = SPG(atoms, adsorbate_species='CO',
         ...           min_adsorbate_distance=2., 
         ...           adsorption_sites=cas,
@@ -440,7 +445,8 @@ The OrderedPatternGenerator class
         >>> atoms.center()
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc111',
         ...                           allow_6fold=False,
-        ...                           ignore_bridge_sites=True)
+        ...                           ignore_bridge_sites=True,
+        ...                           surrogate_metal='Ni')
         >>> opg = OPG(atoms, adsorbate_species=['C', 'N', 'O', 'OH'],
         ...           surface='fcc111',
         ...           repeating_distance=5.026,
@@ -480,7 +486,8 @@ The OrderedPatternGenerator class
         >>> diagonal_vec = atoms[63].position - atoms[48].position
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc100',
         ...                           allow_6fold=False,
-        ...                           ignore_bridge_sites=False)
+        ...                           ignore_bridge_sites=False,
+        ...                           surrogate_metal='Ni')
         >>> opg = OPG(atoms, adsorbate_species=['C', 'N', 'O', 'OH'],
         ...           surface='fcc100',
         ...           repeating_distance=5.026,
@@ -507,13 +514,12 @@ The special_coverage_pattern function
 
     To add a 0.5 ML CO adlayer pattern on a cuboctahedron:
 
-        >>> from acat.build.adlayer import special_coverage_pattern
+        >>> from acat.build.adlayer import special_coverage_pattern as scp
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = special_coverage_pattern(atoms, adsorbate_species='CO', 
-        ...                                    coverage=0.5)
+        >>> pattern = scp(atoms, adsorbate_species='CO', coverage=0.5)
         >>> view(pattern)
 
     Output:
@@ -524,13 +530,13 @@ The special_coverage_pattern function
 
     To add a 0.5 ML CO adlayer pattern on a fcc111 surface slab:
 
-        >>> from acat.build.adlayer import special_coverage_pattern
+        >>> from acat.build.adlayer import special_coverage_pattern as scp
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
         >>> atoms = fcc111('Cu', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = special_coverage_pattern(atoms, adsorbate_species='CO',
-        ...                                    coverage=0.5, surface='fcc111')
+        >>> pattern = scp(atoms, adsorbate_species='CO',
+        ...               coverage=0.5, surface='fcc111')
         >>> view(pattern)
 
     Output:
@@ -546,13 +552,13 @@ The max_dist_coverage_pattern function
 
     To add 0.33 ML CO to all fcc and hcp sites on an icosahedron:
 
-        >>> from acat.build.adlayer import max_dist_coverage_pattern
+        >>> from acat.build.adlayer import max_dist_coverage_pattern as maxdcp
         >>> from ase.cluster import Icosahedron
         >>> from ase.visualize import view
         >>> atoms = Icosahedron('Au', noshells=5)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = max_dist_coverage_pattern(atoms, adsorbate_species='CO', 
-        ...                                     coverage=0.33, site_types=['fcc','hcp'])
+        >>> pattern = maxdcp(atoms, adsorbate_species='CO', 
+        ...                  coverage=0.33, site_types=['fcc','hcp'])
         >>> view(pattern)
 
     Output:
@@ -566,14 +572,14 @@ The max_dist_coverage_pattern function
     To add N and O (3 : 1 ratio) to all 3fold sites on a bcc110 surface 
     slab: 
 
-        >>> from acat.build.adlayer import max_dist_coverage_pattern
+        >>> from acat.build.adlayer import max_dist_coverage_pattern as maxdcp
         >>> from ase.build import bcc110
         >>> from ase.visualize import view
         >>> atoms = bcc110('Mo', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = max_dist_coverage_pattern(atoms, adsorbate_species=['N','O'],
-        ...                                     species_probabilities={'N': 0.75, 'O':0.25},
-        ...                                     coverage=1, site_types='3fold', surface='bcc110')
+        >>> pattern = maxdcp(atoms, adsorbate_species=['N','O'],
+        ...                  species_probabilities={'N': 0.75, 'O':0.25},
+        ...                  coverage=1, site_types='3fold', surface='bcc110')
         >>> view(pattern)
 
     Output:
@@ -592,13 +598,13 @@ The min_dist_coverage_pattern function
     To add CO randomly onto a cuboctahedron with a minimum adsorbate 
     distance of 5 Angstrom:
 
-        >>> from acat.build.adlayer import min_dist_coverage_pattern
+        >>> from acat.build.adlayer import min_dist_coverage_pattern as mindcp
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Au', length=9, cutoff=4)
         >>> atoms.center(vacuum=5.)
-        >>> pattern = min_dist_coverage_pattern(atoms, adsorbate_species='CO', 
-        ...                                     min_adsorbate_distance=5.)
+        >>> pattern = mindcp(atoms, adsorbate_species='CO', 
+        ...                  min_adsorbate_distance=5.)
         >>> view(pattern)
 
     Output:
@@ -611,17 +617,17 @@ The min_dist_coverage_pattern function
     of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of 
     2 Angstrom:
 
-        >>> from acat.build.adlayer import min_dist_coverage_pattern
+        >>> from acat.build.adlayer import min_dist_coverage_pattern as mindcp
         >>> from ase.build import hcp0001
         >>> from ase.visualize import view
         >>> atoms = hcp0001('Ru', (8, 8, 4), vacuum=5.)
         >>> atoms.center()
-        >>> pattern = min_dist_coverage_pattern(atoms, adsorbate_species=['C','N','O'],
-        ...                                     species_probabilities={'C': 0.25, 
-        ...                                                            'N': 0.25, 
-        ...                                                            'O': 0.5},
-        ...                                     surface='hcp0001',
-        ...                                     min_adsorbate_distance=2.)
+        >>> pattern = mindcp(atoms, adsorbate_species=['C','N','O'],
+        ...                  species_probabilities={'C': 0.25, 
+        ...                                         'N': 0.25, 
+        ...                                         'O': 0.5},
+        ...                  surface='hcp0001',
+        ...                  min_adsorbate_distance=2.)
         >>> view(pattern)
 
     Output:
@@ -635,7 +641,7 @@ The min_dist_coverage_pattern function
     in between) with probabilities of 0.25, 0.25, 0.5, respectively, and a 
     minimum adsorbate distance of 2 Angstrom:
 
-        >>> from acat.build.adlayer import min_dist_coverage_pattern                        
+        >>> from acat.build.adlayer import min_dist_coverage_pattern as mindcp                       
         >>> from ase.io import read
         >>> from ase.build import fcc100 
         >>> from ase.visualize import view
@@ -648,13 +654,14 @@ The min_dist_coverage_pattern function
         >>> slab.translate(-slab.cell[2] / 2)
         >>> slab.wrap()
         >>> atoms = slab + water_bulk
-        >>> pattern = min_dist_coverage_pattern(atoms, adsorbate_species=['H','OH','OH2'],
-        ...                                     species_probabilities={'H': 0.25,
-        ...                                                            'OH': 0.25,
-        ...                                                            'OH2': 0.5},
-        ...                                     surface='fcc100',
-        ...                                     min_adsorbate_distance=2.,
-        ...                                     both_sides=True)
+        >>> pattern = mindcp(atoms, adsorbate_species=['H','OH','OH2'],
+        ...                  species_probabilities={'H': 0.25,
+        ...                                         'OH': 0.25,
+        ...                                         'OH2': 0.5},
+        ...                  surface='fcc100',
+        ...                  min_adsorbate_distance=2.,
+        ...                  both_sides=True,
+        ...                  surrogate_metal='Ni')
         >>> view(pattern) 
 
     Output:

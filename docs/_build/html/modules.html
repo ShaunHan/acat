@@ -232,11 +232,13 @@ otherwise use the monometallic labels.</p></li>
 The generalization of the code is achieved by mapping all
 input atoms to a surrogate transition metal that is
 supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt
-or Au). Try changing the surrogate metal when the site
-identification is not satisfying. If no surrogate metal is
-provided, but the majority of the nanoparticle is a metal
-supported by asap3.EMT, the surrogate metal will be set to
-that metal automatically.</p></li>
+or Au). Ideally this should be the metal that defines the
+lattice constant of the nanoparticle. Try changing the
+surrogate metal when the site identification is not
+satisfying. If no surrogate metal is provided, but the
+majority of the nanoparticle is a metal supported by
+asap3.EMT, the surrogate metal will be set to that metal
+automatically.</p></li>
 <li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default 0.5</em>) – The tolerence of neighbor distance (in Angstrom).
 Might be helpful to adjust this if the site identification
 is not satisfying. When the nanoparticle is small (less
@@ -257,7 +259,8 @@ Au should be good for larger nanoparticles.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="gp">... </span>                             <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="gp">... </span>                             <span class="n">label_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">... </span>                             <span class="n">label_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_site</span><span class="p">()</span> <span class="c1"># Use cas.get_sites() to get all sites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
 </pre></div>
@@ -285,7 +288,7 @@ atoms and collect in a site list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em><em>, </em><em>default None</em>) – The indices of the atoms that contribute to the site.
-Return a random site if the indices is not provided.</p>
+Return a random site if the indices are not provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -554,13 +557,14 @@ otherwise use the monometallic labels.</p></li>
 The generalization of the code is achieved by mapping all
 input atoms to a surrogate transition metal that is
 supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt
-or Au). Try changing the surrogate metal when the site
-identification is not satisfying. When the cell is small,
-Cu is normally the better choice, while the Pt and Au
-should be good for larger cells. If no surrogate metal is
-provided, but the majority of the slab is a metal supported
-by asap3.EMT, the surrogate metal will be set to that metal
-automatically.</p></li>
+or Au). Ideally this should be the metal that defines the
+lattice constant of the slab. Try changing the surrogate
+metal when the site identification is not satisfying. When
+the cell is small, Cu is normally the better choice, while
+the Pt and Au should be good for larger cells. If no
+surrogate metal is provided, but the majority of the slab
+is a metal supported by asap3.EMT, the surrogate metal will
+be set to that metal automatically.</p></li>
 <li><p><strong>optimize_surrogate_cell</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to also optimize the cell during the optimization
 of the surrogate slab. Useful for generalizing the code for
 alloy slabs of various compositions and lattice constants.
@@ -640,7 +644,7 @@ unit cell.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em><em>, </em><em>default None</em>) – The indices of the atoms that contribute to the site.
-Return a random site if the indices is not provided.</p>
+Return a random site if the indices are not provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -780,7 +784,7 @@ Useful when the composition of the alloy surface is not fixed.</p></li>
 <blockquote>
 <div><dl class="py function">
 <dt id="acat.adsorption_sites.get_adsorption_site">
-<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">get_adsorption_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_index</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#get_adsorption_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.get_adsorption_site" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">acat.adsorption_sites.</code><code class="sig-name descname">get_adsorption_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_index</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#get_adsorption_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.get_adsorption_site" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function that returns the information of a site given the
 indices of the atoms that contribute to the site. The function
 is generalized for both periodic and non-periodic systems
@@ -807,7 +811,9 @@ together with the site.</p></li>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">site</span> <span class="o">=</span> <span class="n">get_adsorption_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc110&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site</span> <span class="o">=</span> <span class="n">get_adsorption_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+<span class="gp">... </span>                           <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc110&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                           <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Cu&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -850,22 +856,23 @@ local surface morphology. Only available for surface slabs.</p></li>
 of a Marks decahedral nanoparticle:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.adsorption_sites</span> <span class="kn">import</span> <span class="n">enumerate_adsorption_sites</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Decahedron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Decahedron</span><span class="p">(</span><span class="s1">&#39;Pb&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Decahedron</span><span class="p">(</span><span class="s1">&#39;Pd&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Ag&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">enumerate_adsorption_sites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                   <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">... </span>                                   <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                                   <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Pd&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Output:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;4fold&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">22.63758191</span><span class="p">,</span> <span class="mf">21.69793997</span><span class="p">,</span> <span class="mf">13.75044642</span><span class="p">]),</span>
+ <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">18.86064518</span><span class="p">,</span> <span class="mf">18.12221949</span><span class="p">,</span> <span class="mf">11.87661345</span><span class="p">]),</span>
  <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">0.58778525</span><span class="p">,</span>  <span class="mf">0.80901699</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.</span>        <span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">116</span><span class="p">,</span> <span class="mi">117</span><span class="p">,</span> <span class="mi">118</span><span class="p">,</span> <span class="mi">119</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;AgAgPbPb&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="s1">&#39;Pb&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+ <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">116</span><span class="p">,</span> <span class="mi">117</span><span class="p">,</span> <span class="mi">118</span><span class="p">,</span> <span class="mi">119</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;AgAgPdPd&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="s1">&#39;Pd&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -940,7 +947,8 @@ nearest site to be considered as the atom being bound to the site.</p></li>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fcc&#39;</span><span class="p">:</span>
@@ -953,13 +961,13 @@ nearest site to be considered as the atom being bound to the site.</p></li>
 </div>
 <p>Output:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">6.41470446</span><span class="p">,</span>  <span class="mf">8.17470446</span><span class="p">,</span> <span class="mf">11.69470446</span><span class="p">]),</span>
+ <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">6.17333333</span><span class="p">,</span>  <span class="mf">7.93333333</span><span class="p">,</span> <span class="mf">11.45333333</span><span class="p">]),</span>
  <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">]),</span>
  <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;PtPtPt&#39;</span><span class="p">,</span>
  <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;21CO&#39;</span><span class="p">,</span>
- <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.30000000</span><span class="p">,</span>
- <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span>
- <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">)}</span>
+ <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.3</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span> <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+ <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">)}</span>
 </pre></div>
 </div>
 <dl class="py method">
@@ -989,11 +997,12 @@ of those sites and collect in a heterogeneous site list.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site">
-<code class="sig-name descname">get_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get information of a site given its atom indices.</p>
+<code class="sig-name descname">get_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#ClusterAdsorbateCoverage.get_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.ClusterAdsorbateCoverage.get_site" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information of an adsorption site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em>) – The indices of the atoms that contribute to the site.</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em><em>, </em><em>default None</em>) – The indices of the atoms that contribute to the site.
+Return a random site if the indices are not provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1152,22 +1161,29 @@ nearest site to be considered as the atom being bound to the site.</p></li>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;CH3OH&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span>
-<span class="gp">... </span>              <span class="n">indices</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="gp">... </span>              <span class="n">indices</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Cu&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sac</span> <span class="o">=</span> <span class="n">SlabAdsorbateCoverage</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc211&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                            <span class="n">label_occupied_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">occupied_sites</span> <span class="o">=</span> <span class="n">sac</span><span class="o">.</span><span class="n">get_sites</span><span class="p">(</span><span class="n">occupied_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">occupied_sites</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">occupied_sites</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc211&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="s1">&#39;tc-cc-h&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">2.08423447</span><span class="p">,</span>  <span class="mf">3.82898322</span><span class="p">,</span> <span class="mf">12.00043756</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.33333333</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.94280904</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;AuCu&#39;</span><span class="p">,</span> <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;17OH&#39;</span><span class="p">,</span> <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
- <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.43783658</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CH3OH&#39;</span><span class="p">,</span>
- <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span>
- <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">)}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc211&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="s1">&#39;sc-cc-t&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">1.04211724</span><span class="p">,</span>  <span class="mf">3.82898322</span><span class="p">,</span> <span class="mf">12.73732573</span><span class="p">]),</span>
+  <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;8OH&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span> <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">0.66624136</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CH3OH&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span>
+  <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">)},</span>
+ <span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc211&#39;</span><span class="p">,</span> <span class="s1">&#39;morphology&#39;</span><span class="p">:</span> <span class="s1">&#39;sc-tc-h&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">1.04211724</span><span class="p">,</span>  <span class="mf">6.3816387</span> <span class="p">,</span> <span class="mf">12.73732573</span><span class="p">]),</span>
+  <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.33333333</span><span class="p">,</span>  <span class="mf">0.</span>        <span class="p">,</span>  <span class="mf">0.94280904</span><span class="p">]),</span>
+  <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;6CH3&#39;</span><span class="p">,</span> <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">36</span><span class="p">,</span>
+  <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">0.78070973</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;CH3OH&#39;</span><span class="p">,</span> <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;CH3&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span> <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">39</span><span class="p">)}]</span>
 </pre></div>
 </div>
 <dl class="py method">
@@ -1197,11 +1213,12 @@ of those sites and collect in a heterogeneous site list.</p>
 
 <dl class="py method">
 <dt id="acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site">
-<code class="sig-name descname">get_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get information of a site given its atom indices.</p>
+<code class="sig-name descname">get_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorbate_coverage.html#SlabAdsorbateCoverage.get_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorbate_coverage.SlabAdsorbateCoverage.get_site" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information of an adsorption site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em>) – The indices of the atoms that contribute to the site.</p>
+<dd class="field-odd"><p><strong>indices</strong> (<em>list</em><em> or </em><em>tuple</em><em>, </em><em>default None</em>) – The indices of the atoms that contribute to the site.
+Return a random site if the indices are not provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1340,7 +1357,8 @@ octahedral nanoparticle:</p>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sites</span> <span class="o">=</span> <span class="n">cas</span><span class="o">.</span><span class="n">get_sites</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ontop&#39;</span><span class="p">:</span>
@@ -1350,14 +1368,14 @@ octahedral nanoparticle:</p>
 </pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;ontop&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">6.76</span><span class="p">,</span>  <span class="mf">8.52</span><span class="p">,</span> <span class="mf">10.28</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.57735027</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;ontop&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;edge&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">6.76</span><span class="p">,</span>  <span class="mf">6.76</span><span class="p">,</span> <span class="mf">12.04</span><span class="p">]),</span>
+ <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.70710678</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.70710678</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.</span>        <span class="p">]),</span>
+ <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;Pt&#39;</span><span class="p">,</span> <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
  <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;bonding_index&#39;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span>
- <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.80000000</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span>
- <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span>
- <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">)}</span>
+ <span class="s1">&#39;bond_length&#39;</span><span class="p">:</span> <span class="mf">1.8</span><span class="p">,</span> <span class="s1">&#39;adsorbate&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span> <span class="s1">&#39;fragment&#39;</span><span class="p">:</span> <span class="s1">&#39;OH&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;adsorbate_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">),</span> <span class="s1">&#39;occupied&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dentate&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+ <span class="s1">&#39;fragment_indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">)}</span>
 </pre></div>
 </div>
 </dd></dl>

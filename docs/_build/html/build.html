@@ -244,7 +244,8 @@ Ni on the fcc111 surface of a bimetallic truncated octahedron:</p>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Pt&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">add_adsorbate</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;NO&#39;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="s1">&#39;bridge&#39;</span><span class="p">,</span>
-<span class="gp">... </span>              <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span> <span class="n">composition</span><span class="o">=</span><span class="s1">&#39;NiPt&#39;</span><span class="p">)</span>
+<span class="gp">... </span>              <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span> <span class="n">composition</span><span class="o">=</span><span class="s1">&#39;NiPt&#39;</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -357,8 +358,8 @@ much faster. Useful when the function is called many times.</p></li>
 </dd></dl>
 
 <p><strong>Example</strong></p>
-<p>To add a NH molecule to a site with bimetallic label 14 (an hcp
-CuCuAu site) on a bimetallic fcc110 surface slab:</p>
+<p>To add a NH molecule to a site with bimetallic label 14 (an
+hcp CuCuAu site) on a bimetallic fcc110 surface slab:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build</span> <span class="kn">import</span> <span class="n">add_adsorbate_to_label</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc110</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
@@ -367,8 +368,10 @@ CuCuAu site) on a bimetallic fcc110 surface slab:</p>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
 <span class="gp">... </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">add_adsorbate_to_label</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;NH&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc110&#39;</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">add_adsorbate_to_label</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate</span><span class="o">=</span><span class="s1">&#39;NH&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">label</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc110&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Cu&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -692,7 +695,8 @@ minimum adsorbate distance of 2.5 Angstrom:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">slab</span> <span class="o">+</span> <span class="n">water_bulk</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">both_sides</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">... </span>                          <span class="n">both_sides</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span> <span class="o">=</span> <span class="n">RPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;OH2&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;OH2&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
 <span class="gp">... </span>          <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
@@ -725,10 +729,10 @@ nanoparticles):</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;orderings.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span> <span class="o">=</span> <span class="n">RPG</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="n">add_species_composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;CO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
-<span class="gp">... </span>        <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">... </span>          <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_gen</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="n">num_act</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">add_species_composition</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;CO&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">images</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;patterns.traj&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
 </pre></div>
@@ -843,7 +847,8 @@ distance of 2 Angstrom:</p>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Au&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Cu&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spg</span> <span class="o">=</span> <span class="n">SPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">adsorption_sites</span><span class="o">=</span><span class="n">cas</span><span class="p">,</span>
@@ -1013,7 +1018,8 @@ around each occupied site must be removed:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">... </span>                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">opg</span> <span class="o">=</span> <span class="n">OPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">repeating_distance</span><span class="o">=</span><span class="mf">5.026</span><span class="p">,</span>
@@ -1048,7 +1054,8 @@ are sorted according to the diagonal vector:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">diagonal_vec</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">63</span><span class="p">]</span><span class="o">.</span><span class="n">position</span> <span class="o">-</span> <span class="n">atoms</span><span class="p">[</span><span class="mi">48</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="gp">... </span>                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">... </span>                          <span class="n">ignore_bridge_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">opg</span> <span class="o">=</span> <span class="n">OPG</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH&#39;</span><span class="p">],</span>
 <span class="gp">... </span>          <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="n">repeating_distance</span><span class="o">=</span><span class="mf">5.026</span><span class="p">,</span>
@@ -1115,13 +1122,12 @@ adsorbates.</p></li>
 
 <p><strong>Example1</strong></p>
 <p>To add a 0.5 ML CO adlayer pattern on a cuboctahedron:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">special_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">special_coverage_pattern</span> <span class="k">as</span> <span class="n">scp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Au&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">special_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                   <span class="n">coverage</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">scp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="n">coverage</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1129,13 +1135,13 @@ adsorbates.</p></li>
 <img alt="_images/special_coverage_pattern_1.png" src="_images/special_coverage_pattern_1.png" />
 <p><strong>Example2</strong></p>
 <p>To add a 0.5 ML CO adlayer pattern on a fcc111 surface slab:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">special_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">special_coverage_pattern</span> <span class="k">as</span> <span class="n">scp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc111</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">fcc111</span><span class="p">(</span><span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">special_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                   <span class="n">coverage</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">scp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">coverage</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc111&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1187,13 +1193,13 @@ type is not specified.</p></li>
 
 <p><strong>Example1</strong></p>
 <p>To add 0.33 ML CO to all fcc and hcp sites on an icosahedron:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">max_dist_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">max_dist_coverage_pattern</span> <span class="k">as</span> <span class="n">maxdcp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Icosahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Icosahedron</span><span class="p">(</span><span class="s1">&#39;Au&#39;</span><span class="p">,</span> <span class="n">noshells</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">max_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">coverage</span><span class="o">=</span><span class="mf">0.33</span><span class="p">,</span> <span class="n">site_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fcc&#39;</span><span class="p">,</span><span class="s1">&#39;hcp&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">maxdcp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">coverage</span><span class="o">=</span><span class="mf">0.33</span><span class="p">,</span> <span class="n">site_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;fcc&#39;</span><span class="p">,</span><span class="s1">&#39;hcp&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1202,14 +1208,14 @@ type is not specified.</p></li>
 <p><strong>Example2</strong></p>
 <p>To add N and O (3 : 1 ratio) to all 3fold sites on a bcc110 surface
 slab:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">max_dist_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">max_dist_coverage_pattern</span> <span class="k">as</span> <span class="n">maxdcp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">bcc110</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">bcc110</span><span class="p">(</span><span class="s1">&#39;Mo&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">max_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                    <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">},</span>
-<span class="gp">... </span>                                    <span class="n">coverage</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">site_types</span><span class="o">=</span><span class="s1">&#39;3fold&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;bcc110&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">maxdcp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="n">coverage</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">site_types</span><span class="o">=</span><span class="s1">&#39;3fold&#39;</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;bcc110&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1260,13 +1266,13 @@ type is not specified.</p></li>
 <p><strong>Example1</strong></p>
 <p>To add CO randomly onto a cuboctahedron with a minimum adsorbate
 distance of 5 Angstrom:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span> <span class="k">as</span> <span class="n">mindcp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.cluster</span> <span class="kn">import</span> <span class="n">Octahedron</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">Octahedron</span><span class="p">(</span><span class="s1">&#39;Au&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">mindcp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1276,17 +1282,17 @@ distance of 5 Angstrom:</p>
 <p>To add C, N, O randomly onto a hcp0001 surface slab with probabilities
 of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 2 Angstrom:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span> <span class="k">as</span> <span class="n">mindcp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">hcp0001</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">hcp0001</span><span class="p">(</span><span class="s1">&#39;Ru&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">vacuum</span><span class="o">=</span><span class="mf">5.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span><span class="o">.</span><span class="n">center</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                    <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                           <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                           <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
-<span class="gp">... </span>                                    <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;hcp0001&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">mindcp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">,</span><span class="s1">&#39;O&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                        <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                        <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;hcp0001&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1297,7 +1303,7 @@ of 0.25, 0.25, 0.5, respectively, and a minimum adsorbate distance of
 and bottom interfaces ( <a class="reference download internal" download="" href="_downloads/d4db2def8832c660c65d58623887badd/water_bulk.xyz"><code class="xref download docutils literal notranslate"><span class="pre">bulk</span> <span class="pre">water</span></code></a>
 in between) with probabilities of 0.25, 0.25, 0.5, respectively, and a
 minimum adsorbate distance of 2 Angstrom:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">acat.build.adlayer</span> <span class="kn">import</span> <span class="n">min_dist_coverage_pattern</span> <span class="k">as</span> <span class="n">mindcp</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">fcc100</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
@@ -1310,13 +1316,14 @@ minimum adsorbate distance of 2 Angstrom:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">-</span><span class="n">slab</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slab</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">atoms</span> <span class="o">=</span> <span class="n">slab</span> <span class="o">+</span> <span class="n">water_bulk</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">min_dist_coverage_pattern</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;OH2&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                                    <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                           <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-<span class="gp">... </span>                                                           <span class="s1">&#39;OH2&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
-<span class="gp">... </span>                                    <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
-<span class="gp">... </span>                                    <span class="n">both_sides</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">mindcp</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">adsorbate_species</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span><span class="s1">&#39;OH&#39;</span><span class="p">,</span><span class="s1">&#39;OH2&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                 <span class="n">species_probabilities</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                        <span class="s1">&#39;OH&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">... </span>                                        <span class="s1">&#39;OH2&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+<span class="gp">... </span>                 <span class="n">surface</span><span class="o">=</span><span class="s1">&#39;fcc100&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">both_sides</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">surrogate_metal</span><span class="o">=</span><span class="s1">&#39;Ni&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
 </pre></div>
 </div>
