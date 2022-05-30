@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Adsorbate procreation operators that adds an adsorbate to the surface of 
 a particle or given structure."""
 from ..settings import (adsorbate_elements, 
@@ -18,6 +20,7 @@ from ase import Atoms
 from asap3 import FullNeighborList
 from operator import attrgetter
 from itertools import chain
+from copy import deepcopy
 import numpy as np
 import warnings
 import random
@@ -371,7 +374,7 @@ class AddAdsorbate(AdsorbateOperator):
 
         if True in indi.pbc:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
@@ -379,7 +382,7 @@ class AddAdsorbate(AdsorbateOperator):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs)
@@ -519,7 +522,7 @@ class RemoveAdsorbate(AdsorbateOperator):
 
         if True in indi.pbc:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
@@ -527,7 +530,7 @@ class RemoveAdsorbate(AdsorbateOperator):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs)
@@ -691,7 +694,7 @@ class MoveAdsorbate(AdsorbateOperator):
 
         if True in indi.pbc:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
@@ -699,7 +702,7 @@ class MoveAdsorbate(AdsorbateOperator):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
@@ -874,7 +877,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
 
         if True in indi.pbc:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
@@ -882,7 +885,7 @@ class ReplaceAdsorbate(AdsorbateOperator):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
@@ -1036,7 +1039,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
 
         if True in indi.pbc:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = SlabAdsorptionSites(indi, **self.kwargs)
@@ -1044,7 +1047,7 @@ class ReplaceAdsorbateSpecies(AdsorbateOperator):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(indi)
             else:
                 sas = ClusterAdsorptionSites(indi, **self.kwargs) 
@@ -1620,7 +1623,7 @@ class SimpleCutSpliceCrossoverWithAdsorbates(AdsorbateOperator):
         # Place adsorbates from half of m and remove adsorbates from
         # half of f
         if self.adsorption_sites is not None:
-            cas = self.adsorption_sites
+            cas = deepcopy(self.adsorption_sites)
             cas.update(indi)
         else:
             cas = ClusterAdsorptionSites(indi, **self.kwargs) 

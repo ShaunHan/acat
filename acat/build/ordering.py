@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from ..utilities import (get_mic,
                          partitions_into_totals, 
                          numbers_from_ratios, 

@@ -20,7 +20,7 @@ The add_adsorbate function
     To add a NO molecule to a bridge site consists of one Pt and one 
     Ni on the fcc111 surface of a bimetallic truncated octahedron:
 
-        >>> from acat.build.action import add_adsorbate 
+        >>> from acat.build import add_adsorbate 
         >>> from ase.cluster import Octahedron
         >>> from ase.visualize import view
         >>> atoms = Octahedron('Ni', length=7, cutoff=2)
@@ -47,7 +47,7 @@ The add_adsorbate_to_site function
     To add CO to all fcc sites of an icosahedral nanoparticle:
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
-        >>> from acat.build.action import add_adsorbate_to_site
+        >>> from acat.build import add_adsorbate_to_site
         >>> from ase.cluster import Icosahedron
         >>> from ase.visualize import view
         >>> atoms = Icosahedron('Pt', noshells=5)
@@ -70,7 +70,7 @@ The add_adsorbate_to_site function
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorption_sites import get_adsorption_site
-        >>> from acat.build.action import add_adsorbate_to_site 
+        >>> from acat.build import add_adsorbate_to_site 
         >>> from acat.utilities import get_mic
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
@@ -103,7 +103,7 @@ The add_adsorbate_to_label function
     To add a NH molecule to a site with bimetallic label 14 (an hcp 
     CuCuAu site) on a bimetallic fcc110 surface slab:
 
-        >>> from acat.build.action import add_adsorbate_to_label 
+        >>> from acat.build import add_adsorbate_to_label 
         >>> from ase.build import fcc110
         >>> from ase.visualize import view
         >>> atoms = fcc110('Cu', (3, 3, 8), vacuum=5.)
@@ -133,8 +133,8 @@ The remove_adsorbate_from_site function
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-        >>> from acat.build.action import add_adsorbate_to_site 
-        >>> from acat.build.action import remove_adsorbate_from_site
+        >>> from acat.build import add_adsorbate_to_site 
+        >>> from acat.build import remove_adsorbate_from_site
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
         >>> atoms = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
@@ -165,7 +165,7 @@ The remove_adsorbates_from_sites function
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
         >>> from acat.build.adlayer import min_dist_coverage_pattern
-        >>> from acat.build.action import remove_adsorbates_from_sites
+        >>> from acat.build import remove_adsorbates_from_sites
         >>> from ase.build import fcc111
         >>> from ase.visualize import view
         >>> slab = fcc111('Pt', (6, 6, 4), 4, vacuum=5.)
@@ -196,7 +196,7 @@ The remove_adsorbates_too_close function
     decahedron with 0.75 ML ordered CO coverage:
 
         >>> from acat.build.adlayer import special_coverage_pattern
-        >>> from acat.build.action import remove_adsorbates_too_close
+        >>> from acat.build import remove_adsorbates_too_close
         >>> from ase.cluster import Decahedron
         >>> from ase.visualize import view
         >>> atoms = Decahedron('Pt', p=4, q=3, r=1)

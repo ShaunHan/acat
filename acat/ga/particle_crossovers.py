@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Crossover operations originally intended for medium sized particles"""
 import random
 import numpy as np

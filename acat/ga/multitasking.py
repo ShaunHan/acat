@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Implementation for evolutionary multitasking (EM)"""
 from math import tanh
 from operator import itemgetter

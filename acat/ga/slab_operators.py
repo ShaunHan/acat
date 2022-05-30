@@ -1,5 +1,6 @@
-"""Operators that work on slabs.
-Allowed compositions are respected.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Operators that work on slabs. Allowed compositions are respected.
 Identical indexing of the slabs are assumed for the cut-splice operator."""
 import random
 from operator import itemgetter

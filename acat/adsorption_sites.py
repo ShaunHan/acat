@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from .settings import adsorbate_elements
 from .utilities import (expand_cell, 
                         get_mic, 
@@ -13,7 +15,7 @@ from .labels import (get_monometallic_cluster_labels,
                      get_bimetallic_slab_labels,
                      get_multimetallic_cluster_labels, 
                      get_multimetallic_slab_labels)
-from ase.data import reference_states, atomic_numbers
+from ase.data import reference_states
 from ase.constraints import ExpCellFilter
 from ase.geometry import find_mic, wrap_positions
 from ase.optimize import BFGS, FIRE
@@ -27,6 +29,7 @@ from itertools import combinations, groupby
 import networkx as nx
 import numpy as np
 import warnings
+import random
 import scipy
 import math
 import re
@@ -124,8 +127,8 @@ class ClusterAdsorptionSites(object):
         >>> cas = ClusterAdsorptionSites(atoms, allow_6fold=False,
         ...                              composition_effect=True,
         ...                              label_sites=True)
-        >>> sites = cas.get_sites()
-        >>> print(sites[0])
+        >>> site = cas.get_site() # Use cas.get_sites() to get all sites
+        >>> print(site)
 
     Output:
 
@@ -141,9 +144,9 @@ class ClusterAdsorptionSites(object):
 
     def __init__(self, atoms, 
                  allow_6fold=False, 
-                 composition_effect=False, 
-                 label_sites=False,
+                 composition_effect=False,
                  ignore_bridge_sites=False,
+                 label_sites=False,
                  surrogate_metal=None,
                  tol=.5):
 
@@ -173,8 +176,7 @@ class ClusterAdsorptionSites(object):
         self.ref_atoms = self.mapping(atoms)
         self.cell = atoms.cell
         self.pbc = atoms.pbc
-        self.metals = sorted(list(set(atoms.symbols)), 
-                             key=lambda x: atomic_numbers[x])
+        self.metals = sorted(list(set(atoms.symbols)))
         self.label_sites = label_sites
 
         if self.composition_effect:
@@ -230,10 +232,7 @@ class ClusterAdsorptionSites(object):
                                      'position': np.round(pos, 8),
                                      'indices': si})
                         if self.composition_effect:                         
-                            symbols = [(self.symbols[i], self.numbers[i]) 
-                                       for i in si]
-                            comp = sorted(symbols, key=lambda x: x[1])
-                            composition = ''.join([c[0] for c in comp])
+                            composition = ''.join(sorted(self.symbols[list(si)]))
                             site.update({'composition': composition})
                         sl.append(site)
                         usi.add(si)
@@ -271,7 +270,7 @@ class ClusterAdsorptionSites(object):
                                     composition = 3*metals[0]
                                 elif len(metals) == 2:
                                     ma, mb = metals[0], metals[1]
-                                    symbols = [self.symbols[i] for i in si]
+                                    symbols = self.symbols[list(si)]
                                     nma = symbols.count(ma)
                                     if nma == 0:
                                         composition = 3*mb
@@ -327,7 +326,7 @@ class ClusterAdsorptionSites(object):
                                                     composition = 4*metals[0]
                                                 elif len(metals) == 2:
                                                     ma, mb = metals[0], metals[1]
-                                                    symbols = [self.symbols[i] for i in si]
+                                                    symbols = self.symbols[list(si)]
                                                     nma = symbols.count(ma)
                                                     if nma == 0:
                                                         composition = 4*mb
@@ -410,7 +409,7 @@ class ClusterAdsorptionSites(object):
                             composition = ''.join([comp, 3*metals[0]])
                         elif len(metals) == 2: 
                             ma, mb = metals[0], metals[1]
-                            subsyms = [self.symbols[subi] for subi in subsi]
+                            subsyms = self.symbols[subsi]
                             nma = subsyms.count(ma)
                             if nma == 0:
                                 composition = ''.join([comp, 3*mb])
@@ -440,20 +439,24 @@ class ClusterAdsorptionSites(object):
                     sl.append(site)
                     usi.add(si) 
 
-    def get_site(self, indices):
-        """Get information of a site given its atom indices.
+    def get_site(self, indices=None):
+        """Get information of an adsorption site.
         
         Parameters
         ----------
-        indices : list or tuple
+        indices : list or tuple, default None
             The indices of the atoms that contribute to the site.
-        
+            Return a random site if the indices is not provided.        
+
         """
 
-        indices = indices if is_list_or_tuple(indices) else [indices]
-        indices = tuple(sorted(indices))
-        st = next((s for s in self.site_list if 
-                   s['indices'] == indices), None)
+        if indices is None:
+            st = random.choice(self.site_list)
+        else:
+            indices = indices if is_list_or_tuple(indices) else [indices]
+            indices = tuple(sorted(indices))
+            st = next((s for s in self.site_list if 
+                       s['indices'] == indices), None)
         return st 
 
     def get_sites(self, site=None,
@@ -489,14 +492,12 @@ class ClusterAdsorptionSites(object):
             else:
                 comp = re.findall('[A-Z][^A-Z]*', composition)
                 if len(comp) != 4:
-                    scomp = ''.join(sorted(comp, key=lambda x: 
-                                           atomic_numbers[x]))
+                    scomp = ''.join(sorted(comp))
                 else:
                     if comp[0] != comp[2]:
-                        scomp = ''.join(sorted(comp, key=lambda x: 
-                                               atomic_numbers[x]))
+                        scomp = ''.join(sorted(comp))
                     else:
-                        if atomic_numbers[comp[0]] > atomic_numbers[comp[1]]:
+                        if comp[0] > comp[1]:
                             scomp = comp[1]+comp[0]+comp[3]+comp[2]
                         else:
                             scomp = ''.join(comp)
@@ -979,33 +980,41 @@ class ClusterAdsorptionSites(object):
 
         return nbslist
 
-    def update(self, atoms, update_composition=False):                 
-        """Update the position and composition of each adsorption site 
-        given an updated atoms object. Please only use this when the 
-        indexing of the atoms object is preserved. Useful for updating
-        adsorption sites e.g. after geometry optimization.
+    def update(self, atoms, full_update=False):                 
+        """Update the position of each adsorption site given an updated 
+        atoms object. Please only use this when the indexing of the atoms 
+        object is preserved. Useful for updating adsorption sites e.g. 
+        after geometry optimization. **Please remember to deepcopy the
+        ClusterAdsorptionSites instance before using update!**
         
         Parameters
         ----------
         atoms : ase.Atoms object
             The updated atoms object. 
 
-        update_composition : bool, default False
-            Whether to update the composition as well. It is recommended
-            to only set update_composition=True if the composition of 
-            the surface is not fixed.  
+        full_update : bool, default False
+            Whether to update the normal vectors and composition as well.
+            Useful when the composition of the nanoalloy is not fixed.
 
         """ 
 
         sl = self.site_list
-        for st in sl:
-            si = list(st['indices'])
-            newpos = np.average(atoms.positions[si], 0) 
-            st['position'] = np.round(newpos, 8)
-            if update_composition:
-                newcomp = ''.join(sorted(atoms.symbols[si], key=
-                                         lambda x: atomic_numbers[x]))
-                st['composition'] = newcomp                           
+        new_cluster = atoms[[a.index for a in atoms if 
+                             a.symbol not in adsorbate_elements]]
+        if full_update:                                                                      
+            ncas = ClusterAdsorptionSites(new_cluster, allow_6fold=self.allow_6fold,
+                                          composition_effect=self.composition_effect, 
+                                          ignore_bridge_sites=self.ignore_bridge_sites,
+                                          label_sites=self.label_sites,
+                                          surrogate_metal=self.surrogate_metal,
+                                          tol=self.tol)
+            sl = ncas.site_list
+                                                                                             
+        else:
+            for st in sl:
+                si = list(st['indices'])
+                newpos = np.average(new_cluster.positions[si], 0) 
+                st['position'] = np.round(newpos, 8)
 
 
 def group_sites_by_facet(atoms, sites, all_sites=None):            
@@ -1198,9 +1207,10 @@ class SlabAdsorptionSites(object):
         >>> sas = SlabAdsorptionSites(atoms, surface='fcc211',
         ...                           allow_6fold=False,
         ...                           composition_effect=True,
-        ...                           label_sites=True)
-        >>> sites = sas.get_sites()
-        >>> print(sites[-1])
+        ...                           label_sites=True,
+        ...                           surrogate_metal='Cu')
+        >>> site = sas.get_site() # Use sas.get_sites() to get all sites
+        >>> print(site)
 
     Output:
 
@@ -1209,7 +1219,7 @@ class SlabAdsorptionSites(object):
         {'site': 'hcp', 'surface': 'fcc211', 'morphology': 'sc-tc-h', 
          'position': array([ 4.51584136,  0.63816387, 12.86014042]), 
          'normal': array([-0.33333333, -0.        ,  0.94280904]), 
-         'indices': (0, 2, 3), 'composition': 'CuAuAu', 
+         'indices': (0, 2, 3), 'composition': 'AuAuCu', 
          'subsurf_index': 9, 'subsurf_element': 'Cu', 'label': 28}
 
     """
@@ -1248,8 +1258,7 @@ class SlabAdsorptionSites(object):
         self.ref_atoms, self.delta_positions = self.mapping(atoms) 
         self.cell = atoms.cell
         self.pbc = atoms.pbc
-        self.metals = sorted(list(set(atoms.symbols)), 
-                             key=lambda x: atomic_numbers[x])
+        self.metals = sorted(list(set(atoms.symbols)))
         self.allow_6fold = allow_6fold
         self.composition_effect = composition_effect
         self.both_sides = both_sides
@@ -1364,7 +1373,7 @@ class SlabAdsorptionSites(object):
                             composition = 4*metals[0]
                         elif len(metals) == 2: 
                             ma, mb = metals[0], metals[1]                       
-                            symbols = [self.symbols[i] for i in extraids]
+                            symbols = self.symbols[extraids]
                             nma = symbols.count(ma)
                             if nma == 0:
                                 composition = 4*mb
@@ -1741,16 +1750,11 @@ class SlabAdsorptionSites(object):
                                      'indices': si})           
                     if self.composition_effect:
                         if self.surface == 'hcp10m11' and morphology == 'subsurf':
-                            symbols = [(self.symbols[j], self.numbers[j]) for j in isubs]
+                            composition = ''.join(sorted(self.symbols[isubs]))
                         else:
-                            symbols = [(self.symbols[j], self.numbers[j]) for j in si]
-                        comp = sorted(symbols, key=lambda x: x[1])
-                        composition = ''.join([c[0] for c in comp])
+                            composition = ''.join(sorted(self.symbols[list(si)]))
                         if special:
-                            extrasymbols = [(self.symbols[xj], self.numbers[xj]) 
-                                             for xj in extraids]
-                            extra = sorted(extrasymbols, key=lambda x: x[1])
-                            extracomp = ''.join([e[0] for e in extra])
+                            extracomp = ''.join(sorted(self.symbols[list(extraids)]))
                             composition += '-{}'.format(extracomp)
                         site.update({'composition': composition})
                     sl.append(site)
@@ -1828,7 +1832,7 @@ class SlabAdsorptionSites(object):
                                 composition = 4*metals[0]
                             elif len(metals) == 2:
                                 ma, mb = metals[0], metals[1]
-                                symbols = [self.symbols[i] for i in fold4ids]
+                                symbols = self.symbols[fold4ids]
                                 nma = symbols.count(ma)
                                 if nma == 0:
                                     composition = 4*mb
@@ -1980,7 +1984,7 @@ class SlabAdsorptionSites(object):
                             composition = 3*metals[0]
                         elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
-                            symbols = [self.symbols[i] for i in si]
+                            symbols = self.symbols[list(si)]
                             nma = symbols.count(ma)
                             if nma == 0:
                                 composition = 3*mb
@@ -2083,7 +2087,7 @@ class SlabAdsorptionSites(object):
                             composition = 4*metals[0] 
                         elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
-                            symbols = [self.symbols[i] for i in si]
+                            symbols = self.symbols[list(si)]
                             nma = symbols.count(ma)
                             if nma == 0:
                                 composition = 4*mb
@@ -2248,7 +2252,7 @@ class SlabAdsorptionSites(object):
                             comp = 3*metals[0]
                         elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
-                            symbols = [self.symbols[i] for i in newsi]
+                            symbols = self.symbols[newsi]
                             nma = symbols.count(ma)
                             if nma == 0:
                                 comp = 3*mb
@@ -2271,7 +2275,7 @@ class SlabAdsorptionSites(object):
                         composition = ''.join([comp, 3*metals[0]])
                     elif len(metals) == 2: 
                         ma, mb = metals[0], metals[1]
-                        subsyms = [self.symbols[subi] for subi in subsi]
+                        subsyms = self.symbols[subsi]
                         nma = subsyms.count(ma)
                         if nma == 0:
                             composition = ''.join([comp, 3*mb])
@@ -2393,20 +2397,24 @@ class SlabAdsorptionSites(object):
             s['indices'] = tuple(sorted(np.mod(s['indices'], len(self.atoms))))
             self.site_list.append(s)
 
-    def get_site(self, indices):
-        """Get information of a site given its atom indices.
+    def get_site(self, indices=None):
+        """Get information of an adsorption site.
         
         Parameters
         ----------
-        indices : list or tuple
+        indices : list or tuple, default None
             The indices of the atoms that contribute to the site.
+            Return a random site if the indices is not provided.
         
         """
 
-        indices = indices if is_list_or_tuple(indices) else [indices]
-        indices = tuple(sorted(indices))
-        st = next((s for s in self.site_list if 
-                   s['indices'] == indices), None)
+        if indices is None:
+            st = random.choice(self.site_list)
+        else:
+            indices = indices if is_list_or_tuple(indices) else [indices]
+            indices = tuple(sorted(indices))
+            st = next((s for s in self.site_list if 
+                       s['indices'] == indices), None)
         return st
 
     def get_sites(self, site=None,                                                                 
@@ -2442,14 +2450,12 @@ class SlabAdsorptionSites(object):
             else:
                 comp = re.findall('[A-Z][^A-Z]*', composition)
                 if len(comp) != 4:
-                    scomp = ''.join(sorted(comp, key=lambda x: 
-                                           atomic_numbers[x]))
+                    scomp = ''.join(sorted(comp))
                 else:
                     if comp[0] != comp[2]:
-                        scomp = ''.join(sorted(comp, key=lambda x: 
-                                               atomic_numbers[x]))
+                        scomp = ''.join(sorted(comp))
                     else:
-                        if atomic_numbers[comp[0]] > atomic_numbers[comp[1]]:
+                        if comp[0] > comp[1]:
                             scomp = comp[1]+comp[0]+comp[3]+comp[2]
                         else:
                             scomp = ''.join(comp)
@@ -2777,36 +2783,45 @@ class SlabAdsorptionSites(object):
 
         return nbslist
 
-    def update(self, atoms, update_composition=False):
-        """Update the position and composition of each adsorption site 
-        given an updated atoms object. Please only use this when the 
-        indexing of the atoms object is preserved. Useful for updating
-        adsorption sites e.g. after geometry optimization.
+    def update(self, atoms, full_update=False):
+        """Update the position of each adsorption site given an updated
+        atoms object. Please only use this when the indexing of the atoms 
+        object is preserved. Useful for updating adsorption sites e.g. 
+        after geometry optimization. **Please remember to deepcopy the
+        SlabAdsorptionSites instance before using update!**
         
         Parameters
         ----------
         atoms : ase.Atoms object
             The updated atoms object. 
 
-        update_composition : bool, default False
-            Whether to update the composition as well. It is recommended
-            to only set update_composition=True if the composition of 
-            the surface is not fixed.  
+        full_update : bool, default False
+            Whether to update the normal vectors and composition as well.
+            Useful when the composition of the alloy surface is not fixed.
 
         """
 
         sl = self.site_list
         new_slab = atoms[[a.index for a in atoms if 
                           a.symbol not in adsorbate_elements]]
-        dvecs, _ = find_mic(new_slab.positions - self.positions,
-                            self.cell, self.pbc)
-        for st in sl:
-            si = list(st['indices'])
-            st['position'] += np.average(dvecs[si], 0) 
-            if update_composition:
-                newcomp = ''.join(sorted(atoms.symbols[si], key=
-                                         lambda x: atomic_numbers[x]))
-                st['composition'] = newcomp                           
+        if full_update:                                                                       
+            nsas = SlabAdsorptionSites(new_slab, surface=self.surface,                         
+                                       allow_6fold=self.allow_6fold,
+                                       composition_effect=self.composition_effect, 
+                                       both_sides=self.both_sides,
+                                       ignore_bridge_sites=self.ignore_bridge_sites,
+                                       label_sites=self.label_sites,
+                                       surrogate_metal=self.surrogate_metal,
+                                       optimize_surrogate_cell=self.optimize_surrogate_cell,
+                                       tol=self.tol)
+            sl = nsas.site_list
+
+        else:
+            dvecs, _ = find_mic(new_slab.positions - self.positions,
+                                self.cell, self.pbc)
+            for st in sl:
+                si = list(st['indices'])
+                st['position'] += np.average(dvecs[si], 0) 
 
 
 def get_adsorption_site(atoms, indices, 
@@ -2855,7 +2870,7 @@ def get_adsorption_site(atoms, indices,
         {'site': 'fcc', 'surface': 'fcc110', 'morphology': 'sc-tc-h', 
          'position': array([ 3.91083333,  1.91449161, 13.5088516 ]), 
          'normal': array([-0.57735027,  0.        ,  0.81649658]), 
-         'indices': (24, 29, 31), 'composition': 'CuCuAu', 
+         'indices': (24, 29, 31), 'composition': 'AuCuCu', 
          'subsurf_index': None, 'subsurf_element': None, 'label': None}
 
     """

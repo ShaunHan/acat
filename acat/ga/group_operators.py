@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Procreation operators meant to be used in symmetry-constrained
 genetic algorithm (SCGA)."""
 from ..settings import site_heights
@@ -379,7 +381,7 @@ class AdsorbateGroupSubstitute(Mutation):
         atoms = atoms.copy() 
         if True in atoms.pbc:                                          
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(atoms)
             else:
                 sas = SlabAdsorptionSites(atoms, **self.kwargs)
@@ -387,7 +389,7 @@ class AdsorbateGroupSubstitute(Mutation):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(atoms)
             else:
                 sas = ClusterAdsorptionSites(atoms, **self.kwargs)
@@ -613,7 +615,7 @@ class AdsorbateGroupPermutation(Mutation):
 
         if True in f.pbc:                                          
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(f)
             else:
                 sas = SlabAdsorptionSites(f, **self.kwargs)
@@ -621,7 +623,7 @@ class AdsorbateGroupPermutation(Mutation):
                                         self.subtract_heights, dmax=self.dmax)
         else:
             if self.adsorption_sites is not None:
-                sas = self.adsorption_sites
+                sas = deepcopy(self.adsorption_sites)
                 sas.update(f)
             else:
                 sas = ClusterAdsorptionSites(f, **self.kwargs)
