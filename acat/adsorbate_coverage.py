@@ -16,6 +16,7 @@ from operator import attrgetter
 from copy import deepcopy
 import networkx as nx
 import numpy as np
+import random
 
 
 class ClusterAdsorbateCoverage(object):
@@ -96,7 +97,8 @@ class ClusterAdsorbateCoverage(object):
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Pt'
         >>> atoms.center(vacuum=5.)
-        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True) 
+        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True,
+        ...                              surrogate_metal='Ni') 
         >>> sites = cas.get_sites()
         >>> for s in sites:
         ...     if s['site'] == 'fcc':
@@ -111,13 +113,13 @@ class ClusterAdsorbateCoverage(object):
     .. code-block:: python
 
         {'site': 'fcc', 'surface': 'fcc111', 
-         'position': array([ 6.41470446,  8.17470446, 11.69470446]), 
+         'position': array([ 6.17333333,  7.93333333, 11.45333333]), 
          'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
          'indices': (0, 2, 4), 'composition': 'PtPtPt', 
          'subsurf_index': None, 'subsurf_element': None, 'label': '21CO', 
-         'bonding_index': 201, 'bond_length': 1.30000000, 
-         'adsorbate': 'CO', 'fragment': 'CO', 'adsorbate_indices': (201, 202), 
-         'occupied': 1, 'dentate': 1, 'fragment_indices': (201, 202)}
+         'bonding_index': 201, 'bond_length': 1.3, 'adsorbate': 'CO', 
+         'fragment': 'CO', 'adsorbate_indices': (201, 202), 'occupied': 1, 
+         'dentate': 1, 'fragment_indices': (201, 202)}
 
     """
 
@@ -391,20 +393,24 @@ class ClusterAdsorbateCoverage(object):
         self.adsorbate_list = self.monodentate_adsorbate_list + \
                               self.multidentate_adsorbate_list 
 
-    def get_site(self, indices):
-        """Get information of a site given its atom indices.
+    def get_site(self, indices=None):
+        """Get information of an adsorption site.
         
         Parameters
         ----------
-        indices : list or tuple
-            The indices of the atoms that contribute to the site.
-        
+        indices : list or tuple, default None
+            The indices of the atoms that contribute to the site. 
+            Return a random site if the indices are not provided.        
+
         """
 
-        indices = indices if is_list_or_tuple(indices) else [indices]
-        indices = tuple(sorted(indices))
-        st = next((s for s in self.hetero_site_list if 
-                   s['indices'] == indices), None)
+        if indices is None:
+            st = random.choice(self.hetero_site_list)
+        else:
+            indices = indices if is_list_or_tuple(indices) else [indices]
+            indices = tuple(sorted(indices))
+            st = next((s for s in self.hetero_site_list if 
+                       s['indices'] == indices), None)
         return st
 
     def get_sites(self, occupied_only=False):
@@ -733,24 +739,31 @@ class SlabAdsorbateCoverage(object):
         ...         atom.symbol = 'Au'
         >>> atoms.center()
         >>> add_adsorbate(atoms, adsorbate='CH3OH', surface='fcc211',
-        ...               indices=(5, 7, 8))
+        ...               indices=(5, 7, 8), surrogate_metal='Cu')
         >>> sac = SlabAdsorbateCoverage(atoms, surface='fcc211', 
         ...                             label_occupied_sites=True)
         >>> occupied_sites = sac.get_sites(occupied_only=True)
-        >>> print(occupied_sites[0])
+        >>> print(occupied_sites)
 
     Output:
 
     .. code-block:: python
 
-        {'site': 'bridge', 'surface': 'fcc211', 'morphology': 'tc-cc-h', 
-         'position': array([ 2.08423447,  3.82898322, 12.00043756]), 
-         'normal': array([-0.33333333,  0.        ,  0.94280904]), 
-         'indices': (4, 7), 'composition': 'AuCu', 'subsurf_index': None, 
-         'subsurf_element': None, 'label': '17OH', 'bonding_index': 40, 
-         'bond_length': 1.43783658, 'adsorbate': 'CH3OH', 
-         'fragment': 'OH', 'adsorbate_indices': (36, 37, 38, 39, 40, 41), 
-         'occupied': 1, 'dentate': 2, 'fragment_indices': (40, 41)}
+        [{'site': 'bridge', 'surface': 'fcc211', 'morphology': 'sc-cc-t', 
+          'position': array([ 1.04211724,  3.82898322, 12.73732573]), 
+          'normal': nan, 'indices': (1, 4), 'composition': None, 
+          'subsurf_index': None, 'subsurf_element': None, 'label': '8OH', 
+          'bonding_index': 40, 'bond_length': 0.66624136, 'adsorbate': 'CH3OH', 
+          'fragment': 'OH', 'adsorbate_indices': (36, 37, 38, 39, 40, 41), 
+          'occupied': 1, 'dentate': 2, 'fragment_indices': (40, 41)}, 
+         {'site': 'bridge', 'surface': 'fcc211', 'morphology': 'sc-tc-h', 
+          'position': array([ 1.04211724,  6.3816387 , 12.73732573]), 
+          'normal': array([-0.33333333,  0.        ,  0.94280904]), 
+          'indices': (2, 5), 'composition': None, 'subsurf_index': None, 
+          'subsurf_element': None, 'label': '6CH3', 'bonding_index': 36, 
+          'bond_length': 0.78070973, 'adsorbate': 'CH3OH', 'fragment': 'CH3', 
+          'adsorbate_indices': (36, 37, 38, 39, 40, 41), 'occupied': 1, 
+          'dentate': 2, 'fragment_indices': (36, 37, 38, 39)}]
 
     """
 
@@ -1027,20 +1040,24 @@ class SlabAdsorbateCoverage(object):
         self.adsorbate_list = self.monodentate_adsorbate_list + \
                               self.multidentate_adsorbate_list 
 
-    def get_site(self, indices):
-        """Get information of a site given its atom indices.
+    def get_site(self, indices=None):
+        """Get information of an adsorption site.
         
         Parameters
         ----------
-        indices : list or tuple
+        indices : list or tuple, default None
             The indices of the atoms that contribute to the site.
-        
+            Return a random site if the indices are not provided.   
+
         """
 
-        indices = indices if is_list_or_tuple(indices) else [indices]
-        indices = tuple(sorted(indices))
-        st = next((s for s in self.hetero_site_list if 
-                   s['indices'] == indices), None)
+        if indices is None:
+            st = random.choice(self.hetero_site_list)
+        else:
+            indices = indices if is_list_or_tuple(indices) else [indices]
+            indices = tuple(sorted(indices))
+            st = next((s for s in self.hetero_site_list if 
+                       s['indices'] == indices), None)
         return st
 
     def get_sites(self, occupied_only=False):
@@ -1374,7 +1391,8 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Pt'
         >>> atoms.center(vacuum=5.)
-        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True) 
+        >>> cas = ClusterAdsorptionSites(atoms, composition_effect=True,
+        ...                              surrogate_metal='Ni') 
         >>> sites = cas.get_sites()
         >>> for s in sites:
         ...     if s['site'] == 'ontop':
@@ -1386,14 +1404,14 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
 
     .. code-block:: python
 
-        {'site': 'ontop', 'surface': 'fcc111', 
-         'position': array([ 6.76,  8.52, 10.28]), 
-         'normal': array([-0.57735027, -0.57735027, -0.57735027]), 
-         'indices': (2,), 'composition': 'Pt', 'subsurf_index': None, 
+        {'site': 'ontop', 'surface': 'edge', 
+         'position': array([ 6.76,  6.76, 12.04]), 
+         'normal': array([-0.70710678, -0.70710678, -0.        ]), 
+         'indices': (0,), 'composition': 'Pt', 'subsurf_index': None, 
          'subsurf_element': None, 'label': None, 'bonding_index': 201, 
-         'bond_length': 1.80000000, 'adsorbate': 'OH', 
-         'fragment': 'OH', 'adsorbate_indices': (201, 202), 
-         'occupied': 1, 'dentate': 1, 'fragment_indices': (201, 202)}
+         'bond_length': 1.8, 'adsorbate': 'OH', 'fragment': 'OH', 
+         'adsorbate_indices': (201, 202), 'occupied': 1, 'dentate': 1, 
+         'fragment_indices': (201, 202)}
 
     """
 

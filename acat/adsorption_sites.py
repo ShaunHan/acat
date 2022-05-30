@@ -99,11 +99,13 @@ class ClusterAdsorptionSites(object):
         The generalization of the code is achieved by mapping all 
         input atoms to a surrogate transition metal that is 
         supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt 
-        or Au). Try changing the surrogate metal when the site 
-        identification is not satisfying. If no surrogate metal is
-        provided, but the majority of the nanoparticle is a metal       
-        supported by asap3.EMT, the surrogate metal will be set to 
-        that metal automatically.
+        or Au). Ideally this should be the metal that defines the
+        lattice constant of the nanoparticle. Try changing the 
+        surrogate metal when the site identification is not 
+        satisfying. If no surrogate metal is provided, but the 
+        majority of the nanoparticle is a metal supported by 
+        asap3.EMT, the surrogate metal will be set to that metal 
+        automatically.
 
     tol : float, default 0.5
         The tolerence of neighbor distance (in Angstrom).
@@ -126,7 +128,8 @@ class ClusterAdsorptionSites(object):
         >>> atoms.center(vacuum=5.)
         >>> cas = ClusterAdsorptionSites(atoms, allow_6fold=False,
         ...                              composition_effect=True,
-        ...                              label_sites=True)
+        ...                              label_sites=True,
+        ...                              surrogate_metal='Ni')
         >>> site = cas.get_site() # Use cas.get_sites() to get all sites
         >>> print(site)
 
@@ -446,7 +449,7 @@ class ClusterAdsorptionSites(object):
         ----------
         indices : list or tuple, default None
             The indices of the atoms that contribute to the site.
-            Return a random site if the indices is not provided.        
+            Return a random site if the indices are not provided.        
 
         """
 
@@ -1172,13 +1175,14 @@ class SlabAdsorptionSites(object):
         The generalization of the code is achieved by mapping all 
         input atoms to a surrogate transition metal that is 
         supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt 
-        or Au). Try changing the surrogate metal when the site 
-        identification is not satisfying. When the cell is small, 
-        Cu is normally the better choice, while the Pt and Au 
-        should be good for larger cells. If no surrogate metal is
-        provided, but the majority of the slab is a metal supported     
-        by asap3.EMT, the surrogate metal will be set to that metal 
-        automatically.
+        or Au). Ideally this should be the metal that defines the
+        lattice constant of the slab. Try changing the surrogate 
+        metal when the site identification is not satisfying. When 
+        the cell is small, Cu is normally the better choice, while 
+        the Pt and Au should be good for larger cells. If no 
+        surrogate metal is provided, but the majority of the slab 
+        is a metal supported by asap3.EMT, the surrogate metal will 
+        be set to that metal automatically.
 
     optimize_surrogate_cell : bool, default False
         Whether to also optimize the cell during the optimization
@@ -2404,7 +2408,7 @@ class SlabAdsorptionSites(object):
         ----------
         indices : list or tuple, default None
             The indices of the atoms that contribute to the site.
-            Return a random site if the indices is not provided.
+            Return a random site if the indices are not provided.
         
         """
 
@@ -2824,9 +2828,8 @@ class SlabAdsorptionSites(object):
                 st['position'] += np.average(dvecs[si], 0) 
 
 
-def get_adsorption_site(atoms, indices, 
-                        surface=None, 
-                        return_index=False):
+def get_adsorption_site(atoms, indices, surface=None, 
+                        return_index=False, **kwargs):
     """A function that returns the information of a site given the
     indices of the atoms that contribute to the site. The function 
     is generalized for both periodic and non-periodic systems
@@ -2860,7 +2863,9 @@ def get_adsorption_site(atoms, indices,
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Au'
         >>> atoms.center()
-        >>> site = get_adsorption_site(atoms, (24, 29, 31), surface='fcc110') 
+        >>> site = get_adsorption_site(atoms, (24, 29, 31), 
+        ...                            surface='fcc110',
+        ...                            surrogate_metal='Cu') 
         >>> print(site)
 
     Output:
@@ -2880,11 +2885,11 @@ def get_adsorption_site(atoms, indices,
 
     if True not in atoms.pbc:
         sas = ClusterAdsorptionSites(atoms, allow_6fold=True,
-                                     composition_effect=True)                                                             
+                                     composition_effect=True, **kwargs)                                                             
     else:
         sas = SlabAdsorptionSites(atoms, surface, 
                                   allow_6fold=True, 
-                                  composition_effect=True)             
+                                  composition_effect=True, **kwargs)             
     site_list = sas.site_list
     sti, site = next(((i, s) for i, s in enumerate(site_list) if                        
                       s['indices'] == indices), None)                     
@@ -2923,13 +2928,14 @@ def enumerate_adsorption_sites(atoms, surface=None,
 
         >>> from acat.adsorption_sites import enumerate_adsorption_sites
         >>> from ase.cluster import Decahedron
-        >>> atoms = Decahedron('Pb', p=3, q=2, r=1)
+        >>> atoms = Decahedron('Pd', p=3, q=2, r=1)
         >>> for atom in atoms:
         ...     if atom.index % 2 == 0:
         ...         atom.symbol = 'Ag'
         >>> atoms.center(vacuum=5.)
         >>> sites = enumerate_adsorption_sites(atoms, surface='fcc100',
-        ...                                    composition_effect=True) 
+        ...                                    composition_effect=True,
+        ...                                    surrogate_metal='Pd')
         >>> print(sites[0])
 
     Output:
@@ -2937,10 +2943,10 @@ def enumerate_adsorption_sites(atoms, surface=None,
     .. code-block:: python
 
         {'site': '4fold', 'surface': 'fcc100', 
-         'position': array([22.63758191, 21.69793997, 13.75044642]), 
+         'position': array([18.86064518, 18.12221949, 11.87661345]), 
          'normal': array([ 0.58778525,  0.80901699, -0.        ]), 
-         'indices': (116, 117, 118, 119), 'composition': 'AgAgPbPb', 
-         'subsurf_index': 75, 'subsurf_element': 'Pb', 'label': None}
+         'indices': (116, 117, 118, 119), 'composition': 'AgAgPdPd', 
+         'subsurf_index': 75, 'subsurf_element': 'Pd', 'label': None}
 
     """
 

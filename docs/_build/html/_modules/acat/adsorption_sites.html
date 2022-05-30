@@ -261,11 +261,13 @@
 <span class="sd">        The generalization of the code is achieved by mapping all </span>
 <span class="sd">        input atoms to a surrogate transition metal that is </span>
 <span class="sd">        supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt </span>
-<span class="sd">        or Au). Try changing the surrogate metal when the site </span>
-<span class="sd">        identification is not satisfying. If no surrogate metal is</span>
-<span class="sd">        provided, but the majority of the nanoparticle is a metal       </span>
-<span class="sd">        supported by asap3.EMT, the surrogate metal will be set to </span>
-<span class="sd">        that metal automatically.</span>
+<span class="sd">        or Au). Ideally this should be the metal that defines the</span>
+<span class="sd">        lattice constant of the nanoparticle. Try changing the </span>
+<span class="sd">        surrogate metal when the site identification is not </span>
+<span class="sd">        satisfying. If no surrogate metal is provided, but the </span>
+<span class="sd">        majority of the nanoparticle is a metal supported by </span>
+<span class="sd">        asap3.EMT, the surrogate metal will be set to that metal </span>
+<span class="sd">        automatically.</span>
 
 <span class="sd">    tol : float, default 0.5</span>
 <span class="sd">        The tolerence of neighbor distance (in Angstrom).</span>
@@ -288,7 +290,8 @@
 <span class="sd">        &gt;&gt;&gt; atoms.center(vacuum=5.)</span>
 <span class="sd">        &gt;&gt;&gt; cas = ClusterAdsorptionSites(atoms, allow_6fold=False,</span>
 <span class="sd">        ...                              composition_effect=True,</span>
-<span class="sd">        ...                              label_sites=True)</span>
+<span class="sd">        ...                              label_sites=True,</span>
+<span class="sd">        ...                              surrogate_metal=&#39;Ni&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; site = cas.get_site() # Use cas.get_sites() to get all sites</span>
 <span class="sd">        &gt;&gt;&gt; print(site)</span>
 
@@ -608,7 +611,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        indices : list or tuple, default None</span>
 <span class="sd">            The indices of the atoms that contribute to the site.</span>
-<span class="sd">            Return a random site if the indices is not provided.        </span>
+<span class="sd">            Return a random site if the indices are not provided.        </span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1334,13 +1337,14 @@
 <span class="sd">        The generalization of the code is achieved by mapping all </span>
 <span class="sd">        input atoms to a surrogate transition metal that is </span>
 <span class="sd">        supported by the asap3.EMT calculator (Ni, Cu, Pd, Ag, Pt </span>
-<span class="sd">        or Au). Try changing the surrogate metal when the site </span>
-<span class="sd">        identification is not satisfying. When the cell is small, </span>
-<span class="sd">        Cu is normally the better choice, while the Pt and Au </span>
-<span class="sd">        should be good for larger cells. If no surrogate metal is</span>
-<span class="sd">        provided, but the majority of the slab is a metal supported     </span>
-<span class="sd">        by asap3.EMT, the surrogate metal will be set to that metal </span>
-<span class="sd">        automatically.</span>
+<span class="sd">        or Au). Ideally this should be the metal that defines the</span>
+<span class="sd">        lattice constant of the slab. Try changing the surrogate </span>
+<span class="sd">        metal when the site identification is not satisfying. When </span>
+<span class="sd">        the cell is small, Cu is normally the better choice, while </span>
+<span class="sd">        the Pt and Au should be good for larger cells. If no </span>
+<span class="sd">        surrogate metal is provided, but the majority of the slab </span>
+<span class="sd">        is a metal supported by asap3.EMT, the surrogate metal will </span>
+<span class="sd">        be set to that metal automatically.</span>
 
 <span class="sd">    optimize_surrogate_cell : bool, default False</span>
 <span class="sd">        Whether to also optimize the cell during the optimization</span>
@@ -2566,7 +2570,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        indices : list or tuple, default None</span>
 <span class="sd">            The indices of the atoms that contribute to the site.</span>
-<span class="sd">            Return a random site if the indices is not provided.</span>
+<span class="sd">            Return a random site if the indices are not provided.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -2986,9 +2990,8 @@
                 <span class="n">st</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">dvecs</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> </div></div>
 
 
-<div class="viewcode-block" id="get_adsorption_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.get_adsorption_site">[docs]</a><span class="k">def</span> <span class="nf">get_adsorption_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> 
-                        <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                        <span class="n">return_index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="get_adsorption_site"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.get_adsorption_site">[docs]</a><span class="k">def</span> <span class="nf">get_adsorption_site</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                        <span class="n">return_index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function that returns the information of a site given the</span>
 <span class="sd">    indices of the atoms that contribute to the site. The function </span>
 <span class="sd">    is generalized for both periodic and non-periodic systems</span>
@@ -3022,7 +3025,9 @@
 <span class="sd">        ...     if atom.index % 2 == 0:</span>
 <span class="sd">        ...         atom.symbol = &#39;Au&#39;</span>
 <span class="sd">        &gt;&gt;&gt; atoms.center()</span>
-<span class="sd">        &gt;&gt;&gt; site = get_adsorption_site(atoms, (24, 29, 31), surface=&#39;fcc110&#39;) </span>
+<span class="sd">        &gt;&gt;&gt; site = get_adsorption_site(atoms, (24, 29, 31), </span>
+<span class="sd">        ...                            surface=&#39;fcc110&#39;,</span>
+<span class="sd">        ...                            surrogate_metal=&#39;Cu&#39;) </span>
 <span class="sd">        &gt;&gt;&gt; print(site)</span>
 
 <span class="sd">    Output:</span>
@@ -3042,11 +3047,11 @@
 
     <span class="k">if</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">:</span>
         <span class="n">sas</span> <span class="o">=</span> <span class="n">ClusterAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                     <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>                                                             
+                                     <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>                                                             
     <span class="k">else</span><span class="p">:</span>
         <span class="n">sas</span> <span class="o">=</span> <span class="n">SlabAdsorptionSites</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">surface</span><span class="p">,</span> 
                                   <span class="n">allow_6fold</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
-                                  <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>             
+                                  <span class="n">composition_effect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>             
     <span class="n">site_list</span> <span class="o">=</span> <span class="n">sas</span><span class="o">.</span><span class="n">site_list</span>
     <span class="n">sti</span><span class="p">,</span> <span class="n">site</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">site_list</span><span class="p">)</span> <span class="k">if</span>                        
                       <span class="n">s</span><span class="p">[</span><span class="s1">&#39;indices&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">indices</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>                     
@@ -3085,13 +3090,14 @@
 
 <span class="sd">        &gt;&gt;&gt; from acat.adsorption_sites import enumerate_adsorption_sites</span>
 <span class="sd">        &gt;&gt;&gt; from ase.cluster import Decahedron</span>
-<span class="sd">        &gt;&gt;&gt; atoms = Decahedron(&#39;Pb&#39;, p=3, q=2, r=1)</span>
+<span class="sd">        &gt;&gt;&gt; atoms = Decahedron(&#39;Pd&#39;, p=3, q=2, r=1)</span>
 <span class="sd">        &gt;&gt;&gt; for atom in atoms:</span>
 <span class="sd">        ...     if atom.index % 2 == 0:</span>
 <span class="sd">        ...         atom.symbol = &#39;Ag&#39;</span>
 <span class="sd">        &gt;&gt;&gt; atoms.center(vacuum=5.)</span>
 <span class="sd">        &gt;&gt;&gt; sites = enumerate_adsorption_sites(atoms, surface=&#39;fcc100&#39;,</span>
-<span class="sd">        ...                                    composition_effect=True) </span>
+<span class="sd">        ...                                    composition_effect=True,</span>
+<span class="sd">        ...                                    surrogate_metal=&#39;Pd&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; print(sites[0])</span>
 
 <span class="sd">    Output:</span>
@@ -3099,10 +3105,10 @@
 <span class="sd">    .. code-block:: python</span>
 
 <span class="sd">        {&#39;site&#39;: &#39;4fold&#39;, &#39;surface&#39;: &#39;fcc100&#39;, </span>
-<span class="sd">         &#39;position&#39;: array([22.63758191, 21.69793997, 13.75044642]), </span>
+<span class="sd">         &#39;position&#39;: array([18.86064518, 18.12221949, 11.87661345]), </span>
 <span class="sd">         &#39;normal&#39;: array([ 0.58778525,  0.80901699, -0.        ]), </span>
-<span class="sd">         &#39;indices&#39;: (116, 117, 118, 119), &#39;composition&#39;: &#39;AgAgPbPb&#39;, </span>
-<span class="sd">         &#39;subsurf_index&#39;: 75, &#39;subsurf_element&#39;: &#39;Pb&#39;, &#39;label&#39;: None}</span>
+<span class="sd">         &#39;indices&#39;: (116, 117, 118, 119), &#39;composition&#39;: &#39;AgAgPdPd&#39;, </span>
+<span class="sd">         &#39;subsurf_index&#39;: 75, &#39;subsurf_element&#39;: &#39;Pd&#39;, &#39;label&#39;: None}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
