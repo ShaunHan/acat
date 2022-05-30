@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from ..settings import (adsorbate_elements, 
                         site_heights,  
                         adsorbate_list, 

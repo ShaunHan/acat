@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Comparator objects relevant to particles with adsorbates."""
 from ase import Atoms
 

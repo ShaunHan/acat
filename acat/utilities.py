@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from ase.data import (covalent_radii, 
                       atomic_numbers, 
                       atomic_masses)

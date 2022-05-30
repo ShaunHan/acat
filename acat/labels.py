@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from itertools import product 
 
 # Use this label dictionary when site compostion is 

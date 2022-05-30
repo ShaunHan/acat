@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from .settings import (adsorbate_elements,
                        site_heights,
                        adsorbate_formulas)
@@ -744,7 +746,7 @@ class SlabAdsorbateCoverage(object):
         {'site': 'bridge', 'surface': 'fcc211', 'morphology': 'tc-cc-h', 
          'position': array([ 2.08423447,  3.82898322, 12.00043756]), 
          'normal': array([-0.33333333,  0.        ,  0.94280904]), 
-         'indices': (4, 7), 'composition': 'CuAu', 'subsurf_index': None, 
+         'indices': (4, 7), 'composition': 'AuCu', 'subsurf_index': None, 
          'subsurf_element': None, 'label': '17OH', 'bonding_index': 40, 
          'bond_length': 1.43783658, 'adsorbate': 'CH3OH', 
          'fragment': 'OH', 'adsorbate_indices': (36, 37, 38, 39, 40, 41), 

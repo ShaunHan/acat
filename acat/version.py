@@ -1,3 +1,3 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from .version import __version__
+__version__ = '1.4.2'

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from ase.formula import Formula
 from ase.build import molecule
 from ase import Atoms

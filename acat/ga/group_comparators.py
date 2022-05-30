@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Comparators meant to be used in symmetry-constrained genetic 
 algorithm (SCGA)."""
 import bisect

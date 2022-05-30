@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Comparator objects based on graph theory."""
 from ..adsorbate_coverage import ClusterAdsorbateCoverage
 from ..adsorbate_coverage import SlabAdsorbateCoverage
 from ..utilities import neighbor_shell_list, get_adj_matrix
 from ase.atoms import Atoms
+from copy import deepcopy
 import networkx as nx
 import numpy as np
 
@@ -68,7 +71,7 @@ class AdsorptionGraphComparator(object):
             G1 = a1.info['data']['graph']
             G2 = a2.info['data']['graph']
         else:
-            sas = self.adsorption_sites        
+            sas = deepcopy(self.adsorption_sites)        
  
             if hasattr(sas, 'surface'):
                 sas.update(a1, update_composition=self.composition_effect)
