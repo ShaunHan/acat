@@ -2543,7 +2543,7 @@
                                    <span class="n">label_sites</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_sites</span><span class="p">,</span>
                                    <span class="n">surrogate_metal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span><span class="p">,</span>
                                    <span class="n">optimize_surrogate_cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimize_surrogate_cell</span><span class="p">,</span>
-                                   <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">_allow_expand</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                                   <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">_allow_expand</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surf_ids</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">))</span>
         <span class="c1"># Take only the site positions within the periodic boundary</span>
         <span class="n">sl</span> <span class="o">=</span> <span class="n">nsas</span><span class="o">.</span><span class="n">site_list</span>
         <span class="n">poss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sl</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -2791,7 +2791,7 @@
         <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span> 
         <span class="n">coord</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">allsurf</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">both_surf</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">bulk</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">max_coord</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">==</span> <span class="s1">&#39;bcc210&#39;</span><span class="p">:</span>
@@ -2802,17 +2802,20 @@
             <span class="k">if</span> <span class="n">c</span> <span class="o">&gt;=</span> <span class="n">max_coord</span><span class="p">:</span>  
                 <span class="n">bulk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_s</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">allsurf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_s</span><span class="p">)</span>
+                <span class="n">both_surf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a_s</span><span class="p">)</span>
         <span class="n">surfcm</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">surfcm</span><span class="p">[</span><span class="n">bulk</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">surfcm</span><span class="p">[:,</span><span class="n">bulk</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        
-        <span class="c1"># Use networkx to separate top layer and bottom layer</span>
-        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">surfcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-        <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
-        <span class="n">components</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">both_surf</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">components</span> <span class="o">=</span> <span class="p">[[</span><span class="n">both_surf</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">both_surf</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use networkx to separate top layer and bottom layer</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">surfcm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">cols</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+            <span class="n">components</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s1">&#39;top&#39;</span><span class="p">:</span>
             <span class="n">surf</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> 
