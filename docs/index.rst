@@ -24,6 +24,16 @@ Contents
    Other utilities <utilities.rst>
    Notes <notes.rst>
 
+Using ACAT
+==========
+If you find ACAT useful in your research, please cite
+
+    1) S. Han, S. Lysgaard, T. Vegge & H. A. Hansen (in preparation).
+
+If you use ACAT's modules related to symmetric nanoalloy, please also cite:
+
+    2) S. Han, G. Barcaro, A. Fortunelli et al. Unfolding the structural stability of nanoalloys via symmetry-constrained genetic algorithm and neural network potential. npj Comput Mater 8, 121 (2022). https://doi.org/10.1038/s41524-022-00807-6
+
 Gallery
 =======
 Various shapes and facets of nanoparticles identified by ACAT:

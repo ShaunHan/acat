@@ -2381,7 +2381,7 @@ class SlabAdsorptionSites(object):
                                    label_sites=self.label_sites,
                                    surrogate_metal=self.surrogate_metal,
                                    optimize_surrogate_cell=self.optimize_surrogate_cell,
-                                   tol=self.tol, _allow_expand=False)
+                                   tol=self.tol, _allow_expand=(len(self.surf_ids)==1))
         # Take only the site positions within the periodic boundary
         sl = nsas.site_list
         poss = np.stack([s['position'] for s in sl], axis=0)
@@ -2629,7 +2629,7 @@ class SlabAdsorptionSites(object):
         np.fill_diagonal(cm, 0)
         indices = self.indices 
         coord = np.count_nonzero(cm, axis=1)
-        allsurf = []
+        both_surf = []
         bulk = []
         max_coord = np.max(coord)
         if self.surface == 'bcc210':
@@ -2640,17 +2640,20 @@ class SlabAdsorptionSites(object):
             if c >= max_coord:  
                 bulk.append(a_s)
             else:
-                allsurf.append(a_s)
+                both_surf.append(a_s)
         surfcm = cm.copy()
         surfcm[bulk] = 0
         surfcm[:,bulk] = 0
-        
-        # Use networkx to separate top layer and bottom layer
-        rows, cols = np.where(surfcm == 1)
-        edges = zip(rows.tolist(), cols.tolist())
-        G = nx.Graph()
-        G.add_edges_from(edges)
-        components = nx.connected_components(G)
+
+        if len(both_surf) == 2:
+            components = [[both_surf[0]], [both_surf[1]]]
+        else:
+            # Use networkx to separate top layer and bottom layer
+            rows, cols = np.where(surfcm == 1)
+            edges = zip(rows.tolist(), cols.tolist())
+            G = nx.Graph()
+            G.add_edges_from(edges)
+            components = nx.connected_components(G)
 
         if side == 'top':
             surf = list(max(components, 
