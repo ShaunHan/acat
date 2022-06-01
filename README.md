@@ -42,6 +42,17 @@ I would like to highly appreciate the support from BIKE project, where fundings 
 
 I also want to thank Dr. Steen Lysgaard for the useful scripts and Dr. Giovanni Barcaro, Dr. Alessandro Fortunelli for the useful discussions.
 
+## How to cite ACAT
+If you find ACAT useful in your research, please cite
+
+    1) S. Han, S. Lysgaard, T. Vegge & H. A. Hansen (in preparation).
+
+If you use ACAT's modules related to symmetric nanoalloy, please also cite:
+
+    2) S. Han, G. Barcaro, A. Fortunelli et al. Unfolding the structural stability of nanoalloys 
+       via symmetry-constrained genetic algorithm and neural network potential. npj Comput Mater 
+       8, 121 (2022). https://doi.org/10.1038/s41524-022-00807-6
+
 ## Known issues
 
 1. **ACAT currently only support metal / alloy surface slabs and nanoparticles.** Therefore H, C, N, O, F, S and Cl atoms are treated as adsorbate molecules and metals are treated as catalyst by default. Please do not use ACAT for metal oxide catalysts.
