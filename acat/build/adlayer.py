@@ -2302,6 +2302,7 @@ def special_coverage_pattern(atoms, adsorbate_species,
 
     assert coverage in [0.25, 0.5, 0.75, 1., 2.], 'coverage not supported' 
 
+    atoms = atoms.copy()
     adsorbate_species = adsorbate_species if is_list_or_tuple(                                     
                         adsorbate_species) else [adsorbate_species]
     if species_probabilities is not None:
@@ -2803,6 +2804,7 @@ def max_dist_coverage_pattern(atoms, adsorbate_species,
     """
     from pyclustering.cluster.kmedoids import kmedoids
 
+    atoms = atoms.copy()
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]
     if site_types is not None:
@@ -2922,6 +2924,8 @@ def min_dist_coverage_pattern(atoms, adsorbate_species,
         The site type(s) that has higher priority to attach adsorbates.
     
     """
+
+    atoms = atoms.copy()
     adsorbate_species = adsorbate_species if is_list_or_tuple(
                         adsorbate_species) else [adsorbate_species]
     if site_types is not None:

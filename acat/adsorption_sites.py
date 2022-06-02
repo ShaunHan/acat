@@ -1543,7 +1543,6 @@ class SlabAdsorptionSites(object):
                             morphology = 'terrace'
                         else:
                             warnings.warn('Cannot identify site {}'.format(si))
-                            assert False
                             continue 
                     elif self.surface in ['fcc311','fcc331']:
                         this_site = 'bridge'
@@ -1553,10 +1552,11 @@ class SlabAdsorptionSites(object):
                             cto2 = list(occurence).count(2)
                             if cto2 == 2:
                                 morphology = 'sc-tc-t'
-                            elif cto2 == 3:
+                            elif cto2 in [3, 4]:
                                 morphology = 'sc-tc-h'
                             else:
                                 warnings.warn('Cannot identify site {}'.format(si))
+                                continue
                         elif nterrace == 2:
                             morphology = 'terrace'
                         else:
