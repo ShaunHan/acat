@@ -223,7 +223,7 @@ Generate adsorbate overlayer patterns
     :exclude-members: RandomPatternGenerator, SystematicPatternGenerator, OrderedPatternGenerator, special_coverage_pattern, max_dist_coverage_pattern, min_dist_coverage_pattern
 
 The RandomPatternGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: RandomPatternGenerator
 
@@ -416,7 +416,7 @@ The SystematicPatternGenerator class
        :align: center
 
 The OrderedPatternGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: OrderedPatternGenerator
 
@@ -544,7 +544,7 @@ The special_coverage_pattern function
     .. image:: ../images/special_coverage_pattern_2.png
 
 The max_dist_coverage_pattern function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: max_dist_coverage_pattern
 
@@ -589,7 +589,7 @@ The max_dist_coverage_pattern function
        :align: center
 
 The min_dist_coverage_pattern function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autofunction:: min_dist_coverage_pattern
 
@@ -788,7 +788,7 @@ The SymmetricClusterOrderingGenerator class
        :align: center
 
 The SymmetricSlabOrderingGenerator class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. autoclass:: SymmetricSlabOrderingGenerator
 

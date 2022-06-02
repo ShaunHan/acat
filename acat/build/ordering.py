@@ -329,7 +329,7 @@ class SymmetricClusterOrderingGenerator(object):
  
         return groups
 
-    def run(self, max_gen=None, mode='systematic', eps=0.01, 
+    def run(self, max_gen=None, mode='stochastic', eps=0.01, 
             unique=False, hmax=2, verbose=False):
         """Run the chemical ordering generator.
 
@@ -340,7 +340,7 @@ class SymmetricClusterOrderingGenerator(object):
             forever (until exhaustive for systematic search) if not 
             specified. 
 
-        mode : str, default 'systematic'
+        mode : str, default 'stochastic'
             **'systematic'**: enumerate all possible unique chemical 
             orderings. Recommended when there are not many groups. Switch
             to stochastic mode automatically if the number of groups is
@@ -813,7 +813,7 @@ class SymmetricSlabOrderingGenerator(object):
 
         return groups
 
-    def run(self, max_gen=None, mode='systematic', eps=0.01, 
+    def run(self, max_gen=None, mode='stochastic', eps=0.01, 
             unique=False, hmax=2, verbose=False):
         """Run the chemical ordering generator.
 
@@ -824,7 +824,7 @@ class SymmetricSlabOrderingGenerator(object):
             forever (until exhaustive for systematic search) if not 
             specified. 
 
-        mode : str, default 'systematic'
+        mode : str, default 'stochastic'
             **'systematic'**: enumerate all possible unique chemical 
             orderings. Recommended when there are not many groups. Switch
             to stochastic mode automatically if the number of groups is

@@ -90,7 +90,7 @@ class ClusterAdsorbateCoverage(object):
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
         >>> from acat.adsorbate_coverage import ClusterAdsorbateCoverage
-        >>> from acat.build.action import add_adsorbate_to_site
+        >>> from acat.build import add_adsorbate_to_site
         >>> from ase.cluster import Octahedron
         >>> atoms = Octahedron('Ni', length=7, cutoff=2)
         >>> for atom in atoms:
@@ -731,7 +731,7 @@ class SlabAdsorbateCoverage(object):
 
         >>> from acat.adsorption_sites import SlabAdsorptionSites
         >>> from acat.adsorbate_coverage import SlabAdsorbateCoverage
-        >>> from acat.build.action import add_adsorbate
+        >>> from acat.build import add_adsorbate
         >>> from ase.build import fcc211
         >>> atoms = fcc211('Cu', (3, 3, 4), vacuum=5.)
         >>> for atom in atoms:
@@ -1384,7 +1384,7 @@ def enumerate_occupied_sites(atoms, adsorption_sites=None,
 
         >>> from acat.adsorption_sites import ClusterAdsorptionSites
         >>> from acat.adsorbate_coverage import enumerate_occupied_sites
-        >>> from acat.build.action import add_adsorbate_to_site
+        >>> from acat.build import add_adsorbate_to_site
         >>> from ase.cluster import Octahedron
         >>> atoms = Octahedron('Ni', length=7, cutoff=2)
         >>> for atom in atoms:
