@@ -5,7 +5,7 @@ ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials M
 
 To use ACAT, please read **[ACAT documentation](https://asm-dtu.gitlab.io/acat)** (and also [examples](examples/)).
 
-![](images/color_facets.png)
+![](images/acat_logo.png)
 
 ## Developers: 
 Shuang Han (shuha@dtu.dk) - current maintainer
