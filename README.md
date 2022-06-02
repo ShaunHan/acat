@@ -21,15 +21,15 @@ Install via pip:
 
 ```pip3 install acat```
 
-Clone the repository:
+Alternatively, you can clone the repository:
 
 ```git clone https://gitlab.com/asm-dtu/acat.git```
 
-Go to the installed path and install all dependencies:
+then go to the installed path and install all dependencies:
 
 ```pip3 install -r requirements.txt```
 
-Install the main package:
+Finally, install the main package:
 
 ```python3 setup.py install```
  
