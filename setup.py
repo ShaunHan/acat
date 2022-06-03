@@ -11,7 +11,7 @@ if os.path.isfile(requirementPath):
     with open(requirementPath) as f:
         install_requires = f.read().splitlines()
 
-exec(open('acat/version.py').read())
+exec(open('acat/__init__.py').read())
 setuptools.setup(
     name='acat', 
     version=__version__,

@@ -7,6 +7,6 @@ __copyright__ = '2021'
 __email__ = 'hanshuangshiren@gmail.com'
 __license__ = 'GNU Lesser General Public License 3.0 (LGPL 3.0)'
 __maintainer__ = 'Shuang Han'
-__url__ = 'https://asm-dtu.gitlab.io/acat/'
+__url__ = 'https://gitlab.com/asm-dtu/acat'
 __version__ = '1.4.4'
 
