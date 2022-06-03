@@ -17,7 +17,6 @@ from ..build.action import (add_adsorbate_to_site,
 from ase.ga.offspring_creator import OffspringCreator
 from ase.formula import Formula
 from ase import Atoms
-from asap3 import FullNeighborList
 from operator import attrgetter
 from itertools import chain
 from copy import deepcopy
@@ -193,6 +192,8 @@ class AdsorbateOperator(OffspringCreator):
         return atoms
 
     def get_all_adsorbate_indices(self, atoms):
+        from asap3 import FullNeighborList
+
         ac = atoms.copy()
         ads_ind = [a.index for a in ac if 
                    a.symbol in adsorbate_elements]

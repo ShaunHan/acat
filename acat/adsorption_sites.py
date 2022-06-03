@@ -20,9 +20,6 @@ from ase.constraints import ExpCellFilter
 from ase.geometry import find_mic, wrap_positions
 from ase.optimize import BFGS, FIRE
 from ase import Atoms
-from asap3.analysis import rdf, FullCNA 
-from asap3 import FullNeighborList
-from asap3 import EMT as asapEMT
 from scipy.spatial.distance import pdist, squareform
 from collections import defaultdict, Counter
 from itertools import combinations, groupby
@@ -152,6 +149,10 @@ class ClusterAdsorptionSites(object):
                  label_sites=False,
                  surrogate_metal=None,
                  tol=.5):
+
+        from asap3.analysis import rdf, FullCNA 
+        from asap3 import FullNeighborList
+        from asap3 import EMT as asapEMT
 
         assert True not in atoms.pbc, 'the cell must be non-periodic'
         warnings.filterwarnings('ignore', category=RuntimeWarning)
@@ -2574,14 +2575,19 @@ class SlabAdsorptionSites(object):
             raise ValueError('surface {} is not supported'.format(self.surface))
         for a in ref_atoms:
             a.symbol = ref_symbol
-        ref_atoms.calc = asapEMT()
 
-        if self.optimize_surrogate_cell:
-            ecf = ExpCellFilter(ref_atoms)
-            opt = BFGS(ecf, logfile=None)
-        else:
-            opt = BFGS(ref_atoms, logfile=None)
-        opt.run(fmax=0.1)
+        try:
+            from asap3 import EMT as asapEMT
+
+            ref_atoms.calc = asapEMT()
+            if self.optimize_surrogate_cell:
+                ecf = ExpCellFilter(ref_atoms)
+                opt = BFGS(ecf, logfile=None)
+            else:
+                opt = BFGS(ref_atoms, logfile=None)
+            opt.run(fmax=0.1)
+        except:
+            pass
         centered_atoms = ref_atoms.copy()
         centered_atoms.center(vacuum=5., axis=2)
         midz = centered_atoms.cell[2][2] / 2

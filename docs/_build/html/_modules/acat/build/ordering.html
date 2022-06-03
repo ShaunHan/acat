@@ -169,8 +169,6 @@
 <span class="kn">from</span> <span class="nn">..ga.graph_comparators</span> <span class="kn">import</span> <span class="n">WLGraphComparator</span>
 <span class="kn">from</span> <span class="nn">ase.geometry</span> <span class="kn">import</span> <span class="n">get_distances</span><span class="p">,</span> <span class="n">find_mic</span><span class="p">,</span> <span class="n">get_layers</span>
 <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">,</span> <span class="n">Trajectory</span>
-<span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
-<span class="kn">from</span> <span class="nn">asap3.Internal.BuiltinPotentials</span> <span class="kn">import</span> <span class="n">Gupta</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
 <span class="kn">from</span> <span class="nn">networkx.algorithms.components.connected</span> <span class="kn">import</span> <span class="n">connected_components</span>
@@ -348,6 +346,8 @@
             <span class="n">dists</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">positions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">geo_mid</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
         <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;chemical&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">asap3.Internal.BuiltinPotentials</span> <span class="kn">import</span> <span class="n">Gupta</span>
+
             <span class="n">gupta_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Cu&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">10.960</span><span class="p">,</span> <span class="mf">2.2780</span><span class="p">,</span> <span class="mf">0.0855</span><span class="p">,</span> <span class="mf">1.224</span><span class="p">,</span> <span class="mf">2.556</span><span class="p">]}</span>
             <span class="n">calc</span> <span class="o">=</span> <span class="n">Gupta</span><span class="p">(</span><span class="n">gupta_parameters</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
@@ -358,6 +358,8 @@
             <span class="n">atoms</span><span class="o">.</span><span class="n">calc</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;geometrical&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;geometrical&#39;</span><span class="p">:</span>
                 <span class="n">rCut</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">&lt;=</span> <span class="mf">1.</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">==</span> <span class="s1">&#39;geometrical&#39;</span><span class="p">:</span>
@@ -373,6 +375,8 @@
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span>
 
         <span class="k">elif</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;concentric&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">==</span> <span class="s1">&#39;concentric&#39;</span><span class="p">:</span>
                 <span class="n">rCut</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span> <span class="o">&lt;=</span> <span class="mf">1.</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_symmetry</span> <span class="o">==</span> <span class="s1">&#39;concentric&#39;</span><span class="p">:</span>

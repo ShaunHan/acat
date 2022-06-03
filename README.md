@@ -14,7 +14,7 @@ Shuang Han (shuha@dtu.dk) - current maintainer
 * python>=3.6
 * networkx>=2.4
 * ase
-* asap3
+* asap3 (strongly recommended but not required, since asap3 does not support Windows)
 
 ## Installation
 Install via pip:

@@ -7,8 +7,6 @@ from ..utilities import (get_mic,
 from ..ga.graph_comparators import WLGraphComparator
 from ase.geometry import get_distances, find_mic, get_layers
 from ase.io import read, write, Trajectory
-from asap3.analysis import FullCNA 
-from asap3.Internal.BuiltinPotentials import Gupta
 from collections import defaultdict
 from itertools import product
 from networkx.algorithms.components.connected import connected_components
@@ -186,6 +184,8 @@ class SymmetricClusterOrderingGenerator(object):
             dists = abs(atoms.positions[:, 2] - geo_mid[2])
 
         elif symmetry == 'chemical':
+            from asap3.Internal.BuiltinPotentials import Gupta
+
             gupta_parameters = {'Cu': [10.960, 2.2780, 0.0855, 1.224, 2.556]}
             calc = Gupta(gupta_parameters, cutoff=1000, debug=False)
             for a in atoms:
@@ -196,6 +196,8 @@ class SymmetricClusterOrderingGenerator(object):
             atoms.calc = None
 
         elif symmetry == 'geometrical':
+            from asap3.analysis import FullCNA 
+
             if self.symmetry == 'geometrical':
                 rCut = None if self.cutoff <= 1. else self.cutoff
             elif self.secondary_symmetry == 'geometrical':
@@ -211,6 +213,8 @@ class SymmetricClusterOrderingGenerator(object):
             return list(d.values()), None
 
         elif symmetry == 'concentric':
+            from asap3.analysis import FullCNA 
+
             if self.symmetry == 'concentric':
                 rCut = None if self.cutoff <= 1. else self.cutoff
             elif self.secondary_symmetry == 'concentric':
