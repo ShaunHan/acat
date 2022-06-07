@@ -3,7 +3,7 @@ ACAT is a Python package for atomistic modelling of metal or alloy catalysts use
 
 ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials Modelling, Department of Energy Conversion and Storage, Technical University of Denmark (DTU) in Lyngby, Denmark.
 
-To use ACAT, please read **[ACAT documentation](https://asm-dtu.gitlab.io/acat)** (and also [examples](examples/)).
+To use ACAT, please read **[ACAT documentation](https://asm-dtu.gitlab.io/acat)** (and also [examples](examples/)). For all symmetry-inequivalent adsorption sites on the surfaces (and nanoparticles) supported in ACAT, please refer to the [table of adsorption sites](table_of_adsorption_sites.pdf).
 
 ![](images/acat_logo.png)
 
