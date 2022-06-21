@@ -275,7 +275,7 @@ class ClusterAdsorptionSites(object):
                                 elif len(metals) == 2:
                                     ma, mb = metals[0], metals[1]
                                     symbols = self.symbols[list(si)]
-                                    nma = symbols.count(ma)
+                                    nma = np.count_nonzero(symbols==ma)
                                     if nma == 0:
                                         composition = 3*mb
                                     elif nma == 1:
@@ -331,7 +331,7 @@ class ClusterAdsorptionSites(object):
                                                 elif len(metals) == 2:
                                                     ma, mb = metals[0], metals[1]
                                                     symbols = self.symbols[list(si)]
-                                                    nma = symbols.count(ma)
+                                                    nma = np.count_nonzero(symbols==ma)
                                                     if nma == 0:
                                                         composition = 4*mb
                                                     elif nma == 1:
@@ -414,7 +414,7 @@ class ClusterAdsorptionSites(object):
                         elif len(metals) == 2: 
                             ma, mb = metals[0], metals[1]
                             subsyms = self.symbols[subsi]
-                            nma = subsyms.count(ma)
+                            nma = np.count_nonzero(subsyms==ma)
                             if nma == 0:
                                 composition = ''.join([comp, 3*mb])
                             elif nma == 1:
@@ -1379,7 +1379,7 @@ class SlabAdsorptionSites(object):
                         elif len(metals) == 2: 
                             ma, mb = metals[0], metals[1]                       
                             symbols = self.symbols[extraids]
-                            nma = symbols.count(ma)
+                            nma = np.count_nonzero(symbols==ma)
                             if nma == 0:
                                 composition = 4*mb
                             elif nma == 1:
@@ -1550,7 +1550,7 @@ class SlabAdsorptionSites(object):
                         if nstep == 2:
                             morphology = 'step'
                         elif nstep == 1 and nterrace == 1:
-                            cto2 = list(occurence).count(2)
+                            cto2 = np.count_nonzero(occurence==2)
                             if cto2 == 2:
                                 morphology = 'sc-tc-t'
                             elif cto2 in [3, 4]:
@@ -1655,7 +1655,7 @@ class SlabAdsorptionSites(object):
                         if nstep == 2:
                             morphology = 'step'
                         elif nstep == 1 and nterrace == 1:
-                            cto2 = list(occurence).count(2)
+                            cto2 = np.count_nonzero(occurence==2)
                             if cto2 == 2:
                                 morphology = 'sc-tc-t'
                             elif cto2 == 3:
@@ -1683,7 +1683,7 @@ class SlabAdsorptionSites(object):
                         if nstep == 2:
                             morphology = 'step'
                         elif nstep == 1 and nterrace == 1:
-                            cto2 = list(occurence).count(2) 
+                            cto2 = np.count_nonzero(occurence==2) 
                             if cto2 == 2:
                                 morphology = 'subsurf'
                                 isubs = [self.subsurf_ids[i] for i in np.where(
@@ -1838,7 +1838,7 @@ class SlabAdsorptionSites(object):
                             elif len(metals) == 2:
                                 ma, mb = metals[0], metals[1]
                                 symbols = self.symbols[fold4ids]
-                                nma = symbols.count(ma)
+                                nma = np.count_nonzero(symbols==ma)
                                 if nma == 0:
                                     composition = 4*mb
                                 elif nma == 1:
@@ -1990,7 +1990,7 @@ class SlabAdsorptionSites(object):
                         elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
                             symbols = self.symbols[list(si)]
-                            nma = symbols.count(ma)
+                            nma = np.count_nonzero(symbols==ma)
                             if nma == 0:
                                 composition = 3*mb
                             elif nma == 1:
@@ -2093,7 +2093,7 @@ class SlabAdsorptionSites(object):
                         elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
                             symbols = self.symbols[list(si)]
-                            nma = symbols.count(ma)
+                            nma = np.count_nonzero(symbols==ma)
                             if nma == 0:
                                 composition = 4*mb
                             elif nma == 1:
@@ -2258,7 +2258,7 @@ class SlabAdsorptionSites(object):
                         elif len(metals) == 2:
                             ma, mb = metals[0], metals[1]
                             symbols = self.symbols[newsi]
-                            nma = symbols.count(ma)
+                            nma = np.count_nonzero(symbols==ma)
                             if nma == 0:
                                 comp = 3*mb
                             elif nma == 1:
@@ -2281,7 +2281,7 @@ class SlabAdsorptionSites(object):
                     elif len(metals) == 2: 
                         ma, mb = metals[0], metals[1]
                         subsyms = self.symbols[subsi]
-                        nma = subsyms.count(ma)
+                        nma = np.count_nonzero(subsyms==ma)
                         if nma == 0:
                             composition = ''.join([comp, 3*mb])
                         elif nma == 1:

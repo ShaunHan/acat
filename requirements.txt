@@ -1,3 +1,3 @@
 ase
-#asap3 (strongly recommended but asap3 does not support windows)
+#asap3 (strongly recommended but asap3 does not support Windows)
 networkx>=2.4
