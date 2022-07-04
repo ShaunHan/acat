@@ -23,6 +23,7 @@ from ase import Atoms
 from scipy.spatial.distance import pdist, squareform
 from collections import defaultdict, Counter
 from itertools import combinations, groupby
+from copy import deepcopy
 import networkx as nx
 import numpy as np
 import warnings
@@ -988,8 +989,7 @@ class ClusterAdsorptionSites(object):
         """Update the position of each adsorption site given an updated 
         atoms object. Please only use this when the indexing of the atoms 
         object is preserved. Useful for updating adsorption sites e.g. 
-        after geometry optimization. **Please remember to deepcopy the
-        ClusterAdsorptionSites instance before using update!**
+        after geometry optimization.
         
         Parameters
         ----------
@@ -1015,10 +1015,12 @@ class ClusterAdsorptionSites(object):
             sl = ncas.site_list
                                                                                              
         else:
-            for st in sl:
+            nsl = deepcopy(sl)
+            for st in nsl:
                 si = list(st['indices'])
                 newpos = np.average(new_cluster.positions[si], 0) 
                 st['position'] = np.round(newpos, 8)
+            sl = nsl
 
 
 def group_sites_by_facet(atoms, sites, all_sites=None):            
@@ -2800,8 +2802,7 @@ class SlabAdsorptionSites(object):
         """Update the position of each adsorption site given an updated
         atoms object. Please only use this when the indexing of the atoms 
         object is preserved. Useful for updating adsorption sites e.g. 
-        after geometry optimization. **Please remember to deepcopy the
-        SlabAdsorptionSites instance before using update!**
+        after geometry optimization.
         
         Parameters
         ----------
@@ -2832,9 +2833,11 @@ class SlabAdsorptionSites(object):
         else:
             dvecs, _ = find_mic(new_slab.positions - self.positions,
                                 self.cell, self.pbc)
-            for st in sl:
+            nsl = deepcopy(sl)
+            for st in nsl:
                 si = list(st['indices'])
                 st['position'] += np.average(dvecs[si], 0) 
+            sl = nsl
 
 
 def get_adsorption_site(atoms, indices, surface=None, 
