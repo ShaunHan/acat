@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from ase.formula import Formula
 from ase.build import molecule
+from ase.parallel import parprint
 from ase import Atoms
 
 
@@ -184,7 +185,7 @@ def adsorbate_molecule(adsorbate):
         try:
             ads = molecule(adsorbate)
         except:
-            print('Molecule {} is not supported in the database.'.format(adsorbate))
+            parprint('Molecule {} is not supported in the database.'.format(adsorbate))
             return 
     return ads
 
