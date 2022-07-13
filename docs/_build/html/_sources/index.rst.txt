@@ -28,7 +28,7 @@ Using ACAT
 ==========
 If you find ACAT useful in your research, please cite
 
-    [1] S. Han, S. Lysgaard, T. Vegge & H. A. Hansen (in preparation).
+    [1] S. Han, S. Lysgaard, T. Vegge & H. A. Hansen (submitted). [This is a preprint](https://chemrxiv.org/engage/chemrxiv/article-details/62c8116b3be5f17b9a120c98)
 
 If you use ACAT's modules related to symmetric nanoalloy, please also cite:
 
