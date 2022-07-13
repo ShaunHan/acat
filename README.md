@@ -1,5 +1,5 @@
 # ACAT: **A**lloy **C**atalysis **A**utomated **T**oolkit
-ACAT is a Python package for atomistic modelling of metal or alloy catalysts used in heterogeneous catalysis. The package is based on automatic identifications of adsorption sites and adsorbate coverages on surface slabs and nanoparticles. Synergized with ASE, ACAT provides useful tools to build atomistic models and perform global optimization tasks for alloy surfaces and nanoparticles with and without adsorbates. The goal is to automate workflows for the high-throughput screening of alloy catalysts.
+ACAT is a Python package for atomistic modelling of metal or alloy catalysts used in heterogeneous catalysis. The package is based on automatic identifications of adsorption sites and adsorbate coverages on surface slabs and nanoparticles. Synergizing with ASE, ACAT provides useful tools to build atomistic models and perform global optimization tasks for alloy surfaces and nanoparticles with and without adsorbates. The goal is to automate workflows for the high-throughput screening of alloy catalysts.
 
 ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials Modelling, Department of Energy Conversion and Storage, Technical University of Denmark (DTU) in Lyngby, Denmark.
 
