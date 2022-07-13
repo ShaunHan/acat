@@ -43,9 +43,9 @@ I would like to highly appreciate the support from BIKE project, where fundings 
 I also want to thank Dr. Steen Lysgaard for the useful scripts and Dr. Giovanni Barcaro, Dr. Alessandro Fortunelli for the useful discussions.
 
 ## How to cite ACAT
-If you find ACAT useful in your research, please cite
+If you find ACAT useful in your research, please cite the paper below. [This is a preprint](https://chemrxiv.org/engage/chemrxiv/article-details/62c8116b3be5f17b9a120c98)
 
-    [1] S. Han, S. Lysgaard, T. Vegge & H. A. Hansen (submitted). [This is a preprint](https://chemrxiv.org/engage/chemrxiv/article-details/62c8116b3be5f17b9a120c98)
+    [1] S. Han, S. Lysgaard, T. Vegge & H. A. Hansen (submitted). 
 
 If you use ACAT's modules related to symmetric nanoalloy, please also cite [this paper](https://doi.org/10.1038/s41524-022-00807-6):
 
