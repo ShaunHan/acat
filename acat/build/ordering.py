@@ -367,7 +367,7 @@ class SymmetricClusterOrderingGenerator(object):
             are not accurate enough.
 
         unique : bool, default False 
-            Whether to discard duplicate patterns based on graph isomorphism.
+            Whether to discard duplicate patterns based on graph automorphism.
             The Weisfeiler-Lehman subtree kernel is used to check identity.  
 
         hmax : int, default 2                                               
@@ -414,7 +414,7 @@ class SymmetricClusterOrderingGenerator(object):
                         for j in range(len(totals)):
                             ids = [i for group in part[j] for i in group] 
                             atoms.symbols[ids] = len(ids) * keys[j]
-                        # Skip duplicates based on isomorphism                                     
+                        # Skip duplicates based on automorphism                                     
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -481,7 +481,7 @@ class SymmetricClusterOrderingGenerator(object):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -514,7 +514,7 @@ class SymmetricClusterOrderingGenerator(object):
                     for combo in combos:
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -546,7 +546,7 @@ class SymmetricClusterOrderingGenerator(object):
                         combos.add(combo)
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -851,7 +851,7 @@ class SymmetricSlabOrderingGenerator(object):
             are not accurate enough.
 
         unique : bool, default False 
-            Whether to discard duplicate patterns based on graph isomorphism.
+            Whether to discard duplicate patterns based on graph automorphism.
             The Weisfeiler-Lehman subtree kernel is used to check identity.  
 
         hmax : int, default 2                                               
@@ -897,7 +897,7 @@ class SymmetricSlabOrderingGenerator(object):
                         for j in range(len(totals)):
                             ids = [i for group in part[j] for i in group] 
                             atoms.symbols[ids] = len(ids) * keys[j]
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -964,7 +964,7 @@ class SymmetricSlabOrderingGenerator(object):
                         for j in range(nele):
                             ids = partition[j]
                             atoms.symbols[ids] = len(ids) * keys[j]
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -997,7 +997,7 @@ class SymmetricSlabOrderingGenerator(object):
                     for combo in combos:
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -1029,7 +1029,7 @@ class SymmetricSlabOrderingGenerator(object):
                         combos.add(combo)
                         for j, spec in enumerate(combo):
                             atoms.symbols[groups[j]] = spec
-                        # Skip duplicates based on isomorphism                              
+                        # Skip duplicates based on automorphism                              
                         if unique:
                             formula = atoms.get_chemical_formula()
                             potential_dups = [a for i, a in enumerate(atoms_list) if 
@@ -1136,7 +1136,7 @@ class RandomOrderingGenerator(object):
             Number of chemical orderings to generate.
 
         unique : bool, default False 
-            Whether to discard duplicate patterns based on graph isomorphism.
+            Whether to discard duplicate patterns based on graph automorphism.
             The Weisfeiler-Lehman subtree kernel is used to check identity.  
 
         hmax : int, default 2                                               
@@ -1162,7 +1162,7 @@ class RandomOrderingGenerator(object):
             indi = atoms.copy()
             for e, ids in chunks.items():
                 indi.symbols[ids] = e
-            # Skip duplicates based on isomorphism                                 
+            # Skip duplicates based on automorphism                                 
             if unique:
                 formula = indi.get_chemical_formula()
                 potential_dups = [a for i, a in enumerate(atoms_list) if 

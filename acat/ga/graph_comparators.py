@@ -12,9 +12,9 @@ import numpy as np
 
 class AdsorptionGraphComparator(object):
     """Compares the graph of adsorbate overlayer + surface atoms and 
-    returns True if they are isomorphic with node matches. Before checking 
-    graph isomorphism by color refinement, a cheap label match is used to 
-    reject graphs that are impossible to be isomorphic.
+    returns True if they are automorphic with node matches. Before checking 
+    graph automorphism by color refinement, a cheap label match is used to 
+    reject graphs that are impossible to be automorphic.
 
     The graphs (nx.Graph objects) can be quite costly to obtain every time 
     a graph is required (and disk intensive if saved), thus it makes sense 
@@ -115,7 +115,7 @@ class WLGraphComparator(object):
     """Compares two structures (or graphs) based on the Weisfeiler-Lehman 
     subtree kernel (color refinement), as described in N. Shervashidze et 
     al., Journal of Machine Learning Research 2011, 12, 2539–2561. This 
-    serves as a scalable solver for checking graph isomorphism of two 
+    serves as a scalable solver for checking graph automorphism of two 
     structures. 
 
     The graphs (nx.Graph objects) can be quite costly to obtain every time 
