@@ -1315,9 +1315,9 @@ will have a difference of .5 in both elements:</p>
 <em class="property">class </em><code class="sig-prename descclassname">acat.ga.graph_comparators.</code><code class="sig-name descname">AdsorptionGraphComparator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorption_sites</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subtract_height</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/ga/graph_comparators.html#AdsorptionGraphComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.ga.graph_comparators.AdsorptionGraphComparator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Compares the graph of adsorbate overlayer + surface atoms and
-returns True if they are isomorphic with node matches. Before checking
-graph isomorphism by color refinement, a cheap label match is used to
-reject graphs that are impossible to be isomorphic.</p>
+returns True if they are automorphic with node matches. Before checking
+graph automorphism by color refinement, a cheap label match is used to
+reject graphs that are impossible to be automorphic.</p>
 <p>The graphs (nx.Graph objects) can be quite costly to obtain every time
 a graph is required (and disk intensive if saved), thus it makes sense
 to get the graph along with e.g. the potential energy and save it in
@@ -1356,7 +1356,7 @@ nearest site to be considered as the atom being bound to the site.</p></li>
 <p>Compares two structures (or graphs) based on the Weisfeiler-Lehman
 subtree kernel (color refinement), as described in N. Shervashidze et
 al., Journal of Machine Learning Research 2011, 12, 2539–2561. This
-serves as a scalable solver for checking graph isomorphism of two
+serves as a scalable solver for checking graph automorphism of two
 structures.</p>
 <p>The graphs (nx.Graph objects) can be quite costly to obtain every time
 a graph is required (and disk intensive if saved), thus it makes sense

@@ -174,9 +174,9 @@
 
 <div class="viewcode-block" id="AdsorptionGraphComparator"><a class="viewcode-back" href="../../../ga.html#acat.ga.graph_comparators.AdsorptionGraphComparator">[docs]</a><span class="k">class</span> <span class="nc">AdsorptionGraphComparator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compares the graph of adsorbate overlayer + surface atoms and </span>
-<span class="sd">    returns True if they are isomorphic with node matches. Before checking </span>
-<span class="sd">    graph isomorphism by color refinement, a cheap label match is used to </span>
-<span class="sd">    reject graphs that are impossible to be isomorphic.</span>
+<span class="sd">    returns True if they are automorphic with node matches. Before checking </span>
+<span class="sd">    graph automorphism by color refinement, a cheap label match is used to </span>
+<span class="sd">    reject graphs that are impossible to be automorphic.</span>
 
 <span class="sd">    The graphs (nx.Graph objects) can be quite costly to obtain every time </span>
 <span class="sd">    a graph is required (and disk intensive if saved), thus it makes sense </span>
@@ -277,7 +277,7 @@
     <span class="sd">&quot;&quot;&quot;Compares two structures (or graphs) based on the Weisfeiler-Lehman </span>
 <span class="sd">    subtree kernel (color refinement), as described in N. Shervashidze et </span>
 <span class="sd">    al., Journal of Machine Learning Research 2011, 12, 2539–2561. This </span>
-<span class="sd">    serves as a scalable solver for checking graph isomorphism of two </span>
+<span class="sd">    serves as a scalable solver for checking graph automorphism of two </span>
 <span class="sd">    structures. </span>
 
 <span class="sd">    The graphs (nx.Graph objects) can be quite costly to obtain every time </span>

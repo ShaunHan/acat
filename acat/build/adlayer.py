@@ -31,7 +31,7 @@ warnings.formatwarning = custom_warning
 
 class RandomPatternGenerator(object):
     """`RandomPatternGenerator` is a class for generating adsorbate 
-    overlayer patterns stochastically. Graph isomorphism is implemented 
+    overlayer patterns stochastically. Graph automorphism is implemented 
     to identify identical adlayer patterns. 4 adsorbate actions are 
     supported: add, remove, move, replace. The class is generalized for 
     both periodic and non-periodic systems (distinguished by atoms.pbc). 
@@ -108,7 +108,7 @@ class RandomPatternGenerator(object):
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
-        graph isomorphism for the existing structures in the trajectory.
+        graph automorphism for the existing structures in the trajectory.
         This is also useful when you want to generate adlayer patterns 
         stochastically but for all images systematically, e.g. generating
         10 stochastic adlayer patterns for each image:
@@ -715,7 +715,7 @@ class RandomPatternGenerator(object):
             not specified. Please only use this if the action is 'add'.
 
         unique : bool, default False 
-            Whether to discard duplicate patterns based on graph isomorphism.
+            Whether to discard duplicate patterns based on graph automorphism.
             The Weisfeiler-Lehman subtree kernel is used to check identity.
 
         hmax : int, default 2                                               
@@ -866,9 +866,9 @@ class RandomPatternGenerator(object):
                     if self.graph_list:
                         potential_graphs = [g for i, g in enumerate(self.graph_list) 
                                             if self.labels_list[i] == labs]
-                        # If the surface slab is clean, the potentially isomorphic
-                        # graphs are all isomorphic. However, when considering subsurf
-                        # effect, graph isomorphism should still be checked.
+                        # If the surface slab is clean, the potentially automorphic
+                        # graphs are all automorphic. However, when considering subsurf
+                        # effect, graph automorphism should still be checked.
                         if self.clean_slab and potential_graphs and self.num_act == 1 \
                         and not self.subsurf_effect:
                             if self.logfile is not None:                              
@@ -876,10 +876,10 @@ class RandomPatternGenerator(object):
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
                             continue
-                        # Skip duplicates based on isomorphism 
+                        # Skip duplicates based on automorphism 
                         if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
                             if self.logfile is not None:                             
-                                self.logfile.write('Duplicate found by isomorphism test. '
+                                self.logfile.write('Duplicate found by automorphism test. '
                                                    + 'Discarded!\n')
                                 self.logfile.flush()
                             continue
@@ -900,7 +900,7 @@ class SystematicPatternGenerator(object):
     """`SystematicPatternGenerator` is a class for generating 
     adsorbate overlayer patterns systematically. This is useful to 
     enumerate all unique patterns at low coverage, but explodes at
-    higher coverages. Graph isomorphism is implemented to identify 
+    higher coverages. Graph automorphism is implemented to identify 
     identical adlayer patterns. 4 adsorbate actions are supported: 
     add, remove, move, replace. The class is generalized for both
     periodic and non-periodic systems (distinguished by atoms.pbc). 
@@ -969,7 +969,7 @@ class SystematicPatternGenerator(object):
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
-        graph isomorphism for the existing structures in the trajectory.
+        graph automorphism for the existing structures in the trajectory.
 
     logfile : str, default 'patterns.log'
         The name of the log file.
@@ -1188,12 +1188,12 @@ class SystematicPatternGenerator(object):
                             G = nsac.get_graph(fragmentation=self.enumerate_orientations,
                                                subsurf_effect=self.subsurf_effect)
                             if self.graph_list:
-                                # Skip duplicates based on isomorphism 
+                                # Skip duplicates based on automorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
                                                     if self.labels_list[i] == labs]
-                                # If the surface slab is clean, the potentially isomorphic
-                                # graphs are all isomorphic. However, when considering subsurf
-                                # effect, graph isomorphism should still be checked.
+                                # If the surface slab is clean, the potentially automorphic
+                                # graphs are all automorphic. However, when considering subsurf
+                                # effect, graph automorphism should still be checked.
                                 if self.clean_slab and potential_graphs and self.num_act == 1 \
                                 and not self.subsurf_effect:
                                     self.n_duplicate += 1
@@ -1284,7 +1284,7 @@ class SystematicPatternGenerator(object):
                     G = nsac.get_graph(fragmentation=self.enumerate_orientations,
                                        subsurf_effect=self.subsurf_effect)
                     if self.graph_list:
-                        # Skip duplicates based on isomorphism 
+                        # Skip duplicates based on automorphism 
                         potential_graphs = [g for i, g in enumerate(self.graph_list)
                                             if self.labels_list[i] == labs]
                         if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
@@ -1466,7 +1466,7 @@ class SystematicPatternGenerator(object):
                             G = nsac.get_graph(fragmentation=self.enumerate_orientations,
                                                subsurf_effect=self.subsurf_effect)
                             if self.graph_list:
-                                # Skip duplicates based on isomorphism 
+                                # Skip duplicates based on automorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
                                                     if self.labels_list[i] == labs]
                                 if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
@@ -1649,7 +1649,7 @@ class SystematicPatternGenerator(object):
                             G = nsac.get_graph(fragmentation=self.enumerate_orientations,
                                                subsurf_effect=self.subsurf_effect)
                             if self.graph_list:
-                                # Skip duplicates based on isomorphism 
+                                # Skip duplicates based on automorphism 
                                 potential_graphs = [g for i, g in enumerate(self.graph_list)
                                                     if self.labels_list[i] == labs]
                                 if any(H for H in potential_graphs if self.comp.looks_like(G, H)):
@@ -1708,7 +1708,7 @@ class SystematicPatternGenerator(object):
             only use this if the action is 'add'.
 
         unique : bool, default False 
-            Whether to discard duplicate patterns based on graph isomorphism.
+            Whether to discard duplicate patterns based on graph automorphism.
             The Weisfeiler-Lehman subtree kernel is used to check identity.
 
         hmax : int, default 2                                               
@@ -1821,7 +1821,7 @@ class SystematicPatternGenerator(object):
                 self._exhaustive_replace_adsorbate(atoms, sas)            
 
             if self.logfile is not None:
-                method = 'label match' if self.clean_slab else 'isomorphism test'
+                method = 'label match' if self.clean_slab else 'automorphism test'
                 self.logfile.write('All possible patterns were generated '
                                    + 'for image {}\n'.format(n) +
                                    '{} patterns were '.format(self.n_duplicate)
@@ -1831,7 +1831,7 @@ class SystematicPatternGenerator(object):
 
 class OrderedPatternGenerator(object):
     """`OrderedPatternGenerator` is a class for generating 
-    adsorbate overlayer patterns stochastically. Graph isomorphism
+    adsorbate overlayer patterns stochastically. Graph automorphism
     is implemented to identify identical adlayer patterns. 4 
     adsorbate actions are supported: add, remove, move, replace. 
     The class is generalized for both periodic and non-periodic 
@@ -1933,7 +1933,7 @@ class OrderedPatternGenerator(object):
     append_trajectory : bool, default False
         Whether to append structures to the existing trajectory. 
         If only unique patterns are accepted, the code will also check 
-        graph isomorphism for the existing structures in the trajectory.
+        graph automorphism for the existing structures in the trajectory.
 
     """
     def __init__(self, images, 
@@ -2131,7 +2131,7 @@ class OrderedPatternGenerator(object):
             specified. 
 
         unique : bool, default False 
-            Whether to discard duplicate patterns based on graph isomorphism.
+            Whether to discard duplicate patterns based on graph automorphism.
             The Weisfeiler-Lehman subtree kernel is used to check identity.
 
         hmax : int, default 2                                               
@@ -2211,7 +2211,7 @@ class OrderedPatternGenerator(object):
                             if labs in labels_list:
                                 G = nsac.get_graph(fragmentation=self.fragmentation)
                                 if graph_list:
-                                    # Skip duplicates based on isomorphism 
+                                    # Skip duplicates based on automorphism 
                                     potential_graphs = [g for i, g in enumerate(graph_list) 
                                                         if labels_list[i] == labs]
                                     if any(H for H in potential_graphs if comp.looks_like(G, H)):
