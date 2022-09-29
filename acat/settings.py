@@ -111,11 +111,14 @@ def adsorbate_molecule(adsorbate):
     elif adsorbate == 'CHN':
         ads = molecule('HCN')[[0,2,1]]
         ads.rotate(90, 'x')
+        ads.rotate(90, '-z')
     elif adsorbate == 'CHO':
-        ads = molecule('HCO')[[0,2,1]] 
+        ads = molecule('HCO')[[0,2,1]]
+        ads.rotate(90, '-z')
     elif adsorbate == 'NHO':
         ads = molecule('HCO')[[0,2,1]]
         ads[0].symbol = 'N'
+        ads.rotate(90, '-z')
     elif adsorbate == 'COS':
         ads = molecule('OCS')[[1,0,2]]
         ads.rotate(90, 'x')
@@ -141,27 +144,33 @@ def adsorbate_molecule(adsorbate):
     elif adsorbate == 'CH2O':
         ads = molecule('H2CO')[[1,2,3,0]]
         ads.rotate(90, 'y')
+        ads.rotate(180, '-z')
     elif adsorbate in ['CH3O','CH3S']:
         ads = molecule(adsorbate)[[0,2,3,4,1]]
         ads.rotate(30, 'y')
+        ads.rotate(90, 'z')
     elif adsorbate == 'CH2CO':
         ads = molecule('H2CCO')[[0,2,3,1,4]]
         ads.rotate(90, 'y')
+        ads.rotate(180, 'z')
     elif adsorbate == 'CHOH':
         ads = molecule('H2COH')
         del ads[-1]
         ads = ads[[0,3,1,2]]
     elif adsorbate == 'OHOH':
         ads = molecule('H2O2')[[0,2,1,3]]
+        ads.rotate(90, '-z')
     elif adsorbate == 'CH2OH':
         ads = molecule('H2COH')[[0,3,4,1,2]]
     elif adsorbate == 'CH3OH':
         ads = molecule(adsorbate)[[0,2,4,5,1,3]]
         ads.rotate(-30, 'y')
+        ads.rotate(90, '-z')
     elif adsorbate == 'CHOOH':
         ads = molecule('HCOOH')[[1,4,2,0,3]]
     elif adsorbate == 'CH3CO':
         ads = molecule(adsorbate)[[0,2,3,4,1,5]]
+        ads.rotate(180, 'z')
     elif adsorbate == 'COOH':
         ads = molecule('HCOOH')
         del ads[-1]

@@ -135,11 +135,11 @@ class ClusterAdsorptionSites(object):
 
     .. code-block:: python
 
-        {'site': 'bridge', 'surface': 'fcc111', 
-         'position': array([6.96,  7.94, 11.86]), 
-         'normal': array([-0.66666667, -0.66666667, -0.33333333]), 
-         'indices': (0, 2), 'composition': 'PtPt', 
-         'subsurf_index': None, 'subsurf_element': None, 'label': 14}
+        {'site': 'bridge', 'surface': 'edge', 
+         'position': array([12.92, 14.68,  5.  ]), 
+         'normal': array([ 0.20864239,  0.48683225, -0.84821148]), 
+         'indices': (115, 130), 'composition': 'NiPt', 
+         'subsurf_index': None, 'subsurf_element': None, 'label': 10}
 
     """
 
@@ -150,10 +150,6 @@ class ClusterAdsorptionSites(object):
                  label_sites=False,
                  surrogate_metal=None,
                  tol=.5):
-
-        from asap3.analysis import rdf, FullCNA 
-        from asap3 import FullNeighborList
-        from asap3 import EMT as asapEMT
 
         assert True not in atoms.pbc, 'the cell must be non-periodic'
         warnings.filterwarnings('ignore', category=RuntimeWarning)
@@ -518,7 +514,7 @@ class ClusterAdsorptionSites(object):
                          unique_subsurf=False,
                          return_signatures=False,
                          return_site_indices=False,
-                         site_list=None):
+                         about=None, site_list=None):
         """Get all symmetry-inequivalent adsorption sites (one
         site for each type).
         
@@ -539,7 +535,11 @@ class ClusterAdsorptionSites(object):
 
         return_site_indices: bool, default False
             Whether to return the indices of each unique 
-            site (in the site list).                     
+            site (in the site list).
+
+        about: numpy.array, default None                 
+            If specified, returns unique sites closest to 
+            this reference position.
 
         """
 
@@ -566,6 +566,8 @@ class ClusterAdsorptionSites(object):
         else:
             seen_tuple = []
             uni_sites = []
+            if about is not None:
+                sl = sorted(sl, key=lambda x: np.linalg.norm(x['position'] - about))
             for i, s in enumerate(sl):
                 sig = tuple(s[k] for k in key_list)
                 if sig not in seen_tuple:
@@ -573,6 +575,7 @@ class ClusterAdsorptionSites(object):
                     if return_site_indices:
                         s = i 
                     uni_sites.append(s)
+
             return uni_sites                        
 
     def get_labels(self):
@@ -593,6 +596,8 @@ class ClusterAdsorptionSites(object):
     def mapping(self, atoms):
         """Map the nanoparticle into a surrogate nanoparticle for code
         versatility."""
+
+        from asap3 import EMT as asapEMT
 
         ref_atoms = atoms.copy()
         pm = self.surrogate_metal
@@ -713,6 +718,7 @@ class ClusterAdsorptionSites(object):
 
     def make_fullCNA(self, rCut=None):                  
         if rCut not in self.fullCNA:
+            from asap3.analysis import FullCNA 
             self.fullCNA[rCut] = FullCNA(self.ref_atoms, rCut=rCut).get_normal_cna()
 
     def get_fullCNA(self, rCut=None):
@@ -742,6 +748,7 @@ class ClusterAdsorptionSites(object):
 
         """
 
+        from asap3 import FullNeighborList
         self.nblist = FullNeighborList(rCut=rMax, atoms=self.ref_atoms)
 
     def get_connectivity(self):                                      
@@ -851,6 +858,8 @@ class ClusterAdsorptionSites(object):
             return mdeca_dict
 
     def set_first_neighbor_distance_from_rdf(self, rMax=10, nBins=200):
+ 
+        from asap3.analysis import rdf
         atoms = self.ref_atoms.copy()
         for j, L in enumerate(list(atoms.cell.diagonal())):
             if L <= 10:
@@ -2478,7 +2487,7 @@ class SlabAdsorptionSites(object):
                          unique_subsurf=False, 
                          return_signatures=False,
                          return_site_indices=False,
-                         site_list=None):
+                         about=None, site_list=None):
         """Get all symmetry-inequivalent adsorption sites (one
         site for each type).
         
@@ -2499,7 +2508,11 @@ class SlabAdsorptionSites(object):
         return_site_indices: bool, default False
             Whether to return the indices of each unique 
             site (in the site list).                     
-        
+
+        about: numpy.array, default None                 
+            If specified, returns unique sites closest to
+            this reference position.
+
         """
 
         if site_list is None:
@@ -2524,6 +2537,9 @@ class SlabAdsorptionSites(object):
         else:
             seen_tuple = []
             uni_sites = []
+            if about is not None:
+                sl = sorted(sl, key=lambda x: get_mic(x['position'], 
+                            about, self.cell, return_squared_distance=True))
             for i, s in enumerate(sl):
                 sig = tuple(s[k] for k in key_list)
                 if sig not in seen_tuple:
@@ -2531,6 +2547,7 @@ class SlabAdsorptionSites(object):
                     if return_site_indices:
                         s = i
                     uni_sites.append(s)
+
             return uni_sites                        
 
     def get_labels(self):

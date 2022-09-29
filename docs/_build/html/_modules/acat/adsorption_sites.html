@@ -297,11 +297,11 @@
 
 <span class="sd">    .. code-block:: python</span>
 
-<span class="sd">        {&#39;site&#39;: &#39;bridge&#39;, &#39;surface&#39;: &#39;fcc111&#39;, </span>
-<span class="sd">         &#39;position&#39;: array([6.96,  7.94, 11.86]), </span>
-<span class="sd">         &#39;normal&#39;: array([-0.66666667, -0.66666667, -0.33333333]), </span>
-<span class="sd">         &#39;indices&#39;: (0, 2), &#39;composition&#39;: &#39;PtPt&#39;, </span>
-<span class="sd">         &#39;subsurf_index&#39;: None, &#39;subsurf_element&#39;: None, &#39;label&#39;: 14}</span>
+<span class="sd">        {&#39;site&#39;: &#39;bridge&#39;, &#39;surface&#39;: &#39;edge&#39;, </span>
+<span class="sd">         &#39;position&#39;: array([12.92, 14.68,  5.  ]), </span>
+<span class="sd">         &#39;normal&#39;: array([ 0.20864239,  0.48683225, -0.84821148]), </span>
+<span class="sd">         &#39;indices&#39;: (115, 130), &#39;composition&#39;: &#39;NiPt&#39;, </span>
+<span class="sd">         &#39;subsurf_index&#39;: None, &#39;subsurf_element&#39;: None, &#39;label&#39;: 10}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -312,10 +312,6 @@
                  <span class="n">label_sites</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">surrogate_metal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">tol</span><span class="o">=</span><span class="mf">.5</span><span class="p">):</span>
-
-        <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">rdf</span><span class="p">,</span> <span class="n">FullCNA</span> 
-        <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">FullNeighborList</span>
-        <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
 
         <span class="k">assert</span> <span class="kc">True</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atoms</span><span class="o">.</span><span class="n">pbc</span><span class="p">,</span> <span class="s1">&#39;the cell must be non-periodic&#39;</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
@@ -680,7 +676,7 @@
                          <span class="n">unique_subsurf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">return_signatures</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">site_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                         <span class="n">about</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get all symmetry-inequivalent adsorption sites (one</span>
 <span class="sd">        site for each type).</span>
 <span class="sd">        </span>
@@ -701,7 +697,11 @@
 
 <span class="sd">        return_site_indices: bool, default False</span>
 <span class="sd">            Whether to return the indices of each unique </span>
-<span class="sd">            site (in the site list).                     </span>
+<span class="sd">            site (in the site list).</span>
+
+<span class="sd">        about: numpy.array, default None                 </span>
+<span class="sd">            If specified, returns unique sites closest to </span>
+<span class="sd">            this reference position.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -728,6 +728,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seen_tuple</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">uni_sites</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">about</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sl</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sl</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">about</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
                 <span class="n">sig</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">sig</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_tuple</span><span class="p">:</span>
@@ -735,6 +737,7 @@
                     <span class="k">if</span> <span class="n">return_site_indices</span><span class="p">:</span>
                         <span class="n">s</span> <span class="o">=</span> <span class="n">i</span> 
                     <span class="n">uni_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="n">uni_sites</span>                        </div>
 
     <span class="k">def</span> <span class="nf">get_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -755,6 +758,8 @@
 <div class="viewcode-block" id="ClusterAdsorptionSites.mapping"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.mapping">[docs]</a>    <span class="k">def</span> <span class="nf">mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Map the nanoparticle into a surrogate nanoparticle for code</span>
 <span class="sd">        versatility.&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">EMT</span> <span class="k">as</span> <span class="n">asapEMT</span>
 
         <span class="n">ref_atoms</span> <span class="o">=</span> <span class="n">atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surrogate_metal</span>
@@ -875,6 +880,7 @@
 
     <span class="k">def</span> <span class="nf">make_fullCNA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rCut</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>                  
         <span class="k">if</span> <span class="n">rCut</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fullCNA</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">FullCNA</span> 
             <span class="bp">self</span><span class="o">.</span><span class="n">fullCNA</span><span class="p">[</span><span class="n">rCut</span><span class="p">]</span> <span class="o">=</span> <span class="n">FullCNA</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="p">,</span> <span class="n">rCut</span><span class="o">=</span><span class="n">rCut</span><span class="p">)</span><span class="o">.</span><span class="n">get_normal_cna</span><span class="p">()</span>
 
 <div class="viewcode-block" id="ClusterAdsorptionSites.get_fullCNA"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_fullCNA">[docs]</a>    <span class="k">def</span> <span class="nf">get_fullCNA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rCut</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -904,6 +910,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="kn">from</span> <span class="nn">asap3</span> <span class="kn">import</span> <span class="n">FullNeighborList</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nblist</span> <span class="o">=</span> <span class="n">FullNeighborList</span><span class="p">(</span><span class="n">rCut</span><span class="o">=</span><span class="n">rMax</span><span class="p">,</span> <span class="n">atoms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ClusterAdsorptionSites.get_connectivity"><a class="viewcode-back" href="../../modules.html#acat.adsorption_sites.ClusterAdsorptionSites.get_connectivity">[docs]</a>    <span class="k">def</span> <span class="nf">get_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>                                      
@@ -1013,6 +1020,8 @@
             <span class="k">return</span> <span class="n">mdeca_dict</span>
 
     <span class="k">def</span> <span class="nf">set_first_neighbor_distance_from_rdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rMax</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nBins</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+ 
+        <span class="kn">from</span> <span class="nn">asap3.analysis</span> <span class="kn">import</span> <span class="n">rdf</span>
         <span class="n">atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_atoms</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">L</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())):</span>
             <span class="k">if</span> <span class="n">L</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">:</span>
@@ -2640,7 +2649,7 @@
                          <span class="n">unique_subsurf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                          <span class="n">return_signatures</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">return_site_indices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">site_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                         <span class="n">about</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get all symmetry-inequivalent adsorption sites (one</span>
 <span class="sd">        site for each type).</span>
 <span class="sd">        </span>
@@ -2661,7 +2670,11 @@
 <span class="sd">        return_site_indices: bool, default False</span>
 <span class="sd">            Whether to return the indices of each unique </span>
 <span class="sd">            site (in the site list).                     </span>
-<span class="sd">        </span>
+
+<span class="sd">        about: numpy.array, default None                 </span>
+<span class="sd">            If specified, returns unique sites closest to</span>
+<span class="sd">            this reference position.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">site_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2686,6 +2699,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seen_tuple</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">uni_sites</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">about</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sl</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sl</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">get_mic</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">],</span> 
+                            <span class="n">about</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">return_squared_distance</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sl</span><span class="p">):</span>
                 <span class="n">sig</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">sig</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_tuple</span><span class="p">:</span>
@@ -2693,6 +2709,7 @@
                     <span class="k">if</span> <span class="n">return_site_indices</span><span class="p">:</span>
                         <span class="n">s</span> <span class="o">=</span> <span class="n">i</span>
                     <span class="n">uni_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="n">uni_sites</span>                        </div>
 
     <span class="k">def</span> <span class="nf">get_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
