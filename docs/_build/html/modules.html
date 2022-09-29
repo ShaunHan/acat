@@ -266,11 +266,11 @@ Au should be good for larger nanoparticles.</p></li>
 </pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;fcc111&#39;</span><span class="p">,</span>
- <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">6.96</span><span class="p">,</span>  <span class="mf">7.94</span><span class="p">,</span> <span class="mf">11.86</span><span class="p">]),</span>
- <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.66666667</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.66666667</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.33333333</span><span class="p">]),</span>
- <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;PtPt&#39;</span><span class="p">,</span>
- <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="mi">14</span><span class="p">}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;surface&#39;</span><span class="p">:</span> <span class="s1">&#39;edge&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="mf">12.92</span><span class="p">,</span> <span class="mf">14.68</span><span class="p">,</span>  <span class="mf">5.</span>  <span class="p">]),</span>
+ <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span> <span class="mf">0.20864239</span><span class="p">,</span>  <span class="mf">0.48683225</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.84821148</span><span class="p">]),</span>
+ <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">115</span><span class="p">,</span> <span class="mi">130</span><span class="p">),</span> <span class="s1">&#39;composition&#39;</span><span class="p">:</span> <span class="s1">&#39;NiPt&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;subsurf_index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;subsurf_element&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
 </pre></div>
 </div>
 <dl class="py method">
@@ -311,7 +311,7 @@ Return a random site if the indices are not provided.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites">
-<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_site_indices</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_site_indices</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">about</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#ClusterAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.ClusterAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all symmetry-inequivalent adsorption sites (one
 site for each type).</p>
 <dl class="field-list simple">
@@ -326,6 +326,8 @@ surfaces like fcc100.</p></li>
 sites instead.</p></li>
 <li><p><strong>return_site_indices</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the indices of each unique
 site (in the site list).</p></li>
+<li><p><strong>about</strong> (<em>numpy.array</em><em>, </em><em>default None</em>) – If specified, returns unique sites closest to
+this reference position.</p></li>
 </ul>
 </dd>
 </dl>
@@ -666,7 +668,7 @@ Return a random site if the indices are not provided.</p>
 
 <dl class="py method">
 <dt id="acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites">
-<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_site_indices</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_unique_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique_composition</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">unique_subsurf</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_signatures</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_site_indices</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">about</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/adsorption_sites.html#SlabAdsorptionSites.get_unique_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.adsorption_sites.SlabAdsorptionSites.get_unique_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all symmetry-inequivalent adsorption sites (one
 site for each type).</p>
 <dl class="field-list simple">
@@ -680,6 +682,8 @@ checking uniqueness.</p></li>
 sites instead.</p></li>
 <li><p><strong>return_site_indices</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to return the indices of each unique
 site (in the site list).</p></li>
+<li><p><strong>about</strong> (<em>numpy.array</em><em>, </em><em>default None</em>) – If specified, returns unique sites closest to
+this reference position.</p></li>
 </ul>
 </dd>
 </dl>
