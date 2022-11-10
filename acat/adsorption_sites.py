@@ -598,7 +598,6 @@ class ClusterAdsorptionSites(object):
         versatility."""
 
         from asap3 import EMT as asapEMT
-
         ref_atoms = atoms.copy()
         pm = self.surrogate_metal
         if pm is None:

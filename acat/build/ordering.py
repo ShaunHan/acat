@@ -174,8 +174,8 @@ class SymmetricClusterOrderingGenerator(object):
             dists = get_distances(atoms.positions, [geo_mid])[1][:,0]
 
         elif symmetry == 'cylindrical':
-            dists = np.asarray([math.sqrt((a.position[0] - geo_mid[0])**2 + 
-                               (a.position[1] - geo_mid[1])**2) for a in atoms])
+            dists = np.asarray([((a.position[0] - geo_mid[0])**2 + 
+                                 (a.position[1] - geo_mid[1])**2)**0.5 for a in atoms])
 
         elif symmetry == 'planar':
             dists = atoms.positions[:, 2]
@@ -277,7 +277,7 @@ class SymmetricClusterOrderingGenerator(object):
             groups = indices
         else:
             groups = []
-            old_dist = -10.
+            old_dist = np.NINF
             for i, dist in zip(indices, dists):
                 if abs(dist - old_dist) > self.cutoff:
                     groups.append([i])
@@ -288,7 +288,7 @@ class SymmetricClusterOrderingGenerator(object):
         if self.symmetry in ['circular', 'mirror_circular']:
             indices0, dists0 = self.get_sorted_indices(symmetry='cylindrical')
             groups0 = []
-            old_dist0 = -10.
+            old_dist0 = np.NINF
             for j, dist0 in zip(indices0, dists0):
                 if abs(dist0 - old_dist0) > self.cutoff:
                     groups0.append([j])
@@ -313,7 +313,7 @@ class SymmetricClusterOrderingGenerator(object):
                 groups2 = indices2
             else:
                 groups2 = []
-                old_dist2 = -10.
+                old_dist2 = np.NINF
                 for j, dist2 in zip(indices2, dists2):
                     if abs(dist2 - old_dist2) > self.secondary_cutoff:
                         groups2.append([j])
@@ -436,7 +436,7 @@ class SymmetricClusterOrderingGenerator(object):
 
             if mode == 'stochastic':
                 if max_gen is None:
-                    max_gen = math.inf
+                    max_gen = np.inf
                 nele = len(ratios)
                 sor = sum(ratios)
 
@@ -919,7 +919,7 @@ class SymmetricSlabOrderingGenerator(object):
 
             if mode == 'stochastic':
                 if max_gen is None:
-                    max_gen = math.inf
+                    max_gen = np.inf
                 nele = len(ratios)
                 sor = sum(ratios)
 
