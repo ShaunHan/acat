@@ -1,75 +1,39 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Other utilities &mdash; ACAT 1.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-  <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
     <link rel="shortcut icon" href="_static/acat_favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Notes" href="notes.html" />
     <link rel="prev" title="Genetic algorithm" href="ga.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> ACAT
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,97 +41,67 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building things</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ga.html">Evolutionary algorithms</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Other utilities</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Other utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.neighbor_shell_list"><code class="docutils literal notranslate"><span class="pre">neighbor_shell_list()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_adj_matrix"><code class="docutils literal notranslate"><span class="pre">get_adj_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_mic"><code class="docutils literal notranslate"><span class="pre">get_mic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.cart_to_frac"><code class="docutils literal notranslate"><span class="pre">cart_to_frac()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.hash_composition"><code class="docutils literal notranslate"><span class="pre">hash_composition()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_close_atoms"><code class="docutils literal notranslate"><span class="pre">get_close_atoms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.atoms_too_close"><code class="docutils literal notranslate"><span class="pre">atoms_too_close()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.atoms_too_close_after_addition"><code class="docutils literal notranslate"><span class="pre">atoms_too_close_after_addition()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_angle_between"><code class="docutils literal notranslate"><span class="pre">get_angle_between()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_rejection_between"><code class="docutils literal notranslate"><span class="pre">get_rejection_between()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">get_rotation_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_rodrigues_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">get_rodrigues_rotation_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.get_total_masses"><code class="docutils literal notranslate"><span class="pre">get_total_masses()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.string_fragmentation"><code class="docutils literal notranslate"><span class="pre">string_fragmentation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.orthogonal_transform"><code class="docutils literal notranslate"><span class="pre">orthogonal_transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.ratios_from_atoms"><code class="docutils literal notranslate"><span class="pre">ratios_from_atoms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.numbers_from_ratios"><code class="docutils literal notranslate"><span class="pre">numbers_from_ratios()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.dag_from_ucg"><code class="docutils literal notranslate"><span class="pre">dag_from_ucg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.sort_atoms_by_ref_atoms"><code class="docutils literal notranslate"><span class="pre">sort_atoms_by_ref_atoms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acat.utilities.draw_graph"><code class="docutils literal notranslate"><span class="pre">draw_graph()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">ACAT</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>Other utilities</li>
-    
-    
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Other utilities</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/utilities.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="module-acat.utilities">
-<span id="other-utilities"></span><h1>Other utilities<a class="headerlink" href="#module-acat.utilities" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="module-acat.utilities">
+<span id="other-utilities"></span><h1>Other utilities<a class="headerlink" href="#module-acat.utilities" title="Permalink to this heading"></a></h1>
 <dl class="py function">
-<dt id="acat.utilities.neighbor_shell_list">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">neighbor_shell_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">dx</span><span class="o">=</span><span class="default_value">0.3</span></em>, <em class="sig-param"><span class="n">neighbor_number</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">different_species</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">mic</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">span</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#neighbor_shell_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.neighbor_shell_list" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.neighbor_shell_list">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">neighbor_shell_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbor_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">different_species</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#neighbor_shell_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.neighbor_shell_list" title="Permalink to this definition"></a></dt>
 <dd><p>Make dict of neighboring shell atoms for both periodic and
 non-periodic systems. Possible to return neighbors from defined
 neighbor shell e.g. 1st, 2nd, 3rd by changing the neighbor number.
@@ -193,8 +127,8 @@ ring graph.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_adj_matrix">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_adj_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">neighborlist</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_adj_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_adj_matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_adj_matrix">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_adj_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighborlist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_adj_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_adj_matrix" title="Permalink to this definition"></a></dt>
 <dd><p>Returns an adjacency matrix from a neighborlist object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -205,8 +139,8 @@ atom index and values of their neighbor atom indices.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_mic">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_mic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p1</span></em>, <em class="sig-param"><span class="n">p2</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">[1, 1, 0]</span></em>, <em class="sig-param"><span class="n">max_cell_multiple</span><span class="o">=</span><span class="default_value">100000.0</span></em>, <em class="sig-param"><span class="n">return_squared_distance</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_mic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_mic" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_mic">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_mic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_cell_multiple</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_squared_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_mic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_mic" title="Permalink to this definition"></a></dt>
 <dd><p>A highly efficient function for getting all vectors from p1
 to p2. Also able to calculate the squared distance using the
 minimum image convention (mic). This function is useful when you
@@ -232,22 +166,22 @@ mic vector.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.cart_to_frac">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">cart_to_frac</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#cart_to_frac"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.cart_to_frac" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.cart_to_frac">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">cart_to_frac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#cart_to_frac"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.cart_to_frac" title="Permalink to this definition"></a></dt>
 <dd><p>Convert Cartesian coordinates to fractional coordinates.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.hash_composition">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">hash_composition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#hash_composition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.hash_composition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.hash_composition">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">hash_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#hash_composition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.hash_composition" title="Permalink to this definition"></a></dt>
 <dd><p>A hashing function to generate an unique identifier of the
 composition considering self-symmetry. Note that this function
 only accepts a sequence of connected nodes.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_close_atoms">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_close_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">mic</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">delete</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_close_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_close_atoms" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_close_atoms">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_close_atoms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_close_atoms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_close_atoms" title="Permalink to this definition"></a></dt>
 <dd><p>Get a list of close atoms and delete one set of them if requested.
 Identify all atoms that lie within the cutoff radius of each other.</p>
 <dl class="field-list simple">
@@ -265,8 +199,8 @@ mic=True for periodic systems.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.atoms_too_close">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">atoms_too_close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">mic</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#atoms_too_close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.atoms_too_close" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.atoms_too_close">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">atoms_too_close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#atoms_too_close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.atoms_too_close" title="Permalink to this definition"></a></dt>
 <dd><p>Check if there are atoms that are too close to each other.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -282,8 +216,8 @@ mic=True for periodic systems.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.atoms_too_close_after_addition">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">atoms_too_close_after_addition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">n_added</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">mic</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#atoms_too_close_after_addition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.atoms_too_close_after_addition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.atoms_too_close_after_addition">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">atoms_too_close_after_addition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_added</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#atoms_too_close_after_addition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.atoms_too_close_after_addition" title="Permalink to this definition"></a></dt>
 <dd><p>Check if there are atoms that are too close to each other after
 adding some new atoms.</p>
 <dl class="field-list simple">
@@ -301,8 +235,8 @@ mic=True for periodic systems.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_angle_between">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_angle_between</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v1</span></em>, <em class="sig-param"><span class="n">v2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_angle_between"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_angle_between" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_angle_between">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_angle_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_angle_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_angle_between" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the angle in radians between vectors ‘v1’ and ‘v2’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -315,8 +249,8 @@ mic=True for periodic systems.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_rejection_between">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_rejection_between</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v1</span></em>, <em class="sig-param"><span class="n">v2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rejection_between"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_rejection_between" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_rejection_between">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_rejection_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rejection_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_rejection_between" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the vector rejection of vector ‘v1’ perpendicular
 to vector ‘v2’.</p>
 <dl class="field-list simple">
@@ -330,8 +264,8 @@ to vector ‘v2’.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_rotation_matrix">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_rotation_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v1</span></em>, <em class="sig-param"><span class="n">v2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rotation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_rotation_matrix">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rotation_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_rotation_matrix" title="Permalink to this definition"></a></dt>
 <dd><p>Return the rotation matrix R that rotates unit vector v1 onto
 unit vector v2.</p>
 <dl class="field-list simple">
@@ -345,8 +279,8 @@ unit vector v2.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_rodrigues_rotation_matrix">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_rodrigues_rotation_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">angle</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rodrigues_rotation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_rodrigues_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_rodrigues_rotation_matrix">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_rodrigues_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_rodrigues_rotation_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_rodrigues_rotation_matrix" title="Permalink to this definition"></a></dt>
 <dd><p>Return the Rodrigues rotation matrix associated with
 counter-clockwise rotation about the given axis by an angle.</p>
 <dl class="field-list simple">
@@ -360,8 +294,8 @@ counter-clockwise rotation about the given axis by an angle.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.get_total_masses">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">get_total_masses</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbol</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_total_masses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.get_total_masses" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.get_total_masses">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">get_total_masses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#get_total_masses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.get_total_masses" title="Permalink to this definition"></a></dt>
 <dd><p>Get the total molar mass given the chemical symbol of a
 molecule.</p>
 <dl class="field-list simple">
@@ -372,8 +306,8 @@ molecule.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.string_fragmentation">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">string_fragmentation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#string_fragmentation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.string_fragmentation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.string_fragmentation">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">string_fragmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adsorbate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#string_fragmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.string_fragmentation" title="Permalink to this definition"></a></dt>
 <dd><p>A function for generating a fragment list (list of strings)
 from a given adsorbate (string).</p>
 <dl class="field-list simple">
@@ -384,14 +318,14 @@ from a given adsorbate (string).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.orthogonal_transform">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">orthogonal_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">transform_cell</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#orthogonal_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.orthogonal_transform" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.orthogonal_transform">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">orthogonal_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_cell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#orthogonal_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.orthogonal_transform" title="Permalink to this definition"></a></dt>
 <dd><p>Transform a non-orthogonal cell to an orthogonal cell.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.ratios_from_atoms">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">ratios_from_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#ratios_from_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.ratios_from_atoms" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.ratios_from_atoms">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">ratios_from_atoms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#ratios_from_atoms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.ratios_from_atoms" title="Permalink to this definition"></a></dt>
 <dd><p>Return a list of ratios for each element from the atoms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -401,8 +335,8 @@ from a given adsorbate (string).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.numbers_from_ratios">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">numbers_from_ratios</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sum_numbers</span></em>, <em class="sig-param"><span class="n">ratios</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#numbers_from_ratios"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.numbers_from_ratios" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.numbers_from_ratios">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">numbers_from_ratios</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sum_numbers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratios</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#numbers_from_ratios"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.numbers_from_ratios" title="Permalink to this definition"></a></dt>
 <dd><p>Return the number of atoms for each element from ratios.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -415,8 +349,8 @@ from a given adsorbate (string).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.dag_from_ucg">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">dag_from_ucg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adj_matrix</span></em>, <em class="sig-param"><span class="n">sources</span></em>, <em class="sig-param"><span class="n">return_depths</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#dag_from_ucg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.dag_from_ucg" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.dag_from_ucg">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">dag_from_ucg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adj_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_depths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#dag_from_ucg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.dag_from_ucg" title="Permalink to this definition"></a></dt>
 <dd><p>Takes the adjacency matrix of an undirected cyclic graph
 (UCG) and the indices of the starting nodes, returns an
 adjacency list represeting the corresponding shortest-paths
@@ -424,8 +358,8 @@ directed acyclic graph (DAG).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adj_matrix</strong> (<em>np.ndarray</em><em> or </em><em>list of lists</em>) – The adjacency matrix of the UCG.</p></li>
-<li><p><strong>sources</strong> (<em>list of strs</em>) – The indices of the starting nodes for the DAG.</p></li>
+<li><p><strong>adj_matrix</strong> (<em>np.ndarray</em><em> or </em><em>list</em><em> of </em><em>lists</em>) – The adjacency matrix of the UCG.</p></li>
+<li><p><strong>sources</strong> (<em>list</em><em> of </em><em>strs</em>) – The indices of the starting nodes for the DAG.</p></li>
 <li><p><strong>return_depths</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to also return the node indices at each walking depth
 (in ascending order) together with the DAG.</p></li>
 </ul>
@@ -434,8 +368,8 @@ directed acyclic graph (DAG).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.sort_atoms_by_ref_atoms">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">sort_atoms_by_ref_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">ref_atoms</span></em>, <em class="sig-param"><span class="n">mic</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#sort_atoms_by_ref_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.sort_atoms_by_ref_atoms" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.sort_atoms_by_ref_atoms">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">sort_atoms_by_ref_atoms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#sort_atoms_by_ref_atoms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.sort_atoms_by_ref_atoms" title="Permalink to this definition"></a></dt>
 <dd><p>Sort a structure based on a reference structure. This could
 be super useful when restarting DFT relaxation in VASP since
 VASP always shuffles the atom indices when starting a new run.
@@ -445,8 +379,8 @@ cells of the two periodic structures must be the same.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="acat.utilities.draw_graph">
-<code class="sig-prename descclassname">acat.utilities.</code><code class="sig-name descname">draw_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">'graph.png'</span></em>, <em class="sig-param"><span class="n">layout</span><span class="o">=</span><span class="default_value">'spring'</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#draw_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.utilities.draw_graph" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.utilities.draw_graph">
+<span class="sig-prename descclassname"><span class="pre">acat.utilities.</span></span><span class="sig-name descname"><span class="pre">draw_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savefig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'graph.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'spring'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/utilities.html#draw_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.utilities.draw_graph" title="Permalink to this definition"></a></dt>
 <dd><p>Draw the graph using matplotlib.pyplot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -460,54 +394,37 @@ cells of the two periodic structures must be the same.</p>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="notes.html" class="btn btn-neutral float-right" title="Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="ga.html" class="btn btn-neutral float-left" title="Genetic algorithm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="notes.html" class="btn btn-neutral float-right" title="Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Shuang Han.
-
-    </p>
+    <p>&#169; Copyright 2021, Shuang Han.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

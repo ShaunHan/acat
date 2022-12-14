@@ -4,6 +4,7 @@ from ase.formula import Formula
 from ase.build import molecule
 from ase.parallel import parprint
 from ase import Atoms
+import numpy as np
 
 
 # Adsorbate elements must be different from catalyst elements
@@ -95,6 +96,7 @@ def adsorbate_molecule(adsorbate):
     elif adsorbate == 'CO2':     
         ads = molecule(adsorbate)
         ads.rotate(90, 'x')
+        ads.rotate(90, '-z')
     elif adsorbate in ['CS2','N2O']:
         ads = molecule(adsorbate)[[1,0,2]]
         ads.rotate(90, 'x')
@@ -172,11 +174,13 @@ def adsorbate_molecule(adsorbate):
         ads = molecule(adsorbate)[[0,2,3,4,1,5]]
         ads.rotate(180, 'z')
     elif adsorbate == 'COOH':
-        ads = molecule('HCOOH')
-        del ads[-1]
-        ads = ads[[1,2,0,3]]
-        ads.rotate(90, '-x')
-        ads.rotate(15, '-y')
+        ads = Atoms('COOH', positions=[
+                    (1.478221, 1.560435, 1.876707),
+                    (2.124981, 0.480334, 2.067106),
+                    (1.025178, 2.173870, 2.970078),
+                    (0.550955, 3.006358, 2.725701),])
+        ads.positions -= np.array([1.478221, 1.560435, 1.876707])
+        ads.rotate(57, 'z')
     elif adsorbate == 'CHOO':
         ads = molecule('HCOOH')
         del ads[-2]

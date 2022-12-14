@@ -1,75 +1,39 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Building things &mdash; ACAT 1.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-  <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
     <link rel="shortcut icon" href="_static/acat_favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Genetic algorithm" href="ga.html" />
     <link rel="prev" title="Base modules" href="modules.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> ACAT
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,44 +41,78 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Building things</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.build.action">Operate adsorbate</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#the-add-adsorbate-function">The add_adsorbate function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-add-adsorbate-to-site-function">The add_adsorbate_to_site function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-add-adsorbate-to-label-function">The add_adsorbate_to_label function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-remove-adsorbate-from-site-function">The remove_adsorbate_from_site function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-remove-adsorbates-from-sites-function">The remove_adsorbates_from_sites function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-remove-adsorbates-too-close-function">The remove_adsorbates_too_close function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-add-adsorbate-function">The add_adsorbate function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.action.add_adsorbate"><code class="docutils literal notranslate"><span class="pre">add_adsorbate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-add-adsorbate-to-site-function">The add_adsorbate_to_site function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.action.add_adsorbate_to_site"><code class="docutils literal notranslate"><span class="pre">add_adsorbate_to_site()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-add-adsorbate-to-label-function">The add_adsorbate_to_label function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.action.add_adsorbate_to_label"><code class="docutils literal notranslate"><span class="pre">add_adsorbate_to_label()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-remove-adsorbate-from-site-function">The remove_adsorbate_from_site function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.action.remove_adsorbate_from_site"><code class="docutils literal notranslate"><span class="pre">remove_adsorbate_from_site()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-remove-adsorbates-from-sites-function">The remove_adsorbates_from_sites function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.action.remove_adsorbates_from_sites"><code class="docutils literal notranslate"><span class="pre">remove_adsorbates_from_sites()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-remove-adsorbates-too-close-function">The remove_adsorbates_too_close function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.action.remove_adsorbates_too_close"><code class="docutils literal notranslate"><span class="pre">remove_adsorbates_too_close()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.build.adlayer">Generate adsorbate overlayer patterns</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#the-randompatterngenerator-class">The RandomPatternGenerator class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-systematicpatterngenerator-class">The SystematicPatternGenerator class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-orderedpatterngenerator-class">The OrderedPatternGenerator class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-special-coverage-pattern-function">The special_coverage_pattern function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-max-dist-coverage-pattern-function">The max_dist_coverage_pattern function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-min-dist-coverage-pattern-function">The min_dist_coverage_pattern function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-randompatterngenerator-class">The RandomPatternGenerator class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.adlayer.RandomPatternGenerator"><code class="docutils literal notranslate"><span class="pre">RandomPatternGenerator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-systematicpatterngenerator-class">The SystematicPatternGenerator class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.adlayer.SystematicPatternGenerator"><code class="docutils literal notranslate"><span class="pre">SystematicPatternGenerator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-orderedpatterngenerator-class">The OrderedPatternGenerator class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.adlayer.OrderedPatternGenerator"><code class="docutils literal notranslate"><span class="pre">OrderedPatternGenerator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-special-coverage-pattern-function">The special_coverage_pattern function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.adlayer.special_coverage_pattern"><code class="docutils literal notranslate"><span class="pre">special_coverage_pattern()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-max-dist-coverage-pattern-function">The max_dist_coverage_pattern function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.adlayer.max_dist_coverage_pattern"><code class="docutils literal notranslate"><span class="pre">max_dist_coverage_pattern()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-min-dist-coverage-pattern-function">The min_dist_coverage_pattern function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.adlayer.min_dist_coverage_pattern"><code class="docutils literal notranslate"><span class="pre">min_dist_coverage_pattern()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-acat.build.ordering">Generate alloy chemical orderings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#the-symmetricclusterorderinggenerator-class">The SymmetricClusterOrderingGenerator class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-symmetricslaborderinggenerator-class">The SymmetricSlabOrderingGenerator class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-randomorderinggenerator-class">The RandomOrderingGenerator class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-symmetricclusterorderinggenerator-class">The SymmetricClusterOrderingGenerator class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.ordering.SymmetricClusterOrderingGenerator"><code class="docutils literal notranslate"><span class="pre">SymmetricClusterOrderingGenerator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-symmetricslaborderinggenerator-class">The SymmetricSlabOrderingGenerator class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.ordering.SymmetricSlabOrderingGenerator"><code class="docutils literal notranslate"><span class="pre">SymmetricSlabOrderingGenerator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#the-randomorderinggenerator-class">The RandomOrderingGenerator class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acat.build.ordering.RandomOrderingGenerator"><code class="docutils literal notranslate"><span class="pre">RandomOrderingGenerator</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -124,81 +122,40 @@
 <li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">ACAT</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>Building things</li>
-    
-    
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Building things</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/build.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="building-things">
-<h1>Building things<a class="headerlink" href="#building-things" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-acat.build.action">
-<span id="operate-adsorbate"></span><h2>Operate adsorbate<a class="headerlink" href="#module-acat.build.action" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="the-add-adsorbate-function">
-<h3>The add_adsorbate function<a class="headerlink" href="#the-add-adsorbate-function" title="Permalink to this headline">¶</a></h3>
+             
+  <section id="building-things">
+<h1>Building things<a class="headerlink" href="#building-things" title="Permalink to this heading"></a></h1>
+<section id="module-acat.build.action">
+<span id="operate-adsorbate"></span><h2>Operate adsorbate<a class="headerlink" href="#module-acat.build.action" title="Permalink to this heading"></a></h2>
+<section id="the-add-adsorbate-function">
+<h3>The add_adsorbate function<a class="headerlink" href="#the-add-adsorbate-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.action.add_adsorbate">
-<code class="sig-prename descclassname">acat.build.action.</code><code class="sig-name descname">add_adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">site</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">morphology</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">subsurf_element</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">all_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#add_adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.action.add_adsorbate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.action.add_adsorbate">
+<span class="sig-prename descclassname"><span class="pre">acat.build.action.</span></span><span class="sig-name descname"><span class="pre">add_adsorbate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">morphology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsurf_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#add_adsorbate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.action.add_adsorbate" title="Permalink to this definition"></a></dt>
 <dd><p>A general function for adding one adsorbate to the surface.
 Note that this function adds one adsorbate to a random site
 that meets the specified condition regardless of it is already
@@ -226,7 +183,7 @@ Use the default settings if not specified.</p></li>
 the surface normal.</p></li>
 <li><p><strong>subsurf_element</strong> (<em>str</em><em>, </em><em>default None</em>) – The subsurface element of the hcp or 4fold hollow site that
 should be added to.</p></li>
-<li><p><strong>all_sites</strong> (<em>list of dicts</em><em>, </em><em>default None</em>) – The list of all sites. Provide this to make the function
+<li><p><strong>all_sites</strong> (<em>list</em><em> of </em><em>dicts</em><em>, </em><em>default None</em>) – The list of all sites. Provide this to make the function
 much faster. Useful when the function is called many times.</p></li>
 </ul>
 </dd>
@@ -252,13 +209,13 @@ Ni on the fcc111 surface of a bimetallic truncated octahedron:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/add_adsorbate.png"><img alt="_images/add_adsorbate.png" class="align-center" src="_images/add_adsorbate.png" style="width: 533.4px; height: 253.39999999999998px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-add-adsorbate-to-site-function">
-<h3>The add_adsorbate_to_site function<a class="headerlink" href="#the-add-adsorbate-to-site-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-add-adsorbate-to-site-function">
+<h3>The add_adsorbate_to_site function<a class="headerlink" href="#the-add-adsorbate-to-site-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.action.add_adsorbate_to_site">
-<code class="sig-prename descclassname">acat.build.action.</code><code class="sig-name descname">add_adsorbate_to_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">site</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#add_adsorbate_to_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.action.add_adsorbate_to_site" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.action.add_adsorbate_to_site">
+<span class="sig-prename descclassname"><span class="pre">acat.build.action.</span></span><span class="sig-name descname"><span class="pre">add_adsorbate_to_site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#add_adsorbate_to_site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.action.add_adsorbate_to_site" title="Permalink to this definition"></a></dt>
 <dd><p>The base function for adding one adsorbate to a site.
 Site must include information of ‘normal’ and ‘position’.
 Useful for adding adsorbate to multiple sites or adding
@@ -324,13 +281,13 @@ surface slab and rotate to the orientation of a neighbor site:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/add_adsorbate_to_site_2.png"><img alt="_images/add_adsorbate_to_site_2.png" class="align-center" src="_images/add_adsorbate_to_site_2.png" style="width: 471.09999999999997px; height: 223.29999999999998px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-add-adsorbate-to-label-function">
-<h3>The add_adsorbate_to_label function<a class="headerlink" href="#the-add-adsorbate-to-label-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-add-adsorbate-to-label-function">
+<h3>The add_adsorbate_to_label function<a class="headerlink" href="#the-add-adsorbate-to-label-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.action.add_adsorbate_to_label">
-<code class="sig-prename descclassname">acat.build.action.</code><code class="sig-name descname">add_adsorbate_to_label</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate</span></em>, <em class="sig-param"><span class="n">label</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orientation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tilt_angle</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">composition_effect</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">all_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#add_adsorbate_to_label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.action.add_adsorbate_to_label" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.action.add_adsorbate_to_label">
+<span class="sig-prename descclassname"><span class="pre">acat.build.action.</span></span><span class="sig-name descname"><span class="pre">add_adsorbate_to_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition_effect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#add_adsorbate_to_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.action.add_adsorbate_to_label" title="Permalink to this definition"></a></dt>
 <dd><p>Same as add_adsorbate function, except that the site type is
 represented by a numerical label. The function is generalized for
 both periodic and non-periodic systems (distinguished by atoms.pbc).</p>
@@ -350,7 +307,7 @@ Use the default settings if not specified.</p></li>
 <li><p><strong>tilt_angle</strong> (<em>float</em><em>, </em><em>default 0.</em>) – Tilt the adsorbate with an angle (in degrees) relative to
 the surface normal.</p></li>
 <li><p><strong>composition_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether the label is defined in bimetallic labels or not.</p></li>
-<li><p><strong>all_sites</strong> (<em>list of dicts</em><em>, </em><em>default None</em>) – The list of all sites. Provide this to make the function
+<li><p><strong>all_sites</strong> (<em>list</em><em> of </em><em>dicts</em><em>, </em><em>default None</em>) – The list of all sites. Provide this to make the function
 much faster. Useful when the function is called many times.</p></li>
 </ul>
 </dd>
@@ -378,13 +335,13 @@ hcp CuCuAu site) on a bimetallic fcc110 surface slab:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/add_adsorbate_to_label.png"><img alt="_images/add_adsorbate_to_label.png" class="align-center" src="_images/add_adsorbate_to_label.png" style="width: 301.7px; height: 143.5px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-remove-adsorbate-from-site-function">
-<h3>The remove_adsorbate_from_site function<a class="headerlink" href="#the-remove-adsorbate-from-site-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-remove-adsorbate-from-site-function">
+<h3>The remove_adsorbate_from_site function<a class="headerlink" href="#the-remove-adsorbate-from-site-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.action.remove_adsorbate_from_site">
-<code class="sig-prename descclassname">acat.build.action.</code><code class="sig-name descname">remove_adsorbate_from_site</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">site</span></em>, <em class="sig-param"><span class="n">remove_fragment</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#remove_adsorbate_from_site"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.action.remove_adsorbate_from_site" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.action.remove_adsorbate_from_site">
+<span class="sig-prename descclassname"><span class="pre">acat.build.action.</span></span><span class="sig-name descname"><span class="pre">remove_adsorbate_from_site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#remove_adsorbate_from_site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.action.remove_adsorbate_from_site" title="Permalink to this definition"></a></dt>
 <dd><p>The base function for removing one adsorbate from an
 occupied site. The site must include information of
 ‘adsorbate_indices’ or ‘fragment_indices’. Note that if
@@ -428,13 +385,13 @@ CO and one OH:</p>
 </div>
 <a class="reference internal image-reference" href="_images/remove_adsorbate_from_site.png"><img alt="_images/remove_adsorbate_from_site.png" src="_images/remove_adsorbate_from_site.png" style="width: 576.6px; height: 273.59999999999997px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-remove-adsorbates-from-sites-function">
-<h3>The remove_adsorbates_from_sites function<a class="headerlink" href="#the-remove-adsorbates-from-sites-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-remove-adsorbates-from-sites-function">
+<h3>The remove_adsorbates_from_sites function<a class="headerlink" href="#the-remove-adsorbates-from-sites-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.action.remove_adsorbates_from_sites">
-<code class="sig-prename descclassname">acat.build.action.</code><code class="sig-name descname">remove_adsorbates_from_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">sites</span></em>, <em class="sig-param"><span class="n">remove_fragments</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#remove_adsorbates_from_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.action.remove_adsorbates_from_sites" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.action.remove_adsorbates_from_sites">
+<span class="sig-prename descclassname"><span class="pre">acat.build.action.</span></span><span class="sig-name descname"><span class="pre">remove_adsorbates_from_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_fragments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#remove_adsorbates_from_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.action.remove_adsorbates_from_sites" title="Permalink to this definition"></a></dt>
 <dd><p>The base function for removing multiple adsorbates from
 an occupied site. The sites must include information of
 ‘adsorbate_indices’ or ‘fragment_indices’.</p>
@@ -442,7 +399,7 @@ an occupied site. The sites must include information of
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>sites</strong> (<em>list of dicts</em>) – The site that the adsorbate should be removed from.
+<li><p><strong>sites</strong> (<em>list</em><em> of </em><em>dicts</em>) – The site that the adsorbate should be removed from.
 Must contain information of the adsorbate indices.</p></li>
 <li><p><strong>remove_fragments</strong> (<em>bool</em><em>, </em><em>default False</em>) – Remove the fragment of a multidentate adsorbate instead
 of the whole adsorbate.</p></li>
@@ -476,13 +433,13 @@ with both CO and OH:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/remove_adsorbates_from_sites.png"><img alt="_images/remove_adsorbates_from_sites.png" src="_images/remove_adsorbates_from_sites.png" style="width: 576.6px; height: 273.59999999999997px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-remove-adsorbates-too-close-function">
-<h3>The remove_adsorbates_too_close function<a class="headerlink" href="#the-remove-adsorbates-too-close-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-remove-adsorbates-too-close-function">
+<h3>The remove_adsorbates_too_close function<a class="headerlink" href="#the-remove-adsorbates-too-close-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.action.remove_adsorbates_too_close">
-<code class="sig-prename descclassname">acat.build.action.</code><code class="sig-name descname">remove_adsorbates_too_close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_coverage</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#remove_adsorbates_too_close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.action.remove_adsorbates_too_close" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.action.remove_adsorbates_too_close">
+<span class="sig-prename descclassname"><span class="pre">acat.build.action.</span></span><span class="sig-name descname"><span class="pre">remove_adsorbates_too_close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_coverage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_adsorbate_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/action.html#remove_adsorbates_too_close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.action.remove_adsorbates_too_close" title="Permalink to this definition"></a></dt>
 <dd><p>Find adsorbates that are too close, remove one set of them.
 The function is intended to remove atoms that are unphysically
 close. Please do not use a min_adsorbate_distace larger than 2.
@@ -523,16 +480,16 @@ decahedron with 0.75 ML ordered CO coverage:</p>
 <p>Output:</p>
 <img alt="_images/remove_adsorbates_too_close.png" src="_images/remove_adsorbates_too_close.png" />
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="module-acat.build.adlayer">
-<span id="generate-adsorbate-overlayer-patterns"></span><h2>Generate adsorbate overlayer patterns<a class="headerlink" href="#module-acat.build.adlayer" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="the-randompatterngenerator-class">
-<h3>The RandomPatternGenerator class<a class="headerlink" href="#the-randompatterngenerator-class" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="module-acat.build.adlayer">
+<span id="generate-adsorbate-overlayer-patterns"></span><h2>Generate adsorbate overlayer patterns<a class="headerlink" href="#module-acat.build.adlayer" title="Permalink to this heading"></a></h2>
+<section id="the-randompatterngenerator-class">
+<h3>The RandomPatternGenerator class<a class="headerlink" href="#the-randompatterngenerator-class" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.adlayer.RandomPatternGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">RandomPatternGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">image_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="n">species_forbidden_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">species_forbidden_labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'patterns.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">logfile</span><span class="o">=</span><span class="default_value">'patterns.log'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#RandomPatternGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.RandomPatternGenerator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.RandomPatternGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">acat.build.adlayer.</span></span><span class="sig-name descname"><span class="pre">RandomPatternGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_adsorbate_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorption_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'3fold':</span> <span class="pre">1.3,</span> <span class="pre">'4fold':</span> <span class="pre">1.3,</span> <span class="pre">'5fold':</span> <span class="pre">1.5,</span> <span class="pre">'6fold':</span> <span class="pre">0.0,</span> <span class="pre">'bridge':</span> <span class="pre">1.5,</span> <span class="pre">'fcc':</span> <span class="pre">1.3,</span> <span class="pre">'hcp':</span> <span class="pre">1.3,</span> <span class="pre">'longbridge':</span> <span class="pre">1.5,</span> <span class="pre">'ontop':</span> <span class="pre">1.8,</span> <span class="pre">'shortbridge':</span> <span class="pre">1.5}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtract_heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_forbidden_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_forbidden_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragmentation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'patterns.traj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'patterns.log'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#RandomPatternGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.RandomPatternGenerator" title="Permalink to this definition"></a></dt>
 <dd><p><cite>RandomPatternGenerator</cite> is a class for generating adsorbate
 overlayer patterns stochastically. Graph automorphism is implemented
 to identify identical adlayer patterns. 4 adsorbate actions are
@@ -541,11 +498,11 @@ both periodic and non-periodic systems (distinguished by atoms.pbc).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>images</strong> (<em>ase.Atoms object</em><em> or </em><em>list of ase.Atoms objects</em>) – The structure to perform the adsorbate actions on.
+<li><p><strong>images</strong> (<em>ase.Atoms object</em><em> or </em><em>list</em><em> of </em><em>ase.Atoms objects</em>) – The structure to perform the adsorbate actions on.
 If a list of structures is provided, perform one
 adsorbate action on one of the structures in each step.
 Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
 <li><p><strong>image_probabilities</strong> (<em>listt</em><em>, </em><em>default None</em>) – A list of the probabilities of selecting each structure.
 Selecting structure with equal probability if not specified.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
@@ -599,14 +556,14 @@ stochastically but for all images systematically, e.g. generating
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.adlayer.RandomPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">action_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#RandomPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.RandomPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.RandomPatternGenerator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_gen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'add'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_species_composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_preference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsurf_effect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#RandomPatternGenerator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.RandomPatternGenerator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>num_gen</strong> (<em>int</em>) – Number of patterns to generate.</p></li>
-<li><p><strong>action</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default 'add'</em>) – Action(s) to perform. If a list of actions is provided, select
+<li><p><strong>action</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em><em>, </em><em>default 'add'</em>) – Action(s) to perform. If a list of actions is provided, select
 actions from the list randomly or with probabilities.</p></li>
 <li><p><strong>action_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each action and values of the
 corresponding probabilities. Select actions with equal probability
@@ -628,7 +585,7 @@ not specified. Please only use this if the action is ‘add’.</p></li>
 The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
 <li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
 if unique=True.</p></li>
-<li><p><strong>site_preference</strong> (<em>str of list of strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
+<li><p><strong>site_preference</strong> (<em>str</em><em> of </em><em>list</em><em> of </em><em>strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to take subsurface atoms into consideration when checking
 uniqueness. Could be important for surfaces like fcc100.</p></li>
 </ul>
@@ -740,13 +697,13 @@ nanoparticles):</p>
 <p>Output:</p>
 <img alt="_images/RandomPatternGenerator3.gif" src="_images/RandomPatternGenerator3.gif" />
 </div></blockquote>
-</div>
-<div class="section" id="the-systematicpatterngenerator-class">
-<h3>The SystematicPatternGenerator class<a class="headerlink" href="#the-systematicpatterngenerator-class" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-systematicpatterngenerator-class">
+<h3>The SystematicPatternGenerator class<a class="headerlink" href="#the-systematicpatterngenerator-class" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.adlayer.SystematicPatternGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">SystematicPatternGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="n">species_forbidden_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">species_forbidden_labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">enumerate_orientations</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'patterns.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">logfile</span><span class="o">=</span><span class="default_value">'patterns.log'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SystematicPatternGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SystematicPatternGenerator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.SystematicPatternGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">acat.build.adlayer.</span></span><span class="sig-name descname"><span class="pre">SystematicPatternGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_adsorbate_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorption_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'3fold':</span> <span class="pre">1.3,</span> <span class="pre">'4fold':</span> <span class="pre">1.3,</span> <span class="pre">'5fold':</span> <span class="pre">1.5,</span> <span class="pre">'6fold':</span> <span class="pre">0.0,</span> <span class="pre">'bridge':</span> <span class="pre">1.5,</span> <span class="pre">'fcc':</span> <span class="pre">1.3,</span> <span class="pre">'hcp':</span> <span class="pre">1.3,</span> <span class="pre">'longbridge':</span> <span class="pre">1.5,</span> <span class="pre">'ontop':</span> <span class="pre">1.8,</span> <span class="pre">'shortbridge':</span> <span class="pre">1.5}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtract_heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_forbidden_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_forbidden_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enumerate_orientations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'patterns.traj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'patterns.log'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SystematicPatternGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.SystematicPatternGenerator" title="Permalink to this definition"></a></dt>
 <dd><p><cite>SystematicPatternGenerator</cite> is a class for generating
 adsorbate overlayer patterns systematically. This is useful to
 enumerate all unique patterns at low coverage, but explodes at
@@ -757,11 +714,11 @@ periodic and non-periodic systems (distinguished by atoms.pbc).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>images</strong> (<em>ase.Atoms object</em><em> or </em><em>list of ase.Atoms objects</em>) – The structure to perform the adsorbate actions on.
+<li><p><strong>images</strong> (<em>ase.Atoms object</em><em> or </em><em>list</em><em> of </em><em>ase.Atoms objects</em>) – The structure to perform the adsorbate actions on.
 If a list of structures is provided, perform one
 adsorbate action on one of the structures in each step.
 Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
 <li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 1.5</em>) – The minimum distance constraint between two atoms that belongs
 to two adsorbates.</p></li>
 <li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
@@ -800,8 +757,8 @@ graph automorphism for the existing structures in the trajectory.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.adlayer.SystematicPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen_per_image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="n">num_act</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">add_species_composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subsurf_effect</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SystematicPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.SystematicPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.SystematicPatternGenerator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_gen_per_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'add'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_species_composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_preference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsurf_effect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#SystematicPatternGenerator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.SystematicPatternGenerator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -823,7 +780,7 @@ only use this if the action is ‘add’.</p></li>
 The Weisfeiler-Lehman subtree kernel is used to check identity.</p></li>
 <li><p><strong>hmax</strong> (<em>int</em><em>, </em><em>default 2</em>) – Maximum number of iterations for color refinement. Only relevant
 if unique=True.</p></li>
-<li><p><strong>site_preference</strong> (<em>str of list of strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
+<li><p><strong>site_preference</strong> (<em>str</em><em> of </em><em>list</em><em> of </em><em>strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
 <li><p><strong>subsurf_effect</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to take subsurface atoms into consideration when checking
 uniqueness. Could be important for surfaces like fcc100.</p></li>
 </ul>
@@ -891,13 +848,13 @@ bcc111 surface slab with a minimum adsorbate distance of 2 Angstrom
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/SystematicPatternGenerator2.gif"><img alt="_images/SystematicPatternGenerator2.gif" class="align-center" src="_images/SystematicPatternGenerator2.gif" style="width: 256.0px; height: 192.0px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-orderedpatterngenerator-class">
-<h3>The OrderedPatternGenerator class<a class="headerlink" href="#the-orderedpatterngenerator-class" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-orderedpatterngenerator-class">
+<h3>The OrderedPatternGenerator class<a class="headerlink" href="#the-orderedpatterngenerator-class" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.adlayer.OrderedPatternGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">OrderedPatternGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">repeating_distance</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_species</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sorting_vector</span><span class="o">=</span><span class="default_value">array([1, 0])</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">remove_site_shells</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">remove_site_radius</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">populate_isolated_sites</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_odd</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">subtract_heights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">site_groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fragmentation</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">dmax</span><span class="o">=</span><span class="default_value">2.5</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.3</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'patterns.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.OrderedPatternGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">acat.build.adlayer.</span></span><span class="sig-name descname"><span class="pre">OrderedPatternGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeating_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_species</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorting_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([1,</span> <span class="pre">0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorption_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_site_shells</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_site_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_isolated_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_odd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'3fold':</span> <span class="pre">1.3,</span> <span class="pre">'4fold':</span> <span class="pre">1.3,</span> <span class="pre">'5fold':</span> <span class="pre">1.5,</span> <span class="pre">'6fold':</span> <span class="pre">0.0,</span> <span class="pre">'bridge':</span> <span class="pre">1.5,</span> <span class="pre">'fcc':</span> <span class="pre">1.3,</span> <span class="pre">'hcp':</span> <span class="pre">1.3,</span> <span class="pre">'longbridge':</span> <span class="pre">1.5,</span> <span class="pre">'ontop':</span> <span class="pre">1.8,</span> <span class="pre">'shortbridge':</span> <span class="pre">1.5}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtract_heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragmentation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'patterns.traj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator" title="Permalink to this definition"></a></dt>
 <dd><p><cite>OrderedPatternGenerator</cite> is a class for generating
 adsorbate overlayer patterns stochastically. Graph automorphism
 is implemented to identify identical adlayer patterns. 4
@@ -907,11 +864,11 @@ systems (distinguished by atoms.pbc).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>images</strong> (<em>ase.Atoms object</em><em> or </em><em>list of ase.Atoms objects</em>) – The structure to perform the adsorbate actions on.
+<li><p><strong>images</strong> (<em>ase.Atoms object</em><em> or </em><em>list</em><em> of </em><em>ase.Atoms objects</em>) – The structure to perform the adsorbate actions on.
 If a list of structures is provided, perform one
 adsorbate action on one of the structures in each step.
 Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of possible adsorbate species to be added to the surface.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em>) – A list of possible adsorbate species to be added to the surface.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
 values of their probabilities of adding onto the surface.</p></li>
 <li><p><strong>repeating_distance</strong> (<em>float</em><em>, </em><em>default None</em>) – The pairwise distance (in Angstrom) between two symmetry-equivalent
@@ -946,7 +903,7 @@ a site to an adsorbate. Default is to allocate the site that is
 closest to the adsorbate’s binding atom without subtracting height.
 Useful for ensuring the allocated site for each adsorbate is
 consistent with the site to which the adsorbate was added.</p></li>
-<li><p><strong>site_groups</strong> (<em>list of lists</em><em>, </em><em>default None</em>) – Provide the user defined symmetry equivalent site groups as a list
+<li><p><strong>site_groups</strong> (<em>list</em><em> of </em><em>lists</em><em>, </em><em>default None</em>) – Provide the user defined symmetry equivalent site groups as a list
 of lists of site indices (of the site list). Useful for generating
 structures with symmetries that are not supported.</p></li>
 <li><p><strong>save_groups</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to save the site groups in atoms.info[‘data’][‘groups’] for
@@ -966,8 +923,8 @@ graph automorphism for the existing structures in the trajectory.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.adlayer.OrderedPatternGenerator.get_site_groups">
-<code class="sig-name descname">get_site_groups</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_all_site_groups</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.get_site_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.get_site_groups" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.OrderedPatternGenerator.get_site_groups">
+<span class="sig-name descname"><span class="pre">get_site_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_all_site_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.get_site_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.get_site_groups" title="Permalink to this definition"></a></dt>
 <dd><p>Get the groups (a list of lists of site indices) of all
 pairs of symmetry-equivalent sites.</p>
 <dl class="field-list simple">
@@ -979,8 +936,8 @@ the adsorption sites.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.adlayer.OrderedPatternGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.OrderedPatternGenerator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#OrderedPatternGenerator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.OrderedPatternGenerator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the ordered pattern generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1071,13 +1028,13 @@ are sorted according to the diagonal vector:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/OrderedPatternGenerator2.gif"><img alt="_images/OrderedPatternGenerator2.gif" class="align-center" src="_images/OrderedPatternGenerator2.gif" style="width: 384.0px; height: 288.0px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-special-coverage-pattern-function">
-<h3>The special_coverage_pattern function<a class="headerlink" href="#the-special-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-special-coverage-pattern-function">
+<h3>The special_coverage_pattern function<a class="headerlink" href="#the-special-coverage-pattern-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.adlayer.special_coverage_pattern">
-<code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">special_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#special_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.special_coverage_pattern" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.special_coverage_pattern">
+<span class="sig-prename descclassname"><span class="pre">acat.build.adlayer.</span></span><span class="sig-name descname"><span class="pre">special_coverage_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coverage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorption_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_adsorbate_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#special_coverage_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.special_coverage_pattern" title="Permalink to this definition"></a></dt>
 <dd><p>A function for generating representative ordered adsorbate
 overlayer patterns. The function is generalized for both periodic
 and non-periodic systems (distinguished by atoms.pbc). Note that
@@ -1087,7 +1044,7 @@ the algorithm currently does not work for orthogonal fcc111 cells.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle or surface slab onto which the adsorbates are
 added. Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be added to the surface.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em>) – A list of adsorbate species to be added to the surface.</p></li>
 <li><p><strong>coverage</strong> (<em>float</em><em>, </em><em>default 1.</em>) – The coverage (ML) of the adsorbate (N_adsorbate / N_surf_atoms).
 Support 4 adlayer patterns (
 0.25 for p(2x2) pattern;
@@ -1148,13 +1105,13 @@ adsorbates.</p></li>
 <p>Output:</p>
 <img alt="_images/special_coverage_pattern_2.png" src="_images/special_coverage_pattern_2.png" />
 </div></blockquote>
-</div>
-<div class="section" id="the-max-dist-coverage-pattern-function">
-<h3>The max_dist_coverage_pattern function<a class="headerlink" href="#the-max-dist-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-max-dist-coverage-pattern-function">
+<h3>The max_dist_coverage_pattern function<a class="headerlink" href="#the-max-dist-coverage-pattern-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.adlayer.max_dist_coverage_pattern">
-<code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">max_dist_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">coverage</span></em>, <em class="sig-param"><span class="n">site_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#max_dist_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.max_dist_coverage_pattern" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.max_dist_coverage_pattern">
+<span class="sig-prename descclassname"><span class="pre">acat.build.adlayer.</span></span><span class="sig-name descname"><span class="pre">max_dist_coverage_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coverage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorption_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'3fold':</span> <span class="pre">1.3,</span> <span class="pre">'4fold':</span> <span class="pre">1.3,</span> <span class="pre">'5fold':</span> <span class="pre">1.5,</span> <span class="pre">'6fold':</span> <span class="pre">0.0,</span> <span class="pre">'bridge':</span> <span class="pre">1.5,</span> <span class="pre">'fcc':</span> <span class="pre">1.3,</span> <span class="pre">'hcp':</span> <span class="pre">1.3,</span> <span class="pre">'longbridge':</span> <span class="pre">1.5,</span> <span class="pre">'ontop':</span> <span class="pre">1.8,</span> <span class="pre">'shortbridge':</span> <span class="pre">1.5}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#max_dist_coverage_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.max_dist_coverage_pattern" title="Permalink to this definition"></a></dt>
 <dd><p>A function for generating random adlayer patterns with
 a certain surface adsorbate coverage (i.e. fixed number of
 adsorbates N) and trying to even the adsorbate density. The
@@ -1168,10 +1125,10 @@ atoms.pbc). pyclustering is required.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle or surface slab onto which the adsorbates are
 added. Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be added to the surface.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em>) – A list of adsorbate species to be added to the surface.</p></li>
 <li><p><strong>coverage</strong> (<em>float</em>) – The surface coverage calculated by (number of adsorbates /
 number of surface atoms). Subsurface sites are not considered.</p></li>
-<li><p><strong>site_types</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default None</em>) – The site type(s) that the adsorbates should be added to.
+<li><p><strong>site_types</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em><em>, </em><em>default None</em>) – The site type(s) that the adsorbates should be added to.
 Consider all sites if not specified.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
 values of their probabilities of adding onto the surface.</p></li>
@@ -1222,13 +1179,13 @@ slab:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/max_dist_coverage_pattern_2.png"><img alt="_images/max_dist_coverage_pattern_2.png" class="align-center" src="_images/max_dist_coverage_pattern_2.png" style="width: 540.1px; height: 540.1px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-min-dist-coverage-pattern-function">
-<h3>The min_dist_coverage_pattern function<a class="headerlink" href="#the-min-dist-coverage-pattern-function" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-min-dist-coverage-pattern-function">
+<h3>The min_dist_coverage_pattern function<a class="headerlink" href="#the-min-dist-coverage-pattern-function" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py function">
-<dt id="acat.build.adlayer.min_dist_coverage_pattern">
-<code class="sig-prename descclassname">acat.build.adlayer.</code><code class="sig-name descname">min_dist_coverage_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">adsorbate_species</span></em>, <em class="sig-param"><span class="n">species_probabilities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adsorption_sites</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_adsorbate_distance</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">site_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">heights</span><span class="o">=</span><span class="default_value">{'3fold': 1.3, '4fold': 1.3, '5fold': 1.5, '6fold': 0.0, 'bridge': 1.5, 'fcc': 1.3, 'hcp': 1.3, 'longbridge': 1.5, 'ontop': 1.8, 'shortbridge': 1.5}</span></em>, <em class="sig-param"><span class="n">site_preference</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#min_dist_coverage_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.adlayer.min_dist_coverage_pattern" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.adlayer.min_dist_coverage_pattern">
+<span class="sig-prename descclassname"><span class="pre">acat.build.adlayer.</span></span><span class="sig-name descname"><span class="pre">min_dist_coverage_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorbate_species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adsorption_sites</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_adsorbate_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'3fold':</span> <span class="pre">1.3,</span> <span class="pre">'4fold':</span> <span class="pre">1.3,</span> <span class="pre">'5fold':</span> <span class="pre">1.5,</span> <span class="pre">'6fold':</span> <span class="pre">0.0,</span> <span class="pre">'bridge':</span> <span class="pre">1.5,</span> <span class="pre">'fcc':</span> <span class="pre">1.3,</span> <span class="pre">'hcp':</span> <span class="pre">1.3,</span> <span class="pre">'longbridge':</span> <span class="pre">1.5,</span> <span class="pre">'ontop':</span> <span class="pre">1.8,</span> <span class="pre">'shortbridge':</span> <span class="pre">1.5}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_preference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/adlayer.html#min_dist_coverage_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.adlayer.min_dist_coverage_pattern" title="Permalink to this definition"></a></dt>
 <dd><p>A function for generating random adlayer patterns with a
 minimum distance constraint and trying to maximize the adsorbate
 density. The function is generalized for both periodic and
@@ -1239,7 +1196,7 @@ useful for generating high coverage patterns.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle or surface slab onto which the adsorbates are
 added. Accept any ase.Atoms object. No need to be built-in.</p></li>
-<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list of strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
+<li><p><strong>adsorbate_species</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em>) – A list of adsorbate species to be randomly added to the surface.</p></li>
 <li><p><strong>species_probabilities</strong> (<em>dict</em><em>, </em><em>default None</em>) – A dictionary that contains keys of each adsorbate species and
 values of their probabilities of adding onto the surface.</p></li>
 <li><p><strong>adsorption_sites</strong> (<em>acat.adsorption_sites.ClusterAdsorptionSites object</em><em>         or </em><em>acat.adsorption_sites.SlabAdsorptionSites object</em><em>, </em><em>default None</em>) – Provide the built-in adsorption sites class to accelerate the
@@ -1252,12 +1209,12 @@ If the structure is a nanoparticle, the function only add
 adsorbates to the sites on the specified surface.</p></li>
 <li><p><strong>min_adsorbate_distance</strong> (<em>float</em><em>, </em><em>default 1.5</em>) – The minimum distance constraint between two atoms that belongs
 to two adsorbates.</p></li>
-<li><p><strong>site_types</strong> (<em>str</em><em> or </em><em>list of strs</em><em>, </em><em>default None</em>) – The site type(s) that the adsorbates should be added to.
+<li><p><strong>site_types</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strs</em><em>, </em><em>default None</em>) – The site type(s) that the adsorbates should be added to.
 Consider all sites if not specified.</p></li>
 <li><p><strong>heights</strong> (<em>dict</em><em>, </em><em>default acat.settings.site_heights</em>) – A dictionary that contains the adsorbate height for each site
 type. Use the default height settings if the height for a site
 type is not specified.</p></li>
-<li><p><strong>site_preference</strong> (<em>str of list of strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
+<li><p><strong>site_preference</strong> (<em>str</em><em> of </em><em>list</em><em> of </em><em>strs</em><em>, </em><em>defualt None</em>) – The site type(s) that has higher priority to attach adsorbates.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1330,16 +1287,16 @@ minimum adsorbate distance of 2 Angstrom:</p>
 <p>Output:</p>
 <img alt="_images/min_dist_coverage_pattern_3.png" src="_images/min_dist_coverage_pattern_3.png" />
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="module-acat.build.ordering">
-<span id="generate-alloy-chemical-orderings"></span><h2>Generate alloy chemical orderings<a class="headerlink" href="#module-acat.build.ordering" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="the-symmetricclusterorderinggenerator-class">
-<h3>The SymmetricClusterOrderingGenerator class<a class="headerlink" href="#the-symmetricclusterorderinggenerator-class" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="module-acat.build.ordering">
+<span id="generate-alloy-chemical-orderings"></span><h2>Generate alloy chemical orderings<a class="headerlink" href="#module-acat.build.ordering" title="Permalink to this heading"></a></h2>
+<section id="the-symmetricclusterorderinggenerator-class">
+<h3>The SymmetricClusterOrderingGenerator class<a class="headerlink" href="#the-symmetricclusterorderinggenerator-class" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">SymmetricClusterOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'spherical'</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">secondary_symmetry</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">secondary_cutoff</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricClusterOrderingGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">acat.build.ordering.</span></span><span class="sig-name descname"><span class="pre">SymmetricClusterOrderingGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'spherical'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secondary_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secondary_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'orderings.traj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator" title="Permalink to this definition"></a></dt>
 <dd><p><cite>SymmetricClusterOrderingGenerator</cite> is a class for generating
 symmetric chemical orderings for a <strong>nanoalloy</strong>. There is no
 limitation of the number of metal components. Please always align
@@ -1350,7 +1307,7 @@ the z direction to the symmetry axis of the nanocluster.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle to use as a template to generate symmetric
 chemical orderings. Accept any ase.Atoms object. No need to be
 built-in.</p></li>
-<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the nanoalloy.</p></li>
+<li><p><strong>elements</strong> (<em>list</em><em> of </em><em>strs</em>) – The metal elements of the nanoalloy.</p></li>
 <li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'spherical'</em>) – <p>Support 9 symmetries:</p>
 <p><strong>’spherical’</strong>: spherical symmetry (groups defined by the
 distances to the geometric center);</p>
@@ -1402,7 +1359,7 @@ or combining symmetries with different cutoffs.</p></li>
 The dictionary contains the metal elements as keys and their
 concentrations as values. Generate orderings at all compositions
 if not specified.</p></li>
-<li><p><strong>groups</strong> (<em>list of lists</em><em>, </em><em>default None</em>) – Provide the user defined symmetry equivalent groups as a list of
+<li><p><strong>groups</strong> (<em>list</em><em> of </em><em>lists</em><em>, </em><em>default None</em>) – Provide the user defined symmetry equivalent groups as a list of
 lists of atom indices. Useful for generating structures with
 symmetries that are not supported.</p></li>
 <li><p><strong>save_groups</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to save the site groups in atoms.info[‘data’][‘groups’]
@@ -1413,8 +1370,8 @@ for each generated structure.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices">
-<code class="sig-name descname">get_sorted_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symmetry</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.get_sorted_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices">
+<span class="sig-name descname"><span class="pre">get_sorted_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.get_sorted_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.get_sorted_indices" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the indices sorted by the metric that defines different
 groups, together with the corresponding vlues, given a specific
 symmetry. Returns the indices sorted by geometrical environment if
@@ -1429,15 +1386,15 @@ mirror_planar, chemical, geometrical, concentric.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups">
-<code class="sig-name descname">get_groups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.get_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups">
+<span class="sig-name descname"><span class="pre">get_groups</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.get_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.get_groups" title="Permalink to this definition"></a></dt>
 <dd><p>Get the groups (a list of lists of atom indices) of all
 symmetry-equivalent atoms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricClusterOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'stochastic'</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricClusterOrderingGenerator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'stochastic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricClusterOrderingGenerator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricClusterOrderingGenerator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1565,13 +1522,13 @@ octahedral nanoparticle:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/SymmetricClusterOrderingGenerator4.gif"><img alt="_images/SymmetricClusterOrderingGenerator4.gif" class="align-center" src="_images/SymmetricClusterOrderingGenerator4.gif" style="width: 189.0px; height: 189.0px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-symmetricslaborderinggenerator-class">
-<h3>The SymmetricSlabOrderingGenerator class<a class="headerlink" href="#the-symmetricslaborderinggenerator-class" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-symmetricslaborderinggenerator-class">
+<h3>The SymmetricSlabOrderingGenerator class<a class="headerlink" href="#the-symmetricslaborderinggenerator-class" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.ordering.SymmetricSlabOrderingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">SymmetricSlabOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">symmetry</span><span class="o">=</span><span class="default_value">'translational'</span></em>, <em class="sig-param"><span class="n">repeating_size</span><span class="o">=</span><span class="default_value">1, 1</span></em>, <em class="sig-param"><span class="n">bisect_vector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_groups</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dtol</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">ztol</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricSlabOrderingGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">acat.build.ordering.</span></span><span class="sig-name descname"><span class="pre">SymmetricSlabOrderingGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'translational'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeating_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bisect_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ztol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'orderings.traj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator" title="Permalink to this definition"></a></dt>
 <dd><p><cite>SymmetricSlabOrderingGenerator</cite> is a class for generating
 symmetric chemical orderings for a <strong>alloy surface slab</strong>.
 There is no limitation of the number of metal components.</p>
@@ -1581,7 +1538,7 @@ There is no limitation of the number of metal components.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The surface slab to use as a template to generate symmetric
 chemical orderings. Accept any ase.Atoms object. No need to
 be built-in.</p></li>
-<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
+<li><p><strong>elements</strong> (<em>list</em><em> of </em><em>strs</em>) – The metal elements of the alloy catalyst.</p></li>
 <li><p><strong>symmetry</strong> (<em>str</em><em>, </em><em>default 'translational'</em>) – <p>Support 4 symmetries:</p>
 <p><strong>’translational’</strong>: translational symmetry with symmetry
 equivalent groups depending on repeating_size.</p>
@@ -1599,7 +1556,7 @@ and orthogonal cell.</p>
 </p></li>
 <li><p><strong>bisect_vector</strong> (<em>numpy.array</em><em> or </em><em>list</em><em>, </em><em>default None</em>) – The 2d (or 3d) vector that lies in the vertical mirror plane.
 Only relevant for vertical_mirror symmetry.</p></li>
-<li><p><strong>repeating_size</strong> (<em>list of ints</em><em> or </em><em>tuple of ints</em><em>, </em><em>default</em><em> (</em><em>1</em><em>, </em><em>1</em><em>)</em>) – The multiples that describe the size of the repeating pattern
+<li><p><strong>repeating_size</strong> (<em>list</em><em> of </em><em>ints</em><em> or </em><em>tuple</em><em> of </em><em>ints</em><em>, </em><em>default</em><em> (</em><em>1</em><em>, </em><em>1</em><em>)</em>) – The multiples that describe the size of the repeating pattern
 on the surface. Symmetry-equivalent atoms are grouped by
 the multiples in the x and y directions. The x or y length of
 the cell must be this multiple of the distance between each
@@ -1610,7 +1567,7 @@ change repeating_size to larger numbers.</p></li>
 The dictionary contains the metal elements as keys and their
 concentrations as values. Generate orderings at all compositions
 if not specified.</p></li>
-<li><p><strong>groups</strong> (<em>list of lists</em><em>, </em><em>default None</em>) – Provide the user defined symmetry equivalent groups as a list of
+<li><p><strong>groups</strong> (<em>list</em><em> of </em><em>lists</em><em>, </em><em>default None</em>) – Provide the user defined symmetry equivalent groups as a list of
 lists of atom indices. Useful for generating structures with
 symmetries that are not supported.</p></li>
 <li><p><strong>save_groups</strong> (<em>bool</em><em>, </em><em>default False</em>) – Whether to save the site groups in atoms.info[‘data’][‘groups’]
@@ -1625,15 +1582,15 @@ larger ztol if the structure is distorted.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricSlabOrderingGenerator.get_groups">
-<code class="sig-name descname">get_groups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator.get_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator.get_groups" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricSlabOrderingGenerator.get_groups">
+<span class="sig-name descname"><span class="pre">get_groups</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator.get_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator.get_groups" title="Permalink to this definition"></a></dt>
 <dd><p>Get the groups (a list of lists of atom indices) of all
 symmetry-equivalent atoms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.SymmetricSlabOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_gen</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'stochastic'</span></em>, <em class="sig-param"><span class="n">eps</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.SymmetricSlabOrderingGenerator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'stochastic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#SymmetricSlabOrderingGenerator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.SymmetricSlabOrderingGenerator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1780,13 +1737,13 @@ slabs:</p>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/SymmetricSlabOrderingGenerator4.gif"><img alt="_images/SymmetricSlabOrderingGenerator4.gif" class="align-center" src="_images/SymmetricSlabOrderingGenerator4.gif" style="width: 384.0px; height: 288.0px;" /></a>
 </div></blockquote>
-</div>
-<div class="section" id="the-randomorderinggenerator-class">
-<h3>The RandomOrderingGenerator class<a class="headerlink" href="#the-randomorderinggenerator-class" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="the-randomorderinggenerator-class">
+<h3>The RandomOrderingGenerator class<a class="headerlink" href="#the-randomorderinggenerator-class" title="Permalink to this heading"></a></h3>
 <blockquote>
 <div><dl class="py class">
-<dt id="acat.build.ordering.RandomOrderingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">acat.build.ordering.</code><code class="sig-name descname">RandomOrderingGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">elements</span></em>, <em class="sig-param"><span class="n">composition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">trajectory</span><span class="o">=</span><span class="default_value">'orderings.traj'</span></em>, <em class="sig-param"><span class="n">append_trajectory</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.RandomOrderingGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">acat.build.ordering.</span></span><span class="sig-name descname"><span class="pre">RandomOrderingGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'orderings.traj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator" title="Permalink to this definition"></a></dt>
 <dd><p><cite>RandomOrderingGenerator</cite> is a class for generating random
 chemical orderings for an alloy catalyst (can be either bulk,
 slab or nanoparticle). The function is generalized for both
@@ -1798,7 +1755,7 @@ of the number of metal components.</p>
 <li><p><strong>atoms</strong> (<em>ase.Atoms object</em>) – The nanoparticle or surface slab to use as a template to
 generate random chemical orderings. Accept any ase.Atoms
 object. No need to be built-in.</p></li>
-<li><p><strong>elements</strong> (<em>list of strs</em>) – The metal elements of the alloy catalyst.</p></li>
+<li><p><strong>elements</strong> (<em>list</em><em> of </em><em>strs</em>) – The metal elements of the alloy catalyst.</p></li>
 <li><p><strong>composition</strong> (<em>dict</em><em>, </em><em>default None</em>) – Generate random orderings only at a certain composition.
 The dictionary contains the metal elements as keys and
 their concentrations as values. Generate orderings at all
@@ -1809,23 +1766,23 @@ compositions if not specified.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="acat.build.ordering.RandomOrderingGenerator.randint_with_sum">
-<code class="sig-name descname">randint_with_sum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.randint_with_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.randint_with_sum" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.RandomOrderingGenerator.randint_with_sum">
+<span class="sig-name descname"><span class="pre">randint_with_sum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.randint_with_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.randint_with_sum" title="Permalink to this definition"></a></dt>
 <dd><p>Return a randomly chosen list of N positive integers i
 summing to the number of atoms. N is the number of elements.
 Each such list is equally likely to occur.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.RandomOrderingGenerator.random_split_indices">
-<code class="sig-name descname">random_split_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.random_split_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.random_split_indices" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.RandomOrderingGenerator.random_split_indices">
+<span class="sig-name descname"><span class="pre">random_split_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.random_split_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.random_split_indices" title="Permalink to this definition"></a></dt>
 <dd><p>Generate random chunks of indices given sizes of each
 chunk.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="acat.build.ordering.RandomOrderingGenerator.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_gen</span></em>, <em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hmax</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="acat.build.ordering.RandomOrderingGenerator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_gen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/acat/build/ordering.html#RandomOrderingGenerator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#acat.build.ordering.RandomOrderingGenerator.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the chemical ordering generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1878,56 +1835,39 @@ fcc111 surface slabs without duplicates:</p>
 <p>Output:</p>
 <a class="reference internal image-reference" href="_images/RandomOrderingGenerator2.gif"><img alt="_images/RandomOrderingGenerator2.gif" class="align-center" src="_images/RandomOrderingGenerator2.gif" style="width: 384.0px; height: 288.0px;" /></a>
 </div></blockquote>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="ga.html" class="btn btn-neutral float-right" title="Genetic algorithm" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="modules.html" class="btn btn-neutral float-left" title="Base modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ga.html" class="btn btn-neutral float-right" title="Genetic algorithm" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Shuang Han.
-
-    </p>
+    <p>&#169; Copyright 2021, Shuang Han.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

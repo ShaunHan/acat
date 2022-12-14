@@ -8,5 +8,5 @@ __email__ = 'hanshuangshiren@gmail.com'
 __license__ = 'GNU Lesser General Public License 3.0 (LGPL 3.0)'
 __maintainer__ = 'Shuang Han'
 __url__ = 'https://gitlab.com/asm-dtu/acat'
-__version__ = '1.4.8'
+__version__ = '1.4.9'
 
