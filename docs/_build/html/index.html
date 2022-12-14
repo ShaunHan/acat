@@ -1,74 +1,38 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>ACAT: Alloy Catalysis Automated Toolkit &mdash; ACAT 1.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-  <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/table_styling.css" type="text/css" />
     <link rel="shortcut icon" href="_static/acat_favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="#" class="icon icon-home"> ACAT
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,18 +40,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Base modules</a></li>
@@ -97,79 +50,38 @@
 <li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="#">ACAT</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>ACAT: Alloy Catalysis Automated Toolkit</li>
-    
-    
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">ACAT: Alloy Catalysis Automated Toolkit</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="acat-alloy-catalysis-automated-toolkit">
-<h1>ACAT: Alloy Catalysis Automated Toolkit<a class="headerlink" href="#acat-alloy-catalysis-automated-toolkit" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="acat-alloy-catalysis-automated-toolkit">
+<h1>ACAT: Alloy Catalysis Automated Toolkit<a class="headerlink" href="#acat-alloy-catalysis-automated-toolkit" title="Permalink to this heading"></a></h1>
 <p>Welcome to ACAT documentation!</p>
 <p>ACAT is a Python package for atomistic modelling of metal or alloy catalysts used in heterogeneous catalysis. The package is based on automatic identifications of adsorption sites and adsorbate coverages on surface slabs and nanoparticles. Synergizing with ASE, ACAT provides useful tools to build atomistic models and perform global optimization tasks for alloy surfaces and nanoparticles with and without adsorbates. The goal is to automate workflows for the high-throughput screening of alloy catalysts.</p>
 <p>ACAT has been developed by Shuang Han at the Section of Atomic Scale Materials Modelling, Department of Energy Conversion and Storage, Technical University of Denmark (DTU) in Lyngby, Denmark. The development is hosted on <a class="reference external" href="https://gitlab.com/asm-dtu/acat.git">gitlab</a>.</p>
-</div>
-<div class="section" id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
@@ -196,13 +108,35 @@
 <li class="toctree-l2"><a class="reference internal" href="ga.html#module-acat.ga.multitasking">Evolutionary Multitasking</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Other utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.neighbor_shell_list"><code class="docutils literal notranslate"><span class="pre">neighbor_shell_list()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_adj_matrix"><code class="docutils literal notranslate"><span class="pre">get_adj_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_mic"><code class="docutils literal notranslate"><span class="pre">get_mic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.cart_to_frac"><code class="docutils literal notranslate"><span class="pre">cart_to_frac()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.hash_composition"><code class="docutils literal notranslate"><span class="pre">hash_composition()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_close_atoms"><code class="docutils literal notranslate"><span class="pre">get_close_atoms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.atoms_too_close"><code class="docutils literal notranslate"><span class="pre">atoms_too_close()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.atoms_too_close_after_addition"><code class="docutils literal notranslate"><span class="pre">atoms_too_close_after_addition()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_angle_between"><code class="docutils literal notranslate"><span class="pre">get_angle_between()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_rejection_between"><code class="docutils literal notranslate"><span class="pre">get_rejection_between()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">get_rotation_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_rodrigues_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">get_rodrigues_rotation_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.get_total_masses"><code class="docutils literal notranslate"><span class="pre">get_total_masses()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.string_fragmentation"><code class="docutils literal notranslate"><span class="pre">string_fragmentation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.orthogonal_transform"><code class="docutils literal notranslate"><span class="pre">orthogonal_transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.ratios_from_atoms"><code class="docutils literal notranslate"><span class="pre">ratios_from_atoms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.numbers_from_ratios"><code class="docutils literal notranslate"><span class="pre">numbers_from_ratios()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.dag_from_ucg"><code class="docutils literal notranslate"><span class="pre">dag_from_ucg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.sort_atoms_by_ref_atoms"><code class="docutils literal notranslate"><span class="pre">sort_atoms_by_ref_atoms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#acat.utilities.draw_graph"><code class="docutils literal notranslate"><span class="pre">draw_graph()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a></li>
 </ul>
 </div>
-</div>
-<div class="section" id="using-acat">
-<h1>Using ACAT<a class="headerlink" href="#using-acat" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="using-acat">
+<h1>Using ACAT<a class="headerlink" href="#using-acat" title="Permalink to this heading"></a></h1>
 <p>If you find ACAT useful in your research, please cite</p>
 <blockquote>
 <div><p>[1] S. Han, S. Lysgaard, T. Vegge &amp; H. A. Hansen (submitted). [This is a preprint](<a class="reference external" href="https://chemrxiv.org/engage/chemrxiv/article-details/62c8116b3be5f17b9a120c98">https://chemrxiv.org/engage/chemrxiv/article-details/62c8116b3be5f17b9a120c98</a>)</p>
@@ -211,73 +145,56 @@
 <blockquote>
 <div><p>[2] S. Han, G. Barcaro, A. Fortunelli et al. Unfolding the structural stability of nanoalloys via symmetry-constrained genetic algorithm and neural network potential. <em>npj Comput. Mater.</em> 8, 121 (2022). <a class="reference external" href="https://doi.org/10.1038/s41524-022-00807-6">https://doi.org/10.1038/s41524-022-00807-6</a></p>
 </div></blockquote>
-</div>
-<div class="section" id="gallery">
-<h1>Gallery<a class="headerlink" href="#gallery" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="gallery">
+<h1>Gallery<a class="headerlink" href="#gallery" title="Permalink to this heading"></a></h1>
 <p>Various shapes and facets of nanoparticles identified by ACAT:</p>
 <img alt="_images/color_facets.png" class="align-center" src="_images/color_facets.png" />
 <p>All symmetry-inequivalent adsorptions sites (in red) identified by ACAT on truncated octahedron (top left), fcc(311) surface (top right), hcp(10-10) surface (bottom left) and bcc(110) surface (bottom right):</p>
 <a class="reference internal image-reference" href="_images/unique_sites.png"><img alt="_images/unique_sites.png" class="align-center" src="_images/unique_sites.png" style="width: 407.5px; height: 325.5px;" /></a>
 <p>Well-defined ordered adsorbate overlayer patterns at various coverages for various surfaces and nanoparticles generated by ACAT:</p>
 <img alt="_images/all_ordered_coverage_patterns.png" class="align-center" src="_images/all_ordered_coverage_patterns.png" />
-</div>
-<div class="section" id="acknowledgement">
-<h1>Acknowledgement<a class="headerlink" href="#acknowledgement" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="acknowledgement">
+<h1>Acknowledgement<a class="headerlink" href="#acknowledgement" title="Permalink to this heading"></a></h1>
 <p>The ACAT code is developed as part of the project BIKE: BImetallic catalysts Knowledge-based development for Energy applications. The BIKE project has received funding from the European Union’s Horizon 2020 Research and Innovation programme under the Marie Skłodowska-Curie Action – International Training Network (MSCA-ITN), grant agreement 813748</p>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 </ul>
-</div>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Shuang Han.
-
-    </p>
+    <p>&#169; Copyright 2021, Shuang Han.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

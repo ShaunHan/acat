@@ -15,6 +15,7 @@ from ..build.action import (add_adsorbate_to_site,
 from ase.ga.offspring_creator import OffspringCreator
 from collections import defaultdict
 from operator import attrgetter
+from copy import deepcopy
 import warnings
 import random
 warnings.formatwarning = custom_warning

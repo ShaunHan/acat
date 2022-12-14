@@ -978,14 +978,14 @@ The script for a parallel symmetry-constrained genetic algorithm (SCGA) looks as
     soclist = ([3, 3, 2, 3, 3, 3],
                [RandomSlabPermutation(allowed_indices=slab_ids),
                 RandomCompositionMutation(allowed_indices=slab_ids), 
-                ReplaceAdsorbateSpecies(species, vacancy_replacement=True, 
+                ReplaceAdsorbateSpecies(species, replace_vacancy=True, 
                                         adsorption_sites=sas),
                 AdsorbateGroupSubstitute(species, max_species=2, 
                                          adsorption_sites=sas, 
                                          remove_site_shells=1),
                 AdsorbateGroupPermutation(species, adsorption_sites=sas, 
                                           remove_site_shells=1),
-                CatalystAdsorbateCrossover(species, adsorption_sites=sas),])               
+                CatalystAdsorbateCrossover(),]) 
     op_selector = OperationSelector(*soclist)
     
     # Define comparators
@@ -1217,14 +1217,14 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
     soclist = ([3, 3, 2, 3, 3, 3],
                [RandomSlabPermutation(allowed_indices=slab_ids),
                 RandomCompositionMutation(allowed_indices=slab_ids), 
-                ReplaceAdsorbateSpecies(species, vacancy_replacement=True, 
+                ReplaceAdsorbateSpecies(species, replace_vacancy=True, 
                                         adsorption_sites=sas),
                 AdsorbateGroupSubstitute(species, max_species=2, 
                                          adsorption_sites=sas, 
                                          remove_site_shells=1),
                 AdsorbateGroupPermutation(species, adsorption_sites=sas, 
                                           remove_site_shells=1),
-                CatalystAdsorbateCrossover(species, adsorption_sites=sas),])               
+                CatalystAdsorbateCrossover(),])               
     op_selector = OperationSelector(*soclist)
     
     # Define comparators
@@ -1233,7 +1233,7 @@ The script for a parallel multitasking symmetry-constrained genetic algorithm (S
                                 [0.5, 0.5])
     
     # Initialize the population and specify the number of tasks
-    pop = Multitaskpopulation(data_connection=db,
+    pop = MultitaskPopulation(data_connection=db,
                               population_size=pop_size,
                               num_tasks=len(tasks),
                               comparator=comp,
